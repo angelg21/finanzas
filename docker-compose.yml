@@ -1,0 +1,24 @@
+# Base de datos local para desarrollo. En producción se usa Postgres en Supabase.
+# Arrancar: docker compose up -d      Detener: docker compose down
+# Los datos persisten en el volumen "finanzas_pgdata".
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: finanzas-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: finanzas
+      POSTGRES_PASSWORD: finanzas
+      POSTGRES_DB: finanzas
+    ports:
+      - "5433:5432"
+    volumes:
+      - finanzas_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finanzas -d finanzas"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  finanzas_pgdata:

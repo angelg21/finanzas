@@ -1,0 +1,81 @@
+{
+  "permissions": {
+    "defaultMode": "default",
+    "allow": [
+      "Bash(pnpm *)",
+      "Bash(node *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git checkout *)",
+      "Bash(git switch *)",
+      "Bash(git branch*)",
+      "Bash(git merge *)",
+      "Bash(git stash*)",
+      "Bash(git tag*)",
+      "Bash(docker compose ps*)",
+      "Bash(docker compose up*)",
+      "Bash(docker exec finanzas-db *)",
+      "Bash(curl -s http://localhost*)",
+      "Bash(curl -s -o /dev/null -w * http://localhost*)",
+      "Bash(ls *)",
+      "Bash(grep *)",
+      "Bash(sed -n *)"
+    ],
+    "ask": [
+      "Bash(git push*)",
+      "Bash(gh *)",
+      "Bash(vercel *)",
+      "Bash(npx vercel*)",
+      "Bash(docker compose down*)",
+      "Bash(docker volume rm*)",
+      "Edit(drizzle/**)",
+      "Write(drizzle/**)",
+      "Edit(.claude/settings.json)",
+      "Write(.claude/settings.json)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./.env.production)",
+      "Bash(cat .env*)",
+      "Bash(type .env*)",
+      "Bash(rm -rf *)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -fd*)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [{ "type": "command", "command": "node .claude/hooks/session-start.mjs", "timeout": 30 }]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "node .claude/hooks/guardia.mjs", "timeout": 15 }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "node .claude/hooks/formato.mjs", "timeout": 60 },
+          { "type": "command", "command": "node .claude/hooks/estructura.mjs", "timeout": 15 }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [{ "type": "command", "command": "node .claude/hooks/gate.mjs", "timeout": 600 }]
+      }
+    ]
+  }
+}

@@ -1,12 +1,20 @@
-# dependencias y build
-node_modules/
-.next/
-dist/
-coverage/
+# dependencias
+/node_modules
+/.pnp
+.pnp.*
+
+# next.js y build
+/.next/
+/out/
+/build
+*.tsbuildinfo
+next-env.d.ts
+
+# pruebas
+/coverage
 
 # entorno y secretos
-.env
-.env.*
+.env*
 !.env.example
 
 # datos personales: exportaciones y respaldos nunca se suben
@@ -17,8 +25,19 @@ data/
 *.db
 *.sqlite
 
+# vercel
+.vercel
+
 # sistema y editor
 .DS_Store
 Thumbs.db
+*.pem
 .vscode/
 .idea/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+capturas/

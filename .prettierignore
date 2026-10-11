@@ -1,0 +1,8 @@
+.next
+node_modules
+drizzle/meta
+pnpm-lock.yaml
+capturas
+docs/referencias
+*.webp
+*.png
