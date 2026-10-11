@@ -11,11 +11,13 @@ Contexto: ingeniero informático en Venezuela. Ingreso fijo remoto de 1.200 $/me
 Estás ahorrando más del 60 % del ingreso. El problema nunca fue disciplina: fue que todo el ahorro vivía en un solo montón sin nombre, y cuando hacía falta se usaba. Eso era un fondo de emergencia haciendo su trabajo sin que lo llamaras así.
 
 **Lo que está bien**
+
 - Con 400 $ gastabas 200 a 250: ahorrabas casi la mitad. Con 1.200 $ y el mismo gasto ahorras más del 60 %.
 - Ya usas cuentas separadas por lugar, categorías propias y notas por movimiento. Ese hábito es lo más difícil de construir y ya lo tienes.
 - Tu sistema de bolívares es correcto: convertir solo lo que se va a gastar evita la devaluación.
 
 **Riesgos reales**
+
 - Inflación de estilo de vida: cuando el ingreso se triplica, el gasto sube "un poquito" cada mes hasta comerse la diferencia.
 - Concentración: todo el dinero en una sola plataforma. Binance puede congelar cuentas, caerse o bloquear el país.
 - La cuenta de tu prima legalmente es de tu prima. Sirve de tránsito, no para guardar ni invertir.
@@ -29,6 +31,7 @@ Estás ahorrando más del 60 % del ingreso. El problema nunca fue disciplina: fu
 ## 2. Reglas del dinero
 
 **Orden de prioridades**
+
 1. Fondo de emergencia: 6 meses de gastos. Con un límite de 450 $/mes, la meta es 2.700 $. Va en stablecoin, repartido en al menos dos sitios, y una parte pequeña en efectivo. No es inversión.
 2. Deudas con interés alto: hoy ninguna. Si aparece una, va antes que cualquier inversión.
 3. Metas con fecha: cada una con monto y mes objetivo, de ahí sale una cuota mensual.
@@ -36,17 +39,19 @@ Estás ahorrando más del 60 % del ingreso. El problema nunca fue disciplina: fu
 
 **Reparto sugerido como punto de partida**
 
-| Rubro | Con 1.200 $ | Con 2.000 $ mientras dure |
-|---|---|---|
-| Gastos del mes, ocio incluido | 450 | 450 |
-| Apoyo a la familia | 100 | 150 |
-| Fondo de emergencia, hasta llegar a 2.700 | 250 | 700 |
-| Metas grandes | 200 | 350 |
-| Inversión | 200 | 350 |
+| Rubro                                     | Con 1.200 $ | Con 2.000 $ mientras dure |
+| ----------------------------------------- | ----------- | ------------------------- |
+| Gastos del mes, ocio incluido             | 450         | 450                       |
+| Apoyo a la familia                        | 100         | 150                       |
+| Fondo de emergencia, hasta llegar a 2.700 | 250         | 700                       |
+| Ocasiones: regalos y celebraciones        | 25          | 25                        |
+| Planes                                    | 175         | 325                       |
+| Inversión                                 | 200         | 350                       |
 
 Con 700 $/mes el fondo de emergencia se llena en 4 meses. Cuando esté lleno, esa fila se reparte entre metas e inversión.
 
 **Reglas no negociables**
+
 - El límite de gasto es un número escrito, no un rango. No sube con ingreso temporal.
 - El reparto ocurre el día que cobras, antes de gastar nada. Primero te pagas a ti.
 - El fondo de emergencia solo se usa para emergencias definidas de antemano: salud, pérdida de ingreso, emergencia familiar. Una laptop no es una emergencia.
@@ -57,19 +62,21 @@ Con 700 $/mes el fondo de emergencia se llena en 4 meses. Cuando esté lleno, es
 
 Un sobre es una porción del dinero con un propósito. Una sola cuenta de Binance puede contener cinco sobres. El saldo "disponible para gastar" es solo el del sobre de gastos del mes.
 
-| Sobre | Para qué | Regla |
-|---|---|---|
-| Gastos del mes | Todo el consumo, incluido ocio | Se llena con el monto fijo cada cobro; lo que sobra a fin de mes se reasigna |
-| Familia | Apoyo a la familia | Monto fijo por cobro |
-| Emergencia | Reserva de 6 meses | Se llena hasta el tope y luego deja de recibir |
-| Metas | Una por meta: laptop, celular, viaje | Cuota calculada por monto y fecha |
-| Inversión | Aportes al bróker | Intocable |
+| Sobre          | Para qué                                                                         | Regla                                                                                             |
+| -------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Gastos del mes | Todo el consumo, incluido ocio                                                   | Se llena con el monto fijo cada cobro; lo que sobra a fin de mes se reasigna                      |
+| Familia        | Apoyo a la familia                                                               | Monto fijo por cobro                                                                              |
+| Emergencia     | Reserva de 6 meses                                                               | Se llena hasta el tope y luego deja de recibir                                                    |
+| Planes         | Viajes, teléfono, ropa, compras grandes. Una por meta cuando tenga monto y fecha | Cuota calculada por monto y fecha                                                                 |
+| Ocasiones      | Regalos, cumpleaños, aniversarios, Navidad: previsible pero irregular            | Fondo de reserva: aporte fijo mensual igual al desglose anual entre doce; lo que sobra se acumula |
+| Inversión      | Aportes al bróker                                                                | Intocable                                                                                         |
 
 ---
 
 ## 3. Inversión
 
 **Principios**
+
 - No necesitas escoger acciones. Un fondo indexado global compra miles de empresas a la vez.
 - Tres reglas: diversificar, pagar comisiones mínimas, horizonte de 10 años o más.
 - Aportas la misma cantidad todos los meses, suba o baje el mercado. Eso elimina la pregunta de si es buen momento.
@@ -78,32 +85,36 @@ Un sobre es una porción del dinero con un propósito. Una sola cuenta de Binanc
 **Lo que rinde es el tiempo, no la cantidad**
 
 | Aporte mensual al 7 % anual | 10 años | 20 años | 30 años |
-|---|---|---|---|
-| 200 $ | 34.600 | 104.000 | 244.000 |
-| 300 $ | 51.900 | 156.000 | 366.000 |
-| 500 $ | 86.500 | 260.000 | 610.000 |
+| --------------------------- | ------- | ------- | ------- |
+| 200 $                       | 34.600  | 104.000 | 244.000 |
+| 300 $                       | 51.900  | 156.000 | 366.000 |
+| 500 $                       | 86.500  | 260.000 | 610.000 |
 
 Con 300 $/mes, empezar 5 años tarde cuesta 123.000 $ al final. Aprender no debe tardar más de un mes.
 
 **Qué comprar**
 
 Un ETF global de acumulación domiciliado en Irlanda, por ejemplo VWRA en la bolsa de Londres. Para un residente venezolano importa por tres razones:
+
 - Los ETF domiciliados en EE. UU. retienen 30 % de los dividendos porque no hay tratado fiscal. El irlandés retiene 15 %.
 - El ETF de acumulación reinvierte solo, sin generar eventos que rastrear.
 - Evita el impuesto sucesorio de EE. UU. para no residentes, que aplica sobre activos estadounidenses por encima de 60.000 $.
 
 **Dónde abrir cuenta, estado al 30 de septiembre de 2026**
+
 - Interactive Brokers: el mejor y más barato, con acceso a Londres. Venezuela no aparece en su lista oficial en inglés, pero sí en el selector en español. Intentar el registro con dirección real y sin VPN. Sin garantía.
 - Hapi: bróker para Latinoamérica regulado en EE. UU., permite depositar con cripto desde 5 $. Ha aceptado venezolanos, pero su estado ha cambiado varias veces y reportan retiros a 30 $.
 - En abril de 2026 la OFAC alivió sanciones sobre servicios financieros en Venezuela. El acceso puede mejorar en los próximos meses.
 
 **Plan práctico**
+
 1. Durante los 4 meses que tarda el fondo de emergencia, el sobre de inversión acumula en USDT. Ese tiempo es para aprender.
 2. Al tener el fondo lleno, abrir bróker. Primero Interactive Brokers, luego Hapi.
 3. Si ningún bróker regulado acepta, alternativa temporal: hasta 10 % de lo invertido en BTC, el resto sigue esperando en stablecoin.
 4. Nunca invertir a través de la cuenta de la prima.
 
 **Qué aprender, en este orden**
+
 1. "La psicología del dinero", Morgan Housel.
 2. Wiki de Bogleheads, sección "Non-US investors".
 3. "The Simple Path to Wealth", JL Collins.
@@ -123,19 +134,20 @@ La app anterior respondía "¿dónde está mi dinero?". La nueva responde tambi�
 
 El dólar es la única unidad de cuenta. Todo se guarda y se muestra en dólares.
 
-| Cuenta | Moneda | Tipo | Nota |
-|---|---|---|---|
-| Binance | USDT | Exchange | Principal |
-| Segunda billetera | USDC o USDT | Exchange o billetera | Parte del fondo de emergencia |
-| Efectivo | USD | Efectivo | Parte pequeña del fondo |
-| Cuenta prima | USD | Tránsito | Marcada como "no es mía legalmente", saldo bajo |
-| Bolívares | VES | De paso | Casi siempre en cero |
+| Cuenta            | Moneda      | Tipo                 | Nota                                            |
+| ----------------- | ----------- | -------------------- | ----------------------------------------------- |
+| Binance           | USDT        | Exchange             | Principal                                       |
+| Segunda billetera | USDC o USDT | Exchange o billetera | Parte del fondo de emergencia                   |
+| Efectivo          | USD         | Efectivo             | Parte pequeña del fondo                         |
+| Cuenta prima      | USD         | Tránsito             | Marcada como "no es mía legalmente", saldo bajo |
+| Bolívares         | VES         | De paso              | Casi siempre en cero                            |
 
 **Gasto en bolívares, el único caso especial**
 
 No hay tasas históricas, ni tasa BCV, ni pérdida cambiaria. Un gasto en bolívares se registra así: cuánto USDT vendiste, a qué tasa, para qué categoría. La app crea la transferencia de Binance a bolívares y el gasto, valorado en los dólares que realmente vendiste. Si quedan bolívares de vuelto, se ven como saldo pequeño hasta que se gasten. La tasa es un campo en el movimiento y nada más.
 
 **Sobres y reparto**
+
 - Invariante: la suma de los sobres es igual a la suma de los saldos en dólares de las cuentas propias. Cada dólar tiene un trabajo.
 - Los bolívares pertenecen siempre al sobre de gastos del mes.
 - Al registrar un ingreso, la app propone el reparto según las reglas: monto fijo a gastos, monto fijo a familia, el resto por prioridad y porcentaje, con tope en el sobre de emergencia. Se confirma con un clic y se puede ajustar.
@@ -144,20 +156,21 @@ No hay tasas históricas, ni tasa BCV, ni pérdida cambiaria. Un gasto en bolív
 
 **Modelo de datos**
 
-| Entidad | Campos principales |
-|---|---|
-| Cuenta | nombre, moneda, tipo, es_propia |
-| Sobre | nombre, tipo (gastos, familia, emergencia, meta, inversión), tope o meta, fecha objetivo |
-| Categoría | nombre, tipo (ingreso o gasto), categoría padre |
-| Movimiento | fecha, tipo (ingreso, gasto, transferencia, reasignación), monto original en centavos, moneda, monto en USD en centavos, tasa, cuenta origen, cuenta destino, categoría, sobre, nota, origen (manual, telegram, importado, binance) |
-| Regla de reparto | orden, sobre destino, tipo (fijo o porcentaje), valor, tope |
-| Pago programado | nombre, monto, día del mes, categoría, sobre |
-| Posición de inversión | ticker, unidades, costo en USD |
-| Aporte | fecha, monto, posición, movimiento asociado |
+| Entidad               | Campos principales                                                                                                                                                                                                                  |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cuenta                | nombre, moneda, tipo, es_propia                                                                                                                                                                                                     |
+| Sobre                 | nombre, tipo (gastos, familia, emergencia, meta, inversión), tope o meta, fecha objetivo                                                                                                                                            |
+| Categoría             | nombre, tipo (ingreso o gasto), categoría padre                                                                                                                                                                                     |
+| Movimiento            | fecha, tipo (ingreso, gasto, transferencia, reasignación), monto original en centavos, moneda, monto en USD en centavos, tasa, cuenta origen, cuenta destino, categoría, sobre, nota, origen (manual, telegram, importado, binance) |
+| Regla de reparto      | orden, sobre destino, tipo (fijo o porcentaje), valor, tope                                                                                                                                                                         |
+| Pago programado       | nombre, monto, día del mes, categoría, sobre                                                                                                                                                                                        |
+| Posición de inversión | ticker, unidades, costo en USD                                                                                                                                                                                                      |
+| Aporte                | fecha, monto, posición, movimiento asociado                                                                                                                                                                                         |
 
 Los montos se guardan como enteros en centavos. Nunca float.
 
 **Stack**
+
 - Next.js con TypeScript, PostgreSQL en Supabase o Neon, Drizzle como ORM.
 - Tailwind con shadcn/ui, Recharts para gráficas.
 - Supabase Auth, despliegue en Vercel, PWA instalable en el celular.
@@ -170,6 +183,7 @@ Los montos se guardan como enteros en centavos. Nunca float.
 Todo cabe en capas gratuitas.
 
 **Dónde entra la IA y dónde no**
+
 - Sí: interpretar "gasté 12 en comida" desde Telegram. Redactar el resumen semanal en lenguaje humano. Responder preguntas sobre tus datos, por ejemplo cuánto gastaste en comida en agosto contra julio.
 - No: alertas de presupuesto, liquidez ociosa, pagos próximos, cuotas de metas, proyecciones. Todo eso son reglas y aritmética.
 
@@ -183,22 +197,23 @@ Referencia antes de diseñar: Actual Budget, open source, usa exactamente el mod
 
 ## 5. Lo que queda fuera y por qué
 
-| Función | Por qué no |
-|---|---|
-| Valoración predictiva de inmuebles | No existe fuente de datos para Venezuela |
-| Detección de cobros duplicados y suscripciones fantasma | No hay débitos automáticos ni feed bancario; todo se registra a mano |
-| Monte Carlo | La incertidumbre grande es el ingreso, no la varianza del mercado. Tres escenarios deterministas responden lo mismo |
-| Tasas históricas, BCV y pérdida cambiaria | Los bolívares son de paso y casi siempre están en cero |
-| Ajuste por inflación en bolívares | La inflación oficial no es confiable y la tasa de cambio ya captura casi todo |
-| Amortización de deudas con IA | No hay deudas ni acceso real a crédito. Bola de nieve contra avalancha son 20 líneas de aritmética |
-| Metales, coleccionables, vehículos con valoración automática | No aplican a tu patrimonio actual |
-| Mover dinero automáticamente vía API de Binance | Una clave con permisos de trading en código nuevo es la forma más rápida de perder la reserva |
+| Función                                                      | Por qué no                                                                                                          |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| Valoración predictiva de inmuebles                           | No existe fuente de datos para Venezuela                                                                            |
+| Detección de cobros duplicados y suscripciones fantasma      | No hay débitos automáticos ni feed bancario; todo se registra a mano                                                |
+| Monte Carlo                                                  | La incertidumbre grande es el ingreso, no la varianza del mercado. Tres escenarios deterministas responden lo mismo |
+| Tasas históricas, BCV y pérdida cambiaria                    | Los bolívares son de paso y casi siempre están en cero                                                              |
+| Ajuste por inflación en bolívares                            | La inflación oficial no es confiable y la tasa de cambio ya captura casi todo                                       |
+| Amortización de deudas con IA                                | No hay deudas ni acceso real a crédito. Bola de nieve contra avalancha son 20 líneas de aritmética                  |
+| Metales, coleccionables, vehículos con valoración automática | No aplican a tu patrimonio actual                                                                                   |
+| Mover dinero automáticamente vía API de Binance              | Una clave con permisos de trading en código nuevo es la forma más rápida de perder la reserva                       |
 
 ---
 
 ## 6. Fases de construcción
 
 **Fase 1, dos semanas: usar desde el día uno**
+
 - Cuentas, categorías, movimientos con nota.
 - Flujo de gasto en bolívares.
 - Sobres con reglas de reparto y confirmación de un clic.
@@ -207,6 +222,7 @@ Referencia antes de diseñar: Actual Budget, open source, usa exactamente el mod
 - PWA instalable y formulario de captura rápida.
 
 **Fase 2, mes dos: reglas y captura por Telegram**
+
 - Pagos programados.
 - Alertas por reglas enviadas por Telegram: desviación de presupuesto, liquidez ociosa en el sobre de gastos, pago próximo. Con botón de un clic para reasignar.
 - Captura por Telegram interpretada con IA.
@@ -214,12 +230,14 @@ Referencia antes de diseñar: Actual Budget, open source, usa exactamente el mod
 - Simulador de escenarios con tres casos: pesimista, base, optimista. Variables: ingreso, gasto, retorno, una cifra de inflación en dólares.
 
 **Fase 3, meses tres y cuatro: inversión y patrimonio**
+
 - Inversiones: aportes, posiciones, precio actual, rendimiento, distribución.
 - Panel de patrimonio: patrimonio neto en el tiempo, tasa de ahorro, meses de cobertura, ingreso pasivo dividido entre gastos.
 - Resumen semanal y preguntas sobre tus datos con IA.
 - Conciliación con la API de Binance de solo lectura: movimientos que no registraste.
 
 **Bajo demanda, el día que haga falta y no antes**
+
 - Activos manuales con valor y fecha de valoración, cuando compres algo grande.
 - Préstamos a terceros y cuentas por cobrar, la primera vez que prestes.
 - Deudas, si aparece una.
@@ -248,7 +266,7 @@ Si la app no exporta: migrar solo los totales mensuales por categoría. Diecioch
 - [ ] Exportar el CSV de Gestor de Gastos y pasarlo para escribir el importador.
 - [ ] Empezar "La psicología del dinero", 20 minutos al día.
 - [ ] Instalar Actual Budget y probar el modelo de sobres dos semanas.
-- [ ] Definir el modelo de datos y montar el esqueleto de la app.
+- [x] Definir el modelo de datos y montar el esqueleto de la app. Hecho el 2 de octubre de 2026: Next.js 16, Drizzle, Postgres local en Docker, esquema de fase 1 y semillas.
 
 ---
 

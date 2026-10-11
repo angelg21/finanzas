@@ -1,0 +1,105 @@
+"use client";
+
+import { Plus, Trash2 } from "lucide-react";
+import { useActionState } from "react";
+import { Boton, Campo, Entrada, Selector } from "@/components/formulario";
+import { agregarPartida, eliminarPartida, fijarAporteManual, type EstadoFormulario } from "./acciones";
+
+export const nombresMes = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+];
+
+/** Alta de una ocasión. Al guardar con éxito el formulario se reinicia (cambia su key). */
+export function FormularioPartida({ sobreId }: { sobreId: number }) {
+  const accion = agregarPartida.bind(null, sobreId);
+  const [estado, enviar, pendiente] = useActionState<EstadoFormulario, FormData>(accion, {});
+
+  return (
+    <form key={estado.ok ?? 0} action={enviar} className="grid grid-cols-2 gap-3">
+      <Campo etiqueta="Ocasión" className="col-span-2">
+        <Entrada name="nombre" placeholder="Cumpleaños de mamá" required maxLength={80} autoComplete="off" />
+      </Campo>
+      <Campo etiqueta="Monto estimado (USD)">
+        <Entrada name="monto" inputMode="decimal" placeholder="40" required autoComplete="off" />
+      </Campo>
+      <Campo etiqueta="Veces al año">
+        <Entrada name="veces" type="number" min={1} max={52} defaultValue={1} required />
+      </Campo>
+      <Campo etiqueta="Mes" ayuda="Opcional. Sirve para saber cuándo cae." className="col-span-2">
+        <Selector name="mes" defaultValue="">
+          <option value="">Sin mes fijo</option>
+          {nombresMes.map((m, i) => (
+            <option key={m} value={i + 1}>
+              {m}
+            </option>
+          ))}
+        </Selector>
+      </Campo>
+      {estado.error ? (
+        <p role="alert" className="col-span-2 text-[13px] font-semibold text-negativo">
+          {estado.error}
+        </p>
+      ) : null}
+      <div className="col-span-2">
+        <Boton type="submit" disabled={pendiente} className="w-full">
+          <Plus size={18} strokeWidth={2.6} aria-hidden />
+          {pendiente ? "Guardando…" : "Agregar al desglose"}
+        </Boton>
+      </div>
+    </form>
+  );
+}
+
+/** Botón de borrar una ocasión. */
+export function BotonEliminarPartida({ id, sobreId, nombre }: { id: number; sobreId: number; nombre: string }) {
+  return (
+    <form action={eliminarPartida}>
+      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="sobreId" value={sobreId} />
+      <Boton type="submit" variante="peligro" aria-label={`Quitar ${nombre}`}>
+        <Trash2 size={15} aria-hidden />
+      </Boton>
+    </form>
+  );
+}
+
+/** Aporte mensual a mano, para cuando todavía no hay desglose. */
+export function FormularioAporte({ sobreId, actualCentavos }: { sobreId: number; actualCentavos: number }) {
+  const accion = fijarAporteManual.bind(null, sobreId);
+  const [estado, enviar, pendiente] = useActionState<EstadoFormulario, FormData>(accion, {});
+  return (
+    <form action={enviar} className="flex flex-col gap-3">
+      <Campo
+        etiqueta="Aporte mensual (USD)"
+        ayuda="Se usa mientras el sobre no tenga desglose. Con desglose, se calcula solo."
+      >
+        <Entrada
+          name="monto"
+          inputMode="decimal"
+          defaultValue={(actualCentavos / 100).toString()}
+          required
+          autoComplete="off"
+        />
+      </Campo>
+      {estado.error ? (
+        <p role="alert" className="text-[13px] font-semibold text-negativo">
+          {estado.error}
+        </p>
+      ) : null}
+      <Boton type="submit" variante="secundario" disabled={pendiente}>
+        {pendiente ? "Guardando…" : "Guardar aporte"}
+      </Boton>
+    </form>
+  );
+}

@@ -1,0 +1,297 @@
+@import "tailwindcss";
+
+/*
+  Sistema visual. Estructura: docs/referencias/ui-referencia.png. Colores: docs/referencias/ui-referencia-2-colores.webp.
+  Detalle en docs/diseno.md.
+
+  Capas, de atrás hacia adelante:
+    lienzo   → fondo gris verdoso de la composición; en escritorio se ve alrededor del panel
+    panel    → la "pantalla": degradado de blanco cálido a salvia; en móvil ocupa todo, en escritorio flota con radio 28
+    tarjeta  → tarjeta blanca con sombra suave (verde oscuro en tema oscuro)
+    hero     → tarjeta principal verde pino profundo con textura de puntos
+    palida   → tarjeta menta con texto verde pino
+    pildoras → gris claro sobre tarjeta, translúcida sobre el hero, verde pino sólida, blanca
+
+  El tema claro es el de la referencia y el principal. El oscuro usa los mismos verdes sobre fondo verde negruzco.
+*/
+
+:root {
+  color-scheme: light;
+
+  --lienzo-a: #a3b0ae;
+  --lienzo-b: #8a9896;
+  --lienzo-c: #72807f;
+  --lienzo-d: #5f6d6c;
+
+  --panel-a: #f5f6f2;
+  --panel-b: #c9d5c3;
+  --panel-borde: rgba(255, 255, 255, 0.75);
+
+  --tarjeta: #ffffff;
+  --tarjeta-borde: rgba(20, 33, 29, 0.06);
+  --tarjeta-hover: #f2f5f1;
+
+  --hero-a: #174c40;
+  --hero-b: #0b332b;
+  --hero-borde: rgba(255, 255, 255, 0.08);
+  --hero-puntos: rgba(255, 255, 255, 0.2);
+
+  --mosaico: rgba(255, 255, 255, 0.1);
+  --mosaico-borde: rgba(255, 255, 255, 0.14);
+  --mosaico-icono-borde: rgba(255, 255, 255, 0.45);
+
+  --palida-a: #d2e5d7;
+  --palida-b: #b8d6c1;
+  --palida-borde: rgba(255, 255, 255, 0.75);
+  --palida-texto: #0e3b32;
+  --palida-texto-2: #3d6a5b;
+  --palida-pista: rgba(14, 59, 50, 0.12);
+
+  --pildora-oscura: #e6ebe5;
+  --pildora-oscura-texto: #14211d;
+  --pildora-hero: rgba(255, 255, 255, 0.14);
+  --pildora-navy: #0e3b32;
+  --pildora-blanca: rgba(255, 255, 255, 0.72);
+
+  --texto: #14211d;
+  --texto-2: #4f5f59;
+  --texto-3: #7f8d87;
+
+  --palido: #cfe3d4;
+  --palido-texto: #0e3b32;
+  --enlace: #1f6b56;
+
+  --positivo: #2f8f66;
+  --negativo: #c9544e;
+
+  --nav: rgba(255, 255, 255, 0.72);
+  --nav-borde: rgba(20, 33, 29, 0.08);
+  --nav-inactivo: #7f8d87;
+
+  --serie-a: #0e3b32;
+  --serie-b: #5aa381;
+  --rejilla: rgba(20, 33, 29, 0.08);
+  --dona-1: #0b2f28;
+  --dona-2: #4db889;
+  --dona-3: #ffffff;
+  --dona-4: #5f6d6c;
+  --dona-5: #0e3b32;
+
+  --sombra-panel: 0 30px 80px rgba(20, 33, 29, 0.35);
+  --sombra-tarjeta: 0 10px 30px rgba(20, 33, 29, 0.08);
+}
+
+:root[data-tema="oscuro"] {
+  color-scheme: dark;
+
+  --lienzo-a: #3a4745;
+  --lienzo-b: #2b3634;
+  --lienzo-c: #1f2927;
+  --lienzo-d: #171f1e;
+
+  --panel-a: #15241f;
+  --panel-b: #0b1613;
+  --panel-borde: rgba(255, 255, 255, 0.08);
+
+  --tarjeta: #16302a;
+  --tarjeta-borde: rgba(255, 255, 255, 0.07);
+  --tarjeta-hover: #1b3a32;
+
+  --hero-a: #1d5c4c;
+  --hero-b: #0f3b31;
+  --hero-borde: rgba(255, 255, 255, 0.12);
+  --hero-puntos: rgba(255, 255, 255, 0.18);
+
+  --mosaico: rgba(0, 0, 0, 0.25);
+  --mosaico-borde: rgba(255, 255, 255, 0.12);
+  --mosaico-icono-borde: rgba(255, 255, 255, 0.4);
+
+  --palida-a: #c6ddcc;
+  --palida-b: #a9cbb5;
+  --palida-borde: rgba(255, 255, 255, 0.5);
+  --palida-texto: #0e3b32;
+  --palida-texto-2: #3d6a5b;
+  --palida-pista: rgba(14, 59, 50, 0.14);
+
+  --pildora-oscura: rgba(255, 255, 255, 0.1);
+  --pildora-oscura-texto: #ffffff;
+  --pildora-hero: rgba(255, 255, 255, 0.14);
+  --pildora-navy: #0e3b32;
+  --pildora-blanca: rgba(255, 255, 255, 0.72);
+
+  --texto: #e9efe9;
+  --texto-2: #a9b9b2;
+  --texto-3: #6f8079;
+
+  --palido: #b9d6c2;
+  --palido-texto: #0e3b32;
+  --enlace: #9fcbb0;
+
+  --positivo: #5ccf96;
+  --negativo: #ff7b72;
+
+  --nav: rgba(11, 22, 19, 0.88);
+  --nav-borde: rgba(255, 255, 255, 0.08);
+  --nav-inactivo: #7f918a;
+
+  --serie-a: #b9d6c2;
+  --serie-b: #4d9d78;
+  --rejilla: rgba(255, 255, 255, 0.08);
+
+  --sombra-panel: 0 30px 80px rgba(0, 0, 0, 0.5);
+  --sombra-tarjeta: 0 0 0 0 transparent;
+}
+
+@theme inline {
+  --color-panel-borde: var(--panel-borde);
+  --color-tarjeta: var(--tarjeta);
+  --color-tarjeta-borde: var(--tarjeta-borde);
+  --color-tarjeta-hover: var(--tarjeta-hover);
+  --color-hero-borde: var(--hero-borde);
+  --color-mosaico: var(--mosaico);
+  --color-mosaico-borde: var(--mosaico-borde);
+  --color-mosaico-icono-borde: var(--mosaico-icono-borde);
+  --color-palida-borde: var(--palida-borde);
+  --color-palida-texto: var(--palida-texto);
+  --color-palida-texto-2: var(--palida-texto-2);
+  --color-palida-pista: var(--palida-pista);
+  --color-pildora-oscura: var(--pildora-oscura);
+  --color-pildora-oscura-texto: var(--pildora-oscura-texto);
+  --color-pildora-hero: var(--pildora-hero);
+  --color-pildora-navy: var(--pildora-navy);
+  --color-pildora-blanca: var(--pildora-blanca);
+  --color-texto: var(--texto);
+  --color-texto-2: var(--texto-2);
+  --color-texto-3: var(--texto-3);
+  --color-palido: var(--palido);
+  --color-palido-texto: var(--palido-texto);
+  --color-enlace: var(--enlace);
+  --color-positivo: var(--positivo);
+  --color-negativo: var(--negativo);
+  --color-nav: var(--nav);
+  --color-nav-borde: var(--nav-borde);
+  --color-nav-inactivo: var(--nav-inactivo);
+  --color-serie-a: var(--serie-a);
+  --color-serie-b: var(--serie-b);
+  --color-rejilla: var(--rejilla);
+  --color-dona-1: var(--dona-1);
+  --color-dona-2: var(--dona-2);
+  --color-dona-3: var(--dona-3);
+  --color-dona-4: var(--dona-4);
+  --color-dona-5: var(--dona-5);
+
+  --font-sans: var(--font-roboto-flex), "Roboto Flex", system-ui, sans-serif;
+
+  --radius-panel: 28px;
+  --radius-tarjeta: 22px;
+  --radius-palida: 22px;
+  --radius-mosaico: 16px;
+  --radius-avatar: 12px;
+
+  --shadow-panel: var(--sombra-panel);
+  --shadow-tarjeta: var(--sombra-tarjeta);
+}
+
+html {
+  background: var(--lienzo-c);
+}
+
+body {
+  color: var(--texto);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Lienzo: el fondo gris verdoso de la composición, en una capa fija detrás de todo. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 50% at 20% 0%, var(--lienzo-a) 0%, transparent 70%),
+    linear-gradient(170deg, var(--lienzo-b) 0%, var(--lienzo-c) 60%, var(--lienzo-d) 100%);
+}
+
+/* Panel: la pantalla. De blanco cálido arriba a salvia abajo. */
+.panel {
+  background: linear-gradient(180deg, var(--panel-a) 0%, var(--panel-b) 100%);
+}
+
+/* Tarjeta blanca (verde oscuro en tema oscuro). */
+.tarjeta {
+  background: var(--tarjeta);
+  border: 1px solid var(--tarjeta-borde);
+  box-shadow: var(--sombra-tarjeta);
+}
+
+/* Tarjeta principal verde pino con la textura de puntos de la referencia en la esquina superior izquierda. */
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--hero-a) 0%, var(--hero-b) 100%);
+  border: 1px solid var(--hero-borde);
+  color: #ffffff;
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(var(--hero-puntos) 1px, transparent 1.6px);
+  background-size: 9px 9px;
+  -webkit-mask-image: radial-gradient(42% 55% at 10% 8%, #000 0%, transparent 70%);
+  mask-image: radial-gradient(42% 55% at 10% 8%, #000 0%, transparent 70%);
+}
+.hero > * {
+  position: relative;
+}
+
+/* Botón principal verde pino, sin la textura del hero. */
+.boton-pino {
+  background: linear-gradient(135deg, var(--hero-a) 0%, var(--hero-b) 100%);
+  color: #ffffff;
+}
+
+/* Tarjeta menta con texto verde pino. */
+.palida {
+  background: linear-gradient(160deg, var(--palida-a) 0%, var(--palida-b) 100%);
+  border: 1px solid var(--palida-borde);
+  color: var(--palida-texto);
+}
+
+/* Botón de acción en mosaico, dentro de la tarjeta principal. */
+.mosaico {
+  background: var(--mosaico);
+  border: 1px solid var(--mosaico-borde);
+}
+
+/* Cifras en columnas: dígitos tabulares para que alineen. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--enlace);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a,
+  button {
+    transition:
+      color 140ms ease,
+      background-color 140ms ease,
+      border-color 140ms ease,
+      opacity 140ms ease,
+      transform 140ms ease;
+  }
+  a:active,
+  button:active {
+    transform: scale(0.98);
+  }
+}
