@@ -1,6 +1,6 @@
 ---
 name: f-ship
-description: Etapa 5 del pipeline. Fusiona la feature NNN en main con el historial limpio, los gates en verde en este instante y los documentos del plan al día. Si existe un remoto, publica y abre el pull request. Úsalo solo con veredicto APTO.
+description: Etapa 5 del pipeline. Fusiona la feature NNN en main con el historial limpio, los gates en verde en este instante y los documentos del plan al día, y publica main en el remoto privado. Sin pull request. Úsalo solo con veredicto APTO.
 argument-hint: [NNN]
 ---
 
@@ -25,8 +25,10 @@ Fusionar la feature **$ARGUMENTS**.
 
 ## Fusión
 
-- Sin remoto (`git remote -v` vacío): `git switch main && git merge --no-ff feat/NNN-slug -m "feat(NNN): título (#NNN)"` y borra la rama local.
-- Con remoto: `git push -u origin feat/NNN-slug` y `gh pr create` con título `feat(NNN): título` y cuerpo con: resumen, criterios ★ y sus pruebas, salida de `pnpm verify`, veredicto del revisor. Estas dos acciones piden confirmación. Fusiona el PR tú mismo cuando el usuario lo autorice.
+Sin pull request: la revisión ya la hizo el subagente revisor y el candado es el gate local. GitHub gratis no protege ramas en repos privados y no hace falta.
+
+1. `git switch main && git merge --no-ff feat/NNN-slug -m "feat(NNN): título"`. El cuerpo del commit de fusión lleva: resumen, criterios ★ y sus pruebas, última línea de `pnpm verify` y veredicto del revisor.
+2. `git push origin main` (pide confirmación). La rama de la feature se borra en local; no se publica salvo que el usuario quiera respaldo a mitad de camino (`git push -u origin feat/NNN-slug`).
 
 ## Cierre
 

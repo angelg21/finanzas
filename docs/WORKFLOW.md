@@ -72,7 +72,7 @@ Dos niveles, ambos scripts de `package.json`, ambos sellan el árbol al pasar pa
 - `pnpm verify:fast` (lo corre el hook `Stop`): tipos, lint, formato, estructura y pruebas unitarias.
 - `pnpm verify` (bloquea la fusión): lo anterior más el build de producción y la prueba de humo de rutas contra ese build.
 
-No hay integración continua: el verde en la máquina, en el momento de fusionar, es el que cuenta. El remoto es `github.com/angelg21/finanzas`, privado, con la cuenta personal del autor; sirve de respaldo y de lugar para los pull requests. Si algún día hay CI, no repite los gates; solo guarda evidencia.
+No hay integración continua: el verde en la máquina, en el momento de fusionar, es el que cuenta. El remoto es `github.com/angelg21/finanzas`, privado y gratuito, con la cuenta personal del autor; sirve de respaldo. No se usan pull requests ni protección de rama: la revisión la hace el subagente revisor en local y el candado es el gate. Si algún día hay CI, no repite los gates; solo guarda evidencia.
 
 ## Arquitectura y orden
 

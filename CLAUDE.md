@@ -10,14 +10,14 @@ Documentos dueños: producto en `docs/plan-financiero-y-app.md`; visual en `docs
 
 Una sesión, una feature. Entre etapa y etapa, `/clear`: lo importante quedó en un archivo.
 
-| Etapa             | Comando           | Sale cuando                                                                                  |
-| ----------------- | ----------------- | -------------------------------------------------------------------------------------------- |
-| Especificar       | `/f-spec <idea>`  | el desarrollador leyó y corrigió `docs/features/NNN-slug/spec.md`                            |
-| Construir y mirar | `/f-build NNN`    | cada tarea con commit y pantallas validadas en navegador, anotado con fecha en `progress.md` |
-| Probar lo crítico | `/f-verify NNN`   | `pnpm verify` en verde y cada criterio ★ con su prueba derivada de la spec                   |
-| Revisar           | `/f-review NNN`   | el subagente `revisor` da APTO PARA FUSIONAR                                                 |
-| Fusionar          | `/f-ship NNN`     | verify en verde ahora mismo, diff repasado por el autor, rama fusionada en `main`            |
-| Auditar           | `/f-audit <fase>` | al cerrar cada fase del plan                                                                 |
+| Etapa             | Comando           | Sale cuando                                                                                   |
+| ----------------- | ----------------- | --------------------------------------------------------------------------------------------- |
+| Especificar       | `/f-spec <idea>`  | el desarrollador leyó y corrigió `docs/features/NNN-slug/spec.md`                             |
+| Construir y mirar | `/f-build NNN`    | cada tarea con commit y pantallas validadas en navegador, anotado con fecha en `progress.md`  |
+| Probar lo crítico | `/f-verify NNN`   | `pnpm verify` en verde y cada criterio ★ con su prueba derivada de la spec                    |
+| Revisar           | `/f-review NNN`   | el subagente `revisor` da APTO PARA FUSIONAR                                                  |
+| Fusionar          | `/f-ship NNN`     | verify en verde ahora mismo, diff repasado por el autor, `main` fusionada y publicada; sin PR |
+| Auditar           | `/f-audit <fase>` | al cerrar cada fase del plan                                                                  |
 
 Apoyo: `/f-status` (dónde está el pipeline), `/f-adr <decisión>`.
 
