@@ -79,6 +79,11 @@ function Captura({
     ronda: 0,
     estado: "inicial",
   });
+  /*
+    El sobre sugerido sigue a la categoría hasta que se elige un sobre a mano (criterio 8). Vive aquí y no
+    en Campos, que se monta de nuevo tras cada respuesta: un error o el aviso de Inversión no lo olvidan.
+  */
+  const [sobreTocado, setSobreTocado] = useState(false);
 
   if (estado.estado === "guardado") {
     return (
@@ -123,6 +128,8 @@ function Captura({
       errores={estado.estado === "error" ? estado.errores : {}}
       confirmar={estado.estado === "confirmar"}
       primeraVez={estado.ronda === 0}
+      sobreTocado={sobreTocado}
+      alTocarSobre={() => setSobreTocado(true)}
       enviar={enviar}
       pendiente={pendiente}
     />
@@ -138,6 +145,8 @@ function Campos({
   errores,
   confirmar,
   primeraVez,
+  sobreTocado,
+  alTocarSobre,
   enviar,
   pendiente,
 }: Datos & {
@@ -145,6 +154,8 @@ function Campos({
   errores: ErroresFormularioGasto;
   confirmar: boolean;
   primeraVez: boolean;
+  sobreTocado: boolean;
+  alTocarSobre: () => void;
   enviar: (formData: FormData) => void;
   pendiente: boolean;
 }) {
@@ -152,8 +163,6 @@ function Campos({
   const [cuentaId, setCuentaId] = useState(valores.cuentaId);
   const [cuentaVentaId, setCuentaVentaId] = useState(valores.cuentaVentaId);
   const [sobreId, setSobreId] = useState(valores.sobreId);
-  // El sobre sugerido sigue a la categoría hasta que se elige un sobre a mano (criterio 8).
-  const [sobreTocado, setSobreTocado] = useState(false);
   const [fecha, setFecha] = useState(valores.fecha);
   // Lo tecleado, para el "Antes y después" de escritorio. Los campos siguen siendo no controlados.
   const [monto, setMonto] = useState(valores.monto);
@@ -284,7 +293,7 @@ function Campos({
             valor={sobreId}
             onCambio={(v) => {
               setSobreId(v);
-              setSobreTocado(true);
+              alTocarSobre();
             }}
             error={errores.sobre}
           />
