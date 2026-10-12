@@ -61,3 +61,17 @@ Lista viva de las observaciones del usuario sobre la interfaz, lo que se cambió
 **Respuesta**: hace falta uno. Son gastos previsibles pero no mensuales, y no caben bien en ninguno: en "Gastos del mes" rompen el límite el mes que caen, en "Familia" no entran los regalos a amigos o pareja, en "Planes" no porque no son para uno. Propuesta: sobre **"Ocasiones"**, tipo fondo de reserva (se alimenta cada mes con un monto fijo pequeño y se gasta cuando llega la ocasión; lo que sobra se acumula). Monto inicial sugerido: 25 USD al mes, calculado a partir de las ocasiones del año.
 
 **Hecho** (el usuario aceptó): tipo de sobre `fondo`, sobre "Ocasiones" con regla fija de 25 USD después de Familia (Planes baja a 175), tabla `partidas_sobre` para el desglose anual, y pantalla de detalle `/sobres/[id]` donde se agregan y quitan ocasiones (nombre, monto, veces al año, mes) y la app recalcula el aporte mensual como total anual entre doce. Mientras no haya desglose vale un aporte fijo editable. Plan actualizado.
+
+## 8. Administrar categorías con icono y color
+
+**Observación** (11 de octubre de 2026): de Gestor de Gastos le gustaba mucho poder agregar y eliminar categorías de gasto, y asociar a cada una un icono, elegido de una lista larga, y un color de una paleta. **Iconos, nunca emojis**: iconos de línea como los de la barra de navegación.
+
+**Estado**: funcionalidad nueva, fuera del alcance de la spec 001 ("crear categorías desde el formulario"). Se especifica con `/f-spec` cuando la 001 esté fusionada, porque cambia las píldoras de categoría del formulario de captura.
+
+**Puntos de partida para la spec**:
+
+- Iconos de `lucide-react`, el mismo juego que ya usa la app, con más de mil iconos. Se guarda el nombre del icono en la categoría; la lista para elegir es una selección curada y buscable.
+- La paleta sale de tokens nuevos en `globals.css`, en claro y oscuro (regla dura: nada de colores sueltos). Hay que decidir cuántos colores y validarlos contra la referencia.
+- Borrar: solo si la categoría no tiene movimientos; si los tiene, se archiva, igual que las cuentas (observación 3).
+- Las categorías de las semillas reciben un icono y un color por defecto.
+- Hace falta migración: dos columnas en `categorias`.
