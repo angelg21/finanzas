@@ -24,7 +24,7 @@ Spec, sección final. Se construye cuando el desarrollador apruebe la ampliació
 - [x] T11 · (2026-10-11) `src/lib/categorias.ts`: catálogo de iconos con palabras en español, paleta de colores, `validarCategoria` (19 y 20), `buscarIconos` y `destinoAlEliminar` (21). Pruebas primero.
 - [x] T12 · (2026-10-11) Esquema: `icono` y `color` en `categorias`, con `pnpm db:generate`. Lanzar `guardian-datos` antes de `pnpm db:migrate`.
 - [x] T13 · (2026-10-11) Semillas: icono y color de las 15 categorías base; `db:seed` los asigna sin pisar los que el usuario cambió (26).
-- [ ] T14 · Paleta: doce tokens en `globals.css`, con el contraste del icono blanco validado por script en claro y oscuro. Registro `src/components/iconos-categoria.tsx` y `CirculoCategoria` en `ui.tsx`.
+- [x] T14 · (2026-10-11) Paleta: doce tokens en `globals.css`, con el contraste del icono blanco validado por script en claro y oscuro. Registro `src/components/iconos-categoria.tsx` y `CirculoCategoria` en `ui.tsx`.
 - [ ] T15 · `src/db`: consultas (por tipo con su número de movimientos, por id, archivadas) y operaciones (crear, actualizar, borrar o archivar, restaurar). Lanzar `guardian-datos`.
 - [ ] T16 · `src/app/categorias/acciones.ts`: crear, editar, eliminar o archivar y restaurar, con zod y `validarCategoria`.
 - [ ] T17 · Pantalla `/categorias`: pestañas Gastos e Ingresos, rejilla de círculos, "Crear" y "Archivadas (n)" (17 y 22).
@@ -90,3 +90,7 @@ Lo que se aprendió, lo que quedó fuera y por qué.
   - Probado en una copia desechable (`finanzas_t13`, borrada después): la base vacía recibe las 15 con su icono; el verde que el usuario eligió para Comida se respeta; Ocio renombrada a Diversión no revive.
   - Caso residual aceptado: si alguien deja a propósito `etiqueta` y `pizarra` en una categoría base, la siguiente semilla le pone su icono.
   - En la base local, las 15 tienen ya su icono y su color.
+- 2026-10-11 · T14:
+  - Paleta de doce tokens `--cat-*`. Todos dan 4,2:1 o más con el icono blanco. En oscuro, pino e índigo van más claros, porque contra la tarjeta oscura el círculo se perdía (1,8:1).
+  - `src/components/paleta-categorias.test.ts` lee `globals.css` y fija esa regla para siempre. `iconos-categoria.test.ts` comprueba que los 128 nombres tienen icono, sin dibujos repetidos, y que lo desconocido cae en el valor por defecto.
+  - Trampa encontrada: importar el icono `Map` de lucide tapaba el `Map` de JavaScript; se importa como `IconoMapa`.

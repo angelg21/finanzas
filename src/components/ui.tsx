@@ -1,7 +1,8 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { type ReactNode, createElement } from "react";
 import { partesCentavos } from "@/lib/dinero";
+import { fondoDe, iconoDe } from "./iconos-categoria";
 
 /* Piezas base. Fuente de verdad: docs/referencias/ui-referencia.png y docs/diseno.md. */
 
@@ -162,6 +163,38 @@ export function Avatar({
       className={`grid shrink-0 place-items-center bg-palido font-extrabold uppercase text-palido-texto ${tamano} ${className}`}
     >
       {texto}
+    </span>
+  );
+}
+
+const medidasCirculo = {
+  sm: { caja: "size-6", icono: 13 },
+  md: { caja: "size-10", icono: 19 },
+  lg: { caja: "size-14", icono: 26 },
+} as const;
+
+/**
+ * Una categoría como en la referencia: círculo de su color con su icono de línea en blanco.
+ * `sm` va dentro de las píldoras, `lg` en la rejilla de categorías. Nunca emojis.
+ */
+export function CirculoCategoria({
+  icono,
+  color,
+  tamano = "md",
+  className = "",
+}: {
+  icono: string;
+  color: string;
+  tamano?: keyof typeof medidasCirculo;
+  className?: string;
+}) {
+  const { caja, icono: lado } = medidasCirculo[tamano];
+  return (
+    <span
+      aria-hidden
+      className={`grid shrink-0 place-items-center rounded-full text-white ${fondoDe(color)} ${caja} ${className}`}
+    >
+      {createElement(iconoDe(icono), { size: lado, strokeWidth: 1.75 })}
     </span>
   );
 }
