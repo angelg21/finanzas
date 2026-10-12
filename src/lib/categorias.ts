@@ -226,6 +226,20 @@ export type CategoriaValidada =
   /** `archivada`: el id de una archivada con el mismo nombre, para ofrecer restaurarla. */
   | { ok: false; errores: ErroresCategoria; archivada?: number };
 
+/**
+ * Otra categoría del mismo tipo con un nombre equivalente (sin mayúsculas, acentos ni espacios de más),
+ * sin contar `excluir`. Sirve al validar y al restaurar una archivada: el índice único de la base
+ * compara el nombre exacto, así que "Comida" y "comida" solo se detienen aquí.
+ */
+export function repetidaDe<T extends Existente>(
+  nombre: string,
+  tipo: TipoCategoria,
+  existentes: T[],
+  excluir?: number,
+): T | undefined {
+  return existentes.find((c) => c.tipo === tipo && c.id !== excluir && clave(c.nombre) === clave(nombre));
+}
+
 /** Criterios 19 y 20: nombre limpio y único en su tipo, icono y color del catálogo, tipo fijo si hay movimientos. */
 export function validarCategoria(entrada: EntradaCategoria, existentes: Existente[]): CategoriaValidada {
   const errores: ErroresCategoria = {};
@@ -236,9 +250,7 @@ export function validarCategoria(entrada: EntradaCategoria, existentes: Existent
   if (nombre === "") errores.nombre = "Escribe un nombre";
   else if (nombre.length > LARGO_MAXIMO) errores.nombre = `Máximo ${LARGO_MAXIMO} caracteres`;
   else if (tipoValido) {
-    const repetida = existentes.find(
-      (c) => c.tipo === entrada.tipo && c.id !== entrada.edicion?.id && clave(c.nombre) === clave(nombre),
-    );
+    const repetida = repetidaDe(nombre, entrada.tipo, existentes, entrada.edicion?.id);
     if (repetida?.activa) errores.nombre = "Ya existe una categoría con ese nombre";
     else if (repetida) {
       errores.nombre = "Hay una archivada con ese nombre: puedes restaurarla";

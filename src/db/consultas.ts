@@ -190,7 +190,7 @@ export type MovimientoReciente = Awaited<ReturnType<typeof movimientosRecientes>
 export async function categoriasDeGastoPorUso() {
   const usos = sql<number>`count(${movimientos.id})::int`.mapWith(Number);
   return db
-    .select({ id: categorias.id, nombre: categorias.nombre, usos })
+    .select({ id: categorias.id, nombre: categorias.nombre, icono: categorias.icono, color: categorias.color, usos })
     .from(categorias)
     .leftJoin(
       movimientos,

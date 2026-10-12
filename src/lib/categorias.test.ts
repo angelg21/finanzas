@@ -6,6 +6,7 @@ import {
   coloresCategoria,
   destinoAlEliminar,
   iconosCategoria,
+  repetidaDe,
   validarCategoria,
 } from "./categorias";
 
@@ -161,5 +162,16 @@ describe("categoriasBase (criterio 26)", () => {
       expect(coloresCategoria, c.nombre).toContain(c.color);
       expect(c.icono === "etiqueta" && c.color === "pizarra", c.nombre).toBe(false);
     }
+  });
+});
+
+describe("repetidaDe: restaurar una archivada (criterio 22)", () => {
+  const conChoque = [...existentes, { id: 9, nombre: "gimnasio", tipo: "gasto" as const, activa: true }];
+  it("encuentra la activa con un nombre equivalente, sin contarse a sí misma", () => {
+    expect(repetidaDe("Gimnasio", "gasto", conChoque, 3)).toMatchObject({ id: 9, activa: true });
+  });
+  it("sin otra con ese nombre en el mismo tipo, no hay choque", () => {
+    expect(repetidaDe("Gimnasio", "gasto", existentes, 3)).toBeUndefined();
+    expect(repetidaDe("Gimnasio", "ingreso", conChoque)).toBeUndefined();
   });
 });

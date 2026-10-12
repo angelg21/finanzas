@@ -35,7 +35,10 @@ async function main() {
   const categorias = await db.select().from(schema.categorias);
   const cuenta = (n: string) => cuentas.find((c) => c.nombre === n)?.id ?? falta(`cuenta ${n}`);
   const sobre = (n: string) => sobres.find((s) => s.nombre === n)?.id ?? falta(`sobre ${n}`);
-  const categoria = (n: string) => categorias.find((c) => c.nombre === n)?.id ?? falta(`categoría ${n}`);
+  // Por nombre y tipo: "Familia" puede existir como gasto y como ingreso (el nombre es único por tipo).
+  const categoria = (n: string, tipo: "gasto" | "ingreso") =>
+    categorias.find((c) => c.nombre === n && c.tipo === tipo)?.id ??
+    falta(`la categoría de ${tipo} "${n}" (si la renombraste, devuélvele ese nombre)`);
   function falta(que: string): never {
     throw new Error(`No existe ${que}. Corre primero pnpm db:seed.`);
   }
@@ -64,7 +67,7 @@ async function main() {
     montoUsdCentavos: monto,
     cuentaDestinoId: binance,
     sobreDestinoId: porAsignar,
-    categoriaId: categoria(cat),
+    categoriaId: categoria(cat, "ingreso"),
     nota,
     origen: "importado",
     referenciaExterna: ref("ing"),
@@ -88,7 +91,7 @@ async function main() {
     montoUsdCentavos: monto,
     cuentaOrigenId: binance,
     sobreOrigenId: desde,
-    categoriaId: categoria(cat),
+    categoriaId: categoria(cat, "gasto"),
     nota,
     origen: "importado",
     referenciaExterna: ref("gas"),
@@ -123,7 +126,7 @@ async function main() {
         tasa: tasa.toFixed(4),
         cuentaOrigenId: bolivares,
         sobreOrigenId: gastos,
-        categoriaId: categoria(cat),
+        categoriaId: categoria(cat, "gasto"),
         nota,
         origen: "importado",
         referenciaExterna: ref("gbs"),

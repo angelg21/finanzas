@@ -13,5 +13,8 @@ metadata:
   2. Correr los comandos con un envoltorio en el scratchpad. El envoltorio carga `.env.local`, comprueba que el host sea localhost:5433 y la base `/finanzas`, cambia la base a `/finanzas_t12` y pasa `DATABASE_URL` por entorno. dotenv 18 no sobrescribe variables ya definidas: la salida "injected env (0)" lo confirma.
   3. Correr `drizzle-kit migrate`, `db:demo:limpiar`, `db:demo` y `db:seed` en la copia, y al final `dropdb`.
 - Un script tsx en el scratchpad que importa módulos del repo debe importarlos por URL de archivo (`pathToFileURL`), o con `createRequire` apuntando al `package.json` del repo. Lo mismo vale para `drizzle-orm` y `dotenv`. Además, a `tsx` hay que pasarle la ruta con forma `C:/...`, no `/c/...`.
+- Si el script usa `await` en el nivel superior, debe terminar en `.mts`; con `.ts` falla ("cjs output"). Para que tsx resuelva el alias `@/`, se corre con cwd en la raíz del repo.
+- **Carreras** (método de T15, 2026-10-11): abrir una segunda conexión de postgres-js con `begin`, insertar sin confirmar y lanzar la función del repo sin esperarla. Después `pg_sleep(1)` dentro de esa transacción, y leer el resultado tras confirmar. Así se ve si la función se bloquea, falla o se adelanta.
+- El autor sigue con las tareas siguientes mientras reviso. Comprobar la hora de modificación de los archivos revisados antes de dar el veredicto.
 
 Ver también [[defectos-datos-encontrados]].
