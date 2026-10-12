@@ -24,6 +24,8 @@ export default async function NuevoGasto({ searchParams }: PageProps<"/nuevo/gas
   const forma = formas.find((f) => f === parametros.forma) ?? "dolares";
   const pedida = enDolares.find((c) => String(c.id) === parametros.cuenta);
   const cuentaId = String(pedida?.id ?? cuentaPorDefecto ?? enDolares[0]?.id ?? "");
+  // Al volver de crear una categoría con "Nueva", llega ya elegida (criterio 25).
+  const categoriaId = categorias.find((c) => String(c.id) === parametros.categoria)?.id.toString();
 
   return (
     <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">
@@ -49,7 +51,7 @@ export default async function NuevoGasto({ searchParams }: PageProps<"/nuevo/gas
       </header>
 
       <FormularioGasto
-        categorias={categorias.map(({ id, nombre }) => ({ id, nombre }))}
+        categorias={categorias.map(({ id, nombre, icono, color }) => ({ id, nombre, icono, color }))}
         sobres={sobres.map(({ id, nombre, tipo, saldoCentavos, topeCentavos }) => ({
           id,
           nombre,
@@ -65,7 +67,7 @@ export default async function NuevoGasto({ searchParams }: PageProps<"/nuevo/gas
           saldoCentavos,
         }))}
         hoy={hoyEnCaracas(new Date())}
-        inicial={{ forma, cuentaId }}
+        inicial={{ forma, cuentaId, categoriaId }}
       />
     </main>
   );

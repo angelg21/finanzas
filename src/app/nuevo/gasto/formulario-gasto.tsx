@@ -1,10 +1,19 @@
 "use client";
 
-import { CircleAlert } from "lucide-react";
+import { CircleAlert, Plus } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { SelectorFecha } from "@/components/calendario";
-import { Boton, Campo, CampoMonto, Entrada, SelectorPildoras } from "@/components/formulario";
-import { Tarjeta, iniciales } from "@/components/ui";
+import {
+  Boton,
+  Campo,
+  CampoMonto,
+  Entrada,
+  SelectorPildoras,
+  pildoraNormal,
+  pildoraOpcion,
+} from "@/components/formulario";
+import { Tarjeta } from "@/components/ui";
 import { type Moneda, unidadDe } from "@/lib/dinero";
 import { type FormaPago, sobreSugerido } from "@/lib/gastos";
 import { type ErroresFormularioGasto, type EstadoGasto, type ValoresGasto, registrarGasto } from "./acciones";
@@ -20,7 +29,7 @@ export type SobreGasto = {
   topeCentavos: number | null;
 };
 type Datos = {
-  categorias: { id: number; nombre: string }[];
+  categorias: { id: number; nombre: string; icono: string; color: string }[];
   sobres: SobreGasto[];
   cuentas: CuentaGasto[];
   hoy: string;
@@ -40,8 +49,10 @@ const soloEnDolares = "group-has-[[name=forma][value=saldo]:checked]/gasto:hidde
 const soloAlVender = "hidden group-has-[[name=forma][value=vendiendo]:checked]/gasto:block";
 const soloEnBolivares = "group-has-[[name=forma][value=dolares]:checked]/gasto:hidden";
 
+type Inicial = { forma: FormaPago; cuentaId: string; categoriaId?: string };
+
 /** Captura de gasto. "Registrar otro" la vuelve a montar con la misma forma de pago y la misma cuenta. */
-export function FormularioGasto({ inicial, ...datos }: Datos & { inicial: { forma: FormaPago; cuentaId: string } }) {
+export function FormularioGasto({ inicial, ...datos }: Datos & { inicial: Inicial }) {
   const [captura, setCaptura] = useState({ numero: 0, ...inicial });
   return (
     <Captura
@@ -58,7 +69,7 @@ function Captura({
   alRegistrarOtro,
   ...datos
 }: Datos & {
-  inicial: { forma: FormaPago; cuentaId: string };
+  inicial: Inicial;
   alRegistrarOtro: (forma: FormaPago, cuentaId: string) => void;
 }) {
   const [estado, enviar, pendiente] = useActionState<EstadoGasto, FormData>(registrarGasto, {
@@ -85,8 +96,14 @@ function Captura({
           tasa: "",
           vendido: "",
           cuentaId: inicial.cuentaId,
-          categoriaId: "",
-          sobreId: String(sobreSugerido("", datos.sobres) ?? ""),
+          // ?categoria= llega al volver de crear una con la píldora "Nueva" (criterio 25).
+          categoriaId: inicial.categoriaId ?? "",
+          sobreId: String(
+            sobreSugerido(
+              datos.categorias.find((c) => String(c.id) === inicial.categoriaId)?.nombre ?? "",
+              datos.sobres,
+            ) ?? "",
+          ),
           fecha: datos.hoy,
           nota: "",
         }
@@ -210,7 +227,11 @@ function Campos({
           <SelectorPildoras
             etiqueta="Categoría"
             name="categoriaId"
-            opciones={categorias.map((c) => ({ valor: String(c.id), texto: c.nombre, avatar: iniciales(c.nombre) }))}
+            opciones={categorias.map((c) => ({
+              valor: String(c.id),
+              texto: c.nombre,
+              categoria: { icono: c.icono, color: c.color },
+            }))}
             valorInicial={valores.categoriaId}
             onCambio={(v) => {
               const nombre = categorias.find((c) => String(c.id) === v)?.nombre ?? "";
@@ -218,6 +239,15 @@ function Campos({
               if (!sobreTocado && sugerido !== null) setSobreId(String(sugerido));
             }}
             error={errores.categoria}
+            extra={
+              <Link
+                href="/categorias/nueva?volver=/nuevo/gasto"
+                className={`${pildoraOpcion} ${pildoraNormal} shrink-0 border-dashed`}
+              >
+                <Plus size={16} aria-hidden />
+                Nueva
+              </Link>
+            }
           />
 
           <SelectorPildoras
