@@ -12,8 +12,9 @@ export const metadata: Metadata = { title: "Nueva categoría" };
  */
 export default async function NuevaCategoria({ searchParams }: PageProps<"/categorias/nueva">) {
   const parametros = await searchParams;
-  const tipo = parametros.tipo === "ingreso" ? "ingreso" : "gasto";
   const volver = parametros.volver === "/nuevo/gasto" ? parametros.volver : undefined;
+  // Desde la captura de gasto, la categoría nueva es de gasto: una de ingreso no se podría elegir allí (25).
+  const tipo = !volver && parametros.tipo === "ingreso" ? "ingreso" : "gasto";
 
   return (
     <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">

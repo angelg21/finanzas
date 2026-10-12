@@ -84,8 +84,9 @@ function Campos({
     if (lista && elegido) lista.scrollTop = Math.max(0, elegido.offsetTop - 8);
   }, []);
   const visibles = new Set(buscarIconos(busqueda).map((i) => i.nombre));
-  // Con movimientos el tipo no cambia (criterio 20): se muestra fijo y viaja oculto.
-  const tipoFijo = id !== undefined && movimientos > 0;
+  // Con movimientos el tipo no cambia (criterio 20); desde la captura de gasto, es de gasto (25). Fijo y oculto.
+  const conMovimientos = id !== undefined && movimientos > 0;
+  const tipoFijo = conMovimientos || volver !== undefined;
 
   const vistaPrevia = (
     <div className="flex flex-col items-center gap-2 py-2 text-center">
@@ -131,8 +132,10 @@ function Campos({
           {tipoFijo ? (
             <p className="text-[13px] text-texto-2">
               <input type="hidden" name="tipo" value={valores.tipo} />
-              Tipo: <strong>{valores.tipo === "gasto" ? "Gasto" : "Ingreso"}</strong>. Tiene movimientos, así que no
-              cambia de tipo.
+              Tipo: <strong>{valores.tipo === "gasto" ? "Gasto" : "Ingreso"}</strong>.{" "}
+              {conMovimientos
+                ? "Tiene movimientos, así que no cambia de tipo."
+                : "Viene de la captura de gasto, así que es de gasto."}
             </p>
           ) : (
             <SelectorPildoras

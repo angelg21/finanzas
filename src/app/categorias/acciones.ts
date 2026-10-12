@@ -87,8 +87,9 @@ export async function guardarCategoria(previo: EstadoCategoria, formData: FormDa
   }
 
   revalidar();
+  // A la captura solo vuelve una de gasto: una de ingreso llegaría sin elegir y sin aviso (25).
   const volver = texto(formData, "volver");
-  if (destinos.has(volver)) redirect(`${volver}?categoria=${guardada}`);
+  if (destinos.has(volver) && validada.valores.tipo === "gasto") redirect(`${volver}?categoria=${guardada}`);
   redirect(`/categorias?tipo=${validada.valores.tipo}`);
 }
 
@@ -119,6 +120,6 @@ export async function restaurarCategoriaAccion(formData: FormData) {
   await restaurarCategoria(categoria.id);
   revalidar();
   const volver = texto(formData, "volver");
-  if (destinos.has(volver)) redirect(`${volver}?categoria=${categoria.id}`);
+  if (destinos.has(volver) && categoria.tipo === "gasto") redirect(`${volver}?categoria=${categoria.id}`);
   redirect(`/categorias?tipo=${categoria.tipo}`);
 }
