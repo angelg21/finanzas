@@ -1,6 +1,6 @@
 # 001 · Captura rápida de gasto
 
-Fecha: 2026-10-11. Estado: aprobada; la ampliación del 2026-10-11 (categorías con icono y color, al final) está en borrador.
+Fecha: 2026-10-11. Estado: aprobada, también la ampliación del 2026-10-11 (categorías con icono y color, al final).
 
 ## Para qué
 

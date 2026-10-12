@@ -42,7 +42,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 ## Etapas
 
 - [x] Spec leída y corregida por el desarrollador (2026-10-11)
-- [ ] Ampliación de categorías leída y aprobada por el desarrollador
+- [x] Ampliación de categorías leída y aprobada por el desarrollador (2026-10-11)
 - [ ] Construida (todas las tareas con commit). La captura quedó construida el 2026-10-11; falta la ampliación.
 - [ ] Validada en navegador. La captura se validó el 2026-10-11; falta la ampliación.
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
