@@ -1,2 +1,2 @@
-- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — ★ bien probados; fallan los "por defecto" (también "hoy"), el estado tras key={ronda}, "tocar" un radio y el arreglo de la vuelta anterior
-- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, sin JS por $ACTION, Edge por DevTools (cerrar solo por PID), reloj atrasado en 3125
+- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — "por defecto", key={ronda}, el arreglo previo; y la mitad no ejercitada (botones con formAction, reglas por nombre)
+- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, sin JS solo con los $ACTION del form correcto, Edge por DevTools (cerrar por PID)

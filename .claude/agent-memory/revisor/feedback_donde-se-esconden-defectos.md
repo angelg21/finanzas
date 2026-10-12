@@ -1,6 +1,6 @@
 ---
 name: donde-se-esconden-defectos
-description: Patrón del autor en finanzas - ★ muy bien probados en lib y en scripts/comprobar-NNN; los defectos quedan en valores por defecto (también "hoy"), en estado del cliente que se pierde tras una vuelta al servidor y en lo que "tocar" significa para un radio
+description: Patrón del autor en finanzas - ★ muy bien probados en lib y en scripts/comprobar-NNN; los defectos quedan en valores por defecto (también "hoy"), en estado del cliente tras una vuelta al servidor, en lo que "tocar" significa para un radio y en la parte de la feature que solo se probó por curl (botones con formAction)
 metadata:
   type: feedback
 ---
@@ -13,6 +13,8 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 
 - 001, vuelta 4 (2026-10-12): el arreglo de la vuelta 3 metió el defecto siguiente. `SelectorFecha` manda "hoy"/"ayer" cuando `valor === hoy`/`ayer`, no cuando se tocó el atajo: un día elegido en el calendario que coincide con el hoy o el ayer de la página se vuelve a resolver al guardar (elegí el 10, se guardó el 11). Y sin JS, vaciar la fecha nativa devuelve `fecha=""`, que vuelve en `valores` y `etiquetaFecha("")` revienta el render: 500 y pantalla en blanco.
 
+- 001, vuelta 5 (2026-10-12): los arreglos de fecha y tasa estaban bien; el defecto vivía en la ampliación de categorías, que nadie había ejercitado con un navegador. "Restaurar la archivada" (★ 19) es un `<button name="restaurar" formAction={accion}>`: React reemplaza ese `name` por `$ACTION_ID_…`, así que `restaurar` nunca llega y no restaura nada, con o sin JS. La evidencia del autor era un curl que mandaba `restaurar=<id>` a mano. También: `sobreSugerido` compara el nombre exacto de la categoría y la misma feature permite renombrarla (criterio 20): "Familia y casa" ya no sugiere el sobre Familia.
+
 **Why:** la demo es toda `origen = importado`, así que la lógica que depende de historial `manual` no se ve. La validación en navegador sigue el camino feliz, en un solo momento, y no pasa por un error de validación ni por el paso del tiempo antes de guardar.
 
 **How to apply:**
@@ -24,5 +26,7 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 - Una fila que queda en una cuenta, un sobre o una fecha que el usuario no eligió afecta datos: NO APTO, más aún si la app todavía no permite editar ni reasignar.
 - Lee primero el diff de los `fix(` de la vuelta anterior: ahí está el defecto nuevo. Desconfía de inferir la intención por igualdad (`valor === hoy` no es "tocó Hoy").
 - Todo lo que la acción devuelve en `valores` vuelve a pintarse: envía sin JS valores vacíos o raros (fecha vacía, texto) y mira si el render los formatea sin validar.
+- Cuando el capture ya resiste, mira la otra mitad de la feature (aquí, categorías): cada botón o enlace secundario que ofrece la pantalla, pulsado en Edge, no por curl. Busca `formAction` con `name`: React pisa ese `name`.
+- Una regla que busca por nombre (`sobreSugerido`, "Binance", "Gastos del mes") se rompe si la misma feature deja renombrar: cruza cada criterio de "editar" con las reglas por nombre.
 
 Ver [[entorno-revision-finanzas]].
