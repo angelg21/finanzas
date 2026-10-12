@@ -113,4 +113,4 @@ Lo que se aprendió, lo que quedó fuera y por qué.
   - el icono elegido toma el color de la categoría, como en la referencia;
   - al editar, la lista se desplaza hasta el icono elegido;
   - el botón de archivar usa la variante `peligro`.
-- 2026-10-12 · A pedido del desarrollador, las categorías de la captura se envuelven en varias filas también en el celular, sin desplazamiento lateral, porque con muchas categorías resultaba incómodo. Spec ajustada (criterio 12 y Pantallas). Cuenta y Sobre siguen desplazables.
+- 2026-10-12 · A pedido del desarrollador, las categorías de la captura se envuelven en varias filas también en el celular, sin desplazamiento lateral, porque con muchas categorías resultaba incómodo. Spec ajustada (criterio 12 y Pantallas). Luego pidió lo mismo para Cuenta y Sobre: ninguna fila de la captura se desplaza de lado.

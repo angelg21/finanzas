@@ -188,6 +188,7 @@ function Campos({
             <SelectorPildoras
               etiqueta={forma === "vendiendo" ? "Salen de" : "Cuenta"}
               name="cuentaId"
+              envolver
               opciones={enDolares.map((c) => ({
                 valor: String(c.id),
                 texto: c.nombre,
@@ -227,7 +228,7 @@ function Campos({
           <SelectorPildoras
             etiqueta="Categoría"
             name="categoriaId"
-            // Envueltas también en el celular: con muchas categorías, desplazarse de lado es incómodo.
+            // Envueltas también en el celular, como cuenta y sobre: desplazarse de lado es incómodo.
             envolver
             opciones={categorias.map((c) => ({
               valor: String(c.id),
@@ -255,6 +256,7 @@ function Campos({
           <SelectorPildoras
             etiqueta="Sobre"
             name="sobreId"
+            envolver
             opciones={sobres.map((s) => ({
               valor: String(s.id),
               texto: s.nombre,
