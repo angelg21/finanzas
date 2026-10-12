@@ -133,6 +133,8 @@ export function prepararGasto(e: EntradaGasto, hoy: string): GastoPreparado {
 
   const recibidos = bolivaresDesdeUsd(vendido, tasa);
   if (!Number.isSafeInteger(recibidos)) return { ok: false, errores: { vendido: mensajes.vendido.invalido } };
+  // Con una tasa absurda lo vendido puede redondear a 0 Bs; una venta que no entrega nada no se guarda.
+  if (recibidos <= 0) return { ok: false, errores: { vendido: "A esa tasa la venta no llega a 0,01 Bs" } };
   // La venta mueve dinero real entre cuentas y no toca sobres; el gasto sale del sobre elegido.
   const transferencia: FilaMovimiento = {
     fecha: e.fecha,
