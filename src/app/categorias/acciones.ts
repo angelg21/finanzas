@@ -11,7 +11,6 @@ import {
   eliminarCategoria,
   restaurarCategoria,
 } from "@/db/categorias";
-import { vueltaConCategoria } from "@/lib/borrador-captura";
 import { type ErroresCategoria, type TipoCategoria, repetidaDe, validarCategoria } from "@/lib/categorias";
 
 /** Lo tecleado, para volver a llenar el formulario si hay que corregir. */
@@ -23,8 +22,8 @@ export type EstadoCategoria = { ronda: number } & (
   | { estado: "error"; errores: ErroresCategoria & { general?: string }; valores: ValoresCategoria; archivada?: number }
 );
 
-/** A dónde puede volver el formulario tras crear o restaurar: solo rutas conocidas, nunca otra dirección. */
-const destinos = ["/nuevo/gasto"];
+/** A dónde puede volver el formulario tras crear: solo rutas conocidas, nunca una dirección cualquiera. */
+const destinos = new Set(["/nuevo/gasto"]);
 
 const texto = (formData: FormData, nombre: string) => {
   const valor = formData.get(nombre);
@@ -88,10 +87,9 @@ export async function guardarCategoria(previo: EstadoCategoria, formData: FormDa
   }
 
   revalidar();
-  // Desde la captura, de vuelta a ella con lo escrito y la categoría nueva elegida (criterio 25).
-  redirect(
-    vueltaConCategoria(texto(formData, "volver"), guardada, destinos) ?? `/categorias?tipo=${validada.valores.tipo}`,
-  );
+  const volver = texto(formData, "volver");
+  if (destinos.has(volver)) redirect(`${volver}?categoria=${guardada}`);
+  redirect(`/categorias?tipo=${validada.valores.tipo}`);
 }
 
 /** Criterio 21: borra la categoría si no tiene movimientos; si los tiene, la archiva. */
@@ -120,7 +118,7 @@ export async function restaurarCategoriaAccion(formData: FormData) {
   }
   await restaurarCategoria(categoria.id);
   revalidar();
-  redirect(
-    vueltaConCategoria(texto(formData, "volver"), categoria.id, destinos) ?? `/categorias?tipo=${categoria.tipo}`,
-  );
+  const volver = texto(formData, "volver");
+  if (destinos.has(volver)) redirect(`${volver}?categoria=${categoria.id}`);
+  redirect(`/categorias?tipo=${categoria.tipo}`);
 }

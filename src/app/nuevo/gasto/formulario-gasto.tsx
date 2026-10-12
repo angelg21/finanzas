@@ -2,7 +2,7 @@
 
 import { CircleAlert, Plus } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { SelectorFecha } from "@/components/calendario";
 import {
   Boton,
@@ -18,7 +18,6 @@ import { type Moneda, unidadDe } from "@/lib/dinero";
 import { type FormaPago, sobreSugerido } from "@/lib/gastos";
 import { type ErroresFormularioGasto, type EstadoGasto, type ValoresGasto, registrarGasto } from "./acciones";
 import { AntesYDespues, saldosAfectados } from "./antes-y-despues";
-import { guardarBorrador, olvidarBorrador, useBorrador } from "./borrador-pestana";
 import { ResumenGasto } from "./resumen-gasto";
 
 export type CuentaGasto = { id: number; nombre: string; moneda: Moneda; esPropia: boolean; saldoCentavos: number };
@@ -52,34 +51,16 @@ const soloAlVender = "hidden group-has-[[name=forma][value=vendiendo]:checked]/g
 const soloEnBolivares = "group-has-[[name=forma][value=dolares]:checked]/gasto:hidden";
 const soloDelSaldo = "hidden group-has-[[name=forma][value=saldo]:checked]/gasto:block";
 
-/** Lo que llega en la dirección ("Registrar otro", la categoría de "Nueva") y lo escrito antes de "Nueva". */
-type Inicial = { forma: FormaPago; cuentaId: string; cuentaVentaId: string; categoriaId?: string } & Partial<
-  Record<"monto" | "tasa" | "vendido" | "sobreId" | "fecha" | "nota", string>
->;
+type Inicial = { forma: FormaPago; cuentaId: string; cuentaVentaId: string; categoriaId?: string };
 
 /** Captura de gasto. "Registrar otro" la vuelve a montar con la misma forma de pago y las mismas cuentas. */
 export function FormularioGasto({ inicial, ...datos }: Datos & { inicial: Inicial }) {
   const [captura, setCaptura] = useState({ numero: 0, ...inicial });
-  // Al volver de "Nueva" por cualquier camino, lo escrito vuelve con la categoría nueva (criterio 25).
-  const b = useBorrador();
-  const conBorrador = captura.numero === 0 && b !== null;
-  const forma = formasPago.find((f) => f.valor === b?.forma)?.valor as FormaPago | undefined;
   return (
     <Captura
-      // Con borrador, la captura se monta de nuevo con él: en el servidor y al hidratar no lo hay.
-      key={`${captura.numero}${conBorrador ? "b" : ""}`}
+      key={captura.numero}
       {...datos}
-      inicial={
-        conBorrador
-          ? {
-              ...captura,
-              forma: forma ?? captura.forma,
-              cuentaId: b.cuenta ?? captura.cuentaId,
-              cuentaVentaId: b.venta ?? captura.cuentaVentaId,
-              ...{ monto: b.monto, tasa: b.tasa, vendido: b.vendido, sobreId: b.sobre, fecha: b.fecha, nota: b.nota },
-            }
-          : captura
-      }
+      inicial={captura}
       alRegistrarOtro={(forma, cuentaId, cuentaVentaId) =>
         setCaptura((c) => ({ numero: c.numero + 1, forma, cuentaId, cuentaVentaId }))
       }
@@ -103,13 +84,7 @@ function Captura({
     El sobre sugerido sigue a la categoría hasta que se elige un sobre a mano (criterio 8). Vive aquí y no
     en Campos, que se monta de nuevo tras cada respuesta: un error o el aviso de Inversión no lo olvidan.
   */
-  // Un sobre que vuelve del borrador se eligió a mano, si sigue existiendo.
-  const sobreDelBorrador = datos.sobres.find((s) => String(s.id) === inicial.sobreId)?.id.toString();
-  const [sobreTocado, setSobreTocado] = useState(sobreDelBorrador !== undefined);
-  // Guardado el gasto, su borrador se olvida: recargar o volver atrás no lo deja a un toque de repetirse.
-  useEffect(() => {
-    if (estado.estado === "guardado") olvidarBorrador();
-  }, [estado.estado]);
+  const [sobreTocado, setSobreTocado] = useState(false);
 
   if (estado.estado === "guardado") {
     return (
@@ -127,24 +102,22 @@ function Captura({
     estado.estado === "inicial"
       ? {
           forma: inicial.forma,
-          monto: inicial.monto ?? "",
-          tasa: inicial.tasa ?? "",
-          vendido: inicial.vendido ?? "",
+          monto: "",
+          tasa: "",
+          vendido: "",
           cuentaId: inicial.cuentaId,
           cuentaVentaId: inicial.cuentaVentaId,
           // ?categoria= llega al volver de crear una con la píldora "Nueva" (criterio 25).
           categoriaId: inicial.categoriaId ?? "",
-          sobreId:
-            sobreDelBorrador ??
-            String(
-              sobreSugerido(
-                datos.categorias.find((c) => String(c.id) === inicial.categoriaId)?.nombre ?? "",
-                datos.sobres,
-              ) ?? "",
-            ),
+          sobreId: String(
+            sobreSugerido(
+              datos.categorias.find((c) => String(c.id) === inicial.categoriaId)?.nombre ?? "",
+              datos.sobres,
+            ) ?? "",
+          ),
           // "Hoy" como atajo, no como la fecha de hoy: se resuelve al guardar (criterio 11).
-          fecha: inicial.fecha ?? "hoy",
-          nota: inicial.nota ?? "",
+          fecha: "hoy",
+          nota: "",
         }
       : estado.valores;
 
@@ -197,7 +170,6 @@ function Campos({
   const [monto, setMonto] = useState(valores.monto);
   const [tasa, setTasa] = useState(valores.tasa);
   const [vendido, setVendido] = useState(valores.vendido);
-  const [nota, setNota] = useState(valores.nota);
 
   const enDolares = cuentas.filter((c) => c.moneda !== "VES");
   const opcionesCuenta = enDolares.map((c) => ({
@@ -227,7 +199,7 @@ function Campos({
               }
               defaultValue={valores.monto}
               onChange={(e) => setMonto(e.target.value)}
-              // Con un monto ya escrito (borrador, error), teclear lo reemplaza en vez de anteponerse.
+              // Con un monto ya escrito (tras un error), teclear lo reemplaza en vez de anteponerse.
               onFocus={(e) => e.currentTarget.select()}
               autoFocus={primeraVez || errores.monto !== undefined}
               aria-invalid={errores.monto ? true : undefined}
@@ -317,20 +289,6 @@ function Campos({
             extra={
               <Link
                 href="/categorias/nueva?volver=/nuevo/gasto"
-                // Lo escrito se guarda en la pestaña y vuelve con la categoría nueva elegida (criterio 25).
-                onClick={() =>
-                  guardarBorrador({
-                    forma,
-                    monto,
-                    tasa,
-                    vendido,
-                    cuenta: cuentaId,
-                    venta: cuentaVentaId,
-                    sobre: sobreTocado ? sobreId : "",
-                    fecha,
-                    nota,
-                  })
-                }
                 className={`${pildoraOpcion} ${pildoraNormal} shrink-0 border-dashed`}
               >
                 <Plus size={16} aria-hidden />
@@ -364,7 +322,6 @@ function Campos({
               maxLength={200}
               autoComplete="off"
               defaultValue={valores.nota}
-              onChange={(e) => setNota(e.target.value)}
             />
           </Campo>
 

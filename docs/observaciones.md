@@ -75,3 +75,16 @@ Lista viva de las observaciones del usuario sobre la interfaz, lo que se cambió
 - Borrar: solo si la categoría no tiene movimientos; si los tiene, se archiva, igual que las cuentas (observación 3).
 - Las categorías de las semillas reciben un icono y un color por defecto.
 - Hace falta migración: dos columnas en `categorias`.
+
+## 9. Crear una categoría sin perder lo escrito en la captura
+
+**Observación** (12 de octubre de 2026, revisión de la spec 001): al tocar "Nueva" en la captura de gasto se sale a `/categorias/nueva`, y al volver se pierde lo escrito: monto, forma de pago, vendido y tasa. La forma vuelve a "Dólares". Si se reescribe "2100" sin mirar, se guardan 2.100 USDT en vez de 2.100 Bs.
+
+**Estado**: limitación aceptada en la spec 001 (criterio 25). En la revisión se intentó conservar lo escrito, primero en la dirección y luego en `sessionStorage`. Cada intento trajo un defecto de datos: un gasto guardado quedaba a un toque de repetirse, un borrador abandonado reaparecía en otra captura, o la confirmación desaparecía tras guardar. El desarrollador decidió sacarlo a una feature aparte, con `/f-spec`.
+
+**Puntos de partida para la spec**:
+
+- Resolverlo de raíz sin salir de la captura: crear la categoría en una ventana modal dentro de `/nuevo/gasto` (el `<dialog>` que ya usa el calendario), con nombre, icono y color, y elegirla al guardar.
+- Así no hace falta ningún borrador fuera de React: el estado de la captura no se desmonta.
+- Reutilizar `validarCategoria` y las operaciones de `src/db/categorias.ts`; la pantalla `/categorias/nueva` sigue para crear desde la lista.
+- Probar desde el principio, en Edge y con el teclado, los caminos que rompieron los intentos: guardar y "Registrar otro", recargar, atrás del sistema, abandonar y entrar por otro acceso.

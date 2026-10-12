@@ -1,23 +1,19 @@
 import type { Metadata } from "next";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import { esVuelta } from "@/lib/borrador-captura";
 import { colorPorDefecto, iconoPorDefecto } from "@/lib/categorias";
 import { FormularioCategoria } from "../formulario-categoria";
 
 export const metadata: Metadata = { title: "Nueva categoría" };
 
 /**
- * Crear categoría (spec 001, criterio 18). `?tipo=` la abre en gasto o ingreso; `?volver=/nuevo/gasto…`
- * viene de la píldora "Nueva" de la captura, con lo escrito, y vuelve allí con la categoría elegida (25).
+ * Crear categoría (spec 001, criterio 18). `?tipo=` la abre en gasto o ingreso; `?volver=/nuevo/gasto`
+ * viene de la píldora "Nueva" de la captura y vuelve allí con la categoría elegida (criterio 25).
  */
 export default async function NuevaCategoria({ searchParams }: PageProps<"/categorias/nueva">) {
   const parametros = await searchParams;
   const tipo = parametros.tipo === "ingreso" ? "ingreso" : "gasto";
-  const volver =
-    typeof parametros.volver === "string" && esVuelta(parametros.volver, ["/nuevo/gasto"])
-      ? parametros.volver
-      : undefined;
+  const volver = parametros.volver === "/nuevo/gasto" ? parametros.volver : undefined;
 
   return (
     <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">

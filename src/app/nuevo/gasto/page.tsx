@@ -16,10 +16,7 @@ export const dynamic = "force-dynamic";
 
 const formas = ["dolares", "vendiendo", "saldo"] as const;
 
-/**
- * Captura rápida de gasto (spec 001). `?forma=`, `?cuenta=` y `?venta=` vienen de "Registrar otro" sin
- * JavaScript; `?categoria=`, de crear una con "Nueva". Lo demás escrito vuelve de la pestaña, no de aquí (25).
- */
+/** Captura rápida de gasto (spec 001). `?forma=`, `?cuenta=` y `?venta=` vienen de "Registrar otro" sin JavaScript. */
 export default async function NuevoGasto({ searchParams }: PageProps<"/nuevo/gasto">) {
   const parametros = await searchParams;
   const [categorias, sobres, cuentas, cuentaPorDefecto, cuentaVentaPorDefecto] = await Promise.all([
