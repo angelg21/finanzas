@@ -6,7 +6,7 @@ Rama: `feat/001-captura-rapida-gasto`. Spec: `spec.md`.
 
 Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca con la fecha al cerrarla.
 
-- [ ] T1 · `src/lib/dinero.ts`: `aTasa`, `bolivaresDesdeUsd`, `usdDesdeBolivares`, `formatearTasa`. Pruebas primero (criterios 6 y 7), verlas fallar, implementar.
+- [x] T1 · (2026-10-11) `src/lib/dinero.ts`: `aTasa`, `bolivaresDesdeUsd`, `usdDesdeBolivares`, `formatearTasa`. Pruebas primero (criterios 6 y 7), verlas fallar, implementar.
 - [ ] T2 · `src/lib/gastos.ts`: `prepararGasto` para los tres casos con los números exactos de los criterios 1 a 4, el mínimo de 1 centavo del 7 y los errores de 5 y 6; `sobreSugerido` (8). `src/lib/fechas.ts`: `hoyEnCaracas` y `fechaValida` (11). Pruebas primero.
 - [ ] T3 · `src/db/consultas.ts`: categorías de gasto por uso en 90 días, cuentas activas con `es_propia`, sobres aptos para gasto, última cuenta propia en dólares usada en un gasto. `src/db/movimientos.ts`: `registrarMovimientos` en transacción. Lanzar `guardian-datos` antes de dar por cerrada.
 - [ ] T4 · `src/app/nuevo/gasto/acciones.ts`: `registrarGasto` con zod, confirmación de Inversión, revalidación de `/`, `/movimientos`, `/sobres`, `/cuentas` y estado de éxito con el resumen.
