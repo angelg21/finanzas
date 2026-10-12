@@ -76,6 +76,16 @@ export function CampoMonto({
 
 export type OpcionPildora = { valor: string; texto: string; detalle?: string; avatar?: string };
 
+/*
+  Opción en píldora, compartida por SelectorPildoras y SelectorFecha. La forma va aparte de los colores:
+  dos fondos en el mismo elemento chocan y gana el que Tailwind emite después, no el último escrito.
+*/
+export const pildoraOpcion =
+  "flex h-10 items-center gap-2 rounded-full border px-3.5 text-[13px] font-semibold whitespace-nowrap transition-colors";
+export const pildoraNormal = "border-tarjeta-borde bg-tarjeta-hover text-texto-2 hover:text-texto";
+/** La opción elegida: menta con texto verde pino. */
+export const pildoraElegida = "border-transparent bg-palido text-palido-texto";
+
 /**
  * Grupo de radios accesible con forma de píldoras: en el celular, una fila desplazable en horizontal;
  * en escritorio, envueltas. `envolver` las envuelve también en el celular, para grupos de pocas opciones
@@ -120,7 +130,9 @@ export function SelectorPildoras({
               defaultChecked={valor === undefined ? o.valor === valorInicial : undefined}
               onChange={onCambio ? () => onCambio(o.valor) : undefined}
             />
-            <span className="flex h-10 items-center gap-2 rounded-full border border-tarjeta-borde bg-tarjeta-hover px-3.5 text-[13px] font-semibold whitespace-nowrap text-texto-2 transition-colors group-hover:text-texto group-has-checked:border-transparent group-has-checked:bg-palido group-has-checked:text-palido-texto group-has-focus-visible:ring-2 group-has-focus-visible:ring-palido group-has-focus-visible:ring-offset-2 group-has-focus-visible:ring-offset-tarjeta">
+            <span
+              className={`${pildoraOpcion} ${pildoraNormal} group-hover:text-texto group-has-checked:border-transparent group-has-checked:bg-palido group-has-checked:text-palido-texto group-has-focus-visible:ring-2 group-has-focus-visible:ring-palido group-has-focus-visible:ring-offset-2 group-has-focus-visible:ring-offset-tarjeta`}
+            >
               {o.avatar ? <Avatar texto={o.avatar} pequeno className="group-has-checked:bg-pildora-blanca" /> : null}
               {o.texto}
               {o.detalle ? <span className="text-[11px] font-medium opacity-75">{o.detalle}</span> : null}

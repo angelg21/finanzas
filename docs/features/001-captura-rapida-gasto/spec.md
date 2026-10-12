@@ -46,7 +46,7 @@ Los montos se escriben como los teclea el usuario, sin separador de miles ("42",
    - **Forma de pago**: `SelectorPildoras` (pieza nueva) con tres opciones: "Dólares", "Bolívares vendiendo USDT", "Bolívares del saldo". Debajo, según la opción: para la primera, la cuenta de origen (`SelectorPildoras` con todas las cuentas en dólares; la de la prima lleva el detalle "a nombre de mi prima"); para la segunda, dos `Entrada` en una fila, el monto vendido y "Tasa Bs/USD", más la cuenta de donde salen (Binance por defecto, cualquier cuenta en dólares); la etiqueta del monto vendido sigue la moneda de esa cuenta ("USDT vendidos", "USD vendidos"); para la tercera, solo "Tasa Bs/USD".
    - **Categoría**: `SelectorPildoras` desplazable en horizontal, cada píldora con `Avatar` pequeño de iniciales y el nombre, ordenadas por uso.
    - **Sobre**: `SelectorPildoras` con los sobres excepto "Por asignar"; el sugerido queda marcado. Inversión muestra la marca "intocable".
-   - **Fecha**: píldoras "Hoy" y "Ayer" (hora de Caracas) más una `Entrada` de tipo fecha.
+   - **Fecha**: `SelectorFecha` (pieza nueva): píldoras "Hoy" y "Ayer" (hora de Caracas) y "Otra fecha", que abre un calendario propio dentro de la tarjeta, con los días futuros apagados. Sin JavaScript, un campo de fecha nativo. El selector del navegador no se puede estilizar; el desarrollador lo pidió así el 2026-10-11.
    - **Nota**: `Entrada` opcional, una línea.
    - `Boton` primario ancho completo "Guardar gasto". Si el sobre es Inversión, el primer clic muestra el aviso y cambia el texto a "Sí, gastar de Inversión".
 3. Estado de éxito en la misma `Tarjeta`: resumen con `Cifra`, `Pildora` de la categoría y la cuenta, aviso de sobre negativo o de vuelto en bolívares si aplica, y los botones "Registrar otro" (primario) e "Ir al inicio" (secundario).
@@ -59,6 +59,10 @@ Los montos se escriben como los teclea el usuario, sin separador de miles ("42",
 
 - `CampoMonto`: entrada numérica grande con unidad a la derecha; recibe `moneda`, `name`, `defaultValue`, `autoFocus`.
 - `SelectorPildoras`: grupo de radios accesible renderizado como píldoras desplazables; recibe `name`, `opciones` (valor, texto, detalle opcional, avatar opcional), `valorInicial`; sin JavaScript funciona como radios nativos. La elegida usa `bg-palido text-palido-texto`.
+
+En `src/components/calendario.tsx`:
+
+- `SelectorFecha`: recibe `name`, `valor`, `hoy`, `onCambio` y `error`; envía la fecha en un campo oculto.
 
 **Pieza modificada**, en `src/components/ui.tsx`: `Pildora` gana el tono `palida` (`bg-palido text-palido-texto`), el mismo de la opción elegida en `SelectorPildoras`, para la píldora activa de la cabecera.
 

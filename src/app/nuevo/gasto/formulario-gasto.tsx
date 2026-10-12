@@ -2,10 +2,10 @@
 
 import { CircleAlert } from "lucide-react";
 import { useActionState, useState } from "react";
+import { SelectorFecha } from "@/components/calendario";
 import { Boton, Campo, CampoMonto, Entrada, SelectorPildoras } from "@/components/formulario";
 import { Tarjeta, iniciales } from "@/components/ui";
 import { type Moneda, unidadDe } from "@/lib/dinero";
-import { diaAnterior } from "@/lib/fechas";
 import { type FormaPago, sobreSugerido } from "@/lib/gastos";
 import { type ErroresFormularioGasto, type EstadoGasto, type ValoresGasto, registrarGasto } from "./acciones";
 import { AntesYDespues, saldosAfectados } from "./antes-y-despues";
@@ -136,7 +136,6 @@ function Campos({
   const [monto, setMonto] = useState(valores.monto);
   const [tasa, setTasa] = useState(valores.tasa);
   const [vendido, setVendido] = useState(valores.vendido);
-  const ayer = diaAnterior(hoy);
 
   const enDolares = cuentas.filter((c) => c.moneda !== "VES");
   const monedaCuenta = enDolares.find((c) => String(c.id) === cuentaId)?.moneda ?? "USD";
@@ -237,32 +236,7 @@ function Campos({
             error={errores.sobre}
           />
 
-          <div className="flex flex-wrap items-end gap-3">
-            <SelectorPildoras
-              etiqueta="Fecha"
-              name="atajoFecha"
-              opciones={[
-                { valor: hoy, texto: "Hoy" },
-                { valor: ayer, texto: "Ayer" },
-              ]}
-              valor={fecha === hoy || fecha === ayer ? fecha : ""}
-              onCambio={setFecha}
-            />
-            <Entrada
-              type="date"
-              name="fecha"
-              aria-label="Otra fecha"
-              max={hoy}
-              value={fecha}
-              onChange={(e) => setFecha(e.target.value)}
-              className="w-auto min-w-0 flex-1"
-            />
-          </div>
-          {errores.fecha ? (
-            <p role="alert" className="-mt-3 text-[12px] font-semibold text-negativo">
-              {errores.fecha}
-            </p>
-          ) : null}
+          <SelectorFecha name="fecha" valor={fecha} hoy={hoy} onCambio={setFecha} error={errores.fecha} />
 
           <Campo etiqueta="Nota">
             <Entrada

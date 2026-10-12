@@ -34,3 +34,78 @@ export function fechaValida(texto: string, hoy: string): boolean {
   // Mismo formato de ancho fijo: comparar como texto es comparar como fecha.
   return existe && texto <= hoy;
 }
+
+/*
+  Calendario propio del formulario de gasto. Nombres escritos a mano en vez de Intl, para que la
+  etiqueta sea la misma en cualquier navegador y no dependa de su versión de ICU.
+*/
+
+const meses = [
+  "enero",
+  "febrero",
+  "marzo",
+  "abril",
+  "mayo",
+  "junio",
+  "julio",
+  "agosto",
+  "septiembre",
+  "octubre",
+  "noviembre",
+  "diciembre",
+];
+const dias = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+
+const mayuscula = (texto: string) => texto.charAt(0).toUpperCase() + texto.slice(1);
+
+function partes(fecha: string) {
+  const [anio, mes, dia] = fecha.split("-").map(Number);
+  return { anio, mes, dia, semana: new Date(Date.UTC(anio, mes - 1, dia)).getUTCDay() };
+}
+
+/** 10 → "Octubre". */
+export function nombreMes(mes: number): string {
+  return mayuscula(meses[mes - 1] ?? "");
+}
+
+/** "2026-10-09" → "Vie 9 oct", para la píldora de la fecha elegida. */
+export function etiquetaFecha(fecha: string): string {
+  const { mes, dia, semana } = partes(fecha);
+  return `${mayuscula(dias[semana].slice(0, 3))} ${dia} ${meses[mes - 1].slice(0, 3)}`;
+}
+
+/** "2026-10-09" → "viernes 9 de octubre de 2026", para el lector de pantalla. */
+export function fechaLarga(fecha: string): string {
+  const { anio, mes, dia, semana } = partes(fecha);
+  return `${dias[semana]} ${dia} de ${meses[mes - 1]} de ${anio}`;
+}
+
+export type Mes = { anio: number; mes: number };
+
+/** "2026-10-09" → { anio: 2026, mes: 10 }. */
+export function mesDe(fecha: string): Mes {
+  const { anio, mes } = partes(fecha);
+  return { anio, mes };
+}
+
+/** Suma o resta meses cruzando el año: { 2026, 1 } − 1 → { 2025, 12 }. */
+export function moverMes({ anio, mes }: Mes, delta: number): Mes {
+  const total = anio * 12 + (mes - 1) + delta;
+  return { anio: Math.floor(total / 12), mes: (total % 12) + 1 };
+}
+
+/**
+ * Cuadrícula del mes de lunes a domingo: null en los huecos antes del 1 y después del último día,
+ * hasta completar semanas enteras; "AAAA-MM-DD" en cada día.
+ */
+export function celdasDelMes(anio: number, mes: number): (string | null)[] {
+  const primero = new Date(Date.UTC(anio, mes - 1, 1)).getUTCDay();
+  const huecos = (primero + 6) % 7;
+  const total = new Date(Date.UTC(anio, mes, 0)).getUTCDate();
+  const celdas: (string | null)[] = Array(huecos).fill(null);
+  for (let dia = 1; dia <= total; dia++) {
+    celdas.push(`${anio}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`);
+  }
+  while (celdas.length % 7 !== 0) celdas.push(null);
+  return celdas;
+}
