@@ -14,20 +14,20 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 - [x] T6 · (2026-10-11) Piezas `CampoMonto` y `SelectorPildoras` en `src/components/formulario.tsx`, con radios nativos y la elegida en `palido`; tono `palida` en `Pildora`.
 - [x] T7 · (2026-10-11) Pantalla `/nuevo/gasto` en móvil: cabecera con píldoras de tipo, formulario completo en el orden de la spec, estado de éxito con "Registrar otro" e "Ir al inicio", foco y teclado numérico.
 - [x] T8 · (2026-10-11) Escritorio: `TarjetaPalida` "Antes y después" con saldos del sobre y la cuenta, actualizada al cambiar monto, cuenta o sobre. Enlaces del "+", de "Registrar movimiento" y del mosaico "Gasto" a la nueva ruta.
-- [ ] T9 · `pnpm capturas -- /nuevo/gasto /cuentas` en claro y oscuro, comparar con las referencias y la sección "Pantallas"; cronometrar un gasto en dólares desde el celular; ajustar.
+- [x] T9 · (2026-10-11) `pnpm capturas -- /nuevo/gasto /cuentas` en claro y oscuro, comparar con las referencias y la sección "Pantallas"; cronometrar un gasto en dólares desde el celular; ajustar. Capturas comparadas y ajustadas (formas de pago envueltas, doble anillo del monto, calendario propio); el desarrollador no reportó el tiempo del cronómetro.
 - [x] T10 · (2026-10-11) Documentos: ADR nuevo "la cuenta de la prima cuenta en el cuadre" (y la tasa en diezmilésimas) con `/f-adr`; invariante en el plan (sección 4) y en `CLAUDE.md`; plan (fase 1: casilla del formulario de captura); diseño (piezas nuevas y tono `palida`); observaciones si cambió algo.
 
 ## Validación en navegador
 
 El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. Sin esta nota no se pasa a `/f-verify`.
 
--
+- 2026-10-11 · El desarrollador probó `/nuevo/gasto` en su celular, por la red local, y en escritorio, durante la construcción. Pidió el calendario propio y luego la ventana modal compacta, y aprobó en el chat: "ok perfecto ahora si aprobado". Anotado por Claude a su pedido. Se borró de la base local el gasto de prueba que guardó (id 615, 150 USDT); quedan 118 filas, todas `demo-*`.
 
 ## Etapas
 
 - [x] Spec leída y corregida por el desarrollador (2026-10-11)
-- [ ] Construida (todas las tareas con commit)
-- [ ] Validada en navegador
+- [x] Construida (todas las tareas con commit) (2026-10-11)
+- [x] Validada en navegador (2026-10-11)
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
 - [ ] Fusionada en `main` el AAAA-MM-DD
