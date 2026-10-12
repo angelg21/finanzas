@@ -21,6 +21,8 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 
 - 001, vuelta 8 (2026-10-12): el arreglo pasó el borrador a `sessionStorage` (`b63fba7`). Se aplica a toda captura montada con `numero === 0` durante 30 min, no solo al volver de "Nueva": abandonar crear categoría y abrir luego "Gasto" o "+" desde inicio trae forma "vendiendo", vendido, tasa, fecha "ayer", nota y hasta la Cuenta prima; "5" + Transporte guardó 20 USDT vendidos y un gasto en Bs con fecha de ayer. Y el `key` de la captura depende del borrador: si caduca entre volver y guardar, la re-renderización que trae `revalidatePath` cambia el `key`, se pierde la confirmación y queda el formulario vacío con la categoría ya elegida (duplicado a un número y un toque). El progress decía "se recupera y se borra"; el código solo lo borra al guardar.
 
+- 001, vuelta 9 (2026-10-12): APTO. El autor revirtió el borrador (`13f1354`) por decisión del desarrollador tras tres vueltas de defectos de datos; el revert salió limpio. Lo que sobrevivió del commit revertido, `onFocus={select()}` en el monto, se pensó para un monto precargado y ahora corre en cada foco: tocar el monto para añadir una cifra lo selecciona todo ("21" + "0" → "0"). Se reportó como baja, no bloquea.
+
 **Why:** la demo es toda `origen = importado`, así que la lógica que depende de historial `manual` no se ve. La validación en navegador sigue el camino feliz, en un solo momento, y no pasa por un error de validación ni por el paso del tiempo antes de guardar.
 
 **How to apply:**
@@ -37,5 +39,6 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 - Si un arreglo mete estado en la dirección (`searchParams`), sigue esa URL después del éxito: guarda, "Registrar otro", `location.reload()` y "Ir al inicio" + `history.back()`. Un formulario que reaparece lleno es un duplicado a un toque. Y prueba el atrás del sistema (`history.back()`), no solo la flecha de la app: el autor valida con la flecha.
 - Si un arreglo guarda estado fuera de React (`sessionStorage`, almacén externo): abandona el flujo a mitad y abre la pantalla por otro acceso (inicio, "+"); deja que caduque entre abrir y guardar (escribe la marca de tiempo en el pasado). Un `key` que se calcula de un almacén externo cambia en la re-renderización que trae `revalidatePath` tras guardar. Compara lo que el progress dice del diseño ("un solo uso") con dónde se borra de verdad.
 - Una regla que busca por nombre (`sobreSugerido`, "Binance", "Gastos del mes") se rompe si la misma feature deja renombrar: cruza cada criterio de "editar" con las reglas por nombre.
+- Tras un `revert` con "se conservan los demás arreglos": cada pieza conservada se diseñó para el contexto que se fue. Mira si su condición sigue teniendo sentido (un handler que antes servía al dato precargado ahora corre siempre) y ejercítala con un toque real, no con `autoFocus`.
 
 Ver [[entorno-revision-finanzas]].
