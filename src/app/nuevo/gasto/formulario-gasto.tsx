@@ -49,6 +49,7 @@ const formasPago = [
 const soloEnDolares = "hidden group-has-[[name=forma][value=dolares]:checked]/gasto:block";
 const soloAlVender = "hidden group-has-[[name=forma][value=vendiendo]:checked]/gasto:block";
 const soloEnBolivares = "group-has-[[name=forma][value=dolares]:checked]/gasto:hidden";
+const soloDelSaldo = "hidden group-has-[[name=forma][value=saldo]:checked]/gasto:block";
 
 type Inicial = { forma: FormaPago; cuentaId: string; cuentaVentaId: string; categoriaId?: string };
 
@@ -188,7 +189,13 @@ function Campos({
           <Campo etiqueta="Monto" error={errores.monto}>
             <CampoMonto
               name="monto"
-              moneda={forma === "dolares" ? monedaDe(cuentaId) : "VES"}
+              // Bs o dólares según la forma de pago, también sin JavaScript; cuál moneda de dólares, con él.
+              unidad={
+                <>
+                  <span className={soloEnDolares}>{unidadDe(monedaDe(cuentaId))}</span>
+                  <span className={soloEnBolivares}>{unidadDe("VES")}</span>
+                </>
+              }
               defaultValue={valores.monto}
               onChange={(e) => setMonto(e.target.value)}
               autoFocus={primeraVez || errores.monto !== undefined}
@@ -252,6 +259,12 @@ function Campos({
               />
             </Campo>
           </div>
+          {/* Del saldo no se ve ningún grupo de cuentas: si falta la cuenta en bolívares, el error va aquí. */}
+          {errores.cuenta ? (
+            <p role="alert" className={`${soloDelSaldo} text-[13px] font-semibold text-negativo`}>
+              {errores.cuenta}
+            </p>
+          ) : null}
 
           <SelectorPildoras
             etiqueta="Categoría"

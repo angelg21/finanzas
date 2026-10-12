@@ -8,7 +8,6 @@ import {
   createElement,
 } from "react";
 import { coloresCategoria, iconosCategoria } from "@/lib/categorias";
-import { unidadDe } from "@/lib/dinero";
 import { fondoDe, fondoElegidoDe, iconoDe } from "./iconos-categoria";
 import { Avatar, CirculoCategoria } from "./ui";
 
@@ -59,11 +58,12 @@ export function Campo({
  * Monto grande: la cifra a 36 px en negrita con la unidad de la moneda a la derecha ("VES" se ve "Bs").
  * Teclado decimal en el celular. Va dentro de un `Campo`, que le da la etiqueta.
  */
+/** La cifra grande con su unidad a la derecha. La unidad es un nodo: puede cambiar con CSS, sin JavaScript. */
 export function CampoMonto({
-  moneda,
+  unidad,
   className = "",
   ...props
-}: InputHTMLAttributes<HTMLInputElement> & { moneda: string }) {
+}: InputHTMLAttributes<HTMLInputElement> & { unidad: ReactNode }) {
   return (
     <span
       className={`flex h-[72px] items-center gap-3 rounded-[14px] border border-tarjeta-borde bg-tarjeta-hover px-4 focus-within:ring-2 focus-within:ring-palido ${className}`}
@@ -78,7 +78,7 @@ export function CampoMonto({
         style={{ outline: "none" }}
         {...props}
       />
-      <span className="shrink-0 text-[15px] font-bold text-texto-3">{unidadDe(moneda)}</span>
+      <span className="shrink-0 text-[15px] font-bold text-texto-3">{unidad}</span>
     </span>
   );
 }
