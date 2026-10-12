@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
-import { useId, useState } from "react";
+import { useRef, useState } from "react";
 import {
   type Mes,
   celdasDelMes,
@@ -17,8 +17,10 @@ import { pildoraElegida, pildoraNormal, pildoraOpcion } from "./formulario";
 const iniciales = ["L", "M", "M", "J", "V", "S", "D"];
 
 /**
- * Fecha de un movimiento: píldoras "Hoy" y "Ayer" y un calendario propio para cualquier otro día, con los
- * tokens de la app en vez del selector del navegador, que no se puede estilizar. No deja elegir días futuros.
+ * Fecha de un movimiento: píldoras "Hoy" y "Ayer" y, para cualquier otro día, un calendario propio en una
+ * ventana modal pequeña, con los tokens de la app en vez del selector del navegador, que no se puede
+ * estilizar. No deja elegir días futuros. La ventana es un <dialog>: Escape la cierra, el foco queda dentro
+ * y tocar fuera también la cierra.
  * La fecha viaja en un campo oculto. Sin JavaScript, un campo de fecha nativo dentro de <noscript> va antes
  * con el mismo nombre, así que es el que lee el servidor.
  */
@@ -35,15 +37,14 @@ export function SelectorFecha({
   onCambio: (fecha: string) => void;
   error?: string;
 }) {
-  const id = useId();
+  const ventana = useRef<HTMLDialogElement>(null);
   const ayer = diaAnterior(hoy);
-  const [abierto, setAbierto] = useState(false);
   const [vista, setVista] = useState<Mes>(() => mesDe(valor));
   const otra = valor !== hoy && valor !== ayer;
 
   const elegir = (fecha: string) => {
     onCambio(fecha);
-    setAbierto(false);
+    ventana.current?.close();
   };
   const estilo = (elegida: boolean) => `${pildoraOpcion} ${elegida ? pildoraElegida : pildoraNormal}`;
 
@@ -81,12 +82,15 @@ export function SelectorFecha({
         </button>
         <button
           type="button"
-          aria-expanded={abierto}
-          aria-controls={id}
+          aria-haspopup="dialog"
           aria-label={otra ? `Otra fecha: ${fechaLarga(valor)}` : "Otra fecha"}
           onClick={() => {
             setVista(mesDe(valor));
-            setAbierto(!abierto);
+            ventana.current?.showModal();
+            // El foco va al día elegido, no a la primera flecha. Tras pintar el mes, que pudo cambiar.
+            requestAnimationFrame(() =>
+              ventana.current?.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.focus(),
+            );
           }}
           className={estilo(otra)}
         >
@@ -95,17 +99,23 @@ export function SelectorFecha({
         </button>
       </div>
 
-      {abierto ? (
+      <dialog
+        ref={ventana}
+        aria-label="Elegir fecha"
+        // Un clic cuyo destino es el propio <dialog> cayó en el velo, fuera del contenido.
+        onClick={(e) => {
+          if (e.target === e.currentTarget) ventana.current?.close();
+        }}
+        className="m-auto w-[300px] max-w-[calc(100vw-32px)] rounded-[20px] border border-tarjeta-borde bg-tarjeta p-0 text-texto shadow-panel backdrop:bg-velo"
+      >
         <Calendario
-          id={id}
           vista={vista}
           alMover={(delta) => setVista((v) => moverMes(v, delta))}
           valor={valor}
           hoy={hoy}
           alElegir={elegir}
-          alCerrar={() => setAbierto(false)}
         />
-      ) : null}
+      </dialog>
 
       {error ? (
         <span role="alert" className="text-[12px] font-semibold text-negativo">
@@ -116,42 +126,32 @@ export function SelectorFecha({
   );
 }
 
-/** Un mes en cuadrícula de lunes a domingo. El hoy va marcado; lo elegido, en menta; lo futuro, apagado. */
+/** Un mes en cuadrícula de lunes a domingo. El hoy va con anillo; lo elegido, en menta; lo futuro, apagado. */
 function Calendario({
-  id,
   vista,
   alMover,
   valor,
   hoy,
   alElegir,
-  alCerrar,
 }: {
-  id: string;
   vista: Mes;
   alMover: (delta: number) => void;
   valor: string;
   hoy: string;
   alElegir: (fecha: string) => void;
-  alCerrar: () => void;
 }) {
   const actual = mesDe(hoy);
   const enMesActual = vista.anio === actual.anio && vista.mes === actual.mes;
   const navegar =
-    "grid size-9 place-items-center rounded-full bg-tarjeta text-texto-2 enabled:hover:text-texto disabled:opacity-30";
+    "grid size-8 place-items-center rounded-full bg-tarjeta-hover text-texto-2 enabled:hover:text-texto disabled:opacity-30";
 
   return (
-    <div
-      id={id}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") alCerrar();
-      }}
-      className="rounded-[18px] border border-tarjeta-borde bg-tarjeta-hover p-3"
-    >
-      <div className="mb-2 flex items-center justify-between gap-2">
+    <div className="p-3.5">
+      <div className="mb-1.5 flex items-center justify-between gap-2">
         <button type="button" aria-label="Mes anterior" onClick={() => alMover(-1)} className={navegar}>
-          <ChevronLeft size={18} aria-hidden />
+          <ChevronLeft size={16} aria-hidden />
         </button>
-        <p aria-live="polite" className="text-[14px] font-bold text-texto">
+        <p aria-live="polite" className="text-[14px] font-bold">
           {nombreMes(vista.mes)} {vista.anio}
         </p>
         <button
@@ -161,13 +161,13 @@ function Calendario({
           onClick={() => alMover(1)}
           className={navegar}
         >
-          <ChevronRight size={18} aria-hidden />
+          <ChevronRight size={16} aria-hidden />
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center">
+      <div className="grid grid-cols-7 gap-0.5 text-center">
         {iniciales.map((letra, i) => (
-          <span key={i} aria-hidden className="py-1 text-[11px] font-semibold text-texto-3">
+          <span key={i} aria-hidden className="py-1 text-[10px] font-semibold text-texto-3">
             {letra}
           </span>
         ))}
@@ -182,12 +182,12 @@ function Calendario({
               aria-pressed={fecha === valor}
               aria-label={fechaLarga(fecha)}
               onClick={() => alElegir(fecha)}
-              className={`tabular mx-auto grid size-10 place-items-center rounded-full text-[13px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
+              className={`tabular mx-auto grid size-9 place-items-center rounded-full text-[13px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
                 fecha === valor
                   ? "bg-palido text-palido-texto"
                   : fecha === hoy
-                    ? "text-enlace ring-1 ring-inset ring-enlace enabled:hover:bg-tarjeta"
-                    : "text-texto enabled:hover:bg-tarjeta"
+                    ? "text-enlace ring-1 ring-inset ring-enlace enabled:hover:bg-tarjeta-hover"
+                    : "text-texto enabled:hover:bg-tarjeta-hover"
               }`}
             >
               {Number(fecha.slice(8))}

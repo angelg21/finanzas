@@ -113,7 +113,7 @@ Piezas en `src/components/formulario.tsx`:
 - `Boton`: `primario` verde pino en píldora, `secundario` con borde, `peligro` solo texto rojo. `EnlaceBoton` tiene la misma forma, pero es un enlace, para acciones que navegan sin JavaScript.
 - `CampoMonto`: la cifra a 36 px con la unidad a la derecha.
 - `SelectorPildoras`: radios nativos con forma de píldora. Desplazables en el celular; `envolver` las muestra todas.
-- `SelectorFecha`, en `src/components/calendario.tsx`: píldoras "Hoy", "Ayer" y "Otra fecha". La última abre un calendario propio dentro de la tarjeta: de lunes a domingo, el hoy con anillo, lo elegido en menta y los días futuros apagados. Sin JavaScript, el campo de fecha nativo. Nunca el selector del navegador, que no se puede estilizar.
+- `SelectorFecha`, en `src/components/calendario.tsx`: píldoras "Hoy", "Ayer" y "Otra fecha". La última abre un calendario propio en una ventana modal de unos 300 px, con un `<dialog>` sobre el token `velo`: de lunes a domingo, el hoy con anillo, lo elegido en menta y los días futuros apagados. Sin JavaScript, el campo de fecha nativo. Nunca el selector del navegador, que no se puede estilizar.
 
 Las opciones en píldora comparten `pildoraOpcion` (la forma) con `pildoraNormal` o `pildoraElegida` (los colores), nunca dos fondos en el mismo elemento.
 

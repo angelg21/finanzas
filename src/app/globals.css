@@ -77,6 +77,9 @@
   --dona-4: #5f6d6c;
   --dona-5: #0e3b32;
 
+  /* Velo detrás de una ventana modal (el calendario de la fecha). */
+  --velo: rgba(20, 33, 29, 0.32);
+
   --sombra-panel: 0 30px 80px rgba(20, 33, 29, 0.35);
   --sombra-tarjeta: 0 10px 30px rgba(20, 33, 29, 0.08);
 }
@@ -138,6 +141,8 @@
   --serie-b: #4d9d78;
   --rejilla: rgba(255, 255, 255, 0.08);
 
+  --velo: rgba(0, 0, 0, 0.55);
+
   --sombra-panel: 0 30px 80px rgba(0, 0, 0, 0.5);
   --sombra-tarjeta: 0 0 0 0 transparent;
 }
@@ -179,6 +184,7 @@
   --color-dona-3: var(--dona-3);
   --color-dona-4: var(--dona-4);
   --color-dona-5: var(--dona-5);
+  --color-velo: var(--velo);
 
   --font-sans: var(--font-roboto-flex), "Roboto Flex", system-ui, sans-serif;
 
