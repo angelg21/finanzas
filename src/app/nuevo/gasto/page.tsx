@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Pildora } from "@/components/ui";
-import { categoriasDeGastoPorUso, cuentaPorDefectoParaGasto, saldosPorCuenta, sobresParaGasto } from "@/db/consultas";
+import {
+  categoriasDeGastoPorUso,
+  cuentaPorDefectoParaGasto,
+  cuentaPorDefectoParaVenta,
+  saldosPorCuenta,
+  sobresParaGasto,
+} from "@/db/consultas";
 import { hoyEnCaracas } from "@/lib/fechas";
 import { FormularioGasto } from "./formulario-gasto";
 
@@ -10,20 +16,23 @@ export const dynamic = "force-dynamic";
 
 const formas = ["dolares", "vendiendo", "saldo"] as const;
 
-/** Captura rápida de gasto (spec 001). `?forma=` y `?cuenta=` vienen de "Registrar otro" sin JavaScript. */
+/** Captura rápida de gasto (spec 001). `?forma=`, `?cuenta=` y `?venta=` vienen de "Registrar otro" sin JavaScript. */
 export default async function NuevoGasto({ searchParams }: PageProps<"/nuevo/gasto">) {
   const parametros = await searchParams;
-  const [categorias, sobres, cuentas, cuentaPorDefecto] = await Promise.all([
+  const [categorias, sobres, cuentas, cuentaPorDefecto, cuentaVentaPorDefecto] = await Promise.all([
     categoriasDeGastoPorUso(),
     sobresParaGasto(),
     saldosPorCuenta(),
     cuentaPorDefectoParaGasto(),
+    cuentaPorDefectoParaVenta(),
   ]);
 
   const enDolares = cuentas.filter((c) => c.moneda !== "VES");
   const forma = formas.find((f) => f === parametros.forma) ?? "dolares";
-  const pedida = enDolares.find((c) => String(c.id) === parametros.cuenta);
-  const cuentaId = String(pedida?.id ?? cuentaPorDefecto ?? enDolares[0]?.id ?? "");
+  const pedida = (id: unknown) => enDolares.find((c) => String(c.id) === id)?.id;
+  const cuentaId = String(pedida(parametros.cuenta) ?? cuentaPorDefecto ?? enDolares[0]?.id ?? "");
+  // La venta tiene su propio valor por defecto: Binance, aunque el último gasto fuera desde otra cuenta.
+  const cuentaVentaId = String(pedida(parametros.venta) ?? cuentaVentaPorDefecto ?? enDolares[0]?.id ?? "");
   // Al volver de crear una categoría con "Nueva", llega ya elegida (criterio 25).
   const categoriaId = categorias.find((c) => String(c.id) === parametros.categoria)?.id.toString();
 
@@ -67,7 +76,7 @@ export default async function NuevoGasto({ searchParams }: PageProps<"/nuevo/gas
           saldoCentavos,
         }))}
         hoy={hoyEnCaracas(new Date())}
-        inicial={{ forma, cuentaId, categoriaId }}
+        inicial={{ forma, cuentaId, cuentaVentaId, categoriaId }}
       />
     </main>
   );

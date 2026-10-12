@@ -14,7 +14,10 @@ export type ValoresGasto = {
   monto: string;
   tasa: string;
   vendido: string;
+  /** Cuenta del pago en dólares. */
   cuentaId: string;
+  /** Cuenta de donde salen los dólares vendidos; su propio grupo, para que empiece en Binance. */
+  cuentaVentaId: string;
   categoriaId: string;
   sobreId: string;
   fecha: string;
@@ -34,14 +37,16 @@ export type ResumenGasto = {
   sobreDespuesCentavos: number;
   /** Saldo en Bs de la cuenta Bolívares tras el gasto; null si se pagó en dólares. */
   bolivaresDespuesCentavos: number | null;
+  /** Lo vendido y de qué cuenta salió, para que se vea en la confirmación; null si no hubo venta. */
+  venta: { montoCentavos: number; moneda: Moneda; cuenta: string } | null;
 };
 
 type Resultado =
   | { estado: "error"; errores: ErroresFormularioGasto; valores: ValoresGasto }
   /** Sobre Inversión: hace falta un segundo clic (criterio 9). */
   | { estado: "confirmar"; valores: ValoresGasto }
-  /** "Registrar otro" reabre con la misma forma de pago y la misma cuenta. */
-  | { estado: "guardado"; resumen: ResumenGasto; forma: FormaPago; cuentaId: string };
+  /** "Registrar otro" reabre con la misma forma de pago y las mismas cuentas. */
+  | { estado: "guardado"; resumen: ResumenGasto; forma: FormaPago; cuentaId: string; cuentaVentaId: string };
 
 /**
  * `ronda` cuenta las respuestas. React reinicia el formulario al terminar cada acción; con la ronda como
@@ -58,6 +63,7 @@ const esquema = z.object({
   tasa: cifra,
   vendido: cifra,
   cuentaId: z.string(),
+  cuentaVentaId: z.string(),
   categoriaId: z.string(),
   sobreId: z.string(),
   fecha: z.string().trim(),
@@ -87,6 +93,7 @@ async function procesarGasto(formData: FormData): Promise<Resultado> {
     tasa: campo(formData, "tasa"),
     vendido: campo(formData, "vendido"),
     cuentaId: campo(formData, "cuentaId"),
+    cuentaVentaId: campo(formData, "cuentaVentaId"),
     categoriaId: campo(formData, "categoriaId"),
     sobreId: campo(formData, "sobreId"),
     fecha: campo(formData, "fecha"),
@@ -112,7 +119,8 @@ async function procesarGasto(formData: FormData): Promise<Resultado> {
   ]);
   const categoria = categorias.find((c) => String(c.id) === valores.categoriaId);
   const sobre = sobres.find((s) => String(s.id) === valores.sobreId);
-  const cuentaOrigen = cuentas.find((c) => String(c.id) === valores.cuentaId && c.moneda !== "VES");
+  const elegida = valores.forma === "vendiendo" ? valores.cuentaVentaId : valores.cuentaId;
+  const cuentaOrigen = cuentas.find((c) => String(c.id) === elegida && c.moneda !== "VES");
   const bolivares = cuentas.find((c) => c.moneda === "VES") ?? null;
 
   const preparado = prepararGasto(
@@ -147,6 +155,7 @@ async function procesarGasto(formData: FormData): Promise<Resultado> {
   });
   const gasto = preparado.filas.find((f) => f.tipo === "gasto") ?? preparado.filas[0];
   const cuentaDelGasto = cuentas.find((c) => c.id === gasto.cuentaOrigenId);
+  const transferencia = preparado.filas.find((f) => f.tipo === "transferencia");
 
   for (const ruta of ["/", "/movimientos", "/sobres", `/sobres/${sobre.id}`, "/cuentas", "/nuevo/gasto"]) {
     revalidatePath(ruta);
@@ -156,6 +165,7 @@ async function procesarGasto(formData: FormData): Promise<Resultado> {
     estado: "guardado",
     forma: valores.forma,
     cuentaId: valores.cuentaId,
+    cuentaVentaId: valores.cuentaVentaId,
     resumen: {
       montoCentavos: gasto.montoCentavos,
       moneda: gasto.moneda,
@@ -165,6 +175,13 @@ async function procesarGasto(formData: FormData): Promise<Resultado> {
       sobre: sobre.nombre,
       sobreDespuesCentavos: despues.sobres[sobre.id],
       bolivaresDespuesCentavos: valores.forma === "dolares" || !bolivares ? null : despues.cuentas[bolivares.id],
+      venta: transferencia
+        ? {
+            montoCentavos: transferencia.montoCentavos,
+            moneda: transferencia.moneda,
+            cuenta: cuentaOrigen?.nombre ?? "",
+          }
+        : null,
     },
   };
 }

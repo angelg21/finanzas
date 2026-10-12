@@ -210,12 +210,14 @@ export async function sobresParaGasto() {
   return (await saldosPorSobre()).filter((s) => s.tipo !== "por_asignar");
 }
 
+/** Cuentas que se pueden preseleccionar: propias, activas y en dólares. Nunca la de la prima. */
+const enDolaresPropia = and(eq(cuentas.esPropia, true), eq(cuentas.activa, true), ne(cuentas.moneda, "VES"));
+
 /**
  * Cuenta que se preselecciona al pagar en dólares: la cuenta propia en dólares del último gasto manual;
- * sin historial, Binance. La de la prima nunca se preselecciona, para no cargarle un gasto por descuido.
+ * sin historial, la de la venta. La de la prima nunca se preselecciona, para no cargarle un gasto por descuido.
  */
 export async function cuentaPorDefectoParaGasto(): Promise<number | null> {
-  const enDolaresPropia = and(eq(cuentas.esPropia, true), eq(cuentas.activa, true), ne(cuentas.moneda, "VES"));
   const [ultima] = await db
     .select({ id: cuentas.id })
     .from(movimientos)
@@ -223,13 +225,19 @@ export async function cuentaPorDefectoParaGasto(): Promise<number | null> {
     .where(and(eq(movimientos.tipo, "gasto"), eq(movimientos.origen, "manual"), enDolaresPropia))
     .orderBy(desc(movimientos.id))
     .limit(1);
-  if (ultima) return ultima.id;
-  // Sin historial, Binance; si alguien la renombra, la primera cuenta propia en dólares por orden.
-  const [respaldo] = await db
+  return ultima?.id ?? (await cuentaPorDefectoParaVenta());
+}
+
+/**
+ * Cuenta de donde salen los dólares que se venden para pagar en bolívares: Binance, sin importar el
+ * último gasto; si alguien la renombra, la primera cuenta propia en dólares por orden.
+ */
+export async function cuentaPorDefectoParaVenta(): Promise<number | null> {
+  const [binance] = await db
     .select({ id: cuentas.id })
     .from(cuentas)
     .where(enDolaresPropia)
     .orderBy(desc(eq(cuentas.nombre, "Binance")), cuentas.orden, cuentas.id)
     .limit(1);
-  return respaldo?.id ?? null;
+  return binance?.id ?? null;
 }

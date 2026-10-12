@@ -44,14 +44,15 @@ const formasPago = [
 /*
   Qué campos se ven según la forma de pago. Se decide en CSS con :has() sobre el radio marcado, así
   funciona sin JavaScript y no parpadea al cargar. Los campos ocultos se envían igual; la acción los ignora.
+  La cuenta del pago en dólares y la de la venta son grupos distintos: cada una con su valor por defecto.
 */
-const soloEnDolares = "group-has-[[name=forma][value=saldo]:checked]/gasto:hidden";
+const soloEnDolares = "hidden group-has-[[name=forma][value=dolares]:checked]/gasto:block";
 const soloAlVender = "hidden group-has-[[name=forma][value=vendiendo]:checked]/gasto:block";
 const soloEnBolivares = "group-has-[[name=forma][value=dolares]:checked]/gasto:hidden";
 
-type Inicial = { forma: FormaPago; cuentaId: string; categoriaId?: string };
+type Inicial = { forma: FormaPago; cuentaId: string; cuentaVentaId: string; categoriaId?: string };
 
-/** Captura de gasto. "Registrar otro" la vuelve a montar con la misma forma de pago y la misma cuenta. */
+/** Captura de gasto. "Registrar otro" la vuelve a montar con la misma forma de pago y las mismas cuentas. */
 export function FormularioGasto({ inicial, ...datos }: Datos & { inicial: Inicial }) {
   const [captura, setCaptura] = useState({ numero: 0, ...inicial });
   return (
@@ -59,7 +60,9 @@ export function FormularioGasto({ inicial, ...datos }: Datos & { inicial: Inicia
       key={captura.numero}
       {...datos}
       inicial={captura}
-      alRegistrarOtro={(forma, cuentaId) => setCaptura((c) => ({ numero: c.numero + 1, forma, cuentaId }))}
+      alRegistrarOtro={(forma, cuentaId, cuentaVentaId) =>
+        setCaptura((c) => ({ numero: c.numero + 1, forma, cuentaId, cuentaVentaId }))
+      }
     />
   );
 }
@@ -70,7 +73,7 @@ function Captura({
   ...datos
 }: Datos & {
   inicial: Inicial;
-  alRegistrarOtro: (forma: FormaPago, cuentaId: string) => void;
+  alRegistrarOtro: (forma: FormaPago, cuentaId: string, cuentaVentaId: string) => void;
 }) {
   const [estado, enviar, pendiente] = useActionState<EstadoGasto, FormData>(registrarGasto, {
     ronda: 0,
@@ -83,7 +86,8 @@ function Captura({
         resumen={estado.resumen}
         forma={estado.forma}
         cuentaId={estado.cuentaId}
-        alRegistrarOtro={() => alRegistrarOtro(estado.forma, estado.cuentaId)}
+        cuentaVentaId={estado.cuentaVentaId}
+        alRegistrarOtro={() => alRegistrarOtro(estado.forma, estado.cuentaId, estado.cuentaVentaId)}
       />
     );
   }
@@ -96,6 +100,7 @@ function Captura({
           tasa: "",
           vendido: "",
           cuentaId: inicial.cuentaId,
+          cuentaVentaId: inicial.cuentaVentaId,
           // ?categoria= llega al volver de crear una con la píldora "Nueva" (criterio 25).
           categoriaId: inicial.categoriaId ?? "",
           sobreId: String(
@@ -145,6 +150,7 @@ function Campos({
 }) {
   const [forma, setForma] = useState<FormaPago>(valores.forma);
   const [cuentaId, setCuentaId] = useState(valores.cuentaId);
+  const [cuentaVentaId, setCuentaVentaId] = useState(valores.cuentaVentaId);
   const [sobreId, setSobreId] = useState(valores.sobreId);
   // El sobre sugerido sigue a la categoría hasta que se elige un sobre a mano (criterio 8).
   const [sobreTocado, setSobreTocado] = useState(false);
@@ -155,10 +161,16 @@ function Campos({
   const [vendido, setVendido] = useState(valores.vendido);
 
   const enDolares = cuentas.filter((c) => c.moneda !== "VES");
-  const monedaCuenta = enDolares.find((c) => String(c.id) === cuentaId)?.moneda ?? "USD";
+  const opcionesCuenta = enDolares.map((c) => ({
+    valor: String(c.id),
+    texto: c.nombre,
+    detalle: c.esPropia ? undefined : "a nombre de mi prima",
+  }));
+  const monedaDe = (id: string) => enDolares.find((c) => String(c.id) === id)?.moneda ?? "USD";
   const inversion = sobres.find((s) => s.tipo === "inversion");
   const confirmando = confirmar && inversion !== undefined && sobreId === String(inversion.id);
-  const afectados = saldosAfectados({ forma, monto, tasa, vendido, cuentaId, sobreId, cuentas, sobres, hoy });
+  const origen = forma === "vendiendo" ? cuentaVentaId : cuentaId;
+  const afectados = saldosAfectados({ forma, monto, tasa, vendido, cuentaId: origen, sobreId, cuentas, sobres, hoy });
 
   return (
     <>
@@ -167,7 +179,7 @@ function Campos({
           <Campo etiqueta="Monto" error={errores.monto}>
             <CampoMonto
               name="monto"
-              moneda={forma === "dolares" ? monedaCuenta : "VES"}
+              moneda={forma === "dolares" ? monedaDe(cuentaId) : "VES"}
               defaultValue={valores.monto}
               onChange={(e) => setMonto(e.target.value)}
               autoFocus={primeraVez || errores.monto !== undefined}
@@ -186,23 +198,30 @@ function Campos({
 
           <div className={soloEnDolares}>
             <SelectorPildoras
-              etiqueta={forma === "vendiendo" ? "Salen de" : "Cuenta"}
+              etiqueta="Cuenta"
               name="cuentaId"
               envolver
-              opciones={enDolares.map((c) => ({
-                valor: String(c.id),
-                texto: c.nombre,
-                detalle: c.esPropia ? undefined : "a nombre de mi prima",
-              }))}
+              opciones={opcionesCuenta}
               valorInicial={valores.cuentaId}
               onCambio={setCuentaId}
+              error={errores.cuenta}
+            />
+          </div>
+          <div className={soloAlVender}>
+            <SelectorPildoras
+              etiqueta="Salen de"
+              name="cuentaVentaId"
+              envolver
+              opciones={opcionesCuenta}
+              valorInicial={valores.cuentaVentaId}
+              onCambio={setCuentaVentaId}
               error={errores.cuenta}
             />
           </div>
 
           <div className={`grid grid-cols-2 gap-3 ${soloEnBolivares}`}>
             <div className={soloAlVender}>
-              <Campo etiqueta={`${unidadDe(monedaCuenta)} vendidos`} error={errores.vendido}>
+              <Campo etiqueta={`${unidadDe(monedaDe(cuentaVentaId))} vendidos`} error={errores.vendido}>
                 <Entrada
                   name="vendido"
                   inputMode="decimal"

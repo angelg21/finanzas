@@ -8,21 +8,24 @@ import type { ResumenGasto as Resumen } from "./acciones";
 
 /**
  * Estado de éxito (criterio 13): lo registrado, el aviso de sobre negativo (10), el de Bolívares en
- * negativo (4) o el del vuelto de una venta (2), y dos salidas. "Registrar otro" es un enlace para que funcione sin JavaScript; con él,
- * reabre el formulario en el sitio con la misma forma de pago y la misma cuenta.
+ * negativo (4) o el del vuelto de una venta (2), y dos salidas. "Registrar otro" es un enlace para que
+ * funcione sin JavaScript; con él, reabre el formulario en el sitio con la misma forma de pago y las mismas
+ * cuentas.
  */
 export function ResumenGasto({
   resumen,
   forma,
   cuentaId,
+  cuentaVentaId,
   alRegistrarOtro,
 }: {
   resumen: Resumen;
   forma: FormaPago;
   cuentaId: string;
+  cuentaVentaId: string;
   alRegistrarOtro: () => void;
 }) {
-  const { montoCentavos, moneda, montoUsdCentavos, categoria, cuenta, sobre } = resumen;
+  const { montoCentavos, moneda, montoUsdCentavos, categoria, cuenta, sobre, venta } = resumen;
   const bolivares = resumen.bolivaresDespuesCentavos;
 
   return (
@@ -38,6 +41,8 @@ export function ResumenGasto({
         </div>
         <p className="text-[15px] text-texto-2">
           {formatearCentavos(montoCentavos, moneda)} en {categoria} desde {cuenta}
+          {/* La cuenta de la venta, a la vista: si no era la que se quería, se nota aquí. */}
+          {venta ? `, con ${formatearCentavos(venta.montoCentavos, venta.moneda)} vendidos de ${venta.cuenta}` : null}
         </p>
         <div className="flex flex-wrap gap-2">
           <Pildora tono="palida">{categoria}</Pildora>
@@ -64,7 +69,7 @@ export function ResumenGasto({
 
         <div className="flex flex-col gap-2 sm:flex-row">
           <EnlaceBoton
-            href={`/nuevo/gasto?forma=${forma}&cuenta=${cuentaId}`}
+            href={`/nuevo/gasto?forma=${forma}&cuenta=${cuentaId}&venta=${cuentaVentaId}`}
             onClick={(e) => {
               e.preventDefault();
               alRegistrarOtro();
