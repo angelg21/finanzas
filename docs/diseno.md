@@ -128,7 +128,7 @@ Transiciones de 140 ms en color, fondo, borde y opacidad. Botones y enlaces se e
 
 ## Tema
 
-`data-tema` en `<html>`, fijado antes de pintar por un script en `<head>`. Sin preferencia guardada arranca en oscuro, que es el de la referencia. El botón alterna y guarda la elección.
+`data-tema` en `<html>`, fijado antes de pintar por un script en `<head>`. Sin preferencia guardada sigue al tema del sistema operativo. El botón alterna entre claro y oscuro y guarda la elección en el navegador; desde entonces manda esa elección y no el sistema.
 
 ## Datos de ejemplo
 
