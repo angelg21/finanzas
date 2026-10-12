@@ -8,7 +8,6 @@ import {
   saldosPorCuenta,
   sobresParaGasto,
 } from "@/db/consultas";
-import { borradorDesdeParametros } from "@/lib/borrador-captura";
 import { hoyEnCaracas } from "@/lib/fechas";
 import { FormularioGasto } from "./formulario-gasto";
 
@@ -19,7 +18,7 @@ const formas = ["dolares", "vendiendo", "saldo"] as const;
 
 /**
  * Captura rápida de gasto (spec 001). `?forma=`, `?cuenta=` y `?venta=` vienen de "Registrar otro" sin
- * JavaScript; con `?categoria=`, el resto de lo escrito vuelve de crear una categoría con "Nueva" (25).
+ * JavaScript; `?categoria=`, de crear una con "Nueva". Lo demás escrito vuelve de la pestaña, no de aquí (25).
  */
 export default async function NuevoGasto({ searchParams }: PageProps<"/nuevo/gasto">) {
   const parametros = await searchParams;
@@ -40,9 +39,6 @@ export default async function NuevoGasto({ searchParams }: PageProps<"/nuevo/gas
   const cuentaVentaId = String(pedida(parametros.venta) ?? cuentaVentaPorDefecto ?? "");
   // Al volver de crear una categoría con "Nueva", llega ya elegida (criterio 25).
   const categoriaId = categorias.find((c) => String(c.id) === parametros.categoria)?.id.toString();
-  const { monto, tasa, vendido, sobre, fecha, nota } = borradorDesdeParametros(parametros);
-  // El sobre solo viaja si se eligió a mano: al volver sigue elegido a mano (criterio 8).
-  const sobreId = sobres.find((s) => String(s.id) === sobre)?.id.toString();
 
   return (
     <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">
@@ -84,7 +80,7 @@ export default async function NuevoGasto({ searchParams }: PageProps<"/nuevo/gas
           saldoCentavos,
         }))}
         hoy={hoyEnCaracas(new Date())}
-        inicial={{ forma, cuentaId, cuentaVentaId, categoriaId, monto, tasa, vendido, sobreId, fecha, nota }}
+        inicial={{ forma, cuentaId, cuentaVentaId, categoriaId }}
       />
     </main>
   );

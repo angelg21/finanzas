@@ -1,58 +1,53 @@
 import { describe, expect, it } from "vitest";
-import { borradorDesdeParametros, direccionConBorrador, esVuelta, vueltaConCategoria } from "./borrador-captura";
+import { borradorATexto, borradorDesdeTexto, esVuelta, vueltaConCategoria } from "./borrador-captura";
 
 const rutas = ["/nuevo/gasto"];
+const ahora = Date.UTC(2026, 9, 12, 15, 0);
+const minuto = 60_000;
 
-describe("direccionConBorrador: lo escrito en la captura viaja en la dirección (criterio 25)", () => {
-  it("lleva solo los campos con algo, en la ruta de la captura", () => {
-    const direccion = direccionConBorrador("/nuevo/gasto", {
+describe("borrador de la captura en la pestaña: se guarda al tocar «Nueva» (criterio 25)", () => {
+  it("ida y vuelta: lo que se lee es lo que se guardó, solo los campos con algo, también con acentos", () => {
+    const borrador = {
       forma: "vendiendo",
       monto: "2100",
       tasa: "241,8",
       vendido: "20",
       cuenta: "3",
       venta: "1",
-      sobre: "",
-      fecha: "hoy",
-      nota: "",
-    });
-    const url = new URL(direccion, "http://local");
-    expect(url.pathname).toBe("/nuevo/gasto");
-    expect(Object.fromEntries(url.searchParams)).toEqual({
-      forma: "vendiendo",
-      monto: "2100",
-      tasa: "241,8",
+      sobre: "3",
+      fecha: "ayer",
+      nota: "pan & café",
+    };
+    expect(borradorDesdeTexto(borradorATexto({ ...borrador, categoria: "", otro: "" } as never, ahora), ahora)).toEqual(
+      borrador,
+    );
+    expect(borradorDesdeTexto(borradorATexto({ monto: "5", nota: "" }, ahora), ahora)).toEqual({ monto: "5" });
+  });
+  it("caduca a los 30 minutos, y un reloj que retrocede no lo revive", () => {
+    const texto = borradorATexto({ monto: "2100" }, ahora);
+    expect(borradorDesdeTexto(texto, ahora + 29 * minuto)).toEqual({ monto: "2100" });
+    expect(borradorDesdeTexto(texto, ahora + 31 * minuto)).toBeNull();
+    expect(borradorDesdeTexto(texto, ahora - minuto)).toBeNull();
+  });
+  it("sin nada guardado, o con algo que no es un borrador, no hay borrador", () => {
+    for (const texto of [null, "", "abc", "[]", "null", "{}", '{"monto":"5"}', `{"guardado":${ahora}}`]) {
+      expect(borradorDesdeTexto(texto, ahora)).toBeNull();
+    }
+    expect(borradorDesdeTexto(borradorATexto({}, ahora), ahora)).toBeNull();
+  });
+  it("ignora lo que no es del borrador, lo que no es texto y los valores demasiado largos, sin recortar montos", () => {
+    const texto = JSON.stringify({
+      guardado: ahora,
+      monto: "1".repeat(31),
+      tasa: 241.8,
+      nota: "n".repeat(201),
       vendido: "20",
-      cuenta: "3",
-      venta: "1",
-      fecha: "hoy",
+      categoria: "82",
     });
-  });
-  it("sin nada escrito es la ruta sola", () => {
-    expect(direccionConBorrador("/nuevo/gasto", { monto: "", nota: "" })).toBe("/nuevo/gasto");
-  });
-  it("ida y vuelta: lo que sale de la dirección es lo que entró, también con espacios y acentos", () => {
-    const borrador = { monto: "19,99", tasa: "241.8", sobre: "3", fecha: "2026-10-05", nota: "pan & café" };
-    const url = new URL(direccionConBorrador("/nuevo/gasto", borrador), "http://local");
-    expect(borradorDesdeParametros(Object.fromEntries(url.searchParams))).toEqual(borrador);
-  });
-});
-
-describe("borradorDesdeParametros", () => {
-  it("ignora lo que no es del borrador, las listas y los valores demasiado largos, sin recortar montos", () => {
-    expect(
-      borradorDesdeParametros({
-        monto: "1".repeat(31),
-        tasa: ["241,8", "1"],
-        nota: "n".repeat(201),
-        vendido: "20",
-        categoria: "82",
-        otro: "x",
-      }),
-    ).toEqual({ vendido: "20" });
-  });
-  it("una nota de hasta 200 caracteres pasa entera", () => {
-    expect(borradorDesdeParametros({ nota: "n".repeat(200) }).nota).toHaveLength(200);
+    expect(borradorDesdeTexto(texto, ahora)).toEqual({ vendido: "20" });
+    expect(borradorDesdeTexto(JSON.stringify({ guardado: ahora, nota: "n".repeat(200) }), ahora)?.nota).toHaveLength(
+      200,
+    );
   });
 });
 

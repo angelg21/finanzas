@@ -1,7 +1,10 @@
 /**
- * Lo escrito en la captura de gasto viaja en la dirección al ir a crear una categoría con la píldora "Nueva"
- * y vuelve con ella (spec 001, criterio 25). Perder el monto y la forma de pago podía guardar 2.100 USDT en
- * vez de 2.100 Bs. La vuelta solo acepta rutas conocidas: nunca otro sitio.
+ * Lo escrito en la captura de gasto sobrevive a crear una categoría con la píldora "Nueva" (spec 001,
+ * criterio 25). Perder el monto y la forma de pago podía guardar 2.100 USDT en vez de 2.100 Bs.
+ * El borrador se guarda en la pestaña al tocar "Nueva", se recupera al volver a la captura por cualquier
+ * camino y se olvida al guardar el gasto. Nunca viaja en la dirección: recargar después de guardar no lo
+ * trae de vuelta, y un gasto guardado no queda a un toque de repetirse. Caduca a los 30 minutos. La vuelta tras crear o
+ * restaurar solo acepta rutas conocidas: nunca otro sitio.
  */
 
 const campos = ["forma", "monto", "tasa", "vendido", "cuenta", "venta", "sobre", "fecha", "nota"] as const;
@@ -11,26 +14,39 @@ export type BorradorCaptura = Partial<Record<Campo, string>>;
 
 /** Los mismos límites que la acción: un valor más largo no se recorta, se descarta (un monto cortado cambia). */
 const largoMaximo = (campo: Campo) => (campo === "nota" ? 200 : 30);
+const vigencia = 30 * 60_000;
 
-/** La ruta de la captura con lo escrito: solo los campos con algo. */
-export function direccionConBorrador(ruta: string, borrador: BorradorCaptura): string {
-  const parametros = new URLSearchParams();
+/** El borrador como texto para la pestaña: solo los campos con algo, y cuándo se guardó. */
+export function borradorATexto(borrador: BorradorCaptura, ahora: number): string {
+  const guardado: Record<string, string | number> = { guardado: ahora };
   for (const campo of campos) {
     const valor = borrador[campo];
-    if (valor) parametros.set(campo, valor);
+    if (valor) guardado[campo] = valor;
   }
-  const consulta = parametros.toString();
-  return consulta ? `${ruta}?${consulta}` : ruta;
+  return JSON.stringify(guardado);
 }
 
-/** Lo escrito que llega en la dirección: solo textos del borrador dentro de su largo; lo demás se ignora. */
-export function borradorDesdeParametros(parametros: Record<string, string | string[] | undefined>): BorradorCaptura {
+/**
+ * El borrador guardado si tiene hasta 30 minutos y algo útil; si no, null. Solo textos del borrador dentro
+ * de su largo: lo demás se ignora, porque la pestaña también la puede escribir otro código.
+ */
+export function borradorDesdeTexto(texto: string | null, ahora: number): BorradorCaptura | null {
+  let leido: unknown;
+  try {
+    leido = JSON.parse(texto ?? "");
+  } catch {
+    return null;
+  }
+  if (typeof leido !== "object" || leido === null || Array.isArray(leido)) return null;
+  const datos = leido as Record<string, unknown>;
+  const edad = typeof datos.guardado === "number" ? ahora - datos.guardado : -1;
+  if (edad < 0 || edad > vigencia) return null;
   const borrador: BorradorCaptura = {};
   for (const campo of campos) {
-    const valor = parametros[campo];
+    const valor = datos[campo];
     if (typeof valor === "string" && valor !== "" && valor.length <= largoMaximo(campo)) borrador[campo] = valor;
   }
-  return borrador;
+  return Object.keys(borrador).length > 0 ? borrador : null;
 }
 
 const base = "http://local.invalid";
