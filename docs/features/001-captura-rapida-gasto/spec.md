@@ -58,7 +58,7 @@ Los montos se escriben como los teclea el usuario, sin separador de miles ("42",
 
 **Piezas nuevas**, en `src/components/formulario.tsx`:
 
-- `CampoMonto`: entrada numérica grande con unidad a la derecha; recibe `moneda`, `name`, `defaultValue`, `autoFocus`.
+- `CampoMonto`: entrada numérica grande con unidad a la derecha; recibe `unidad` (un nodo, para que la captura la cambie con la forma de pago también sin JavaScript), `name`, `defaultValue`, `autoFocus`.
 - `SelectorPildoras`: grupo de radios accesible renderizado como píldoras desplazables; recibe `name`, `opciones` (valor, texto, detalle opcional, avatar opcional), `valorInicial`; sin JavaScript funciona como radios nativos. La elegida usa `bg-palido text-palido-texto`.
 
 En `src/components/calendario.tsx`:

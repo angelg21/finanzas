@@ -113,11 +113,11 @@ Piezas en `src/components/formulario.tsx`:
 - `Campo`: etiqueta arriba; abajo la ayuda o, si hay, el error en rojo.
 - `Entrada` y `Selector`.
 - `Boton`: `primario` verde pino en píldora, `secundario` con borde, `peligro` solo texto rojo. `EnlaceBoton` tiene la misma forma, pero es un enlace, para acciones que navegan sin JavaScript.
-- `CampoMonto`: la cifra a 36 px con la unidad a la derecha.
+- `CampoMonto`: la cifra a 36 px con la unidad a la derecha. La unidad es un nodo, para que pueda cambiar con CSS sin JavaScript.
 - `SelectorPildoras`: radios nativos con forma de píldora. Desplazables en el celular; `envolver` las muestra todas.
 - `SelectorFecha`, en `src/components/calendario.tsx`: píldoras "Hoy", "Ayer" y "Otra fecha". La última abre un calendario propio en una ventana modal de unos 300 px, con un `<dialog>` sobre el token `velo`: de lunes a domingo, el hoy con anillo, lo elegido en menta y los días futuros apagados. Sin JavaScript, el campo de fecha nativo. Nunca el selector del navegador, que no se puede estilizar.
 - `SelectorIcono` y `SelectorColor`: radios nativos con forma de círculo para el icono y el color de una categoría; el icono elegido toma el color elegido. El registro de iconos está en `src/components/iconos-categoria.tsx` (128 de lucide, nunca emojis). Referencias: `docs/referencias/categorias-gestor-*.jpg`.
-- `SelectorPildoras` admite `categoria` (el círculo en vez de iniciales) y `extra` (como la píldora "Nueva").
+- `SelectorPildoras` admite `categoria` (el círculo en vez de iniciales), `extra` (como la píldora "Nueva") y `alTocar`, que avisa también del toque a la opción ya marcada.
 
 Las opciones en píldora comparten `pildoraOpcion` (la forma) con `pildoraNormal` o `pildoraElegida` (los colores), nunca dos fondos en el mismo elemento.
 
@@ -125,7 +125,7 @@ Primer uso: el desglose del sobre Ocasiones en `/sobres/[id]`. La captura de gas
 
 - Dentro de una tarjeta. Campos de 48 px con fondo `tarjeta-hover`, radio 14 y borde `tarjeta-borde`; al foco, anillo en `palido`.
 - El monto es el primer campo y el más grande: 36 px en negrita con el código de moneda a la derecha. Teclado numérico en el celular.
-- Categoría, cuenta y sobre como filas de píldoras desplazables en horizontal; la elegida en azul pálido con texto azul marino.
+- Categoría, cuenta y sobre como filas de píldoras envueltas en varias filas, sin desplazamiento lateral, también en el celular (pedido el 2026-10-12); la elegida en `palido` con texto `palido-texto`.
 - Botón principal: ancho completo, 52 px, degradado del hero, texto blanco en negrita, radio 14.
 - En escritorio el formulario ocupa 7 columnas y a la derecha, en 5, va un resumen del sobre y la cuenta afectados.
 
