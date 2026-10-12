@@ -13,7 +13,11 @@ const rutas = [
   ["/sobres", 200],
   ["/cuentas", 200],
   ["/nuevo", 200],
+  ["/nuevo/gasto", 200],
+  ["/categorias", 200],
+  ["/categorias/nueva", 200],
   ["/sobres/999999", 404],
+  ["/categorias/999999", 404],
 ];
 
 const esWindows = process.platform === "win32";

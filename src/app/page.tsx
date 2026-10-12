@@ -94,7 +94,7 @@ export default async function Inicio() {
           </Pildora>
         </div>
         <div className="mt-5 grid grid-cols-3 gap-3">
-          <Mosaico href="/nuevo?tipo=gasto" icono={<ArrowUpRight size={18} aria-hidden />} texto="Gasto" />
+          <Mosaico href="/nuevo/gasto" icono={<ArrowUpRight size={18} aria-hidden />} texto="Gasto" />
           <Mosaico href="/nuevo?tipo=ingreso" icono={<ArrowDownLeft size={18} aria-hidden />} texto="Ingreso" />
           <Mosaico href="/nuevo?tipo=mover" icono={<ArrowLeftRight size={18} aria-hidden />} texto="Mover" />
         </div>

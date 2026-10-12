@@ -9,6 +9,7 @@ import { config } from "dotenv";
 import { like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { aTasa, bolivaresDesdeUsd, tasaDecimal } from "../lib/dinero";
 import * as schema from "./schema";
 
 config({ path: ".env.local" });
@@ -35,7 +36,10 @@ async function main() {
   const categorias = await db.select().from(schema.categorias);
   const cuenta = (n: string) => cuentas.find((c) => c.nombre === n)?.id ?? falta(`cuenta ${n}`);
   const sobre = (n: string) => sobres.find((s) => s.nombre === n)?.id ?? falta(`sobre ${n}`);
-  const categoria = (n: string) => categorias.find((c) => c.nombre === n)?.id ?? falta(`categoría ${n}`);
+  // Por nombre y tipo: "Familia" puede existir como gasto y como ingreso (el nombre es único por tipo).
+  const categoria = (n: string, tipo: "gasto" | "ingreso") =>
+    categorias.find((c) => c.nombre === n && c.tipo === tipo)?.id ??
+    falta(`la categoría de ${tipo} "${n}" (si la renombraste, devuélvele ese nombre)`);
   function falta(que: string): never {
     throw new Error(`No existe ${que}. Corre primero pnpm db:seed.`);
   }
@@ -64,7 +68,7 @@ async function main() {
     montoUsdCentavos: monto,
     cuentaDestinoId: binance,
     sobreDestinoId: porAsignar,
-    categoriaId: categoria(cat),
+    categoriaId: categoria(cat, "ingreso"),
     nota,
     origen: "importado",
     referenciaExterna: ref("ing"),
@@ -88,16 +92,18 @@ async function main() {
     montoUsdCentavos: monto,
     cuentaOrigenId: binance,
     sobreOrigenId: desde,
-    categoriaId: categoria(cat),
+    categoriaId: categoria(cat, "gasto"),
     nota,
     origen: "importado",
     referenciaExterna: ref("gas"),
   });
-  /** Vende USDT por bolívares a una tasa y registra el gasto en Bs valorado en los dólares vendidos. */
-  const gastoEnBolivares = (fecha: string, usd: number, tasa: number, cat: string, nota: string): Nuevo[] => {
-    const bs = (Math.round((usd * tasa) / 100) * 100) / 100; // centavos de Bs
-    const bsCentavos = Math.round(usd * tasa);
-    void bs;
+  /**
+   * Vende USDT por bolívares a una tasa y registra el gasto en Bs valorado en los dólares vendidos.
+   * La aritmética es la de dinero.ts, en enteros: nunca float fuera de ella.
+   */
+  const gastoEnBolivares = (fecha: string, usd: number, tasa: string, cat: string, nota: string): Nuevo[] => {
+    const tasaDm = aTasa(tasa);
+    const bsCentavos = bolivaresDesdeUsd(usd, tasaDm);
     return [
       {
         fecha,
@@ -107,7 +113,7 @@ async function main() {
         montoUsdCentavos: usd,
         montoDestinoCentavos: bsCentavos,
         monedaDestino: "VES",
-        tasa: tasa.toFixed(4),
+        tasa: tasaDecimal(tasaDm),
         cuentaOrigenId: binance,
         cuentaDestinoId: bolivares,
         nota: `Cambio a Bs a ${tasa}`,
@@ -120,10 +126,10 @@ async function main() {
         montoCentavos: bsCentavos,
         moneda: "VES",
         montoUsdCentavos: usd,
-        tasa: tasa.toFixed(4),
+        tasa: tasaDecimal(tasaDm),
         cuentaOrigenId: bolivares,
         sobreOrigenId: gastos,
-        categoriaId: categoria(cat),
+        categoriaId: categoria(cat, "gasto"),
         nota,
         origen: "importado",
         referenciaExterna: ref("gbs"),
@@ -187,12 +193,12 @@ async function main() {
     [24, 4_400, "Comida", "Mercado semanal"],
     [27, 1_200, "Hogar", "Limpieza"],
   ];
-  const tasas: Record<string, number> = {
-    "2026-06": 221.4,
-    "2026-07": 226.9,
-    "2026-08": 231.2,
-    "2026-09": 236.5,
-    "2026-10": 241.8,
+  const tasas: Record<string, string> = {
+    "2026-06": "221.4",
+    "2026-07": "226.9",
+    "2026-08": "231.2",
+    "2026-09": "236.5",
+    "2026-10": "241.8",
   };
   for (const m of meses) {
     for (const [dia, monto, cat, nota] of plantilla) {

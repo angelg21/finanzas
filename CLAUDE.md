@@ -30,7 +30,7 @@ Apoyo: `/f-status` (dónde está el pipeline), `/f-adr <decisión>`.
 Cada una existe por una razón real. No se añaden reglas "por si acaso".
 
 - **Montos en centavos enteros.** Nunca float, `parseFloat` ni `toFixed` fuera de `src/lib/dinero.ts`. Razón: precisión del dinero.
-- **Invariante: suma de sobres igual a suma de cuentas propias.** Cada ingreso cae en "Por asignar" y se reparte con reasignaciones (ADR 0002). Los saldos se calculan, nunca se guardan.
+- **Invariante: suma de sobres igual a suma en USD de todas las cuentas**, también la de la prima (ADR 0006). Cada ingreso cae en "Por asignar" y se reparte con reasignaciones (ADR 0002). Los saldos se calculan, nunca se guardan.
 - **Nombres del dominio en español**, como en el plan: cuentas, sobres, categorías, movimientos, reglas de reparto, partidas.
 - **Solo tokens de `globals.css` y piezas de `src/components/ui.tsx` y `formulario.tsx`.** Nunca `dark:` ni colores sueltos. Razón: dos diseños rechazados (ADR 0003).
 - **Nada de este proyecto se publica fuera del repo**: ni artifacts ni documentos en la nube. Razón: otras personas entran a esa cuenta.

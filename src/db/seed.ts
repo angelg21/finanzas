@@ -4,9 +4,10 @@
  * Correr con: pnpm db:seed
  */
 import { config } from "dotenv";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { categoriasBase, colorPorDefecto, iconoPorDefecto } from "../lib/categorias";
 import * as schema from "./schema";
 
 config({ path: ".env.local" });
@@ -81,29 +82,32 @@ async function main() {
     ])
     .onConflictDoNothing();
 
-  // Categorías base. Las propias del usuario llegarán con el importador de Gestor de Gastos.
-  const gastos = [
-    "Comida",
-    "Transporte",
-    "Servicios",
-    "Salud",
-    "Ocio",
-    "Ropa",
-    "Tecnología",
-    "Hogar",
-    "Educación",
-    "Familia",
-    "Regalos",
-    "Otros gastos",
-  ];
-  const ingresos = ["Sueldo remoto", "Proyecto local", "Otros ingresos"];
-  await db
-    .insert(schema.categorias)
-    .values([
-      ...gastos.map((nombre, i) => ({ nombre, tipo: "gasto" as const, orden: i + 1 })),
-      ...ingresos.map((nombre, i) => ({ nombre, tipo: "ingreso" as const, orden: i + 1 })),
-    ])
-    .onConflictDoNothing();
+  // Categorías base, con icono y color (src/lib/categorias.ts). Solo se insertan en una base sin categorías:
+  // si no, la semilla reviviría las que el usuario renombró o borró. En una base que ya las tiene solo les
+  // pone icono y color, y solo a las que siguen con los dos valores por defecto: nunca pisa una elección.
+  const { categorias } = schema;
+  if ((await db.$count(categorias)) === 0) {
+    await db.insert(categorias).values(
+      categoriasBase.map((c) => ({
+        ...c,
+        orden: categoriasBase.filter((o) => o.tipo === c.tipo).indexOf(c) + 1,
+      })),
+    );
+  } else {
+    for (const c of categoriasBase) {
+      await db
+        .update(categorias)
+        .set({ icono: c.icono, color: c.color })
+        .where(
+          and(
+            eq(categorias.nombre, c.nombre),
+            eq(categorias.tipo, c.tipo),
+            eq(categorias.icono, iconoPorDefecto),
+            eq(categorias.color, colorPorDefecto),
+          ),
+        );
+    }
+  }
 
   // Reglas de reparto: sección 2, columna "Con 1.200 $". Fijos primero, porcentajes sobre lo que queda.
   // Idempotente por sobre: si la regla ya existe, no se toca.

@@ -54,26 +54,27 @@ Es una aplicación web progresiva: en el celular se ve como las pantallas de la 
 
 Segunda referencia, `docs/referencias/ui-referencia-2-colores.webp` (7 de octubre de 2026): el usuario prefirió esta paleta y se aplicó sobre la estructura de la primera. Verde pino profundo, menta, salvia y blanco cálido sobre un lienzo gris verdoso. El tema claro es el de la imagen y el principal; el oscuro usa los mismos verdes sobre un fondo verde negruzco. Sin preferencia guardada, la app sigue al sistema.
 
-| Token                             | Claro                                                                                                      | Oscuro                            | Para qué                                                             |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------- | -------------------------------------------------------------------- |
-| `lienzo-a` → `lienzo-d`           | `#a3b0ae` → `#5f6d6c`                                                                                      | `#3a4745` → `#171f1e`             | Fondo de la composición                                              |
-| `panel-a` → `panel-b`             | `#f5f6f2` → `#c9d5c3`                                                                                      | `#15241f` → `#0b1613`             | La pantalla: blanco cálido a salvia                                  |
-| `tarjeta`                         | `#ffffff` con sombra suave                                                                                 | `#16302a`                         | Tarjeta estándar                                                     |
-| `hero-a` → `hero-b`               | `#174c40` → `#0b332b`                                                                                      | `#1d5c4c` → `#0f3b31`             | Tarjeta principal, con textura de puntos arriba a la izquierda       |
-| `mosaico`                         | blanco 10 %                                                                                                | negro 25 %                        | Botones dentro del hero                                              |
-| `palida-a` → `palida-b`           | `#d2e5d7` → `#b8d6c1`                                                                                      | `#c6ddcc` → `#a9cbb5`             | Tarjeta menta                                                        |
-| `palida-texto` / `palida-texto-2` | `#0e3b32` / `#3d6a5b`                                                                                      | iguales                           | Texto sobre menta                                                    |
-| `pildora-oscura`                  | `#e6ebe5` con texto `#14211d`                                                                              | blanco 10 % con texto blanco      | Píldora sobre tarjeta                                                |
-| `pildora-hero`                    | blanco 14 %                                                                                                | blanco 14 %                       | Píldora sobre el hero                                                |
-| `pildora-navy`                    | `#0e3b32`                                                                                                  | igual                             | Píldora sólida verde pino, botón Registrar, icono activo de la barra |
-| `pildora-blanca`                  | blanco 72 %                                                                                                | igual                             | Píldora sobre menta                                                  |
-| `texto` / `texto-2` / `texto-3`   | `#14211d` / `#4f5f59` / `#7f8d87`                                                                          | `#e9efe9` / `#a9b9b2` / `#6f8079` | Jerarquía de texto                                                   |
-| `palido`                          | `#cfe3d4`                                                                                                  | `#b9d6c2`                         | Avatares, navegación activa, decimales del hero, progreso            |
-| `enlace`                          | `#1f6b56`                                                                                                  | `#9fcbb0`                         | Enlaces y porcentajes                                                |
-| `positivo` / `negativo`           | `#2f8f66` / `#c9544e`                                                                                      | `#5ccf96` / `#ff7b72`             | Ingresos y cuadra; avisos                                            |
-| `nav`                             | blanco 72 %                                                                                                | `#0b1613` al 88 %                 | Píldora de navegación inferior                                       |
-| `serie-a` / `serie-b`             | `#0e3b32` / `#5aa381`                                                                                      | `#b9d6c2` / `#4d9d78`             | Barras: gastado / ahorrado                                           |
-| `dona-1` → `dona-5`               | `#0b2f28` pino, `#4db889` verde, `#ffffff` blanco, `#5f6d6c` salvia gris, rayado de `#0e3b32` sobre blanco | iguales                           | Anillo: cinco tonos que se distinguen entre sí                       |
+| Token                             | Claro                                                                                                      | Oscuro                            | Para qué                                                                                       |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `lienzo-a` → `lienzo-d`           | `#a3b0ae` → `#5f6d6c`                                                                                      | `#3a4745` → `#171f1e`             | Fondo de la composición                                                                        |
+| `panel-a` → `panel-b`             | `#f5f6f2` → `#c9d5c3`                                                                                      | `#15241f` → `#0b1613`             | La pantalla: blanco cálido a salvia                                                            |
+| `tarjeta`                         | `#ffffff` con sombra suave                                                                                 | `#16302a`                         | Tarjeta estándar                                                                               |
+| `hero-a` → `hero-b`               | `#174c40` → `#0b332b`                                                                                      | `#1d5c4c` → `#0f3b31`             | Tarjeta principal, con textura de puntos arriba a la izquierda                                 |
+| `mosaico`                         | blanco 10 %                                                                                                | negro 25 %                        | Botones dentro del hero                                                                        |
+| `palida-a` → `palida-b`           | `#d2e5d7` → `#b8d6c1`                                                                                      | `#c6ddcc` → `#a9cbb5`             | Tarjeta menta                                                                                  |
+| `palida-texto` / `palida-texto-2` | `#0e3b32` / `#3d6a5b`                                                                                      | iguales                           | Texto sobre menta                                                                              |
+| `pildora-oscura`                  | `#e6ebe5` con texto `#14211d`                                                                              | blanco 10 % con texto blanco      | Píldora sobre tarjeta                                                                          |
+| `pildora-hero`                    | blanco 14 %                                                                                                | blanco 14 %                       | Píldora sobre el hero                                                                          |
+| `pildora-navy`                    | `#0e3b32`                                                                                                  | igual                             | Píldora sólida verde pino, botón Registrar, icono activo de la barra                           |
+| `pildora-blanca`                  | blanco 72 %                                                                                                | igual                             | Píldora sobre menta                                                                            |
+| `texto` / `texto-2` / `texto-3`   | `#14211d` / `#4f5f59` / `#7f8d87`                                                                          | `#e9efe9` / `#a9b9b2` / `#6f8079` | Jerarquía de texto                                                                             |
+| `palido`                          | `#cfe3d4`                                                                                                  | `#b9d6c2`                         | Avatares, navegación activa, decimales del hero, progreso                                      |
+| `enlace`                          | `#1f6b56`                                                                                                  | `#9fcbb0`                         | Enlaces y porcentajes                                                                          |
+| `positivo` / `negativo`           | `#2f8f66` / `#c9544e`                                                                                      | `#5ccf96` / `#ff7b72`             | Ingresos y cuadra; avisos                                                                      |
+| `nav`                             | blanco 72 %                                                                                                | `#0b1613` al 88 %                 | Píldora de navegación inferior                                                                 |
+| `serie-a` / `serie-b`             | `#0e3b32` / `#5aa381`                                                                                      | `#b9d6c2` / `#4d9d78`             | Barras: gastado / ahorrado                                                                     |
+| `dona-1` → `dona-5`               | `#0b2f28` pino, `#4db889` verde, `#ffffff` blanco, `#5f6d6c` salvia gris, rayado de `#0e3b32` sobre blanco | iguales                           | Anillo: cinco tonos que se distinguen entre sí                                                 |
+| `cat-coral` → `cat-pizarra`       | doce tonos: coral, naranja, ámbar, oliva, verde, pino, turquesa, azul, índigo, lavanda, rosa, pizarra      | pino e índigo, más claros         | Categorías: círculo con el icono blanco encima, 3:1 o más (prueba `paleta-categorias.test.ts`) |
 
 Radios: panel 28, tarjeta 22, pálida 22, mosaico 16, avatar 12, píldora completa. La barra inferior móvil es una píldora flotante con botones redondos; el activo se ensancha y muestra su nombre junto a un círculo verde pino, como en la referencia de colores.
 
@@ -87,30 +88,44 @@ Desviación consciente: los colores de las barras son los de la imagen, azul pá
 
 ## Piezas base
 
-| Pieza                                                                  | Uso                                                                             |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `Tarjeta`                                                              | Oscura (blanca en claro), radio 20                                              |
-| `TarjetaPalida`                                                        | Azul pálido con texto azul marino, radio 22                                     |
-| `EncabezadoTarjeta`                                                    | Título con enlace "Ver todos" o contenido a la derecha; `palida` ajusta colores |
-| `Cifra`                                                                | Dinero en centavos. `sm`, `md`, `lg`, `xl`, `hero`                              |
-| `Pildora`                                                              | `oscura`, `navy`, `blanca`, `positiva`, `negativa`                              |
-| `Avatar` + `iniciales`                                                 | Cuadro azul pálido con iniciales                                                |
-| `FilaLista`                                                            | Avatar, nombre en mayúsculas, subtítulo, columna derecha; enlazable             |
-| `Progreso`                                                             | Barra de 8 px; `palida` para tarjetas pálidas                                   |
-| `Mosaico`                                                              | Botón de acción dentro del hero                                                 |
-| `Dato`                                                                 | Etiqueta y valor para pies de tarjeta pálida                                    |
-| `TituloPagina`                                                         | Título grande, solo en móvil                                                    |
-| `TarjetaMovimiento`                                                    | Movimiento como tarjeta pálida                                                  |
-| `GraficaMensual`, `GraficaDona`                                        | Barras apiladas y anillo                                                        |
-| `BarraLateral`, `NavInferior`, `MenuMovil`, `TituloRuta`, `CambioTema` | Cascarón y navegación                                                           |
+| Pieza                                                                  | Uso                                                                                 |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `Tarjeta`                                                              | Oscura (blanca en claro), radio 20                                                  |
+| `TarjetaPalida`                                                        | Azul pálido con texto azul marino, radio 22                                         |
+| `EncabezadoTarjeta`                                                    | Título con enlace "Ver todos" o contenido a la derecha; `palida` ajusta colores     |
+| `Cifra`                                                                | Dinero en centavos. `sm`, `md`, `lg`, `xl`, `hero`                                  |
+| `Pildora`                                                              | `oscura`, `navy`, `blanca`, `positiva`, `negativa`, `palida` (opción activa)        |
+| `Avatar` + `iniciales`                                                 | Cuadro azul pálido con iniciales; `pequeno` dentro de una píldora                   |
+| `CirculoCategoria`                                                     | Círculo del color de la categoría con su icono de línea en blanco; `sm`, `md`, `lg` |
+| `FilaLista`                                                            | Avatar, nombre en mayúsculas, subtítulo, columna derecha; enlazable                 |
+| `Progreso`                                                             | Barra de 8 px; `palida` para tarjetas pálidas                                       |
+| `Mosaico`                                                              | Botón de acción dentro del hero                                                     |
+| `Dato`                                                                 | Etiqueta y valor para pies de tarjeta pálida                                        |
+| `TituloPagina`                                                         | Título grande, solo en móvil                                                        |
+| `TarjetaMovimiento`                                                    | Movimiento como tarjeta pálida                                                      |
+| `GraficaMensual`, `GraficaDona`                                        | Barras apiladas y anillo                                                            |
+| `BarraLateral`, `NavInferior`, `MenuMovil`, `TituloRuta`, `CambioTema` | Cascarón y navegación                                                               |
 
 ## Formularios
 
-Piezas en `src/components/formulario.tsx`: `Campo` (etiqueta arriba, ayuda abajo), `Entrada`, `Selector` y `Boton` (`primario` verde pino en píldora, `secundario` con borde, `peligro` solo texto rojo). Primer uso: el desglose del sobre Ocasiones en `/sobres/[id]`.
+Piezas en `src/components/formulario.tsx`:
+
+- `Campo`: etiqueta arriba; abajo la ayuda o, si hay, el error en rojo.
+- `Entrada` y `Selector`.
+- `Boton`: `primario` verde pino en píldora, `secundario` con borde, `peligro` solo texto rojo. `EnlaceBoton` tiene la misma forma, pero es un enlace, para acciones que navegan sin JavaScript.
+- `CampoMonto`: la cifra a 36 px con la unidad a la derecha. La unidad es un nodo, para que pueda cambiar con CSS sin JavaScript.
+- `SelectorPildoras`: radios nativos con forma de píldora. Desplazables en el celular; `envolver` las muestra todas.
+- `SelectorFecha`, en `src/components/calendario.tsx`: píldoras "Hoy", "Ayer" y "Otra fecha". La última abre un calendario propio en una ventana modal de unos 300 px, con un `<dialog>` sobre el token `velo`: de lunes a domingo, el hoy con anillo, lo elegido en menta y los días futuros apagados. Sin JavaScript, solo el campo de fecha nativo: las píldoras se ocultan con la variante `noscript:`. Con él, nunca el selector del navegador, que no se puede estilizar. Lo que viaja es lo que se tocó: "hoy" o "ayer", que se resuelven al guardar, o el día elegido.
+- `SelectorIcono` y `SelectorColor`: radios nativos con forma de círculo para el icono y el color de una categoría; el icono elegido toma el color elegido. El registro de iconos está en `src/components/iconos-categoria.tsx` (128 de lucide, nunca emojis). Referencias: `docs/referencias/categorias-gestor-*.jpg`.
+- `SelectorPildoras` admite `categoria` (el círculo en vez de iniciales), `extra` (como la píldora "Nueva") y `alTocar`, que avisa también del toque a la opción ya marcada.
+
+Las opciones en píldora comparten `pildoraOpcion` (la forma) con `pildoraNormal` o `pildoraElegida` (los colores), nunca dos fondos en el mismo elemento.
+
+Primer uso: el desglose del sobre Ocasiones en `/sobres/[id]`. La captura de gasto, `/nuevo/gasto`, usa todas.
 
 - Dentro de una tarjeta. Campos de 48 px con fondo `tarjeta-hover`, radio 14 y borde `tarjeta-borde`; al foco, anillo en `palido`.
 - El monto es el primer campo y el más grande: 36 px en negrita con el código de moneda a la derecha. Teclado numérico en el celular.
-- Categoría, cuenta y sobre como filas de píldoras desplazables en horizontal; la elegida en azul pálido con texto azul marino.
+- Categoría, cuenta y sobre como filas de píldoras envueltas en varias filas, sin desplazamiento lateral, también en el celular (pedido el 2026-10-12); la elegida en `palido` con texto `palido-texto`.
 - Botón principal: ancho completo, 52 px, degradado del hero, texto blanco en negrita, radio 14.
 - En escritorio el formulario ocupa 7 columnas y a la derecha, en 5, va un resumen del sobre y la cuenta afectados.
 
@@ -118,9 +133,13 @@ Piezas en `src/components/formulario.tsx`: `Campo` (etiqueta arriba, ayuda abajo
 
 Transiciones de 140 ms en color, fondo, borde y opacidad. Botones y enlaces se encogen al 98 % al presionarse. Nada se anima al cargar. Se respeta `prefers-reduced-motion`.
 
+## Logo
+
+El usuario entregó su logo el 12 de octubre de 2026: `docs/referencias/logo-original.jpg`, con "ANGEL GUEVARA" debajo. La app usa **solo el emblema, nunca las letras**: un círculo verde con una flecha que sube sobre barras. Está recortado con fondo transparente en `docs/referencias/logo-emblema.png`, de 310 px, la resolución del original. Es el icono de la app instalada en el celular, en la feature 002 (PWA instalable). En el icono adaptable de Android, la punta de la flecha toca la esquina del recorte, así que necesita más margen que el 80 % de la zona segura.
+
 ## Tema
 
-`data-tema` en `<html>`, fijado antes de pintar por un script en `<head>`. Sin preferencia guardada arranca en oscuro, que es el de la referencia. El botón alterna y guarda la elección.
+`data-tema` en `<html>`, fijado antes de pintar por un script en `<head>`. Sin preferencia guardada sigue al tema del sistema operativo. El botón alterna entre claro y oscuro y guarda la elección en el navegador; desde entonces manda esa elección y no el sistema.
 
 ## Datos de ejemplo
 

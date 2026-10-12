@@ -28,10 +28,11 @@ const nombreTipo: Record<string, string> = {
 
 export default async function Cuentas() {
   const [cuentas, sobres] = await Promise.all([saldosPorCuenta(), saldosPorSobre()]);
-  const propias = cuentas.filter((c) => c.esPropia);
-  const totalPropias = propias.reduce((acc, c) => acc + c.saldoUsdCentavos, 0);
+  // Todas las cuentas, también la de la prima: el dinero que la app registra ahí es mío aunque la cuenta
+  // no lo sea, y desde ella también se gasta (spec 001, criterio 16).
+  const totalCuentas = cuentas.reduce((acc, c) => acc + c.saldoUsdCentavos, 0);
   const totalSobres = sobres.reduce((acc, s) => acc + s.saldoCentavos, 0);
-  const cuadra = totalPropias === totalSobres;
+  const cuadra = totalCuentas === totalSobres;
 
   return (
     <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">
@@ -40,7 +41,7 @@ export default async function Cuentas() {
       <section className="hero rounded-tarjeta p-5 lg:col-span-7 lg:p-6">
         <p className="text-[13px] font-semibold text-white/75">Patrimonio en cuentas</p>
         <div className="mt-2">
-          <Cifra centavos={totalPropias} tamano="hero" />
+          <Cifra centavos={totalCuentas} tamano="hero" />
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           <Pildora tono={cuadra ? "positiva" : "negativa"}>
@@ -65,8 +66,8 @@ export default async function Cuentas() {
         </p>
         <div className="mt-4 flex flex-col gap-2 border-t border-palida-pista pt-3">
           <Dato etiqueta="Sobres">{formatearCentavos(totalSobres)}</Dato>
-          <Dato etiqueta="Cuentas">{formatearCentavos(totalPropias)}</Dato>
-          <Dato etiqueta="Diferencia">{formatearCentavos(totalPropias - totalSobres)}</Dato>
+          <Dato etiqueta="Cuentas">{formatearCentavos(totalCuentas)}</Dato>
+          <Dato etiqueta="Diferencia">{formatearCentavos(totalCuentas - totalSobres)}</Dato>
         </div>
       </TarjetaPalida>
 

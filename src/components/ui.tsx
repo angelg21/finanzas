@@ -1,7 +1,8 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { type ReactNode, createElement } from "react";
 import { partesCentavos } from "@/lib/dinero";
+import { fondoDe, iconoDe } from "./iconos-categoria";
 
 /* Piezas base. Fuente de verdad: docs/referencias/ui-referencia.png y docs/diseno.md. */
 
@@ -116,6 +117,7 @@ export function Cifra({
  *   navy    → verde pino sólida con texto blanco, sobre tarjetas pálidas o blancas
  *   blanca  → blanca translúcida con texto verde pino, sobre tarjetas pálidas
  *   positiva / negativa → como oscura, con el texto en verde o rojo
+ *   palida  → menta con texto verde pino: la opción activa, como la elegida en SelectorPildoras
  */
 export function Pildora({
   children,
@@ -123,7 +125,7 @@ export function Pildora({
   className = "",
 }: {
   children: ReactNode;
-  tono?: "oscura" | "hero" | "navy" | "blanca" | "positiva" | "negativa";
+  tono?: "oscura" | "hero" | "navy" | "blanca" | "positiva" | "negativa" | "palida";
   className?: string;
 }) {
   const estilos = {
@@ -133,6 +135,7 @@ export function Pildora({
     blanca: "bg-pildora-blanca text-palida-texto",
     positiva: "bg-pildora-hero text-positivo",
     negativa: "bg-pildora-hero text-negativo",
+    palida: "bg-palido text-palido-texto",
   }[tono];
   return (
     <span
@@ -143,14 +146,55 @@ export function Pildora({
   );
 }
 
-/** Cuadro azul pálido con iniciales, radio 10. */
-export function Avatar({ texto, className = "" }: { texto: string; className?: string }) {
+/** Cuadro azul pálido con iniciales, radio 10. `pequeno` para dentro de una píldora. */
+export function Avatar({
+  texto,
+  pequeno = false,
+  className = "",
+}: {
+  texto: string;
+  pequeno?: boolean;
+  className?: string;
+}) {
+  const tamano = pequeno ? "size-6 rounded-[8px] text-[10px]" : "size-11 rounded-avatar text-[13px]";
   return (
     <span
       aria-hidden
-      className={`grid size-11 shrink-0 place-items-center rounded-avatar bg-palido text-[13px] font-extrabold uppercase text-palido-texto ${className}`}
+      className={`grid shrink-0 place-items-center bg-palido font-extrabold uppercase text-palido-texto ${tamano} ${className}`}
     >
       {texto}
+    </span>
+  );
+}
+
+const medidasCirculo = {
+  sm: { caja: "size-6", icono: 13 },
+  md: { caja: "size-10", icono: 19 },
+  lg: { caja: "size-14", icono: 26 },
+} as const;
+
+/**
+ * Una categoría como en la referencia: círculo de su color con su icono de línea en blanco.
+ * `sm` va dentro de las píldoras, `lg` en la rejilla de categorías. Nunca emojis.
+ */
+export function CirculoCategoria({
+  icono,
+  color,
+  tamano = "md",
+  className = "",
+}: {
+  icono: string;
+  color: string;
+  tamano?: keyof typeof medidasCirculo;
+  className?: string;
+}) {
+  const { caja, icono: lado } = medidasCirculo[tamano];
+  return (
+    <span
+      aria-hidden
+      className={`grid shrink-0 place-items-center rounded-full text-white ${fondoDe(color)} ${caja} ${className}`}
+    >
+      {createElement(iconoDe(icono), { size: lado, strokeWidth: 1.75 })}
     </span>
   );
 }

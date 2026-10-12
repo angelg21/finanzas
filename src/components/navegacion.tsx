@@ -1,6 +1,6 @@
 "use client";
 
-import { History, House, Landmark, Menu, Plus, Wallet, X, type LucideIcon } from "lucide-react";
+import { History, House, Landmark, Menu, Plus, Tags, Wallet, X, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -15,15 +15,23 @@ const rutas: Ruta[] = [
   { href: "/cuentas", texto: "Cuentas", Icono: Landmark },
 ];
 
-const registrar: Ruta = { href: "/nuevo", texto: "Registrar", Icono: Plus };
+// El "+" y "Registrar movimiento" abren la captura de gasto, lo más frecuente (spec 001, criterio 15).
+// Ingreso y Mover siguen en el selector /nuevo; los dos cuentan como "Registrar".
+/** En la barra lateral y el menú, no en la barra inferior, que ya tiene sus cinco accesos. */
+const secundarias: Ruta[] = [{ href: "/categorias", texto: "Categorías", Icono: Tags }];
+
+const registrar: Ruta = { href: "/nuevo/gasto", texto: "Registrar", Icono: Plus };
+const prefijoRegistrar = "/nuevo";
 
 function esActiva(href: string, ruta: string) {
+  if (href === registrar.href) return ruta.startsWith(prefijoRegistrar);
   return href === "/" ? ruta === "/" : ruta.startsWith(href);
 }
 
 function tituloDe(ruta: string) {
+  if (ruta.startsWith(registrar.href)) return "Nuevo gasto";
   if (esActiva(registrar.href, ruta)) return registrar.texto;
-  return rutas.find((r) => esActiva(r.href, ruta))?.texto ?? "Finanzas";
+  return [...rutas, ...secundarias].find((r) => esActiva(r.href, ruta))?.texto ?? "Finanzas";
 }
 
 /** Título de la página actual, para la barra superior de escritorio. */
@@ -85,7 +93,7 @@ export function BarraLateral() {
         <Marca />
       </Link>
       <nav aria-label="Principal" className="flex flex-col gap-1">
-        {rutas.map((r) => (
+        {[...rutas, ...secundarias].map((r) => (
           <EnlaceLateral key={r.href} {...r} ruta={ruta} />
         ))}
       </nav>
@@ -150,7 +158,7 @@ export function MenuMovil() {
               </button>
             </div>
             <nav aria-label="Principal" className="flex flex-col gap-1">
-              {rutas.map((r) => (
+              {[...rutas, ...secundarias].map((r) => (
                 <EnlaceLateral key={r.href} {...r} ruta={ruta} alHacerClic={cerrar} />
               ))}
             </nav>

@@ -77,6 +77,24 @@
   --dona-4: #5f6d6c;
   --dona-5: #0e3b32;
 
+  /* Velo detrás de una ventana modal (el calendario de la fecha). */
+  --velo: rgba(20, 33, 29, 0.32);
+
+  /* Paleta de categorías: el icono va en blanco encima, así que cada tono da 3:1 o más con el blanco
+     (lo prueba src/components/paleta-categorias.test.ts). La base guarda el nombre, no el tono. */
+  --cat-coral: #c4553f;
+  --cat-naranja: #bd6420;
+  --cat-ambar: #9a6f0e;
+  --cat-oliva: #677526;
+  --cat-verde: #2e8458;
+  --cat-pino: #1f5c4d;
+  --cat-turquesa: #1c7a7a;
+  --cat-azul: #2f6aab;
+  --cat-indigo: #4d55b5;
+  --cat-lavanda: #7a5fb3;
+  --cat-rosa: #b4477a;
+  --cat-pizarra: #5f6d6c;
+
   --sombra-panel: 0 30px 80px rgba(20, 33, 29, 0.35);
   --sombra-tarjeta: 0 10px 30px rgba(20, 33, 29, 0.08);
 }
@@ -138,6 +156,12 @@
   --serie-b: #4d9d78;
   --rejilla: rgba(255, 255, 255, 0.08);
 
+  --velo: rgba(0, 0, 0, 0.55);
+
+  /* Pino e índigo, algo más claros para que el círculo se despegue de la tarjeta oscura. */
+  --cat-pino: #3a7062;
+  --cat-indigo: #545cb8;
+
   --sombra-panel: 0 30px 80px rgba(0, 0, 0, 0.5);
   --sombra-tarjeta: 0 0 0 0 transparent;
 }
@@ -179,6 +203,19 @@
   --color-dona-3: var(--dona-3);
   --color-dona-4: var(--dona-4);
   --color-dona-5: var(--dona-5);
+  --color-velo: var(--velo);
+  --color-cat-coral: var(--cat-coral);
+  --color-cat-naranja: var(--cat-naranja);
+  --color-cat-ambar: var(--cat-ambar);
+  --color-cat-oliva: var(--cat-oliva);
+  --color-cat-verde: var(--cat-verde);
+  --color-cat-pino: var(--cat-pino);
+  --color-cat-turquesa: var(--cat-turquesa);
+  --color-cat-azul: var(--cat-azul);
+  --color-cat-indigo: var(--cat-indigo);
+  --color-cat-lavanda: var(--cat-lavanda);
+  --color-cat-rosa: var(--cat-rosa);
+  --color-cat-pizarra: var(--cat-pizarra);
 
   --font-sans: var(--font-roboto-flex), "Roboto Flex", system-ui, sans-serif;
 
