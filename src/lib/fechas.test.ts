@@ -3,6 +3,7 @@ import {
   celdasDelMes,
   diaAnterior,
   etiquetaFecha,
+  fechaDesdeAtajo,
   fechaLarga,
   fechaValida,
   hoyEnCaracas,
@@ -46,6 +47,23 @@ describe("fechaValida (criterio 11)", () => {
     expect(fechaValida("2026-13-01", hoy)).toBe(false);
     expect(fechaValida("11/10/2026", hoy)).toBe(false);
     expect(fechaValida("2026-10-1", hoy)).toBe(false);
+  });
+});
+
+describe("fechaDesdeAtajo: «Hoy» y «Ayer» se resuelven al guardar (criterio 11)", () => {
+  it("«hoy» es el hoy de Caracas del momento de guardar, no el de cuando se abrió la pantalla", () => {
+    // Pantalla abierta el 11 a las 23:50 de Caracas; se guarda el 12 a las 00:10.
+    const alGuardar = hoyEnCaracas(new Date("2026-10-12T04:10:00Z"));
+    expect(fechaDesdeAtajo("hoy", alGuardar)).toBe("2026-10-12");
+  });
+  it("«ayer» es el día anterior a ese hoy, también al cambiar de mes", () => {
+    expect(fechaDesdeAtajo("ayer", "2026-10-12")).toBe("2026-10-11");
+    expect(fechaDesdeAtajo("ayer", "2026-11-01")).toBe("2026-10-31");
+  });
+  it("una fecha concreta llega tal cual, para que fechaValida la juzgue", () => {
+    expect(fechaDesdeAtajo("2026-10-05", "2026-10-12")).toBe("2026-10-05");
+    expect(fechaDesdeAtajo("2099-01-01", "2026-10-12")).toBe("2099-01-01");
+    expect(fechaDesdeAtajo("", "2026-10-12")).toBe("");
   });
 });
 

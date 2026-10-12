@@ -15,6 +15,7 @@ import {
 } from "@/components/formulario";
 import { Tarjeta } from "@/components/ui";
 import { type Moneda, unidadDe } from "@/lib/dinero";
+import { fechaDesdeAtajo } from "@/lib/fechas";
 import { type FormaPago, sobreSugerido } from "@/lib/gastos";
 import { type ErroresFormularioGasto, type EstadoGasto, type ValoresGasto, registrarGasto } from "./acciones";
 import { AntesYDespues, saldosAfectados } from "./antes-y-despues";
@@ -164,7 +165,8 @@ function Campos({
   const [cuentaId, setCuentaId] = useState(valores.cuentaId);
   const [cuentaVentaId, setCuentaVentaId] = useState(valores.cuentaVentaId);
   const [sobreId, setSobreId] = useState(valores.sobreId);
-  const [fecha, setFecha] = useState(valores.fecha);
+  // Tras un error vuelve "hoy" o "ayer" tal como se mandó; el selector necesita la fecha.
+  const [fecha, setFecha] = useState(fechaDesdeAtajo(valores.fecha, hoy));
   // Lo tecleado, para el "Antes y después" de escritorio. Los campos siguen siendo no controlados.
   const [monto, setMonto] = useState(valores.monto);
   const [tasa, setTasa] = useState(valores.tasa);

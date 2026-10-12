@@ -24,6 +24,17 @@ export function diaAnterior(fecha: string): string {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * Lo que manda el selector de fecha: "hoy", "ayer" o una fecha concreta. Los atajos se resuelven con el `hoy`
+ * del momento de guardar: una pantalla abierta antes de la medianoche, o "Registrar otro" a la mañana
+ * siguiente, no guarda la fecha de ayer con "Hoy" marcado.
+ */
+export function fechaDesdeAtajo(texto: string, hoy: string): string {
+  if (texto === "hoy") return hoy;
+  if (texto === "ayer") return diaAnterior(hoy);
+  return texto;
+}
+
 /** Una fecha real en formato AAAA-MM-DD que no es posterior a `hoy`. */
 export function fechaValida(texto: string, hoy: string): boolean {
   const partes = /^(\d{4})-(\d{2})-(\d{2})$/.exec(texto);

@@ -21,8 +21,9 @@ const iniciales = ["L", "M", "M", "J", "V", "S", "D"];
  * ventana modal pequeña, con los tokens de la app en vez del selector del navegador, que no se puede
  * estilizar. No deja elegir días futuros. La ventana es un <dialog>: Escape la cierra, el foco queda dentro
  * y tocar fuera también la cierra.
- * La fecha viaja en un campo oculto. Sin JavaScript, un campo de fecha nativo dentro de <noscript> va antes
- * con el mismo nombre, así que es el que lee el servidor.
+ * La fecha viaja en un campo oculto: "hoy" o "ayer" si se eligió un atajo, para que el servidor los resuelva
+ * al guardar (fechaDesdeAtajo) y no con el día en que se abrió la pantalla; si no, la fecha. Sin JavaScript,
+ * un campo de fecha nativo dentro de <noscript> va antes con el mismo nombre, así que es el que se lee.
  */
 export function SelectorFecha({
   name,
@@ -61,7 +62,7 @@ export function SelectorFecha({
           className="h-12 w-full rounded-[14px] border border-tarjeta-borde bg-tarjeta-hover px-4 text-[15px] text-texto"
         />
       </noscript>
-      <input type="hidden" name={name} value={valor} />
+      <input type="hidden" name={name} value={valor === hoy ? "hoy" : valor === ayer ? "ayer" : valor} />
 
       <div className="flex flex-wrap gap-2">
         <button

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { categoriasDeGastoPorUso, saldosPorCuenta, sobresParaGasto } from "@/db/consultas";
 import { registrarMovimientos } from "@/db/movimientos";
 import type { Moneda } from "@/lib/dinero";
-import { hoyEnCaracas } from "@/lib/fechas";
+import { fechaDesdeAtajo, hoyEnCaracas } from "@/lib/fechas";
 import { type ErroresGasto, type FormaPago, prepararGasto, saldosTras } from "@/lib/gastos";
 
 /** Lo que se tecleó, para volver a llenar el formulario si hay que corregir o confirmar. */
@@ -126,16 +126,19 @@ async function procesarGasto(formData: FormData): Promise<Resultado> {
   const cuentaOrigen = cuentas.find((c) => String(c.id) === elegida && c.moneda !== "VES");
   const bolivares = cuentas.find((c) => c.moneda === "VES") ?? null;
 
+  // "Hoy" es el de ahora, al guardar, no el del día en que se abrió la pantalla (criterio 11).
+  const hoy = hoyEnCaracas(new Date());
   const preparado = prepararGasto(
     {
       ...valores,
+      fecha: fechaDesdeAtajo(valores.fecha, hoy),
       // Sin cuenta válida, una en bolívares hace que prepararGasto pida "Elige una cuenta en dólares".
       cuentaOrigen: cuentaOrigen ?? { id: 0, moneda: "VES" },
       cuentaBolivares: bolivares,
       sobreId: sobre?.id ?? 0,
       categoriaId: categoria?.id ?? 0,
     },
-    hoyEnCaracas(new Date()),
+    hoy,
   );
 
   const errores: ErroresFormularioGasto = preparado.ok ? {} : { ...preparado.errores };
