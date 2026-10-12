@@ -1,0 +1,3 @@
+- [Prima en el cuadre](project_prima-en-cuadre.md): decisión 2026-10-11; "cuentas activas" se rompe al desactivar con saldo; T5 y T10 pendientes
+- [Defectos de datos encontrados](project_defectos-datos-encontrados.md): parser hex/exponente, check solo de forma, floats en demo, mezcla demo/prueba, pooler sin probar
+- [Entorno de prueba](reference_entorno-de-prueba.md): .env.local denegado, finanzas-db, sondas demo-sonda-*, imports por URL desde el scratchpad
