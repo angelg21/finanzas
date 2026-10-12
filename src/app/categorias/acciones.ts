@@ -102,8 +102,9 @@ export async function eliminarCategoriaAccion(formData: FormData) {
 }
 
 /**
- * Criterio 22: una archivada vuelve a ofrecerse al registrar. Lee `restaurar` (el botón que lo ofrece
- * dentro del formulario de crear, donde `id` podría ser otra) o, si no viene, `id`.
+ * Criterios 19 y 22: restaura una archivada. Lee `restaurar` (el campo oculto que acompaña al botón "Restaurar
+ * la archivada" del formulario de crear o editar, donde `id` es otra) o, si no viene, `id` (la lista de
+ * archivadas). Si se llegó desde la captura, vuelve a ella con la categoría elegida, como al crear (25).
  */
 export async function restaurarCategoriaAccion(formData: FormData) {
   const id = Number(texto(formData, "restaurar") || texto(formData, "id"));
@@ -117,5 +118,7 @@ export async function restaurarCategoriaAccion(formData: FormData) {
   }
   await restaurarCategoria(categoria.id);
   revalidar();
+  const volver = texto(formData, "volver");
+  if (destinos.has(volver)) redirect(`${volver}?categoria=${categoria.id}`);
   redirect(`/categorias?tipo=${categoria.tipo}`);
 }

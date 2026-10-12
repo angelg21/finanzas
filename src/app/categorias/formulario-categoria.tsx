@@ -116,16 +116,18 @@ function Campos({
             />
           </Campo>
           {archivada !== undefined ? (
-            <button
-              type="submit"
-              formAction={restaurarCategoriaAccion}
-              name="restaurar"
-              value={archivada}
-              className="-mt-3 flex w-fit items-center gap-1.5 rounded-full px-2 py-1 text-[13px] font-bold text-enlace hover:bg-tarjeta-hover"
-            >
-              <RotateCcw size={14} aria-hidden />
-              Restaurar la archivada
-            </button>
+            <>
+              {/* El id va en un campo oculto: React reemplaza el name de un botón con formAction por el suyo. */}
+              <input type="hidden" name="restaurar" value={archivada} />
+              <button
+                type="submit"
+                formAction={restaurarCategoriaAccion}
+                className="-mt-3 flex w-fit items-center gap-1.5 rounded-full px-2 py-1 text-[13px] font-bold text-enlace hover:bg-tarjeta-hover"
+              >
+                <RotateCcw size={14} aria-hidden />
+                Restaurar la archivada
+              </button>
+            </>
           ) : null}
 
           {tipoFijo ? (
