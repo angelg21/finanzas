@@ -1,2 +1,2 @@
-- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — "por defecto", key={ronda}, el arreglo previo, Enter, y el estado en la URL tras guardar (recargar, atrás)
-- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, sin JS por $ACTION, Enter y atrás por CDP, Edge por PID
+- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — "por defecto", key={ronda}, el arreglo previo, Enter, estado en la URL o en sessionStorage tras guardar o abandonar
+- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, sin JS por $ACTION, Enter y atrás por CDP, clic en el visible, Edge por PID

@@ -1,6 +1,6 @@
 ---
 name: donde-se-esconden-defectos
-description: Patrón del autor en finanzas - ★ muy bien probados en lib y en scripts/comprobar-NNN; los defectos quedan en valores por defecto (también "hoy"), en estado del cliente tras una vuelta al servidor, en lo que "tocar" significa para un radio y en la parte de la feature que solo se probó por curl (botones con formAction)
+description: Patrón del autor en finanzas - ★ muy bien probados en lib y en scripts/comprobar-NNN; los defectos quedan en valores por defecto (también "hoy"), en estado del cliente tras una vuelta al servidor, en lo que "tocar" significa para un radio, en la parte de la feature que solo se probó por curl (botones con formAction) y en estado guardado fuera de React (URL, sessionStorage) que sobrevive a guardar o a abandonar
 metadata:
   type: feedback
 ---
@@ -19,6 +19,8 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 
 - 001, vuelta 7 (2026-10-12): el arreglo "lo escrito viaja en la dirección" (`?volver=` con el borrador) dejó el borrador en la URL de la captura después de guardar: "Registrar otro" con JS hace `preventDefault` y no toca la URL. Recargar (pestaña descartada en el celular) o "Ir al inicio" → atrás vuelve a pintar el gasto ya guardado, completo, y un toque lo duplica (venta + gasto); la app no deja borrar gastos. Además el foco automático deja el cursor al principio del monto precargado ("15" → "152100"), y el atrás del sistema desde "Nueva" pierde todo: la spec solo nombraba "la flecha de volver" de la app.
 
+- 001, vuelta 8 (2026-10-12): el arreglo pasó el borrador a `sessionStorage` (`b63fba7`). Se aplica a toda captura montada con `numero === 0` durante 30 min, no solo al volver de "Nueva": abandonar crear categoría y abrir luego "Gasto" o "+" desde inicio trae forma "vendiendo", vendido, tasa, fecha "ayer", nota y hasta la Cuenta prima; "5" + Transporte guardó 20 USDT vendidos y un gasto en Bs con fecha de ayer. Y el `key` de la captura depende del borrador: si caduca entre volver y guardar, la re-renderización que trae `revalidatePath` cambia el `key`, se pierde la confirmación y queda el formulario vacío con la categoría ya elegida (duplicado a un número y un toque). El progress decía "se recupera y se borra"; el código solo lo borra al guardar.
+
 **Why:** la demo es toda `origen = importado`, así que la lógica que depende de historial `manual` no se ve. La validación en navegador sigue el camino feliz, en un solo momento, y no pasa por un error de validación ni por el paso del tiempo antes de guardar.
 
 **How to apply:**
@@ -33,6 +35,7 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 - Cuando el capture ya resiste, mira la otra mitad de la feature (aquí, categorías): cada botón o enlace secundario que ofrece la pantalla, pulsado en Edge, no por curl. Busca `formAction` con `name`: React pisa ese `name`.
 - En cada formulario con más de un `type=submit`, mira cuál es el primero en el orden del DOM: es el que dispara Enter. Y todo buscador o filtro dentro de un `<form>` lo envía con Enter. Pruébalo pulsando Enter, no con clics: el autor valida con clics.
 - Si un arreglo mete estado en la dirección (`searchParams`), sigue esa URL después del éxito: guarda, "Registrar otro", `location.reload()` y "Ir al inicio" + `history.back()`. Un formulario que reaparece lleno es un duplicado a un toque. Y prueba el atrás del sistema (`history.back()`), no solo la flecha de la app: el autor valida con la flecha.
+- Si un arreglo guarda estado fuera de React (`sessionStorage`, almacén externo): abandona el flujo a mitad y abre la pantalla por otro acceso (inicio, "+"); deja que caduque entre abrir y guardar (escribe la marca de tiempo en el pasado). Un `key` que se calcula de un almacén externo cambia en la re-renderización que trae `revalidatePath` tras guardar. Compara lo que el progress dice del diseño ("un solo uso") con dónde se borra de verdad.
 - Una regla que busca por nombre (`sobreSugerido`, "Binance", "Gastos del mes") se rompe si la misma feature deja renombrar: cruza cada criterio de "editar" con las reglas por nombre.
 
 Ver [[entorno-revision-finanzas]].
