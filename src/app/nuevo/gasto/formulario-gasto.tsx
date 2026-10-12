@@ -227,6 +227,8 @@ function Campos({
           <SelectorPildoras
             etiqueta="Categoría"
             name="categoriaId"
+            // Envueltas también en el celular: con muchas categorías, desplazarse de lado es incómodo.
+            envolver
             opciones={categorias.map((c) => ({
               valor: String(c.id),
               texto: c.nombre,
