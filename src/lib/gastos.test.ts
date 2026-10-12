@@ -155,7 +155,7 @@ describe("prepararGasto: bolívares del saldo (criterio 3)", () => {
 
 describe("prepararGasto: montos inválidos (criterio 5)", () => {
   it("rechaza vacío, cero, negativo y texto", () => {
-    for (const monto of ["", "  ", "0", "0,00", "-5", "abc"]) {
+    for (const monto of ["", "  ", "0", "0,00", "-5", "abc", "1e3", "0x10"]) {
       expect(errores(entrada({ monto })).monto).toBeDefined();
     }
   });
@@ -171,7 +171,7 @@ describe("prepararGasto: montos inválidos (criterio 5)", () => {
 describe("prepararGasto: tasa (criterio 6)", () => {
   it("en bolívares rechaza tasa vacía, cero, negativa o texto", () => {
     for (const forma of ["vendiendo", "saldo"] as const) {
-      for (const tasa of ["", "0", "-1", "abc"]) {
+      for (const tasa of ["", "0", "-1", "abc", "1e3"]) {
         expect(errores(entrada({ forma, tasa, vendido: "20", monto: "2100" })).tasa).toBeDefined();
       }
     }

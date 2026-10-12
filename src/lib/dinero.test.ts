@@ -34,6 +34,19 @@ describe("aCentavos", () => {
     expect(() => aCentavos("abc")).toThrow();
     expect(() => aCentavos("")).toThrow();
   });
+  it("rechaza notación científica, hexadecimal y binaria: solo cifras y un decimal", () => {
+    for (const texto of ["1e3", "0x10", "0b11", "Infinity", "1.2.3", "1,2,3", "+5", ".", "-"]) {
+      expect(() => aCentavos(texto), texto).toThrow();
+    }
+  });
+  it("redondea el tercer decimal sin coma flotante, las mitades hacia arriba", () => {
+    expect(aCentavos("1.005")).toBe(101);
+    expect(aCentavos("1,004")).toBe(100);
+    expect(aCentavos("0,125")).toBe(13);
+  });
+  it("rechaza montos que no caben en un entero seguro", () => {
+    expect(() => aCentavos("999999999999999999")).toThrow();
+  });
 });
 
 describe("formatearCentavos y partesCentavos", () => {
@@ -67,6 +80,10 @@ describe("aTasa", () => {
     expect(() => aTasa("0,00")).toThrow();
     expect(() => aTasa("0,00001")).toThrow();
     expect(() => aTasa("-5")).toThrow();
+  });
+  it("rechaza notación científica y hexadecimal", () => {
+    expect(() => aTasa("1e3")).toThrow();
+    expect(() => aTasa("0x10")).toThrow();
   });
   it("rechaza tasas que no caben en numeric(14,4)", () => {
     expect(() => aTasa("10000000000")).toThrow();

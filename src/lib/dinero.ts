@@ -49,14 +49,31 @@ function normalizar(texto: string): string {
   return ultimaComa > ultimoPunto ? limpio.replace(/\./g, "").replace(",", ".") : limpio.replace(/,/g, "");
 }
 
+/**
+ * Un número normalizado, multiplicado por 10^decimales y redondeado al entero (mitades lejos de cero),
+ * leyendo las cifras como texto: nunca pasa por coma flotante. Solo admite signo, cifras y un punto
+ * decimal; "1e3" o "0x10", que `Number` sí entiende, son null. También null si no cabe en un entero seguro.
+ */
+function escalar(normalizado: string, decimales: number): number | null {
+  const partes = /^(-?)(\d*)(?:\.(\d*))?$/.exec(normalizado);
+  if (!partes) return null;
+  const [, signo, entero = "", fraccion = ""] = partes;
+  if (entero === "" && fraccion === "") return null;
+  const cifras = fraccion.padEnd(decimales + 1, "0");
+  let valor = BigInt(entero || "0") * BigInt(10 ** decimales) + BigInt(cifras.slice(0, decimales) || "0");
+  if (Number(cifras[decimales]) >= 5) valor += BigInt(1);
+  if (valor > BigInt(Number.MAX_SAFE_INTEGER)) return null;
+  return signo && valor > BigInt(0) ? -Number(valor) : Number(valor);
+}
+
 /** "1.234,56" o "1234.56" → 123456. Lanza si no es un número válido. */
 export function aCentavos(texto: string): number {
   const normalizado = normalizar(texto);
   // Vacío no es cero: un monto sin escribir es un error, no un gasto de 0.
   if (normalizado === "") throw new Error("Monto vacío");
-  const valor = Number(normalizado);
-  if (!Number.isFinite(valor)) throw new Error(`Monto inválido: ${texto}`);
-  return Math.round(valor * 100);
+  const centavos = escalar(normalizado, 2);
+  if (centavos === null) throw new Error(`Monto inválido: ${texto}`);
+  return centavos;
 }
 
 /*
@@ -73,9 +90,8 @@ const TASA_MAXIMA = 10 ** 14 - 1;
 export function aTasa(texto: string): number {
   const normalizado = normalizar(texto);
   if (normalizado === "") throw new Error("Tasa vacía");
-  const valor = Number(normalizado);
-  if (!Number.isFinite(valor)) throw new Error(`Tasa inválida: ${texto}`);
-  const tasaDm = Math.round(valor * DIEZMILESIMAS);
+  const tasaDm = escalar(normalizado, 4);
+  if (tasaDm === null) throw new Error(`Tasa inválida: ${texto}`);
   if (tasaDm <= 0) throw new Error(`La tasa debe ser mayor que cero: ${texto}`);
   if (tasaDm > TASA_MAXIMA) throw new Error(`Tasa demasiado grande: ${texto}`);
   return tasaDm;
