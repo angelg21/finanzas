@@ -1,2 +1,2 @@
-- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — ★ bien probados; fallan los "por defecto" (también "hoy"), el useState perdido con key={ronda} y "tocar" un radio ya marcado
-- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, sin JS por $ACTION, Edge por DevTools, reloj atrasado en 3125, guardián en paralelo
+- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — ★ bien probados; fallan los "por defecto" (también "hoy"), el estado tras key={ronda}, "tocar" un radio y el arreglo de la vuelta anterior
+- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, sin JS por $ACTION, Edge por DevTools (cerrar solo por PID), reloj atrasado en 3125
