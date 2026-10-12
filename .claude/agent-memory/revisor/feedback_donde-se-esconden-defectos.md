@@ -17,6 +17,8 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 
 - 001, vuelta 6 (2026-10-12): el arreglo de restaurar funciona al pulsar el botón, pero "Restaurar la archivada" quedó como el primer `type=submit` del formulario (justo bajo el nombre). Enter, o la tecla "Ir" del teclado del celular, dispara el botón por defecto: tras el error de archivada, cambiar el nombre y pulsar Enter restaura la archivada y descarta lo que se creaba o editaba, con o sin JS. Y Enter en el buscador de iconos (`type=search` dentro del `<form>`) crea la categoría con el icono por defecto.
 
+- 001, vuelta 7 (2026-10-12): el arreglo "lo escrito viaja en la dirección" (`?volver=` con el borrador) dejó el borrador en la URL de la captura después de guardar: "Registrar otro" con JS hace `preventDefault` y no toca la URL. Recargar (pestaña descartada en el celular) o "Ir al inicio" → atrás vuelve a pintar el gasto ya guardado, completo, y un toque lo duplica (venta + gasto); la app no deja borrar gastos. Además el foco automático deja el cursor al principio del monto precargado ("15" → "152100"), y el atrás del sistema desde "Nueva" pierde todo: la spec solo nombraba "la flecha de volver" de la app.
+
 **Why:** la demo es toda `origen = importado`, así que la lógica que depende de historial `manual` no se ve. La validación en navegador sigue el camino feliz, en un solo momento, y no pasa por un error de validación ni por el paso del tiempo antes de guardar.
 
 **How to apply:**
@@ -30,6 +32,7 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 - Todo lo que la acción devuelve en `valores` vuelve a pintarse: envía sin JS valores vacíos o raros (fecha vacía, texto) y mira si el render los formatea sin validar.
 - Cuando el capture ya resiste, mira la otra mitad de la feature (aquí, categorías): cada botón o enlace secundario que ofrece la pantalla, pulsado en Edge, no por curl. Busca `formAction` con `name`: React pisa ese `name`.
 - En cada formulario con más de un `type=submit`, mira cuál es el primero en el orden del DOM: es el que dispara Enter. Y todo buscador o filtro dentro de un `<form>` lo envía con Enter. Pruébalo pulsando Enter, no con clics: el autor valida con clics.
+- Si un arreglo mete estado en la dirección (`searchParams`), sigue esa URL después del éxito: guarda, "Registrar otro", `location.reload()` y "Ir al inicio" + `history.back()`. Un formulario que reaparece lleno es un duplicado a un toque. Y prueba el atrás del sistema (`history.back()`), no solo la flecha de la app: el autor valida con la flecha.
 - Una regla que busca por nombre (`sobreSugerido`, "Binance", "Gastos del mes") se rompe si la misma feature deja renombrar: cruza cada criterio de "editar" con las reglas por nombre.
 
 Ver [[entorno-revision-finanzas]].
