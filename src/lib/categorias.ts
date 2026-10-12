@@ -180,6 +180,27 @@ export type ColorCategoria = (typeof coloresCategoria)[number];
 export const iconoPorDefecto = "etiqueta";
 export const colorPorDefecto: ColorCategoria = "pizarra";
 
+type CategoriaBase = { nombre: string; tipo: TipoCategoria; icono: string; color: ColorCategoria };
+
+/** Las categorías con que arranca la app (pnpm db:seed), en su orden. Las propias llegan con el importador. */
+export const categoriasBase: CategoriaBase[] = [
+  { nombre: "Comida", tipo: "gasto", icono: "cubiertos", color: "coral" },
+  { nombre: "Transporte", tipo: "gasto", icono: "bus", color: "azul" },
+  { nombre: "Servicios", tipo: "gasto", icono: "bombillo", color: "ambar" },
+  { nombre: "Salud", tipo: "gasto", icono: "salud", color: "rosa" },
+  { nombre: "Ocio", tipo: "gasto", icono: "mando", color: "lavanda" },
+  { nombre: "Ropa", tipo: "gasto", icono: "camisa", color: "indigo" },
+  { nombre: "Tecnología", tipo: "gasto", icono: "celular", color: "turquesa" },
+  { nombre: "Hogar", tipo: "gasto", icono: "casa", color: "naranja" },
+  { nombre: "Educación", tipo: "gasto", icono: "birrete", color: "azul" },
+  { nombre: "Familia", tipo: "gasto", icono: "familia", color: "verde" },
+  { nombre: "Regalos", tipo: "gasto", icono: "regalo", color: "rosa" },
+  { nombre: "Otros gastos", tipo: "gasto", icono: "otros", color: "pizarra" },
+  { nombre: "Sueldo remoto", tipo: "ingreso", icono: "maletin", color: "pino" },
+  { nombre: "Proyecto local", tipo: "ingreso", icono: "oficina", color: "oliva" },
+  { nombre: "Otros ingresos", tipo: "ingreso", icono: "monedas", color: "verde" },
+];
+
 const LARGO_MAXIMO = 40;
 
 /** Minúsculas, sin acentos y sin espacios de más: "  Educación " y "educacion" son la misma clave. */

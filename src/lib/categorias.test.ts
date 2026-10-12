@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   type EntradaCategoria,
   buscarIconos,
+  categoriasBase,
   coloresCategoria,
   destinoAlEliminar,
   iconosCategoria,
@@ -142,5 +143,23 @@ describe("buscarIconos (criterio 23)", () => {
   });
   it("lo que no existe no devuelve nada", () => {
     expect(buscarIconos("zzzz")).toEqual([]);
+  });
+});
+
+describe("categoriasBase (criterio 26)", () => {
+  it("las 15 de la semilla: 12 de gasto y 3 de ingreso, sin nombres repetidos por tipo", () => {
+    expect(categoriasBase).toHaveLength(15);
+    expect(categoriasBase.filter((c) => c.tipo === "gasto")).toHaveLength(12);
+    expect(categoriasBase.filter((c) => c.tipo === "ingreso")).toHaveLength(3);
+    const claves = categoriasBase.map((c) => `${c.tipo}:${c.nombre}`);
+    expect(new Set(claves).size).toBe(claves.length);
+  });
+  it("cada una con un icono y un color del catálogo, distintos de los valores por defecto", () => {
+    const iconos = iconosCategoria.map((i) => i.nombre);
+    for (const c of categoriasBase) {
+      expect(iconos, c.nombre).toContain(c.icono);
+      expect(coloresCategoria, c.nombre).toContain(c.color);
+      expect(c.icono === "etiqueta" && c.color === "pizarra", c.nombre).toBe(false);
+    }
   });
 });
