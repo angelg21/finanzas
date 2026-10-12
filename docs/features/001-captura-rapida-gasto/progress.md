@@ -293,3 +293,18 @@ Lo que se aprendió, lo que quedó fuera y por qué.
       - `comprobar-001 --url` en verde y `/cuentas` cuadra.
     - Filas de prueba borradas: 118 movimientos `demo-*` y 5 cuentas activas.
   - `pnpm verify`: `estructura: 0 errores, 13 avisos`, `Tests 205 passed (205)`, `✓ verify:full en verde en 22.1 s`.
+- 2026-10-12 · `/f-review`, quinta vuelta.
+  - **`revisor`: NO APTO.** Los arreglos de la cuarta vuelta, fecha y tasa, están bien. Hallazgos nuevos:
+    1. **Media, criterios ★ 19 y 25.** "Restaurar la archivada", en crear y en editar, no restaura nada, con JavaScript o sin él. El botón lleva `name="restaurar"` con `formAction`, y React reemplaza ese `name` por su `$ACTION_ID`, así que el id nunca llega a la acción. Desde crear redirige a `/categorias` y la archivada sigue archivada; desde editar, toma el `id` de la categoría editada. La evidencia de T16-T19 era de curl, que mandaba `restaurar` a mano. Además, `restaurarCategoriaAccion` ignora `volver`: desde la píldora "Nueva" de la captura, restaurar no vuelve a `/nuevo/gasto`.
+    2. **Baja-media, criterio 8 frente al 20.** `sobreSugerido` busca el nombre exacto. Al renombrar Familia o Regalos, la sugerencia pasa a Gastos del mes.
+  - **Incidente del revisor:** su primer envío sin JavaScript a `/categorias/10` copió los `$ACTION` de los dos formularios de la página y archivó Familia. La reactivó con `update ... set activa = true where id = 10 and nombre = 'Familia'`. Comprobado: `10|Familia|gasto|familia|verde|t|10`, 15 categorías activas y Familia con sus 5 movimientos.
+  - **Decisión del desarrollador, 2026-10-12:** la sugerencia de sobre compara nombres equivalentes y un renombre de verdad pierde la sugerencia. Queda escrito en el criterio 8. Ligar el sobre a la categoría queda para otra feature.
+  - **Corregido:**
+    - **1** (`8a2405a`): el id de la archivada viaja en un campo oculto `restaurar`, que React no toca, y el botón solo lleva `formAction`. `restaurarCategoriaAccion` respeta `volver`: desde la captura vuelve a `/nuevo/gasto?categoria=<id>`, como al crear.
+    - **2** (`2e63f60`): `sobreSugerido` compara con `claveDeNombre`, la misma clave que `repetidaDe`, exportada de `categorias.ts` en vez de duplicarla. Las pruebas se escribieron primero; falló la de los equivalentes y la de la limitación ya pasaba.
+  - **Evidencia** con Edge manejado por DevTools contra el build, con una archivada temporal (77, "Prueba restaurar") y otra activa (78, "Prueba editar"), borradas al final. Lo mismo con JavaScript y sin él:
+    - **Crear desde la captura** (`/categorias/nueva?volver=/nuevo/gasto`) con "prueba RESTAURAR": se ofrece restaurar, con el campo oculto en 77. Al pulsar "Restaurar la archivada", termina en `/nuevo/gasto?categoria=77` con la 77 marcada, y la base dice `77|Prueba restaurar|t`.
+    - **Editar la 78** con el nombre "Prueba restaurar": se ofrece y restaura la 77, termina en `/categorias?tipo=gasto` y la 78 queda como estaba.
+    - Sin JavaScript, el botón lleva `name="$ACTION_ID_4073…"`, lo que confirma la causa que encontró el revisor. El id llega igual por el campo oculto.
+    - `comprobar-001 --url` en verde y `/cuentas` cuadra. Quedan 118 movimientos `demo-*` y 15 categorías activas de 15.
+  - `pnpm verify`: `estructura: 0 errores, 13 avisos`, `Tests 207 passed (207)`, `✓ verify:full en verde en 24.8 s`.
