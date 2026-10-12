@@ -22,7 +22,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 Spec, sección final. Se construye cuando el desarrollador apruebe la ampliación.
 
 - [x] T11 · (2026-10-11) `src/lib/categorias.ts`: catálogo de iconos con palabras en español, paleta de colores, `validarCategoria` (19 y 20), `buscarIconos` y `destinoAlEliminar` (21). Pruebas primero.
-- [ ] T12 · Esquema: `icono` y `color` en `categorias`, con `pnpm db:generate`. Lanzar `guardian-datos` antes de `pnpm db:migrate`.
+- [x] T12 · (2026-10-11) Esquema: `icono` y `color` en `categorias`, con `pnpm db:generate`. Lanzar `guardian-datos` antes de `pnpm db:migrate`.
 - [ ] T13 · Semillas: icono y color de las 15 categorías base; `db:seed` los asigna sin pisar los que el usuario cambió (26).
 - [ ] T14 · Paleta: doce tokens en `globals.css`, con el contraste del icono blanco validado por script en claro y oscuro. Registro `src/components/iconos-categoria.tsx` y `CirculoCategoria` en `ui.tsx`.
 - [ ] T15 · `src/db`: consultas (por tipo con su número de movimientos, por id, archivadas) y operaciones (crear, actualizar, borrar o archivar, restaurar). Lanzar `guardian-datos`.
@@ -79,3 +79,8 @@ Lo que se aprendió, lo que quedó fuera y por qué.
     - Las 11 filas de prueba se borraron después; la base vuelve a 118 filas, todas `demo-*`.
 - 2026-10-11 · El desarrollador pidió un calendario acorde con la app: el del navegador "está muy feo" y no se puede estilizar. Ahora es `SelectorFecha` (`src/components/calendario.tsx`), con píldoras Hoy, Ayer y Otra fecha y un calendario propio. Las funciones de fecha (`celdasDelMes`, `moverMes`, `mesDe`, `etiquetaFecha`, `fechaLarga`, `nombreMes`) son puras, tienen pruebas en `src/lib/fechas.test.ts` y se vieron fallar antes de implementarlas. Sin JavaScript, el campo nativo dentro de `<noscript>`. Lo vi abierto en claro y en oscuro, con el formulario abierto a mano solo para la captura. Esa captura destapó un choque de clases: "Hoy" no se marcaba porque dos fondos competían en el mismo elemento. Ahora la forma de la píldora va aparte de sus colores.
 - 2026-10-11 · El desarrollador lo quiso más chico y como ventana que salga solo para elegir la fecha. Ahora es un `<dialog>` modal de 300 px, con días de 36 px y el velo en un token nuevo, `velo`, en los dos temas. Escape o tocar fuera lo cierran. Al abrirse, el foco va al día elegido.
+- 2026-10-11 · T12, migración `0002_wet_wrecker.sql`: añade `icono` y `color` a `categorias`. `guardian-datos` dio APTO, con BEGIN/ROLLBACK sobre la base local y la migración completa sobre una copia desechable. `schema.ts` toma los valores por defecto de `src/lib/categorias.ts`, por import relativo, en vez de repetirlos. Al hacerlo, la migración aún sin aplicar ni guardar en git se borró y se volvió a generar con `db:generate`: el SQL es idéntico al revisado y solo cambió el nombre del archivo; nada se editó a mano. Aplicada con `db:migrate`: las 15 categorías tienen `etiqueta` y `pizarra`. Condiciones del guardián:
+  - **T13**: actualizar solo `where icono = 'etiqueta' and color = 'pizarra'`, con las dos columnas juntas. Una prueba comprueba que lo que asigna la semilla existe en el catálogo. Decidir que la semilla no reviva una categoría base que el usuario renombró o borró.
+  - **T14**: el registro de iconos y `CirculoCategoria` usan el valor por defecto ante un nombre fuera del catálogo.
+  - **Importador**: validar contra el catálogo, nunca copiar el hexadecimal de Gestor de Gastos.
+  - **Supabase**: migrar antes de desplegar.

@@ -1,3 +1,4 @@
-- [Prima en el cuadre](project_prima-en-cuadre.md): decisión 2026-10-11; "cuentas activas" se rompe al desactivar con saldo; T5 y T10 pendientes
-- [Defectos de datos encontrados](project_defectos-datos-encontrados.md): parser hex/exponente, check solo de forma, floats en demo, mezcla demo/prueba, pooler sin probar
-- [Entorno de prueba](reference_entorno-de-prueba.md): .env.local denegado, finanzas-db, sondas demo-sonda-*, imports por URL desde el scratchpad
+- [Prima en el cuadre](project_prima-en-cuadre.md): ADR 0006, T5 y T10 hechos; desactivar con saldo descuadra; demo cuadra en 539300
+- [Defectos de datos encontrados](project_defectos-datos-encontrados.md): abiertos (floats en demo, mezcla demo/prueba, pooler, seed revive categorías) y cerrados
+- [Categorías: icono y color](project_categorias-icono-color.md): por nombre, sin check; condiciones para T13, T14 e importador; FK NO ACTION
+- [Entorno de prueba](reference_entorno-de-prueba.md): .env.local denegado, finanzas-db, copia desechable para migraciones, sondas demo-sonda-*

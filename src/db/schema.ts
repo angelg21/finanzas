@@ -27,6 +27,8 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+// Import relativo: drizzle-kit carga este archivo sin los alias de tsconfig.
+import { colorPorDefecto, iconoPorDefecto } from "../lib/categorias";
 
 // ---------- Enumeraciones ----------
 
@@ -99,6 +101,13 @@ export const categorias = pgTable(
     nombre: text().notNull(),
     tipo: tipoCategoriaEnum().notNull(),
     padreId: integer().references((): AnyPgColumn => categorias.id),
+    /**
+     * Nombre del icono y del color en el catálogo de src/lib/categorias.ts, nunca un hexadecimal: el color
+     * sigue al tema y la paleta puede ajustarse sin tocar datos. Lo valida la aplicación, no un enum.
+     */
+    icono: text().notNull().default(iconoPorDefecto),
+    color: text().notNull().default(colorPorDefecto),
+    /** false = archivada: no se ofrece al registrar, pero sus movimientos la conservan. */
     activa: boolean().notNull().default(true),
     orden: integer().notNull().default(0),
     creadoEn: creadoEn(),

@@ -15,6 +15,13 @@
       "when": 1791418912182,
       "tag": "0001_kind_titanium_man",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791775678093,
+      "tag": "0002_wet_wrecker",
+      "breakpoints": true
     }
   ]
 }
