@@ -11,7 +11,7 @@ metadata:
 
 **How to apply:**
 
-- T13 (APTO, 2026-10-11) y T14 (el registro y `CirculoCategoria` caen en el valor por defecto, con prueba) cumplen mis condiciones.
+- T13 (APTO el 2026-10-11, confirmado en /f-review el 2026-10-12 con una base existente y otra migrada desde cero) y T14 (el registro y `CirculoCategoria` caen en el valor por defecto, con prueba) cumplen mis condiciones.
 - T15: APTO el 2026-10-11, tras una ronda de cambios. La capa db bloquea y cuenta (`bloquearYContar`), y la acción de restaurar usa `repetidaDe`. Si alguien quita ese `for update`, vuelve la carrera que lanza 23503 y la del cambio de tipo.
 - La unicidad de nombre en la base es exacta, no por `clave()`. Las equivalencias solo las detiene `lib`.
 - Importador: todo valor que no pase por `validarCategoria` necesita una prueba contra el catálogo (un hexadecimal de Gestor de Gastos es el caso típico). Debe emparejar categorías por `clave()`, no crear subcategorías: `padre_id` bloquea el borrado con 23503 y `destinoAlEliminar` no cuenta las hijas.

@@ -1,4 +1,4 @@
-- [Prima en el cuadre](project_prima-en-cuadre.md): ADR 0006, T5 y T10 hechos; desactivar con saldo descuadra; demo cuadra en 539300
-- [Defectos de datos encontrados](project_defectos-datos-encontrados.md): abiertos (floats en demo, pooler, ventana de tipo, equivalentes) y cerrados (T13, T15)
+- [Prima en el cuadre](project_prima-en-cuadre.md): ADR 0006, T5 y T10 hechos; desactivar con saldo descuadra; demo 539300; sonda prima 537800
+- [Defectos de datos encontrados](project_defectos-datos-encontrados.md): abiertos (floats en demo, pooler, ventana de tipo, equivalentes, carrera de seed) y cerrados (T13, T15)
 - [Categorías: icono y color](project_categorias-icono-color.md): por nombre, sin check; T13, T14 y T15 aptos; for update en db; condiciones del importador
-- [Entorno de prueba](reference_entorno-de-prueba.md): .env.local denegado, finanzas-db, copias desechables, sondas demo-sonda-*, .mts, carreras con 2 conexiones
+- [Entorno de prueba](reference_entorno-de-prueba.md): .env.local denegado, drizzle-kit generate denegado, finanzas-db, copias desechables, sondas, carreras

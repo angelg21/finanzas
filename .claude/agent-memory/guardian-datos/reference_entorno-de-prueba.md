@@ -15,6 +15,9 @@ metadata:
 - Un script tsx en el scratchpad que importa módulos del repo debe importarlos por URL de archivo (`pathToFileURL`), o con `createRequire` apuntando al `package.json` del repo. Lo mismo vale para `drizzle-orm` y `dotenv`. Además, a `tsx` hay que pasarle la ruta con forma `C:/...`, no `/c/...`.
 - Si el script usa `await` en el nivel superior, debe terminar en `.mts`; con `.ts` falla ("cjs output"). Para que tsx resuelva el alias `@/`, se corre con cwd en la raíz del repo.
 - **Carreras** (método de T15, 2026-10-11): abrir una segunda conexión de postgres-js con `begin`, insertar sin confirmar y lanzar la función del repo sin esperarla. Después `pg_sleep(1)` dentro de esa transacción, y leer el resultado tras confirmar. Así se ve si la función se bloquea, falla o se adelanta.
+- **`drizzle-kit generate` está denegado** por permisos, incluso con un `--config` que escribe en una copia de `drizzle/` en el scratchpad (2026-10-12). No intentar rodearlo. `drizzle-kit migrate` sí corre con el envoltorio sobre una copia. Para saber si hay cambios sin migrar, comparar `drizzle/meta/NNNN_snapshot.json` con `schema.ts` y la cadena `prevId`. Para saber si alguien editó una migración ya aplicada, comparar el `sha256sum` del `.sql` con `hash` en `drizzle.__drizzle_migrations`.
+- Para lanzar dos procesos a la vez en bash, preparar primero (migrar) en una línea aparte. `a && b & c` manda a segundo plano la cadena entera, y `c` arranca antes de que termine la migración (me pasó: 42P01).
+- El que me llama puede no saber que ya revisé algo, porque `progress.md` no siempre registra mis veredictos (el de T13 no estaba). Revisar igual, pero decirlo en el informe.
 - El autor sigue con las tareas siguientes mientras reviso. Comprobar la hora de modificación de los archivos revisados antes de dar el veredicto.
 
 Ver también [[defectos-datos-encontrados]].
