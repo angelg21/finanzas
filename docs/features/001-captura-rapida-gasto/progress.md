@@ -331,3 +331,37 @@ Lo que se aprendió, lo que quedó fuera y por qué.
     - **Captura → "Nueva" → la flecha de volver:** vuelve con monto 12.
     - Base: 118 movimientos `demo-*` y 15 categorías activas de 15. `comprobar-001 --url` en verde y `/cuentas` cuadra.
   - `pnpm verify`: `estructura: 0 errores, 14 avisos` (el nuevo es el recordatorio del archivo de pruebas nuevo), `Tests 216 passed (216)`, `✓ verify:full en verde en 23.4 s`.
+- 2026-10-12 · `/f-review`, séptima vuelta.
+  - **`revisor`: NO APTO.** Los arreglos de Enter de la sexta vuelta funcionan. Hallazgos nuevos:
+    1. **Media, datos, criterios 13 y 25. Lo introdujo `17efddd`.** El borrador se queda en la dirección de la captura y nunca se limpia, ni después de guardar. Al recargar (o al descartar el celular la pestaña) o con "Ir al inicio" y atrás, reaparece el gasto ya guardado, y un toque lo registra otra vez. Reproducido: las filas 821 y 822 duplican a la 819 y la 820.
+    2. **Baja-media.** Con el monto precargado, el foco automático deja el cursor al principio: teclear "15" sobre "2100" da "152100".
+    3. **Baja-media, decisión de producto.** El atrás del sistema desde `/categorias/nueva` pierde lo escrito; solo la flecha de la app lo conserva.
+    4. Conocido: la carrera de T15 y los flotantes de `semilla-demo.ts`.
+  - **Decisión del desarrollador, 2026-10-12:** el atrás del sistema también conserva lo escrito.
+  - **Cambio de diseño:** el borrador deja de viajar en la dirección. Mientras esté ahí, recargar o volver atrás lo trae de nuevo. Pasa a ser un borrador de un solo uso en la pestaña (`sessionStorage`): se guarda al tocar "Nueva", se recupera y se borra al volver a montar la captura por cualquier camino, y caduca a los 30 minutos.
+  - **Corregido** (`b63fba7`), los hallazgos 1 a 3:
+    - **Borrador en la pestaña:**
+      - "Nueva" vuelve a ser un enlace fijo y, al tocarlo, guarda el borrador en `sessionStorage` (`src/app/nuevo/gasto/borrador-pestana.ts`).
+      - La captura lo lee con `useSyncExternalStore`, con lectura en caché que vuelve a mirar la vigencia en cada lectura. En el servidor y al hidratar no hay borrador; en el cliente, la captura se monta de nuevo con él.
+      - Se olvida al guardar el gasto y caduca a los 30 minutos.
+      - El lint de React descartó dos caminos más cortos: `setState` dentro de un efecto (`set-state-in-effect`) y `Date.now()` en el render (`purity`).
+    - **Monto recuperado:** se selecciona al recibir el foco, así que teclear lo reemplaza.
+    - **Pruebas:** se escribieron primero y se vieron fallar ("borradorATexto is not a function"). Las de `direccionConBorrador` y `borradorDesdeParametros` se sustituyeron por las equivalentes del borrador en texto (ida y vuelta, campos ajenos, largos y caducidad, también con un reloj que retrocede). Siguen las de la vuelta segura.
+    - Criterio 25 de la spec al día.
+  - **Evidencia** con Edge manejado por DevTools contra el build, con teclas reales:
+    - **A, la reproducción del revisor:**
+      - escribir 2100, "vendiendo", 20, 241,8 y una nota; "Nueva"; "Prueba borrador" y Enter. Vuelve a `/nuevo/gasto?categoria=97` con todo lo escrito y el monto seleccionado (0-4);
+      - "Guardar gasto" crea las filas 834 y 835;
+      - "Registrar otro" deja el monto vacío y sin borrador;
+      - recargar deja el monto vacío y la forma en Dólares, sin borrador, con solo la categoría de la dirección, como antes de `17efddd`;
+      - inicio y atrás: lo mismo. **Siguen siendo dos filas.**
+    - **B, el atrás del sistema:** "Nueva" y `history.back()` recuperan 2100, "vendiendo", 20, 241,8 y la nota.
+      - Teclear "15" sobre el monto da `15`.
+      - Recargar antes de guardar recupera el borrador. Es lo escrito al tocar "Nueva", no lo tecleado después.
+      - Guardar crea las filas 838 y 839, y recargar después deja la captura vacía, sin borrador.
+    - **Regresiones:**
+      - pruebas del sobre: Familia a mano tras el error, Inversión con el aviso, el sobre ya marcado y la sugerencia;
+      - la venta sin JavaScript;
+      - `comprobar-001 --url` en verde y `/cuentas` cuadra.
+    - Filas de prueba borradas: 118 movimientos `demo-*` y 15 categorías activas de 15.
+  - `pnpm verify`: `estructura: 0 errores, 14 avisos`, `Tests 215 passed (215)`, `✓ verify:full en verde en 46.8 s`.
