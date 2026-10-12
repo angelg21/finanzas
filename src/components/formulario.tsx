@@ -1,4 +1,5 @@
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
+import Link from "next/link";
+import type { ButtonHTMLAttributes, ComponentProps, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
 import { unidadDe } from "@/lib/dinero";
 import { Avatar } from "./ui";
 
@@ -62,7 +63,10 @@ export function CampoMonto({
         inputMode="decimal"
         autoComplete="off"
         placeholder="0"
-        className="tabular min-w-0 flex-1 bg-transparent text-[36px] font-extrabold leading-none tracking-tight text-texto placeholder:text-texto-3 focus:outline-none"
+        className="tabular min-w-0 flex-1 bg-transparent text-[36px] font-extrabold leading-none tracking-tight text-texto placeholder:text-texto-3"
+        // El foco lo marca el anillo del contenedor. La regla global :focus-visible no está en una capa de
+        // Tailwind y le gana a outline-none; el estilo en línea evita el doble anillo.
+        style={{ outline: "none" }}
         {...props}
       />
       <span className="shrink-0 text-[15px] font-bold text-texto-3">{unidadDe(moneda)}</span>
@@ -74,7 +78,8 @@ export type OpcionPildora = { valor: string; texto: string; detalle?: string; av
 
 /**
  * Grupo de radios accesible con forma de píldoras: en el celular, una fila desplazable en horizontal;
- * en escritorio, envueltas. Sin JavaScript son radios nativos y el formulario los envía igual.
+ * en escritorio, envueltas. `envolver` las envuelve también en el celular, para grupos de pocas opciones
+ * que conviene ver de una vez. Sin JavaScript son radios nativos y el formulario los envía igual.
  * La elegida va en menta con texto verde pino. Con `valor` es controlado (para sugerir el sobre);
  * sin él, arranca en `valorInicial` y lo maneja el navegador.
  */
@@ -85,6 +90,7 @@ export function SelectorPildoras({
   valorInicial,
   valor,
   onCambio,
+  envolver = false,
   error,
 }: {
   etiqueta: string;
@@ -93,12 +99,16 @@ export function SelectorPildoras({
   valorInicial?: string;
   valor?: string;
   onCambio?: (valor: string) => void;
+  envolver?: boolean;
   error?: string;
 }) {
+  const fila = envolver
+    ? "flex flex-wrap gap-2"
+    : "-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0";
   return (
     <fieldset className="flex min-w-0 flex-col gap-1.5">
       <legend className="mb-1.5 text-[12px] font-semibold text-texto-3">{etiqueta}</legend>
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0">
+      <div className={fila}>
         {opciones.map((o) => (
           <label key={o.valor} className="group shrink-0 cursor-pointer">
             <input
@@ -135,21 +145,41 @@ export function Selector({ className = "", children, ...props }: SelectHTMLAttri
   );
 }
 
+type VarianteBoton = "primario" | "secundario" | "peligro";
+
+const estilosBoton: Record<VarianteBoton, string> = {
+  primario: "boton-pino h-12 rounded-full px-5 text-[14px] font-semibold disabled:opacity-60",
+  secundario:
+    "h-12 rounded-full border border-tarjeta-borde bg-tarjeta px-5 text-[14px] font-semibold text-texto hover:bg-tarjeta-hover disabled:opacity-60",
+  peligro: "h-9 rounded-full px-3 text-[13px] font-semibold text-negativo hover:bg-tarjeta-hover disabled:opacity-60",
+};
+
 export function Boton({
   variante = "primario",
   className = "",
   children,
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variante?: "primario" | "secundario" | "peligro" }) {
-  const estilos = {
-    primario: "boton-pino h-12 rounded-full px-5 text-[14px] font-semibold disabled:opacity-60",
-    secundario:
-      "h-12 rounded-full border border-tarjeta-borde bg-tarjeta px-5 text-[14px] font-semibold text-texto hover:bg-tarjeta-hover disabled:opacity-60",
-    peligro: "h-9 rounded-full px-3 text-[13px] font-semibold text-negativo hover:bg-tarjeta-hover disabled:opacity-60",
-  }[variante];
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variante?: VarianteBoton }) {
   return (
-    <button className={`inline-flex items-center justify-center gap-2 ${estilos} ${className}`} {...props}>
+    <button
+      className={`inline-flex items-center justify-center gap-2 ${estilosBoton[variante]} ${className}`}
+      {...props}
+    >
       {children}
     </button>
+  );
+}
+
+/** Un enlace con la forma de un Boton: para acciones que navegan y tienen que funcionar sin JavaScript. */
+export function EnlaceBoton({
+  variante = "primario",
+  className = "",
+  children,
+  ...props
+}: ComponentProps<typeof Link> & { variante?: VarianteBoton }) {
+  return (
+    <Link className={`inline-flex items-center justify-center gap-2 ${estilosBoton[variante]} ${className}`} {...props}>
+      {children}
+    </Link>
   );
 }

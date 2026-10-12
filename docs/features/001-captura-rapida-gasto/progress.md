@@ -12,7 +12,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 - [x] T4 · (2026-10-11) `src/app/nuevo/gasto/acciones.ts`: `registrarGasto` con zod, confirmación de Inversión, revalidación de `/`, `/movimientos`, `/sobres`, `/cuentas` y estado de éxito con el resumen.
 - [x] T5 · (2026-10-11) `/cuentas`: el total y el cuadre suman todas las cuentas activas, también la de la prima, que conserva su marca (criterio 16).
 - [x] T6 · (2026-10-11) Piezas `CampoMonto` y `SelectorPildoras` en `src/components/formulario.tsx`, con radios nativos y la elegida en `palido`; tono `palida` en `Pildora`.
-- [ ] T7 · Pantalla `/nuevo/gasto` en móvil: cabecera con píldoras de tipo, formulario completo en el orden de la spec, estado de éxito con "Registrar otro" e "Ir al inicio", foco y teclado numérico.
+- [x] T7 · (2026-10-11) Pantalla `/nuevo/gasto` en móvil: cabecera con píldoras de tipo, formulario completo en el orden de la spec, estado de éxito con "Registrar otro" e "Ir al inicio", foco y teclado numérico.
 - [ ] T8 · Escritorio: `TarjetaPalida` "Antes y después" con saldos del sobre y la cuenta, actualizada al cambiar monto, cuenta o sobre. Enlaces del "+", de "Registrar movimiento" y del mosaico "Gasto" a la nueva ruta.
 - [ ] T9 · `pnpm capturas -- /nuevo/gasto /cuentas` en claro y oscuro, comparar con las referencias y la sección "Pantallas"; cronometrar un gasto en dólares desde el celular; ajustar.
 - [ ] T10 · Documentos: ADR nuevo "la cuenta de la prima cuenta en el cuadre" (y la tasa en diezmilésimas) con `/f-adr`; invariante en el plan (sección 4) y en `CLAUDE.md`; plan (fase 1: casilla del formulario de captura); diseño (piezas nuevas y tono `palida`); observaciones si cambió algo.
@@ -44,3 +44,18 @@ Lo que se aprendió, lo que quedó fuera y por qué.
   - **Antes de T7**: los gastos que se guarden al validar en el navegador llevan `origen = manual` y ninguna referencia, y `db:demo:limpiar` no los borra. En la base local, que hoy solo tiene filas `demo-*`, se borran al terminar la validación con `delete from movimientos where origen = 'manual' and referencia_externa is null`. Nunca en una base con datos reales.
   - **Para `/f-audit`**: repetir la prueba del lote inválido contra el pooler de Supabase (puerto 6543). Además, `src/db/semilla-demo.ts` usa `Math.round(usd * tasa)` y `toFixed` fuera de `dinero.ts`.
 - 2026-10-11 · T4 añadió `saldosTras` a `src/lib/gastos.ts`, una función pura con pruebas. Aplica las filas a los saldos para el resumen tras guardar y le servirá al "Antes y después" de T8; así la acción no hace otra consulta después de insertar. La confirmación de Inversión viaja como `confirmarSobre=<id>`: si se cambia de sobre después del aviso, no vale. La acción todavía no tiene pantalla; se ejercita de punta a punta en T7.
+- 2026-10-11 · T7, cómo quedó y la evidencia:
+  - Lo que se ve según la forma de pago se decide en CSS con `:has()` sobre el radio marcado: funciona sin JavaScript y no parpadea al cargar.
+  - React 19 reinicia el formulario al terminar cada acción. Por eso el estado lleva `ronda` y los campos se montan de nuevo con lo tecleado.
+  - "Hoy" y "Ayer" son un grupo de radios `atajoFecha` que la acción ignora; sin JavaScript manda el campo de fecha.
+  - Piezas añadidas: `EnlaceBoton`, el mismo estilo que `Boton` pero como enlace, para "Registrar otro" e "Ir al inicio" sin JavaScript; y `envolver` en `SelectorPildoras`, para que las tres formas de pago se vean sin desplazar.
+  - Límite de plataforma: iOS Safari no abre el teclado con el foco automático sin un toque previo. El campo recibe el foco, pero el teclado solo se abre solo en Android. Se mide en T9.
+  - Evidencia, con el formulario enviado como un navegador sin JavaScript (`curl` con los campos ocultos de Next) contra la base local:
+    - criterio 1: 4200 USDT = 4200;
+    - criterio 2: transferencia 2000 → 483600 a `241.8000` y gasto de 210000 VES = 868, con aviso del vuelto;
+    - criterios 5 y 6: errores junto al campo, también con "1e3";
+    - criterio 9: primero el aviso y, confirmado, se guarda;
+    - criterio 11: rechaza 2099-01-01;
+    - criterio 16: gasto desde la cuenta de la prima y `/cuentas` sigue diciendo "Cuadra con los sobres" (el cuadre anterior habría dado 528464 contra 527864);
+    - envíos hostiles: sobre "Por asignar", una categoría de ingreso y Bolívares como cuenta en dólares, todos rechazados.
+    - Las 11 filas de prueba se borraron después; la base vuelve a 118 filas, todas `demo-*`.

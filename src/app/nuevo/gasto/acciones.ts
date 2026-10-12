@@ -36,13 +36,18 @@ export type ResumenGasto = {
   bolivaresDespuesCentavos: number | null;
 };
 
-export type EstadoGasto =
-  | { estado: "inicial" }
+type Resultado =
   | { estado: "error"; errores: ErroresFormularioGasto; valores: ValoresGasto }
   /** Sobre Inversión: hace falta un segundo clic (criterio 9). */
   | { estado: "confirmar"; valores: ValoresGasto }
   /** "Registrar otro" reabre con la misma forma de pago y la misma cuenta. */
   | { estado: "guardado"; resumen: ResumenGasto; forma: FormaPago; cuentaId: string };
+
+/**
+ * `ronda` cuenta las respuestas. React reinicia el formulario al terminar cada acción; con la ronda como
+ * `key` los campos se vuelven a montar con lo tecleado, también sin JavaScript.
+ */
+export type EstadoGasto = { ronda: number } & ({ estado: "inicial" } | Resultado);
 
 const cifra = z.string().trim().max(30, "Ese número es demasiado largo");
 const formas = z.enum(["dolares", "vendiendo", "saldo"], { error: "Elige una forma de pago" });
@@ -65,12 +70,17 @@ function campo(formData: FormData, nombre: keyof ValoresGasto | "confirmarSobre"
   return typeof valor === "string" ? valor : "";
 }
 
+/** Registra un gasto (spec 001). Para `useActionState`. */
+export async function registrarGasto(previo: EstadoGasto, formData: FormData): Promise<EstadoGasto> {
+  return { ronda: (previo?.ronda ?? 0) + 1, ...(await procesarGasto(formData)) };
+}
+
 /**
- * Registra un gasto (spec 001). Nada del formulario se cree a ciegas: el sobre, la categoría y las
- * cuentas se buscan en la base entre los activos y aptos, y la moneda sale de la cuenta, no del formulario.
- * El check de la base solo valida la forma de la fila, no que el sobre sea "Por asignar" o la categoría de ingreso.
+ * Nada del formulario se cree a ciegas: el sobre, la categoría y las cuentas se buscan en la base entre
+ * los activos y aptos, y la moneda sale de la cuenta, no del formulario. El check de la base solo valida
+ * la forma de la fila, no que el sobre sea "Por asignar" o la categoría de ingreso.
  */
-export async function registrarGasto(_previo: EstadoGasto, formData: FormData): Promise<EstadoGasto> {
+async function procesarGasto(formData: FormData): Promise<Resultado> {
   const tecleado = {
     forma: campo(formData, "forma"),
     monto: campo(formData, "monto"),
