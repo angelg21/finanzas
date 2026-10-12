@@ -308,3 +308,26 @@ Lo que se aprendió, lo que quedó fuera y por qué.
     - Sin JavaScript, el botón lleva `name="$ACTION_ID_4073…"`, lo que confirma la causa que encontró el revisor. El id llega igual por el campo oculto.
     - `comprobar-001 --url` en verde y `/cuentas` cuadra. Quedan 118 movimientos `demo-*` y 15 categorías activas de 15.
   - `pnpm verify`: `estructura: 0 errores, 13 avisos`, `Tests 207 passed (207)`, `✓ verify:full en verde en 24.8 s`.
+- 2026-10-12 · `/f-review`, sexta vuelta.
+  - **`revisor`: NO APTO.** Los arreglos de la quinta vuelta funcionan al pulsar los botones. Hallazgos nuevos:
+    1. **Media, datos, criterios ★ 19 y 20. Lo introdujo `8a2405a`.** "Restaurar la archivada" es el primer botón de envío del formulario, así que Enter (o "Ir" en el celular) lo dispara: restaura una categoría que no se eligió y descarta lo que se creaba o editaba. Pasa con JavaScript y sin él. Reproducido al crear ("Prueba enter" no se creó y la 81 se restauró) y al editar (se perdieron el nombre y el color de la 82).
+    2. **Baja-media, criterio 23.** Enter en el buscador de iconos envía el formulario y crea la categoría con el icono por defecto, no con el buscado.
+    3. **Baja, criterio 25 y la regla de la captura rápida. Decisión del desarrollador.** Pasar por "Nueva" borra lo escrito en la captura: monto, forma de pago, vendido y tasa. Al volver, la forma está en Dólares. Si se reescribe "2100" sin mirar, se guardan 2.100 USDT.
+    4. Conocido, sin cambios: la carrera de T15 y `toFixed` en `semilla-demo.ts`.
+  - **Decisión del desarrollador, 2026-10-12:** conservar lo escrito en la captura al pasar por "Nueva". Queda escrito en el criterio 25.
+  - **Corregido:**
+    - **1 y 2** (`97698c5`): restaurar es un formulario aparte, sin nada visible, y su botón se asocia con `form={id}`. Enter en el formulario principal siempre guarda. Enter en el buscador de iconos hace `preventDefault`, y sin JavaScript el buscador, que no filtra, se oculta con `noscript:`.
+    - **3** (`17efddd`): `src/lib/borrador-captura.ts`, con las pruebas primero y vistas fallar (no existía el módulo):
+      - el enlace "Nueva" lleva lo escrito en `?volver=`, sin precarga porque cambia con cada tecla;
+      - crear y restaurar vuelven con ello y con `categoria`;
+      - el sobre solo viaja si se eligió a mano;
+      - la vuelta solo acepta la ruta de la captura, nunca `//otro.com`, `\otro.com`, `javascript:` ni otra ruta.
+  - **Evidencia** con Edge manejado por DevTools y un Enter de teclado real (`Input.dispatchKeyEvent`). Las categorías temporales 85 a 89 se borraron:
+    - **Crear**, con y sin JavaScript: se ofrece restaurar, el nombre cambia a "Prueba enter" y Enter crea "Prueba enter" (87 y 88). La archivada 85 sigue en `f`.
+    - **Editar la 86**, con y sin JavaScript: tras la oferta, "Prueba editada" en coral y Enter guardan `86|Prueba editada|coral|t`. La 85 sigue en `f`.
+    - **Enter en el buscador** con "café": la página sigue en `/categorias/nueva` y no se crea nada. Sin JavaScript, el buscador no se ve.
+    - **Captura → "Nueva" → crear con Enter:** vuelve a `/nuevo/gasto?forma=vendiendo&monto=2100&tasa=241%2C8&vendido=20&cuenta=1&venta=1&sobre=3&fecha=ayer&nota=pan+y+caf%C3%A9&categoria=89`. Están monto 2100, "vendiendo", vendido 20, tasa 241,8, sobre 3, "ayer", la nota "pan y café", la categoría 89 y la unidad Bs. Al cambiar luego la categoría, Familia, elegida a mano, no se mueve.
+    - **Captura → "Nueva" → restaurar la archivada:** vuelve con monto 35, "saldo", tasa 240 y la categoría 85, ya activa.
+    - **Captura → "Nueva" → la flecha de volver:** vuelve con monto 12.
+    - Base: 118 movimientos `demo-*` y 15 categorías activas de 15. `comprobar-001 --url` en verde y `/cuentas` cuadra.
+  - `pnpm verify`: `estructura: 0 errores, 14 avisos` (el nuevo es el recordatorio del archivo de pruebas nuevo), `Tests 216 passed (216)`, `✓ verify:full en verde en 23.4 s`.
