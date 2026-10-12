@@ -48,7 +48,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 - [x] Validada en navegador (captura el 2026-10-11, categorías el 2026-10-12)
 - [x] Verificada: `pnpm verify` en verde, cada ★ con su prueba (2026-10-12)
 - [x] Revisada: veredicto APTO PARA FUSIONAR (2026-10-12, novena vuelta)
-- [ ] Fusionada en `main` el AAAA-MM-DD
+- [x] Fusionada en `main` el 2026-10-12
 
 ## Notas
 
@@ -413,3 +413,7 @@ Lo que se aprendió, lo que quedó fuera y por qué.
   - **Logo:** el desarrollador lo pidió como icono de la app instalada. Es la feature 002 del plan (PWA instalable): hoy no hay manifest. El emblema quedó recortado, sin las letras, en `docs/referencias/logo-emblema.png`, con el original al lado y una sección "Logo" en `docs/diseno.md` (`bca92ae`).
   - `comprobar-001 --url` en verde y `/cuentas` cuadra. La base queda con 118 movimientos `demo-*` y 15 categorías.
   - `pnpm verify`: `estructura: 0 errores, 13 avisos`, `Tests 211 passed (211)`, `✓ verify:full en verde en 21.4 s`.
+- 2026-10-12 · `/f-ship`. `pnpm verify --forzar`: `Tests 211 passed (211)`, `✓ verify:full en verde en 20.7 s`. Decisiones del desarrollador al fusionar:
+  - Leyó el diff contra `main`, 66 archivos, línea por línea.
+  - Los cinco commits posteriores al APTO (`55d2101` a `afc2286`, 96 líneas) no son sustanciales: resuelven los hallazgos menores del propio revisor, cada uno con verify y evidencia. No se vuelve a `/f-review`.
+  - El historial se conserva tal cual, con sus cadenas de arreglos, en vez de agruparlo con `reset --soft`. Este archivo y la memoria de los agentes citan 26 de los 81 SHA como evidencia, y agrupar los dejaría sin destino. `merge --no-ff` deja `git log --first-parent main` con un commit por feature.

@@ -214,12 +214,13 @@ Referencia antes de diseñar: Actual Budget, open source, usa exactamente el mod
 
 **Fase 1, dos semanas: usar desde el día uno**
 
-- Cuentas, categorías, movimientos con nota.
-- Flujo de gasto en bolívares (feature 001).
+- Cuentas, categorías, movimientos con nota. Los gastos con nota y las categorías con icono y color están hechos en la feature 001; faltan administrar cuentas (observación 3) y los ingresos y movimientos entre cuentas.
+- Flujo de gasto en bolívares. **Hecho** en la feature 001, fusionada el 12 de octubre de 2026.
 - Sobres con reglas de reparto y confirmación de un clic.
 - Importador de Gestor de Gastos.
 - Gráficas básicas: por mes y por categoría.
-- Formulario de captura rápida de gasto (feature 001) y PWA instalable (feature 002).
+- Formulario de captura rápida de gasto. **Hecho** en la feature 001, fusionada el 12 de octubre de 2026.
+- PWA instalable (feature 002).
 
 **Fase 2, mes dos: reglas y captura por Telegram**
 
