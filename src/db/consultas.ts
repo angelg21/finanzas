@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ne, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "./index";
 import { categorias, cuentas, movimientos, partidasSobre, reglasReparto, sobres } from "./schema";
@@ -183,3 +183,53 @@ export async function movimientosDeSobre(sobreId: number, limite = 50) {
 }
 
 export type MovimientoReciente = Awaited<ReturnType<typeof movimientosRecientes>>[number];
+
+// ---------- Captura de gasto (spec 001) ----------
+
+/** Categorías de gasto activas, las más usadas en los últimos 90 días primero. */
+export async function categoriasDeGastoPorUso() {
+  const usos = sql<number>`count(${movimientos.id})::int`.mapWith(Number);
+  return db
+    .select({ id: categorias.id, nombre: categorias.nombre, usos })
+    .from(categorias)
+    .leftJoin(
+      movimientos,
+      and(
+        eq(movimientos.categoriaId, categorias.id),
+        eq(movimientos.tipo, "gasto"),
+        gte(movimientos.fecha, sql`current_date - 90`),
+      ),
+    )
+    .where(and(eq(categorias.tipo, "gasto"), eq(categorias.activa, true)))
+    .groupBy(categorias.id)
+    .orderBy(desc(usos), categorias.orden, categorias.id);
+}
+
+/** Sobres a los que se les puede cargar un gasto, con su saldo: todos los activos menos "Por asignar". */
+export async function sobresParaGasto() {
+  return (await saldosPorSobre()).filter((s) => s.tipo !== "por_asignar");
+}
+
+/**
+ * Cuenta que se preselecciona al pagar en dólares: la cuenta propia en dólares del último gasto manual;
+ * sin historial, Binance. La de la prima nunca se preselecciona, para no cargarle un gasto por descuido.
+ */
+export async function cuentaPorDefectoParaGasto(): Promise<number | null> {
+  const enDolaresPropia = and(eq(cuentas.esPropia, true), eq(cuentas.activa, true), ne(cuentas.moneda, "VES"));
+  const [ultima] = await db
+    .select({ id: cuentas.id })
+    .from(movimientos)
+    .innerJoin(cuentas, eq(movimientos.cuentaOrigenId, cuentas.id))
+    .where(and(eq(movimientos.tipo, "gasto"), eq(movimientos.origen, "manual"), enDolaresPropia))
+    .orderBy(desc(movimientos.id))
+    .limit(1);
+  if (ultima) return ultima.id;
+  // Sin historial, Binance; si alguien la renombra, la primera cuenta propia en dólares por orden.
+  const [respaldo] = await db
+    .select({ id: cuentas.id })
+    .from(cuentas)
+    .where(enDolaresPropia)
+    .orderBy(desc(eq(cuentas.nombre, "Binance")), cuentas.orden, cuentas.id)
+    .limit(1);
+  return respaldo?.id ?? null;
+}
