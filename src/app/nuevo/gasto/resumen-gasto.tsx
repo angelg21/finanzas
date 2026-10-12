@@ -61,9 +61,10 @@ export function ResumenGasto({
           </Aviso>
         ) : null}
         {/* Solo hay vuelto si se vendieron dólares para este gasto; del saldo, no. */}
-        {forma === "vendiendo" && bolivares !== null && bolivares > 0 ? (
+        {venta && venta.vueltoCentavos > 0 && bolivares !== null ? (
           <p className="text-[13px] text-texto-2">
-            Te quedan {formatearCentavos(bolivares, "VES")} en Bolívares, de vuelto.
+            Te quedan {formatearCentavos(venta.vueltoCentavos, "VES")} de vuelto; Bolívares queda en{" "}
+            {formatearCentavos(bolivares, "VES")}.
           </p>
         ) : null}
 

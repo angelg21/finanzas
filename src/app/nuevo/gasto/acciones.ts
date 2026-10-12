@@ -37,8 +37,11 @@ export type ResumenGasto = {
   sobreDespuesCentavos: number;
   /** Saldo en Bs de la cuenta Bolívares tras el gasto; null si se pagó en dólares. */
   bolivaresDespuesCentavos: number | null;
-  /** Lo vendido y de qué cuenta salió, para que se vea en la confirmación; null si no hubo venta. */
-  venta: { montoCentavos: number; moneda: Moneda; cuenta: string } | null;
+  /**
+   * Lo vendido, de qué cuenta salió y el vuelto de esta venta en Bs (lo recibido menos lo gastado), para la
+   * confirmación; null si no hubo venta. El vuelto no es el saldo de Bolívares, que puede traer bolívares de antes.
+   */
+  venta: { montoCentavos: number; moneda: Moneda; cuenta: string; vueltoCentavos: number } | null;
 };
 
 type Resultado =
@@ -180,6 +183,7 @@ async function procesarGasto(formData: FormData): Promise<Resultado> {
             montoCentavos: transferencia.montoCentavos,
             moneda: transferencia.moneda,
             cuenta: cuentaOrigen?.nombre ?? "",
+            vueltoCentavos: (transferencia.montoDestinoCentavos ?? 0) - gasto.montoCentavos,
           }
         : null,
     },
