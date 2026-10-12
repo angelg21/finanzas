@@ -181,3 +181,30 @@ Lo que se aprendió, lo que quedó fuera y por qué.
     ```
 
   - Lo que queda fuera de las pruebas automáticas: el texto de los avisos de la pantalla de éxito, que sale del saldo que calcula `saldosTras` (probado en los criterios 2 y 4). Se vio en el navegador el 2026-10-11.
+- 2026-10-12 · `/f-review`, primera vuelta.
+  - **`revisor`: NO APTO.** Hallazgos:
+    1. **Media-alta, datos.** En "Bolívares vendiendo USDT" la venta no sale de Binance por defecto. Sale de la cuenta del último gasto manual en dólares, porque la venta y el pago en dólares comparten un solo grupo `cuentaId`. Además, la confirmación no dice de qué cuenta salieron los dólares. El revisor lo reprodujo: un gasto desde Efectivo y luego una venta con el valor por defecto dejaron una transferencia desde Efectivo. Binance queda inflada y el cuadre no lo delata. Nadie lo vio antes porque toda la demo es `importado` y `cuentaPorDefectoParaGasto` solo mira gastos `manual`. Incumple Pantallas: "Binance por defecto".
+    2. **Baja.** Una venta puede guardar una transferencia que entrega 0 Bs (vendido "0,01" a tasa "0,4"). `prepararGasto` no exige `recibidos > 0` y el check de la base no cubre `monto_destino_centavos`.
+    3. **Baja, texto.** "Te quedan X en Bolívares, de vuelto" sale también al pagar con "Bolívares del saldo", donde no hubo venta. Pantallas dice "si aplica".
+    4. **Para el ship.** Hay archivos sin commit en `.claude/agent-memory/` de los dos subagentes.
+  - **`guardian-datos` sobre T13 y los comentarios del ADR 0006: SEGURO DE APLICAR.** Hallazgos sin bloqueo:
+    - dos `db:seed` a la vez en una base vacía pueden chocar con `23505`, sin dañar datos;
+    - una categoría nueva en `categoriasBase` no llega a una base existente;
+    - la nota de la Cuenta prima en `seed.ts` es anterior al ADR 0006;
+    - `semilla-demo.ts` sigue con flotantes, para `/f-audit`.
+  - **Corregido**, un commit por hallazgo:
+    - **1** (`64af718`): la venta tiene su propio grupo `cuentaVentaId`, visible solo al vender, con `cuentaPorDefectoParaVenta()` (Binance) como valor inicial, también sin JavaScript. `cuentaPorDefectoParaGasto` la usa como respaldo sin historial. La confirmación dice "con 20,00 USDT vendidos de Binance" y "Registrar otro" conserva las dos cuentas (`?cuenta=` y `?venta=`). Spec, Pantallas 2 y 3, al día. La opción se sigue llamando "Bolívares vendiendo USDT" aunque la cuenta sea en USD, porque así la nombra la spec.
+    - **2** (`17bbedf`): prueba primero, vista fallar ("Se esperaban errores y hubo filas"). Ahora `prepararGasto` rechaza la venta con "A esa tasa la venta no llega a 0,01 Bs". El caso límite, 1 centavo a 0,5, entrega 1 céntimo y se guarda. El check de la base sigue sin cubrir `monto_destino_centavos`; no se migra por esto.
+    - **3** (`6b1f575`): el vuelto solo se anuncia con `forma === "vendiendo"`.
+  - **Evidencia**, con el build en :3124 y el formulario enviado como un navegador sin JavaScript (`$ACTION`), repitiendo la reproducción del revisor:
+    - antes de nada, `cuentaId` = 1 y `cuentaVentaId` = 1;
+    - un gasto de 5 en Dólares desde Efectivo; al recargar, `cuentaId` = 3 (criterio 12) y `cuentaVentaId` = 1;
+    - la venta con esos valores por defecto: la fila 655 es `transferencia|2000|USDT|483600|241.8000|Binance|Bolívares`, cuando antes salía de Efectivo. La confirmación dice "2.100,00 Bs en Comida desde Bolívares, con 20,00 USDT vendidos de Binance … Te quedan 2.736,00 Bs en Bolívares, de vuelto";
+    - una venta eligiendo Efectivo a mano se respeta: "5,00 USD vendidos de Efectivo";
+    - 1 Bs del saldo: ya no hay aviso de vuelto;
+    - una venta de 0,01 a 0,4 no se guarda: "A esa tasa la venta no llega a 0,01 Bs";
+    - "Registrar otro" sin JavaScript (`?forma=vendiendo&cuenta=3&venta=2`) marca la venta, la cuenta 3 y la venta en 2;
+    - `/cuentas` dice "Cuadra con los sobres".
+    - Las 6 filas de prueba (654 a 659) se borraron: 118 movimientos, todos `demo-*`.
+  - Capturas de `/nuevo/gasto` en escritorio y celular, claro y oscuro, en Dólares y en venta: en Dólares solo se ve "Cuenta" (Efectivo); al vender solo "Salen de" (Binance), y el "Antes y después" sigue a Binance.
+  - `pnpm verify`: tipos, lint y formato en verde; `estructura: 0 errores, 12 avisos`; `Tests 196 passed (196)`; build; humo con las 10 rutas; `✓ verify:full en verde en 24.9 s`. El aviso nuevo es `formulario-gasto.tsx` con 325 líneas: sigue siendo solo el formulario de captura y no se parte.
