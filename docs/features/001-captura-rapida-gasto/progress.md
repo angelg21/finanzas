@@ -399,3 +399,17 @@ Lo que se aprendió, lo que quedó fuera y por qué.
     2. **Baja, criterio 25.** Desde "Nueva" se puede crear una categoría de ingreso, y la vuelta a la captura llega sin categoría elegida y sin aviso (`src/app/categorias/acciones.ts:90-91`). No toca saldos.
     3. **Documento.** La línea 62 de la spec describe todavía `SelectorPildoras` como "píldoras desplazables".
     4. Conocidos y aceptados: la carrera de T15 y los flotantes de `semilla-demo.ts`, para `/f-audit`.
+- 2026-10-12 · Después de la revisión apta, a pedido del desarrollador ("corrige todo lo que está pendiente"). Son cambios de una frase cada uno, con `pnpm verify` y evidencia, como pide `CLAUDE.md`:
+  - **Hallazgo 1 de la novena vuelta** (`55d2101`): el monto ya no se selecciona entero en cada foco. En Edge, con toque emulado: tecleo "21", toco Comida, toco el monto al final (cursor 2-2) y "0" da `210`.
+  - **Hallazgos 2 y 3** (`66fecd1`): desde la captura, el tipo de la categoría queda fijo en Gasto y la vuelta a la captura solo ocurre con una de gasto. La spec deja de decir "desplazables".
+    - En Edge, `/categorias/nueva?volver=/nuevo/gasto&tipo=ingreso` no muestra el selector, manda `tipo=gasto` oculto y explica "Viene de la captura de gasto". Enter crea "Prueba pendiente" (118, gasto) y vuelve a `/nuevo/gasto?categoria=118` con ella marcada.
+    - Sin captura de por medio, crear sigue ofreciendo Ingreso.
+    - Un envío forzado con `tipo=ingreso` y `volver` responde 303 a `/categorias?tipo=ingreso`, no a la captura.
+  - **Flotantes de `semilla-demo.ts`** (`b1c3fa1`), anotados para `/f-audit`: las tasas pasan por `aTasa`, `bolivaresDesdeUsd` y `tasaDecimal`.
+    - Con `db:demo:limpiar` y `db:demo`, la huella md5 de los 118 movimientos demo es idéntica: `6819eb1d…`.
+    - **`guardian-datos`: SEGURO DE APLICAR.** En una copia, el código viejo y el nuevo dan las mismas 118 filas con una huella estricta (`162472e7…`) y el cuadre en 539300.
+  - **Flotante de `src/lib/fondos.ts`** (`afc2286`), que encontró `guardian-datos`, viene de `main`: `aporteMensualCentavos` usa `repartirHaciaArriba`, nueva en `dinero.ts`, con BigInt. Pruebas primero, vistas fallar. `guardian-datos` había medido 0 diferencias con el cálculo anterior.
+  - **No se corrige la carrera de T15, y es una decisión.** Cerrarla exige una transacción con bloqueo en `registrarMovimientos`, con más viajes a la base en cada captura (contra "nada puede hacerla más lenta"), o SQL a mano en la inserción del dinero. Solo ocurre si se cambia el tipo de una categoría sin movimientos en otra pestaña en el mismo instante en que se guarda un gasto con ella. Queda para `/f-audit`, midiendo con la latencia real de Supabase.
+  - **Logo:** el desarrollador lo pidió como icono de la app instalada. Es la feature 002 del plan (PWA instalable): hoy no hay manifest. El emblema quedó recortado, sin las letras, en `docs/referencias/logo-emblema.png`, con el original al lado y una sección "Logo" en `docs/diseno.md` (`bca92ae`).
+  - `comprobar-001 --url` en verde y `/cuentas` cuadra. La base queda con 118 movimientos `demo-*` y 15 categorías.
+  - `pnpm verify`: `estructura: 0 errores, 13 avisos`, `Tests 211 passed (211)`, `✓ verify:full en verde en 21.4 s`.
