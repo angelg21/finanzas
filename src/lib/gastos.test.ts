@@ -120,13 +120,13 @@ describe("prepararGasto: bolívares vendiendo USDT (criterios 2 y 4)", () => {
       expect(errores(entrada({ forma: "vendiendo", vendido, tasa: "241,8", monto: "2100" })).vendido).toBeDefined();
     }
   });
-  it("no guarda una venta que entrega 0 Bs: 1 centavo a 0,4 Bs/USD redondea a 0", () => {
-    expect(errores(entrada({ forma: "vendiendo", vendido: "0,01", tasa: "0,4", monto: "1" })).vendido).toBeDefined();
+  it("no guarda una venta que entregaría 0 Bs: 1 centavo a 0,4 Bs/USD redondea a 0 y esa tasa es menor que 1", () => {
+    expect(errores(entrada({ forma: "vendiendo", vendido: "0,01", tasa: "0,4", monto: "1" })).tasa).toBeDefined();
   });
-  it("una venta que entrega 1 centavo de Bs sí se guarda: 1 centavo a 0,5 Bs/USD", () => {
-    expect(
-      filas(entrada({ forma: "vendiendo", vendido: "0,01", tasa: "0,5", monto: "1" }))[0].montoDestinoCentavos,
-    ).toBe(1);
+  it("con la tasa mínima, 1 centavo vendido a 1 Bs/USD entrega 1 céntimo y se guarda", () => {
+    expect(filas(entrada({ forma: "vendiendo", vendido: "0,01", tasa: "1", monto: "1" }))[0].montoDestinoCentavos).toBe(
+      1,
+    );
   });
 });
 

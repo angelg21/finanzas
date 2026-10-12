@@ -192,9 +192,19 @@ describe("★ criterio 6: tasa", () => {
     ["saldo", ""],
     ["saldo", "0"],
     ["saldo", "-241,8"],
+    ["vendiendo", "0,4"],
+    ["saldo", "0,4"],
+    ["saldo", "0,9999"],
   ] as const)("pagando en bolívares (%s), la tasa %j no guarda nada y da error", (forma, tasa) => {
     const errores = rechazar({ forma, tasa, vendido: "20", monto: "2100" });
     expect(errores.tasa).toEqual(expect.any(String));
+  });
+
+  it("la tasa mínima es 1: con 1 se guarda", () => {
+    expect(guardar({ forma: "saldo", monto: "500", tasa: "1" })[0]).toMatchObject({
+      tasa: "1.0000",
+      montoUsdCentavos: 50_000,
+    });
   });
 
   it("se escribe como los montos, con coma o punto, y se guarda con cuatro decimales", () => {

@@ -57,10 +57,13 @@ export type GastoPreparado = { ok: true; filas: FilaMovimiento[] } | { ok: false
 const mensajes = {
   monto: { vacio: "Escribe el monto", invalido: "Escribe un monto mayor que cero" },
   vendido: { vacio: "Escribe cuánto vendiste", invalido: "Escribe un monto vendido mayor que cero" },
-  tasa: { vacio: "Escribe la tasa", invalido: "Escribe una tasa mayor que cero, como 241,8" },
+  tasa: { vacio: "Escribe la tasa", invalido: "Escribe la tasa en Bs por dólar, como 241,8" },
 };
 
-/** Lee un monto o una tasa positivos. Si no se puede, anota el error del campo y devuelve 0. */
+/** Una tasa menor que 1 Bs/USD es un error de tecleo ("0,4" en vez de "40") e inflaría el valor en USD. */
+const tasaMinima = aTasa("1");
+
+/** Lee un monto positivo o una tasa de 1 o más. Si no se puede, anota el error del campo y devuelve 0. */
 function leer(campo: keyof typeof mensajes, texto: string, errores: ErroresGasto): number {
   if (texto.trim() === "") {
     errores[campo] = mensajes[campo].vacio;
@@ -68,7 +71,8 @@ function leer(campo: keyof typeof mensajes, texto: string, errores: ErroresGasto
   }
   try {
     const valor = campo === "tasa" ? aTasa(texto) : aCentavos(texto);
-    if (valor > 0 && Number.isSafeInteger(valor)) return valor;
+    const minimo = campo === "tasa" ? tasaMinima : 1;
+    if (valor >= minimo && Number.isSafeInteger(valor)) return valor;
   } catch {
     // aCentavos y aTasa lanzan con un mensaje técnico; al usuario se le muestra el del campo.
   }
@@ -133,7 +137,7 @@ export function prepararGasto(e: EntradaGasto, hoy: string): GastoPreparado {
 
   const recibidos = bolivaresDesdeUsd(vendido, tasa);
   if (!Number.isSafeInteger(recibidos)) return { ok: false, errores: { vendido: mensajes.vendido.invalido } };
-  // Con una tasa absurda lo vendido puede redondear a 0 Bs; una venta que no entrega nada no se guarda.
+  // Con la tasa mínima de 1 no debería pasar; si cambia, una venta que no entrega nada sigue sin guardarse.
   if (recibidos <= 0) return { ok: false, errores: { vendido: "A esa tasa la venta no llega a 0,01 Bs" } };
   // La venta mueve dinero real entre cuentas y no toca sobres; el gasto sale del sobre elegido.
   const transferencia: FilaMovimiento = {
