@@ -15,6 +15,8 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 
 - 001, vuelta 5 (2026-10-12): los arreglos de fecha y tasa estaban bien; el defecto vivía en la ampliación de categorías, que nadie había ejercitado con un navegador. "Restaurar la archivada" (★ 19) es un `<button name="restaurar" formAction={accion}>`: React reemplaza ese `name` por `$ACTION_ID_…`, así que `restaurar` nunca llega y no restaura nada, con o sin JS. La evidencia del autor era un curl que mandaba `restaurar=<id>` a mano. También: `sobreSugerido` compara el nombre exacto de la categoría y la misma feature permite renombrarla (criterio 20): "Familia y casa" ya no sugiere el sobre Familia.
 
+- 001, vuelta 6 (2026-10-12): el arreglo de restaurar funciona al pulsar el botón, pero "Restaurar la archivada" quedó como el primer `type=submit` del formulario (justo bajo el nombre). Enter, o la tecla "Ir" del teclado del celular, dispara el botón por defecto: tras el error de archivada, cambiar el nombre y pulsar Enter restaura la archivada y descarta lo que se creaba o editaba, con o sin JS. Y Enter en el buscador de iconos (`type=search` dentro del `<form>`) crea la categoría con el icono por defecto.
+
 **Why:** la demo es toda `origen = importado`, así que la lógica que depende de historial `manual` no se ve. La validación en navegador sigue el camino feliz, en un solo momento, y no pasa por un error de validación ni por el paso del tiempo antes de guardar.
 
 **How to apply:**
@@ -27,6 +29,7 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 - Lee primero el diff de los `fix(` de la vuelta anterior: ahí está el defecto nuevo. Desconfía de inferir la intención por igualdad (`valor === hoy` no es "tocó Hoy").
 - Todo lo que la acción devuelve en `valores` vuelve a pintarse: envía sin JS valores vacíos o raros (fecha vacía, texto) y mira si el render los formatea sin validar.
 - Cuando el capture ya resiste, mira la otra mitad de la feature (aquí, categorías): cada botón o enlace secundario que ofrece la pantalla, pulsado en Edge, no por curl. Busca `formAction` con `name`: React pisa ese `name`.
+- En cada formulario con más de un `type=submit`, mira cuál es el primero en el orden del DOM: es el que dispara Enter. Y todo buscador o filtro dentro de un `<form>` lo envía con Enter. Pruébalo pulsando Enter, no con clics: el autor valida con clics.
 - Una regla que busca por nombre (`sobreSugerido`, "Binance", "Gastos del mes") se rompe si la misma feature deja renombrar: cruza cada criterio de "editar" con las reglas por nombre.
 
 Ver [[entorno-revision-finanzas]].

@@ -1,2 +1,2 @@
-- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — "por defecto", key={ronda}, el arreglo previo; y la mitad no ejercitada (botones con formAction, reglas por nombre)
-- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, sin JS solo con los $ACTION del form correcto, Edge por DevTools (cerrar por PID)
+- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — "por defecto", key={ronda}, el arreglo previo, la mitad no ejercitada y Enter (primer submit del DOM, buscadores en el form)
+- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, sin JS por $ACTION o setScriptExecutionDisabled, Enter por CDP, Edge por PID
