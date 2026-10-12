@@ -7,6 +7,7 @@ import {
   formatearEnteros,
   formatearTasa,
   partesCentavos,
+  repartirHaciaArriba,
   tasaDecimal,
   unidadDe,
   usdDesdeBolivares,
@@ -152,5 +153,26 @@ describe("formatearTasa", () => {
   });
   it("separa los miles", () => {
     expect(formatearTasa(12_345_000)).toBe("1.234,50 Bs/USD");
+  });
+});
+
+describe("repartirHaciaArriba: un total entre partes, hacia arriba al múltiplo, en enteros", () => {
+  it("1.200 USD al año son 100 USD al mes; un centavo más sube al dólar siguiente", () => {
+    expect(repartirHaciaArriba(120_000, 12, 100)).toBe(10_000);
+    expect(repartirHaciaArriba(120_001, 12, 100)).toBe(10_100);
+  });
+  it("cero da cero y un centavo ya pide el múltiplo entero", () => {
+    expect(repartirHaciaArriba(0, 12, 100)).toBe(0);
+    expect(repartirHaciaArriba(1, 12, 100)).toBe(100);
+  });
+  it("es exacto también en totales enormes, donde la coma flotante ya no lo es", () => {
+    const total = 2 ** 53 - 1;
+    const esperado = Number(((BigInt(total) + BigInt(1199)) / BigInt(1200)) * BigInt(100));
+    expect(repartirHaciaArriba(total, 12, 100)).toBe(esperado);
+  });
+  it("rechaza lo que no son centavos enteros o partes y múltiplos positivos", () => {
+    expect(() => repartirHaciaArriba(10.5, 12, 100)).toThrow(RangeError);
+    expect(() => repartirHaciaArriba(100, 0, 100)).toThrow(RangeError);
+    expect(() => repartirHaciaArriba(100, 12, 0)).toThrow(RangeError);
   });
 });

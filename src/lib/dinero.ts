@@ -128,6 +128,22 @@ export function usdDesdeBolivares(bsCentavos: number, tasaDm: number): number {
   return dividirRedondeando(BigInt(bsCentavos) * BigInt(DIEZMILESIMAS), BigInt(tasaDm));
 }
 
+/**
+ * Un total en centavos repartido en partes iguales, hacia arriba al múltiplo dado, sin coma flotante:
+ * 120001 centavos al año en 12 meses, al dólar (100) → 10100. Para aportes que nunca se quedan cortos.
+ */
+export function repartirHaciaArriba(centavos: number, partes: number, multiplo: number): number {
+  if (!Number.isSafeInteger(centavos)) throw new RangeError(`Los centavos deben ser enteros: ${centavos}`);
+  if (!Number.isSafeInteger(partes) || partes <= 0) throw new RangeError(`Partes inválidas: ${partes}`);
+  if (!Number.isSafeInteger(multiplo) || multiplo <= 0) throw new RangeError(`Múltiplo inválido: ${multiplo}`);
+  const divisor = BigInt(partes) * BigInt(multiplo);
+  const total = BigInt(centavos);
+  // La división de BigInt trunca hacia cero: para positivos se suma el divisor menos uno para subir.
+  const uno = BigInt(1);
+  const bloques = total > BigInt(0) ? (total + divisor - uno) / divisor : total / divisor;
+  return Number(bloques * BigInt(multiplo));
+}
+
 /** Parte entera y los cuatro decimales de una tasa, sin pasar por coma flotante. */
 function partesTasa(tasaDm: number) {
   const resto = tasaDm % DIEZMILESIMAS;

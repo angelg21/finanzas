@@ -1,4 +1,5 @@
 /** Aritmética de los fondos de reserva. Pura, sin base de datos, para poder probarla. */
+import { repartirHaciaArriba } from "./dinero";
 
 export function totalAnualCentavos(partidas: { montoCentavos: number; vecesPorAnio: number }[]) {
   return partidas.reduce((acc, p) => acc + p.montoCentavos * p.vecesPorAnio, 0);
@@ -6,5 +7,5 @@ export function totalAnualCentavos(partidas: { montoCentavos: number; vecesPorAn
 
 /** Total anual entre doce, redondeado hacia arriba al dólar entero. */
 export function aporteMensualCentavos(totalAnual: number) {
-  return Math.ceil(totalAnual / 12 / 100) * 100;
+  return repartirHaciaArriba(totalAnual, 12, 100);
 }
