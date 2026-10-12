@@ -38,13 +38,14 @@ Spec, sección final. Se construye cuando el desarrollador apruebe la ampliació
 El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. Sin esta nota no se pasa a `/f-verify`.
 
 - 2026-10-11 · El desarrollador probó `/nuevo/gasto` en su celular, por la red local, y en escritorio, durante la construcción. Pidió el calendario propio y luego la ventana modal compacta, y aprobó en el chat: "ok perfecto ahora si aprobado". Anotado por Claude a su pedido. Se borró de la base local el gasto de prueba que guardó (id 615, 150 USDT); quedan 118 filas, todas `demo-*`.
+- 2026-10-12 · El desarrollador probó en su celular y en escritorio la ampliación de categorías: lista, crear, editar, archivar y restaurar, y los iconos y la píldora "Nueva" en la captura. Pidió quitar el desplazamiento lateral de categoría, cuenta y sobre (hecho) y aprobó en el chat: "ok de acuerdo pasemos al verify ahora sí estoy conforme". Anotado por Claude a su pedido. La base local quedó sin datos de prueba: 15 categorías base y ningún movimiento fuera de `demo-*`.
 
 ## Etapas
 
 - [x] Spec leída y corregida por el desarrollador (2026-10-11)
 - [x] Ampliación de categorías leída y aprobada por el desarrollador (2026-10-11)
 - [x] Construida (todas las tareas con commit) (2026-10-11, con la ampliación de categorías)
-- [ ] Validada en navegador. La captura se validó el 2026-10-11; faltan las pantallas de categorías.
+- [x] Validada en navegador (captura el 2026-10-11, categorías el 2026-10-12)
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
 - [ ] Fusionada en `main` el AAAA-MM-DD
