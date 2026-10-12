@@ -10,7 +10,7 @@ Lista viva de las observaciones del usuario sobre la interfaz, lo que se cambió
 
 **Pendiente para el final**:
 
-- El modelo marca esa cuenta con `es_propia = false`, lo que la excluye de la suma de cuentas y del invariante con los sobres. Si el sueldo cae ahí y se queda, ese dinero sí tiene que entrar en los sobres. Hay que decidir: pasar la cuenta a propia y dejar una marca distinta, por ejemplo `titular_tercero`, que exprese el riesgo sin sacarla de las cuentas.
+- ~~El modelo marca esa cuenta con `es_propia = false`, lo que la excluye de la suma de cuentas y del invariante con los sobres.~~ Resuelto el 2026-10-11 con el ADR 0006 (spec 001, criterio 16). La cuenta sigue con `es_propia = false` como marca legal, pero entra al cuadre con los sobres y desde ella se puede gastar.
 - Ajustar las semillas (`src/db/seed.ts`): tipo, nota y `esPropia` de "Cuenta prima".
 - Ajustar `docs/plan-financiero-y-app.md`, secciones 1, 2 y 4, donde dice que es de tránsito y que debe mantener saldo bajo. El riesgo legal sigue siendo real y conviene dejarlo escrito, pero como riesgo, no como regla de uso.
 - Revisar el flujo de ingreso: el sueldo remoto entra en esa cuenta y de ahí se mueve a Binance. Hoy las semillas de demostración lo ponen directo en Binance.

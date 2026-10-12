@@ -93,8 +93,8 @@ Desviación consciente: los colores de las barras son los de la imagen, azul pá
 | `TarjetaPalida`                                                        | Azul pálido con texto azul marino, radio 22                                     |
 | `EncabezadoTarjeta`                                                    | Título con enlace "Ver todos" o contenido a la derecha; `palida` ajusta colores |
 | `Cifra`                                                                | Dinero en centavos. `sm`, `md`, `lg`, `xl`, `hero`                              |
-| `Pildora`                                                              | `oscura`, `navy`, `blanca`, `positiva`, `negativa`                              |
-| `Avatar` + `iniciales`                                                 | Cuadro azul pálido con iniciales                                                |
+| `Pildora`                                                              | `oscura`, `navy`, `blanca`, `positiva`, `negativa`, `palida` (opción activa)    |
+| `Avatar` + `iniciales`                                                 | Cuadro azul pálido con iniciales; `pequeno` dentro de una píldora               |
 | `FilaLista`                                                            | Avatar, nombre en mayúsculas, subtítulo, columna derecha; enlazable             |
 | `Progreso`                                                             | Barra de 8 px; `palida` para tarjetas pálidas                                   |
 | `Mosaico`                                                              | Botón de acción dentro del hero                                                 |
@@ -106,7 +106,15 @@ Desviación consciente: los colores de las barras son los de la imagen, azul pá
 
 ## Formularios
 
-Piezas en `src/components/formulario.tsx`: `Campo` (etiqueta arriba, ayuda abajo), `Entrada`, `Selector` y `Boton` (`primario` verde pino en píldora, `secundario` con borde, `peligro` solo texto rojo). Primer uso: el desglose del sobre Ocasiones en `/sobres/[id]`.
+Piezas en `src/components/formulario.tsx`:
+
+- `Campo`: etiqueta arriba; abajo la ayuda o, si hay, el error en rojo.
+- `Entrada` y `Selector`.
+- `Boton`: `primario` verde pino en píldora, `secundario` con borde, `peligro` solo texto rojo. `EnlaceBoton` tiene la misma forma, pero es un enlace, para acciones que navegan sin JavaScript.
+- `CampoMonto`: la cifra a 36 px con la unidad a la derecha.
+- `SelectorPildoras`: radios nativos con forma de píldora. Desplazables en el celular; `envolver` las muestra todas.
+
+Primer uso: el desglose del sobre Ocasiones en `/sobres/[id]`. La captura de gasto, `/nuevo/gasto`, usa todas.
 
 - Dentro de una tarjeta. Campos de 48 px con fondo `tarjeta-hover`, radio 14 y borde `tarjeta-borde`; al foco, anillo en `palido`.
 - El monto es el primer campo y el más grande: 36 px en negrita con el código de moneda a la derecha. Teclado numérico en el celular.
