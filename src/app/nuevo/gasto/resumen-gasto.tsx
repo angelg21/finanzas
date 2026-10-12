@@ -7,8 +7,8 @@ import type { FormaPago } from "@/lib/gastos";
 import type { ResumenGasto as Resumen } from "./acciones";
 
 /**
- * Estado de éxito (criterio 13): lo registrado, el aviso de sobre negativo (10) o de los bolívares que
- * quedan (2 y 4), y dos salidas. "Registrar otro" es un enlace para que funcione sin JavaScript; con él,
+ * Estado de éxito (criterio 13): lo registrado, el aviso de sobre negativo (10), el de Bolívares en
+ * negativo (4) o el del vuelto de una venta (2), y dos salidas. "Registrar otro" es un enlace para que funcione sin JavaScript; con él,
  * reabre el formulario en el sitio con la misma forma de pago y la misma cuenta.
  */
 export function ResumenGasto({
@@ -55,7 +55,8 @@ export function ResumenGasto({
             Bolívares queda en {formatearCentavos(bolivares, "VES")}. Revisa el monto o registra la venta que falta.
           </Aviso>
         ) : null}
-        {bolivares !== null && bolivares > 0 ? (
+        {/* Solo hay vuelto si se vendieron dólares para este gasto; del saldo, no. */}
+        {forma === "vendiendo" && bolivares !== null && bolivares > 0 ? (
           <p className="text-[13px] text-texto-2">
             Te quedan {formatearCentavos(bolivares, "VES")} en Bolívares, de vuelto.
           </p>
