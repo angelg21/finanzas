@@ -1,7 +1,16 @@
 import Link from "next/link";
-import type { ButtonHTMLAttributes, ComponentProps, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
+import {
+  type ButtonHTMLAttributes,
+  type ComponentProps,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  createElement,
+} from "react";
+import { coloresCategoria, iconosCategoria } from "@/lib/categorias";
 import { unidadDe } from "@/lib/dinero";
-import { Avatar } from "./ui";
+import { fondoDe, fondoElegidoDe, iconoDe } from "./iconos-categoria";
+import { Avatar, CirculoCategoria } from "./ui";
 
 /*
   Piezas de formulario según docs/diseno.md: campos de 48 px con fondo suave y radio 14,
@@ -74,7 +83,15 @@ export function CampoMonto({
   );
 }
 
-export type OpcionPildora = { valor: string; texto: string; detalle?: string; avatar?: string };
+export type OpcionPildora = {
+  valor: string;
+  texto: string;
+  detalle?: string;
+  /** Iniciales en un cuadro menta. */
+  avatar?: string;
+  /** Una categoría: su círculo de color con el icono, en lugar de iniciales. */
+  categoria?: { icono: string; color: string };
+};
 
 /*
   Opción en píldora, compartida por SelectorPildoras y SelectorFecha. La forma va aparte de los colores:
@@ -101,6 +118,7 @@ export function SelectorPildoras({
   valor,
   onCambio,
   envolver = false,
+  extra,
   error,
 }: {
   etiqueta: string;
@@ -110,6 +128,8 @@ export function SelectorPildoras({
   valor?: string;
   onCambio?: (valor: string) => void;
   envolver?: boolean;
+  /** Algo más al final de la fila, como la píldora "Nueva" de las categorías. */
+  extra?: ReactNode;
   error?: string;
 }) {
   const fila = envolver
@@ -133,10 +153,109 @@ export function SelectorPildoras({
             <span
               className={`${pildoraOpcion} ${pildoraNormal} group-hover:text-texto group-has-checked:border-transparent group-has-checked:bg-palido group-has-checked:text-palido-texto group-has-focus-visible:ring-2 group-has-focus-visible:ring-palido group-has-focus-visible:ring-offset-2 group-has-focus-visible:ring-offset-tarjeta`}
             >
-              {o.avatar ? <Avatar texto={o.avatar} pequeno className="group-has-checked:bg-pildora-blanca" /> : null}
+              {o.categoria ? (
+                <CirculoCategoria icono={o.categoria.icono} color={o.categoria.color} tamano="sm" className="-ml-1.5" />
+              ) : o.avatar ? (
+                <Avatar texto={o.avatar} pequeno className="group-has-checked:bg-pildora-blanca" />
+              ) : null}
               {o.texto}
               {o.detalle ? <span className="text-[11px] font-medium opacity-75">{o.detalle}</span> : null}
             </span>
+          </label>
+        ))}
+        {extra}
+      </div>
+      <ErrorCampo>{error}</ErrorCampo>
+    </fieldset>
+  );
+}
+
+/**
+ * Icono de una categoría: radios nativos con forma de círculo gris, como los "Símbolos" de la referencia
+ * (docs/referencias/categorias-gestor-crear.jpg); el elegido, en menta con anillo. `visibles` filtra por la
+ * búsqueda sin quitar radios del formulario, así lo elegido sigue enviándose. Sin JavaScript se ven todos.
+ * Iconos de línea, nunca emojis.
+ */
+export function SelectorIcono({
+  name,
+  valorInicial,
+  visibles,
+  color,
+  onCambio,
+  error,
+}: {
+  name: string;
+  valorInicial: string;
+  visibles?: Set<string>;
+  /** Con color, el elegido se pinta de ese color; sin él (sin JavaScript), en menta. */
+  color?: string;
+  onCambio?: (icono: string) => void;
+  error?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div
+        data-iconos
+        className="relative grid max-h-[264px] grid-cols-6 gap-2 overflow-y-auto rounded-[14px] p-1 sm:grid-cols-8"
+      >
+        {iconosCategoria.map((i) => (
+          <label
+            key={i.nombre}
+            title={i.palabras[0]}
+            className={`group cursor-pointer justify-self-center ${visibles && !visibles.has(i.nombre) ? "hidden" : ""}`}
+          >
+            <input
+              type="radio"
+              name={name}
+              value={i.nombre}
+              defaultChecked={i.nombre === valorInicial}
+              onChange={onCambio ? () => onCambio(i.nombre) : undefined}
+              aria-label={i.palabras[0]}
+              className="sr-only"
+            />
+            <span
+              className={`grid size-11 place-items-center rounded-full bg-tarjeta-hover text-texto-2 transition-colors group-hover:text-texto group-has-checked:ring-2 group-has-checked:ring-texto group-has-checked:ring-offset-2 group-has-checked:ring-offset-tarjeta group-has-focus-visible:ring-2 group-has-focus-visible:ring-enlace ${color ? `${fondoElegidoDe(color)} group-has-checked:text-white` : "group-has-checked:bg-palido group-has-checked:text-palido-texto"}`}
+            >
+              {createElement(iconoDe(i.nombre), { size: 20, strokeWidth: 1.75, "aria-hidden": true })}
+            </span>
+          </label>
+        ))}
+      </div>
+      <ErrorCampo>{error}</ErrorCampo>
+    </div>
+  );
+}
+
+/** Color de una categoría: radios nativos con forma de círculo de la paleta; el elegido, con anillo. */
+export function SelectorColor({
+  name,
+  valorInicial,
+  onCambio,
+  error,
+}: {
+  name: string;
+  valorInicial: string;
+  onCambio?: (color: string) => void;
+  error?: string;
+}) {
+  return (
+    <fieldset className="flex min-w-0 flex-col gap-1.5">
+      <legend className="mb-1.5 text-[12px] font-semibold text-texto-3">Color</legend>
+      <div className="flex flex-wrap gap-2.5">
+        {coloresCategoria.map((color) => (
+          <label key={color} title={color} className="group cursor-pointer">
+            <input
+              type="radio"
+              name={name}
+              value={color}
+              defaultChecked={color === valorInicial}
+              onChange={onCambio ? () => onCambio(color) : undefined}
+              aria-label={color}
+              className="sr-only"
+            />
+            <span
+              className={`block size-9 rounded-full ${fondoDe(color)} ring-offset-2 ring-offset-tarjeta transition-shadow group-has-checked:ring-2 group-has-checked:ring-texto group-has-focus-visible:ring-2 group-has-focus-visible:ring-enlace`}
+            />
           </label>
         ))}
       </div>

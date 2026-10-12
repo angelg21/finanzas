@@ -294,6 +294,29 @@ const fondos: Record<ColorCategoria, string> = {
   pizarra: "bg-cat-pizarra",
 };
 
+/** El icono elegido en SelectorIcono toma el color de la categoría, como en la referencia. Clases completas. */
+const elegidos: Record<ColorCategoria, string> = {
+  coral: "group-has-checked:bg-cat-coral",
+  naranja: "group-has-checked:bg-cat-naranja",
+  ambar: "group-has-checked:bg-cat-ambar",
+  oliva: "group-has-checked:bg-cat-oliva",
+  verde: "group-has-checked:bg-cat-verde",
+  pino: "group-has-checked:bg-cat-pino",
+  turquesa: "group-has-checked:bg-cat-turquesa",
+  azul: "group-has-checked:bg-cat-azul",
+  indigo: "group-has-checked:bg-cat-indigo",
+  lavanda: "group-has-checked:bg-cat-lavanda",
+  rosa: "group-has-checked:bg-cat-rosa",
+  pizarra: "group-has-checked:bg-cat-pizarra",
+};
+
+/** La clase que pinta el icono elegido con un color de la paleta; si no existe, con la de por defecto. */
+export function fondoElegidoDe(color: string): string {
+  return Object.prototype.hasOwnProperty.call(elegidos, color)
+    ? elegidos[color as ColorCategoria]
+    : elegidos[colorPorDefecto];
+}
+
 /** La clase de fondo de un color de la paleta; si no existe, la de por defecto. */
 export function fondoDe(color: string): string {
   return Object.prototype.hasOwnProperty.call(fondos, color)
