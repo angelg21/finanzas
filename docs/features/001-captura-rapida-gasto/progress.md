@@ -46,7 +46,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 - [x] Ampliación de categorías leída y aprobada por el desarrollador (2026-10-11)
 - [x] Construida (todas las tareas con commit) (2026-10-11, con la ampliación de categorías)
 - [x] Validada en navegador (captura el 2026-10-11, categorías el 2026-10-12)
-- [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
+- [x] Verificada: `pnpm verify` en verde, cada ★ con su prueba (2026-10-12)
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
 - [ ] Fusionada en `main` el AAAA-MM-DD
 
@@ -115,3 +115,69 @@ Lo que se aprendió, lo que quedó fuera y por qué.
   - al editar, la lista se desplaza hasta el icono elegido;
   - el botón de archivar usa la variante `peligro`.
 - 2026-10-12 · A pedido del desarrollador, las categorías de la captura se envuelven en varias filas también en el celular, sin desplazamiento lateral, porque con muchas categorías resultaba incómodo. Spec ajustada (criterio 12 y Pantallas). Luego pidió lo mismo para Cuenta y Sobre: ninguna fila de la captura se desplaza de lado.
+- 2026-10-12 · `/f-verify`. Doce criterios ★ (1 a 7, 16 y 18 a 21), cada uno con pruebas escritas desde el texto de la spec, no desde el código:
+  - **Funciones puras**, 73 pruebas en tres archivos nuevos, aparte de las de construcción:
+    - `src/lib/gastos.criterios.test.ts`: 1 a 6, el mínimo de un centavo del 7 y el 16.
+    - `src/lib/dinero.criterios.test.ts`: la conversión del 7, también una rejilla de montos y tasas que comprueba que el resultado es entero y queda a medio centavo o menos del valor exacto.
+    - `src/lib/categorias.criterios.test.ts`: 18 a 21.
+  - **Contra la base**, `scripts/comprobar-001.ts`: 1 a 4, 16, 18, 20 y 21 con las operaciones reales de `src/db`, y con `--url` también las páginas servidas por el build. Se niega a correr si hay movimientos que no sean `demo-*`. Lo que inserta lleva la referencia `demo-comprobar-001-*` y lo borra al terminar. Comprueba además que la base queda igual.
+  - **Humo**: no cubría ninguna ruta de la feature. Ahora también `/nuevo/gasto`, `/categorias`, `/categorias/nueva` y el 404 de `/categorias/999999`.
+  - `pnpm verify`, la última línea de cada gate:
+    - tipos: `✓ tipos (2.8 s)`
+    - lint: `✓ lint (7.0 s)`
+    - formato: `All matched files use Prettier code style!`
+    - estructura: `estructura: 0 errores, 11 avisos`. Diez avisos son el recordatorio de cada archivo de pruebas. El otro: `src/components/iconos-categoria.tsx` tiene 326 líneas, viene de T14 y sigue siendo un solo registro.
+    - unitarias: `Tests  194 passed (194)`
+    - build: `✓ build (14.3 s)`, con las once rutas
+    - humo: `✓ humo: todas las rutas responden.`
+    - cierre: `✓ verify:full en verde en 30.6 s. Árbol sellado.`
+  - `pnpm exec tsx scripts/comprobar-001.ts --url http://localhost:3124`, con `next start` sobre el build y la base local de demostración:
+
+    ```text
+    Base local · hoy en Caracas 2026-10-12 · 118 movimientos, 15 categorías
+    ✓ 16 · al empezar, la suma de sobres es igual a la suma en USD de todas las cuentas activas (sobres 539300, cuentas 539300)
+    ✓ 1 · un gasto de 4200 USDT que vale 4200 USD, de Binance, Gastos del mes y Comida, manual, sin tasa
+    ✓ 1 · es un solo movimiento
+    ✓ 1 · el cuadre se mantiene (535100)
+    ✓ 2 · dos movimientos con la misma fecha
+    ✓ 2 · transferencia de 20 USDT de Binance a Bolívares: 483600 centavos de Bs a 241.8000
+    ✓ 2 · gasto de 2100 Bs desde Bolívares que vale 868 centavos USD, Gastos del mes y Comida
+    ✓ 2 · Bolívares recibe 273600 centavos de Bs de vuelto (273600)
+    ✓ 2 · el cuadre se mantiene (534232)
+    ✓ 2 · una sola transacción: con el gasto inválido no queda ni la transferencia
+    ✓ 3 · es un solo movimiento
+    ✓ 3 · gasto de 500 Bs desde Bolívares que vale 207 centavos USD, en Transporte
+    ✓ 4 · el gasto se registra completo: 250000 centavos de Bs, 1042 centavos USD
+    ✓ 4 · Bolívares baja 10000 centavos de Bs: desde cero queda en −10000 (-10000)
+    ✓ 16 · el gasto desde la Cuenta prima se registra como desde cualquier otra
+    ✓ 16 · su saldo entra en el total de cuentas
+    ✓ 16 · y el cuadre se mantiene (528783)
+    ✓ 16 · la cuenta conserva su marca: no es propia
+    ✓ 16 · /cuentas dice «Cuadra con los sobres»
+    ✓ 16 · /cuentas muestra «a nombre de mi prima»
+    ✓ 16 · el inicio muestra «A nombre de mi prima»
+    ✓ 16 · el selector de cuenta muestra «a nombre de mi prima»
+    ✓ 18 · antes de crearla, Mascotas no está en la captura
+    ✓ 18 · existe Mascotas, de gasto, activa, con icono huella y color lavanda
+    ✓ 18 · aparece en las píldoras de la captura
+    ✓ 18 · /categorias la muestra
+    ✓ 18 · /nuevo/gasto la muestra
+    ✓ 20 · cambian el nombre, el icono y el color
+    ✓ 20 · la operación responde «actualizada» (actualizada)
+    ✓ 20 · sus movimientos siguen en la misma fila
+    ✓ 20 · y muestran el nombre nuevo
+    ✓ 20 · con movimientos el tipo no cambia (tipo-fijo)
+    ✓ 20 · sin movimientos el tipo sí cambia
+    ✓ 20 · /movimientos muestra el nombre nuevo
+    ✓ 21 · antes de confirmar, la edición dice «Tiene 2 movimientos: se archivará, no se borra»
+    ✓ 21 · y sin movimientos dice que se borrará
+    ✓ 21 · sin movimientos se borra (borrada)
+    ✓ 21 · con movimientos se archiva, no se borra (archivada)
+    ✓ 21 · desaparece de la captura
+    ✓ 21 · sus movimientos la conservan
+    ✓ 21 · /nuevo/gasto ya no la ofrece
+    ✓ — · la base queda como estaba: mismos saldos, movimientos y categorías (118 movimientos, 15 categorías)
+    ✓ comprobar-001: todo en verde
+    ```
+
+  - Lo que queda fuera de las pruebas automáticas: el texto de los avisos de la pantalla de éxito, que sale del saldo que calcula `saldosTras` (probado en los criterios 2 y 4). Se vio en el navegador el 2026-10-11.
