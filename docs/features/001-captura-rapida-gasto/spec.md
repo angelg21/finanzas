@@ -1,6 +1,6 @@
 # 001 · Captura rápida de gasto
 
-Fecha: 2026-10-11. Estado: aprobada.
+Fecha: 2026-10-11. Estado: aprobada; la ampliación del 2026-10-11 (categorías con icono y color, al final) está en borrador.
 
 ## Para qué
 
@@ -80,7 +80,7 @@ Consultas nuevas en `src/db/consultas.ts`: categorías de gasto ordenadas por us
 
 - Registrar ingresos y mover dinero entre cuentas o sobres (features siguientes).
 - Editar o borrar un gasto ya guardado.
-- Crear categorías o cuentas desde el formulario.
+- Crear cuentas desde el formulario. Las categorías entran en la ampliación del final.
 - Instalación como PWA, atajos de pantalla de inicio y uso sin conexión (feature 002).
 - Captura por Telegram y cualquier interpretación con IA (fase 2).
 - Tasa sugerida automáticamente: la escribe el usuario cada vez.
@@ -107,3 +107,77 @@ Lo demás se prueba después de mirar, en `/f-verify`.
 - **Diferencia cambiaria aceptada**: gastar bolívares del saldo a una tasa distinta de la de compra puede dejar la cuenta Bolívares en 0 Bs con unos centavos de USD. El plan descarta la pérdida cambiaria; no se corrige.
 - **Riesgo de velocidad**: el selector de forma de pago añade un toque en el caso de bolívares. Se acepta porque el caso en dólares sigue en tres toques; se mide en `/f-build` con el cronómetro en la mano.
 - **Sin autenticación todavía**: la server action es pública como todo lo demás. Se trata en `/f-audit` al cerrar la fase 1 y antes de desplegar.
+
+---
+
+## Ampliación · Categorías con icono y color
+
+Pedida por el desarrollador el 2026-10-11, antes de verificar la 001, para que la captura y las categorías se cierren juntas. Trazabilidad: observación 8 en `docs/observaciones.md` y plan, fase 1: "Cuentas, categorías, movimientos". Referencias visuales: `docs/referencias/categorias-gestor-lista.jpg` (la rejilla de categorías creadas) y `docs/referencias/categorias-gestor-crear.jpg` (el formulario para crear una). Se toma de ahí la idea, no los colores: la app conserva su paleta y su tipografía.
+
+**Iconos, nunca emojis**: iconos de línea de `lucide-react`, el mismo juego de la barra de navegación.
+
+### Criterios de aceptación
+
+17. **Lista de categorías.** Dado que abro `/categorias`, veo dos pestañas, Gastos e Ingresos. Cada categoría activa es un círculo de su color con su icono en blanco y el nombre debajo, en una rejilla de 4 columnas en el celular y de 8 en escritorio, ordenada por uso. Al final hay un círculo "Crear". Tocar una categoría abre su edición.
+18. ★ **Crear.** Dado que escribo "Mascotas", elijo Gasto, el icono `huella` y el color `lavanda`, cuando guardo, entonces existe una categoría de tipo `gasto`, activa, con `icono = huella` y `color = lavanda`. Aparece en la lista y en las píldoras de la captura de gasto.
+19. ★ **Validación.** El nombre vacío o de más de 40 caracteres, o un icono o un color fuera del catálogo, no se guardan: el error sale junto al campo. Un nombre repetido dentro del mismo tipo, sin distinguir mayúsculas, acentos ni espacios de más, da "Ya existe una categoría con ese nombre". Si la repetida está archivada, se ofrece restaurarla.
+20. ★ **Editar.** Puedo cambiar el nombre, el icono y el color. Los movimientos existentes siguen en la misma categoría (es la misma fila) y muestran el nombre nuevo. El tipo solo se puede cambiar si la categoría no tiene movimientos: un gasto nunca queda con una categoría de ingreso.
+21. ★ **Eliminar.** Una categoría sin movimientos se borra. Una con movimientos se archiva: desaparece de la lista y de la captura, y sus movimientos la conservan. Antes de confirmar, la pantalla dice cuál de las dos pasará, por ejemplo "Tiene 13 movimientos: se archivará, no se borra".
+22. **Archivadas.** Al final de la lista, "Archivadas (n)" las muestra apagadas, cada una con "Restaurar".
+23. **Catálogo de iconos.** Unos 100 iconos agrupados en un catálogo propio (comida, transporte, hogar, salud, ocio, familia, mascotas, trabajo, dinero, viajes, tecnología, ropa, educación…), cada uno con palabras en español para buscarlo: "carro" encuentra el auto y "café", la taza. Con JavaScript, un buscador filtra; sin él, se ven todos.
+24. **Paleta.** Doce colores propios de la app, como tokens de `globals.css`. Cada uno da 3:1 o más de contraste con el icono blanco, en claro y en oscuro. Mientras eliges, una vista previa muestra el círculo con el icono, el color y el nombre.
+25. **En la captura de gasto.** Cada píldora de categoría lleva su círculo de color con el icono, en lugar de las iniciales. Al final de la fila, una píldora "Nueva" abre el formulario de crear. Al guardar, vuelve a la captura con la categoría nueva ya elegida.
+26. **Semillas.** Las 15 categorías base reciben icono y color propios. `pnpm db:seed` también se los pone en una base que ya existe, pero solo a las que siguen con el valor por defecto: nunca pisa lo que el usuario cambió.
+27. **Accesos.** "Categorías" en la barra lateral de escritorio y en el menú del celular, además de "Nueva" en la captura.
+
+### Pantallas
+
+- **`/categorias`**, móvil: título "Categorías" y una fila con las pestañas Gastos e Ingresos (como la cabecera de la captura). Debajo, una `Tarjeta` con la rejilla de `CirculoCategoria` grandes (56 px) y su nombre, y el círculo "Crear" en `tarjeta-hover` con un `+`. Debajo, "Archivadas (n)". En escritorio, la misma tarjeta a lo ancho con 8 columnas.
+- **`/categorias/nueva`** y **`/categorias/[id]`**: una `Tarjeta` con:
+  - arriba, la vista previa: el círculo grande y el nombre;
+  - el nombre (`Entrada`) y el tipo (`SelectorPildoras`, Gasto o Ingreso);
+  - el icono (`SelectorIcono`), con el buscador arriba;
+  - el color (`SelectorColor`);
+  - `Boton` "Guardar" a lo ancho.
+
+  En edición, además, "Eliminar" o "Archivar" (`peligro`) con la confirmación del criterio 21. En escritorio, el formulario en 7 columnas y la vista previa en 5.
+
+- **Piezas nuevas:**
+  - `CirculoCategoria`, en `ui.tsx`: círculo del color con el icono blanco, en tamaños `sm` (24 px, para las píldoras), `md` y `lg` (56 px).
+  - `SelectorIcono` y `SelectorColor`, en `formulario.tsx`: radios nativos con forma de círculo; el elegido, con anillo.
+  - El registro de iconos, en `src/components/iconos-categoria.tsx`: nombre → componente de lucide. Solo se importan los del catálogo, para no cargar los más de mil iconos.
+
+### Datos
+
+Migración con `pnpm db:generate`: dos columnas en `categorias`.
+
+- `icono text not null default 'etiqueta'`
+- `color text not null default 'pizarra'`
+
+Se guarda el **nombre** del icono y el **nombre** del color, nunca un hexadecimal: así el color sigue los temas claro y oscuro y la paleta puede ajustarse sin tocar datos. La aplicación valida contra el catálogo; la base no lleva enum, para no migrar cada vez que se añada un icono. Las filas existentes reciben los valores por defecto y la semilla asigna los propios.
+
+Consultas: categorías por tipo con su número de movimientos, categoría por id y archivadas. Operaciones: crear, actualizar, borrar o archivar según tenga movimientos, y restaurar. El invariante no cambia: las categorías no tocan saldos.
+
+### Fuera de alcance
+
+- "Gasto programado" de la referencia: llega con los pagos programados, en la fase 2.
+- Un color fuera de la paleta (el "+" de la referencia): la regla dura de tokens lo impide.
+- Subcategorías y reordenar las categorías a mano.
+- Mostrar los iconos en la lista de movimientos y en las gráficas: es el paso siguiente.
+- Importar las categorías de Gestor de Gastos: lo hará el importador.
+
+### Pruebas antes del código
+
+`src/lib/categorias.ts`, con su `.test.ts`, que se ve fallar antes:
+
+- el catálogo de iconos (nombre y palabras) y de colores;
+- `validarCategoria(entrada, existentes)`, para los criterios 19 y 20: nombre normalizado, largo, catálogo, repetidas y cambio de tipo;
+- `buscarIconos(texto)`, sin distinguir acentos ni mayúsculas;
+- `destinoAlEliminar(movimientos)`, que decide entre `borrar` y `archivar` (criterio 21).
+
+### Riesgos y decisiones
+
+- **Nombre de token, no hexadecimal**, en la base: se registra como ADR en la tarea de documentos.
+- **Archivar en vez de borrar** cuando hay movimientos: el historial nunca pierde su categoría, que es un dato del usuario.
+- **Catálogo curado y no los más de mil iconos de lucide**: importarlos todos pesaría cientos de KB en la captura, la pantalla que más importa que sea rápida.
+- **Contraste**: el icono blanco necesita 3:1 sobre cada color. Se valida con un script antes de fijar la paleta, y si un color no llega, se oscurece.

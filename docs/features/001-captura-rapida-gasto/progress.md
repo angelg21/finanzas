@@ -17,6 +17,22 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 - [x] T9 · (2026-10-11) `pnpm capturas -- /nuevo/gasto /cuentas` en claro y oscuro, comparar con las referencias y la sección "Pantallas"; cronometrar un gasto en dólares desde el celular; ajustar. Capturas comparadas y ajustadas (formas de pago envueltas, doble anillo del monto, calendario propio); el desarrollador no reportó el tiempo del cronómetro.
 - [x] T10 · (2026-10-11) Documentos: ADR nuevo "la cuenta de la prima cuenta en el cuadre" (y la tasa en diezmilésimas) con `/f-adr`; invariante en el plan (sección 4) y en `CLAUDE.md`; plan (fase 1: casilla del formulario de captura); diseño (piezas nuevas y tono `palida`); observaciones si cambió algo.
 
+### Ampliación: categorías con icono y color
+
+Spec, sección final. Se construye cuando el desarrollador apruebe la ampliación.
+
+- [ ] T11 · `src/lib/categorias.ts`: catálogo de iconos con palabras en español, paleta de colores, `validarCategoria` (19 y 20), `buscarIconos` y `destinoAlEliminar` (21). Pruebas primero.
+- [ ] T12 · Esquema: `icono` y `color` en `categorias`, con `pnpm db:generate`. Lanzar `guardian-datos` antes de `pnpm db:migrate`.
+- [ ] T13 · Semillas: icono y color de las 15 categorías base; `db:seed` los asigna sin pisar los que el usuario cambió (26).
+- [ ] T14 · Paleta: doce tokens en `globals.css`, con el contraste del icono blanco validado por script en claro y oscuro. Registro `src/components/iconos-categoria.tsx` y `CirculoCategoria` en `ui.tsx`.
+- [ ] T15 · `src/db`: consultas (por tipo con su número de movimientos, por id, archivadas) y operaciones (crear, actualizar, borrar o archivar, restaurar). Lanzar `guardian-datos`.
+- [ ] T16 · `src/app/categorias/acciones.ts`: crear, editar, eliminar o archivar y restaurar, con zod y `validarCategoria`.
+- [ ] T17 · Pantalla `/categorias`: pestañas Gastos e Ingresos, rejilla de círculos, "Crear" y "Archivadas (n)" (17 y 22).
+- [ ] T18 · `/categorias/nueva` y `/categorias/[id]`: vista previa, `SelectorIcono` con buscador, `SelectorColor`, guardar, y eliminar o archivar con su confirmación (18 a 21, 23 y 24).
+- [ ] T19 · Captura de gasto: píldoras con `CirculoCategoria`, píldora "Nueva" que vuelve con la categoría elegida, y accesos en la barra lateral y el menú (25 y 27).
+- [ ] T20 · Capturas de `/categorias`, crear y editar, y `/nuevo/gasto`, en claro y oscuro, comparadas con `docs/referencias/categorias-gestor-*.jpg`; ajustar.
+- [ ] T21 · Documentos: ADR "el color y el icono se guardan por nombre", diseño (piezas y paleta), plan y observación 8.
+
 ## Validación en navegador
 
 El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. Sin esta nota no se pasa a `/f-verify`.
@@ -26,8 +42,9 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 ## Etapas
 
 - [x] Spec leída y corregida por el desarrollador (2026-10-11)
-- [x] Construida (todas las tareas con commit) (2026-10-11)
-- [x] Validada en navegador (2026-10-11)
+- [ ] Ampliación de categorías leída y aprobada por el desarrollador
+- [ ] Construida (todas las tareas con commit). La captura quedó construida el 2026-10-11; falta la ampliación.
+- [ ] Validada en navegador. La captura se validó el 2026-10-11; falta la ampliación.
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
 - [ ] Fusionada en `main` el AAAA-MM-DD
