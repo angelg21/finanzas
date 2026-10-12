@@ -117,6 +117,7 @@ export function SelectorPildoras({
   valorInicial,
   valor,
   onCambio,
+  alTocar,
   envolver = false,
   extra,
   error,
@@ -127,6 +128,8 @@ export function SelectorPildoras({
   valorInicial?: string;
   valor?: string;
   onCambio?: (valor: string) => void;
+  /** Con cualquier toque a una opción, también a la que ya está marcada, que no emite `change`. */
+  alTocar?: (valor: string) => void;
   envolver?: boolean;
   /** Algo más al final de la fila, como la píldora "Nueva" de las categorías. */
   extra?: ReactNode;
@@ -149,6 +152,7 @@ export function SelectorPildoras({
               checked={valor === undefined ? undefined : o.valor === valor}
               defaultChecked={valor === undefined ? o.valor === valorInicial : undefined}
               onChange={onCambio ? () => onCambio(o.valor) : undefined}
+              onClick={alTocar ? () => alTocar(o.valor) : undefined}
             />
             <span
               className={`${pildoraOpcion} ${pildoraNormal} group-hover:text-texto group-has-checked:border-transparent group-has-checked:bg-palido group-has-checked:text-palido-texto group-has-focus-visible:ring-2 group-has-focus-visible:ring-palido group-has-focus-visible:ring-offset-2 group-has-focus-visible:ring-offset-tarjeta`}

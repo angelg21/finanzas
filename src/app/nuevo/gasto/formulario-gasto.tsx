@@ -306,10 +306,9 @@ function Campos({
               detalle: s.tipo === "inversion" ? "intocable" : undefined,
             }))}
             valor={sobreId}
-            onCambio={(v) => {
-              setSobreId(v);
-              alTocarSobre();
-            }}
+            onCambio={setSobreId}
+            // Tocar el sobre ya marcado también cuenta: es elegirlo a mano (criterio 8).
+            alTocar={alTocarSobre}
             error={errores.sobre}
           />
 
