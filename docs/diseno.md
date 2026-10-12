@@ -133,6 +133,10 @@ Primer uso: el desglose del sobre Ocasiones en `/sobres/[id]`. La captura de gas
 
 Transiciones de 140 ms en color, fondo, borde y opacidad. Botones y enlaces se encogen al 98 % al presionarse. Nada se anima al cargar. Se respeta `prefers-reduced-motion`.
 
+## Logo
+
+El usuario entregó su logo el 12 de octubre de 2026: `docs/referencias/logo-original.jpg`, con "ANGEL GUEVARA" debajo. La app usa **solo el emblema, nunca las letras**: un círculo verde con una flecha que sube sobre barras. Está recortado con fondo transparente en `docs/referencias/logo-emblema.png`, de 310 px, la resolución del original. Es el icono de la app instalada en el celular, en la feature 002 (PWA instalable). En el icono adaptable de Android, la punta de la flecha toca la esquina del recorte, así que necesita más margen que el 80 % de la zona segura.
+
 ## Tema
 
 `data-tema` en `<html>`, fijado antes de pintar por un script en `<head>`. Sin preferencia guardada sigue al tema del sistema operativo. El botón alterna entre claro y oscuro y guarda la elección en el navegador; desde entonces manda esa elección y no el sistema.
