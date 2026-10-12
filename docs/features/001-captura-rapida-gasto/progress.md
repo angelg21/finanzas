@@ -43,8 +43,8 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 
 - [x] Spec leída y corregida por el desarrollador (2026-10-11)
 - [x] Ampliación de categorías leída y aprobada por el desarrollador (2026-10-11)
-- [ ] Construida (todas las tareas con commit). La captura quedó construida el 2026-10-11; falta la ampliación.
-- [ ] Validada en navegador. La captura se validó el 2026-10-11; falta la ampliación.
+- [x] Construida (todas las tareas con commit) (2026-10-11, con la ampliación de categorías)
+- [ ] Validada en navegador. La captura se validó el 2026-10-11; faltan las pantallas de categorías.
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
 - [ ] Fusionada en `main` el AAAA-MM-DD
