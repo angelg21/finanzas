@@ -1,6 +1,6 @@
 # 001 · Captura rápida de gasto
 
-Fecha: 2026-10-11. Estado: borrador.
+Fecha: 2026-10-11. Estado: aprobada.
 
 ## Para qué
 
