@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type EntradaGasto, prepararGasto, sobreSugerido } from "./gastos";
+import { type EntradaGasto, prepararGasto, saldosTras, sobreSugerido } from "./gastos";
 
 const hoy = "2026-10-11";
 const binance = { id: 1, moneda: "USDT" as const };
@@ -194,6 +194,34 @@ describe("prepararGasto: fecha y nota", () => {
       "monto",
       "tasa",
     ]);
+  });
+});
+
+describe("saldosTras: antes y después del gasto", () => {
+  const cuentas = { 1: 50_000, 5: 0 };
+  const sobres = { [gastosDelMes]: 30_000 };
+  it("un gasto en dólares baja la cuenta en su moneda y el sobre en USD (criterio 1)", () => {
+    expect(saldosTras(filas(entrada({})), cuentas, sobres)).toEqual({
+      cuentas: { 1: 45_800, 5: 0 },
+      sobres: { [gastosDelMes]: 25_800 },
+    });
+  });
+  it("vendiendo, la venta pasa a Bolívares y el sobre solo baja lo gastado (criterio 2)", () => {
+    const filasVenta = filas(entrada({ forma: "vendiendo", vendido: "20", tasa: "241,8", monto: "2100" }));
+    expect(saldosTras(filasVenta, cuentas, sobres)).toEqual({
+      cuentas: { 1: 48_000, 5: 273_600 },
+      sobres: { [gastosDelMes]: 29_132 },
+    });
+  });
+  it("Bolívares puede quedar en negativo (criterio 4)", () => {
+    const filasVenta = filas(entrada({ forma: "vendiendo", vendido: "10", tasa: "240", monto: "2500" }));
+    expect(saldosTras(filasVenta, cuentas, sobres).cuentas[5]).toBe(-10_000);
+  });
+  it("una cuenta o un sobre sin saldo previo empieza en cero, y no cambia los saldos recibidos", () => {
+    const resultado = saldosTras(filas(entrada({})), {}, {});
+    expect(resultado).toEqual({ cuentas: { 1: -4_200 }, sobres: { [gastosDelMes]: -4_200 } });
+    saldosTras(filas(entrada({})), cuentas, sobres);
+    expect(cuentas).toEqual({ 1: 50_000, 5: 0 });
   });
 });
 

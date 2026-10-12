@@ -153,6 +153,28 @@ export function prepararGasto(e: EntradaGasto, hoy: string): GastoPreparado {
   return { ok: true, filas: [transferencia, gasto] };
 }
 
+type SaldosPorId = Record<number, number>;
+
+/**
+ * Saldos de cuentas (en su moneda) y de sobres (en USD) después de aplicar las filas, con las mismas
+ * reglas que saldosPorCuenta y saldosPorSobre en src/db/consultas.ts. Sirve para el resumen tras guardar
+ * y para el "Antes y después" mientras se escribe. No modifica los saldos que recibe.
+ */
+export function saldosTras(filas: FilaMovimiento[], cuentas: SaldosPorId, sobres: SaldosPorId) {
+  const c: SaldosPorId = { ...cuentas };
+  const s: SaldosPorId = { ...sobres };
+  for (const f of filas) {
+    c[f.cuentaOrigenId] = (c[f.cuentaOrigenId] ?? 0) - f.montoCentavos;
+    if (f.tipo === "transferencia" && f.cuentaDestinoId !== null) {
+      c[f.cuentaDestinoId] = (c[f.cuentaDestinoId] ?? 0) + (f.montoDestinoCentavos ?? f.montoCentavos);
+    }
+    if (f.tipo === "gasto" && f.sobreOrigenId !== null) {
+      s[f.sobreOrigenId] = (s[f.sobreOrigenId] ?? 0) - f.montoUsdCentavos;
+    }
+  }
+  return { cuentas: c, sobres: s };
+}
+
 /** Familia va a Familia; Regalos, a Ocasiones; cualquier otra, a Gastos del mes. */
 const sobrePorCategoria = new Map([
   ["Familia", "Familia"],
