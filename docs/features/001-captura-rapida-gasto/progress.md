@@ -47,7 +47,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 - [x] Construida (todas las tareas con commit) (2026-10-11, con la ampliación de categorías)
 - [x] Validada en navegador (captura el 2026-10-11, categorías el 2026-10-12)
 - [x] Verificada: `pnpm verify` en verde, cada ★ con su prueba (2026-10-12)
-- [ ] Revisada: veredicto APTO PARA FUSIONAR
+- [x] Revisada: veredicto APTO PARA FUSIONAR (2026-10-12, novena vuelta)
 - [ ] Fusionada en `main` el AAAA-MM-DD
 
 ## Notas
@@ -388,3 +388,14 @@ Lo que se aprendió, lo que quedó fuera y por qué.
       - `comprobar-001 --url` en verde y `/cuentas` cuadra.
     - Base: 118 movimientos `demo-*` y 15 categorías activas de 15, sin filas ni categorías de prueba.
   - `pnpm verify`: `estructura: 0 errores, 13 avisos`, `Tests 207 passed (207)`, `✓ verify:full en verde en 22.1 s`.
+- 2026-10-12 · `/f-review`, novena vuelta.
+  - **`revisor`: APTO PARA FUSIONAR.**
+    - `pnpm verify --forzar` en verde: `Tests 207 passed (207)`, `✓ verify:full en verde en 19.5 s`.
+    - Cada ★ tiene su prueba con los números de la spec, y no se rompe ninguna regla dura.
+    - El revert `13f1354` salió limpio: no quedan restos del borrador, la confirmación sobrevive al redibujo, "Registrar otro" despeja el formulario y `sessionStorage` queda vacío.
+    - `comprobar-001 --url` en verde. La migración 0002 tiene el mismo hash que la aplicada, y `drizzle-kit check` y `generate` no ven cambios.
+  - **Hallazgos sin bloqueo, pendientes de decisión del desarrollador:**
+    1. **Baja-media.** `onFocus={(e) => e.currentTarget.select()}` en el monto corre en cada foco, no solo tras un error, como dice su comentario. Lo conservó el revert de `b63fba7`, que lo había pensado para un monto precargado. Para corregir una cifra hace falta un segundo toque, y teclear sobre "21" da "0" en vez de "210".
+    2. **Baja, criterio 25.** Desde "Nueva" se puede crear una categoría de ingreso, y la vuelta a la captura llega sin categoría elegida y sin aviso (`src/app/categorias/acciones.ts:90-91`). No toca saldos.
+    3. **Documento.** La línea 62 de la spec describe todavía `SelectorPildoras` como "píldoras desplazables".
+    4. Conocidos y aceptados: la carrera de T15 y los flotantes de `semilla-demo.ts`, para `/f-audit`.
