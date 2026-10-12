@@ -208,3 +208,33 @@ Lo que se aprendió, lo que quedó fuera y por qué.
     - Las 6 filas de prueba (654 a 659) se borraron: 118 movimientos, todos `demo-*`.
   - Capturas de `/nuevo/gasto` en escritorio y celular, claro y oscuro, en Dólares y en venta: en Dólares solo se ve "Cuenta" (Efectivo); al vender solo "Salen de" (Binance), y el "Antes y después" sigue a Binance.
   - `pnpm verify`: tipos, lint y formato en verde; `estructura: 0 errores, 12 avisos`; `Tests 196 passed (196)`; build; humo con las 10 rutas; `✓ verify:full en verde en 24.9 s`. El aviso nuevo es `formulario-gasto.tsx` con 325 líneas: sigue siendo solo el formulario de captura y no se parte.
+- 2026-10-12 · `/f-review`, segunda vuelta.
+  - **`revisor`: NO APTO.** Los tres hallazgos de la primera vuelta quedaron corregidos y probados. Hallazgos nuevos:
+    1. **Media-alta, datos, criterio 8.** Tras un error o tras el aviso de Inversión, el sobre elegido a mano se pierde al elegir la categoría. `sobreTocado` vive en `Campos`, que se vuelve a montar con `key={estado.ronda}`, y vuelve a `false`. Reproducido con Edge manejado por DevTools: sobre Familia a mano, Guardar sin categoría, elegir Comida → el sobre pasa a Gastos del mes y el gasto se guarda ahí (fila 679).
+    2. **Baja, texto de dinero.** El "vuelto" de la confirmación es el saldo total de Bolívares, no el vuelto de esa venta: la segunda venta seguida dice 5.472,00 cuando su vuelto es 2.736,00.
+    3. **Baja.** Con "Bolívares del saldo" y sin cuenta VES activa, el error `cuenta` no se ve, porque solo se pinta dentro de los grupos de cuentas, que están ocultos.
+    4. **Baja, sin JavaScript.** La unidad del monto no sigue a la forma de pago: con "Bolívares del saldo" sigue diciendo USDT.
+    5. **Conocido, no bloquea.** La carrera de T15 entre guardar un gasto y cambiar el tipo de su categoría sigue abierta.
+  - **`guardian-datos` sobre `64af718` y `17bbedf`: SEGURO DE APLICAR.** Envíos hostiles a `cuentaVentaId` (Bolívares, inactiva, inexistente, `1e0`, `0x1`, SQL, sin el campo): todos rechazados sin filas. El cuadre se mantiene. Hallazgos:
+    - **Baja.** `page.tsx` cae en `enDolares[0]`, que incluye la prima, si no queda ninguna cuenta propia en dólares activa. Contradice el ADR 0006.
+    - **Decisión de producto.** Una tasa menor que 1 (por ejemplo "0,4" en vez de "40") infla el valor en USD del gasto. La spec solo pide una tasa mayor que cero.
+  - **Corregido:**
+    - **1** (`1e73875`): `sobreTocado` vive en `Captura`, que sobrevive a las respuestas del servidor y solo se reinicia con "Registrar otro".
+    - **2** (`241324d`): el vuelto es lo recibido menos lo gastado en esta venta, y el saldo de Bolívares se nombra aparte.
+    - **3 y 4** (`88629a5`): `CampoMonto` recibe la unidad como nodo, y la captura elige Bs o dólares con `:has()`. Al pagar del saldo, el error de cuenta sale bajo la tasa. Sin JavaScript, la unidad en dólares (USDT, USDC o USD) es la de la cuenta inicial; con JavaScript, la de la elegida. Las monedas en dólares valen 1 a 1, así que no confunde montos.
+    - **Prima** (`eb875f7`): sin `enDolares[0]`. Sin cuenta propia en dólares activa no se marca ninguna.
+    - **Sin corregir:** el 5, que ya era conocido, y la tasa menor que 1, que es una decisión de producto para el desarrollador.
+  - **Evidencia**, contra el build en :3124:
+    - **Con Edge sin ventana, manejado por DevTools:**
+      - sobre Familia a mano, Guardar sin categoría ("Elige una categoría"), elegir Comida: el sobre sigue en 3 y la fila 680 queda en Familia ("Familia queda en −7,00 USD");
+      - Inversión con el aviso y cambiar a Salud: el sobre sigue en 6 y el botón dice "Sí, gastar de Inversión";
+      - sin tocar el sobre, error y luego Familia: la sugerencia lleva el sobre a 3.
+    - **Con los scripts de la página desactivados** (`Emulation.setScriptExecutionDisabled`), al cambiar la forma de pago:
+      - la unidad pasa de USDT a Bs, Bs y otra vez USDT;
+      - los grupos visibles son "Cuenta" en Dólares, "Salen de" en la venta y ninguno del saldo.
+    - **Bolívares desactivada un momento en la base local:** del saldo, con y sin JavaScript, se ve "No hay una cuenta en bolívares activa". Reactivada después.
+    - **Dos ventas seguidas sin JavaScript:** la segunda dice "Te quedan 2.736,00 Bs de vuelto; Bolívares queda en 5.472,00 Bs". Del saldo no hay vuelto.
+    - `/cuentas` dice "Cuadra con los sobres".
+    - Las filas 680 a 685 se borraron: 118 movimientos `demo-*` y 5 cuentas activas.
+    - `comprobar-001 --url` en verde.
+  - `pnpm verify`: `estructura: 0 errores, 12 avisos`, `Tests 196 passed (196)`, `✓ verify:full en verde en 20.5 s`. `formulario-gasto.tsx` tiene ahora 348 líneas y sigue siendo solo la captura.
