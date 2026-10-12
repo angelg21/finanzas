@@ -102,9 +102,8 @@ export async function eliminarCategoriaAccion(formData: FormData) {
 }
 
 /**
- * Criterios 19 y 22: restaura una archivada. Lee `restaurar` (el campo oculto que acompaña al botón "Restaurar
- * la archivada" del formulario de crear o editar, donde `id` es otra) o, si no viene, `id` (la lista de
- * archivadas). Si se llegó desde la captura, vuelve a ella con la categoría elegida, como al crear (25).
+ * Criterios 19 y 22: restaura una archivada. Lee `restaurar` (el formulario aparte del botón "Restaurar la
+ * archivada", al crear o editar) o, si no viene, `id` (la lista de archivadas). Si se llegó desde la captura, vuelve a ella con la categoría elegida, como al crear (25).
  */
 export async function restaurarCategoriaAccion(formData: FormData) {
   const id = Number(texto(formData, "restaurar") || texto(formData, "id"));

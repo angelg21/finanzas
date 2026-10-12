@@ -1,7 +1,7 @@
 "use client";
 
 import { RotateCcw, Search } from "lucide-react";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { Boton, Campo, Entrada, SelectorColor, SelectorIcono, SelectorPildoras } from "@/components/formulario";
 import { CirculoCategoria, Tarjeta, TarjetaPalida } from "@/components/ui";
 import { type TipoCategoria, buscarIconos } from "@/lib/categorias";
@@ -75,6 +75,7 @@ function Campos({
   const [color, setColor] = useState(valores.color);
   const [busqueda, setBusqueda] = useState("");
   const zonaIconos = useRef<HTMLFieldSetElement>(null);
+  const formularioRestaurar = useId();
 
   // Al abrir, la lista de iconos se desplaza hasta el elegido, que puede quedar abajo (al editar).
   useEffect(() => {
@@ -116,18 +117,15 @@ function Campos({
             />
           </Campo>
           {archivada !== undefined ? (
-            <>
-              {/* El id va en un campo oculto: React reemplaza el name de un botón con formAction por el suyo. */}
-              <input type="hidden" name="restaurar" value={archivada} />
-              <button
-                type="submit"
-                formAction={restaurarCategoriaAccion}
-                className="-mt-3 flex w-fit items-center gap-1.5 rounded-full px-2 py-1 text-[13px] font-bold text-enlace hover:bg-tarjeta-hover"
-              >
-                <RotateCcw size={14} aria-hidden />
-                Restaurar la archivada
-              </button>
-            </>
+            // Pertenece al formulario de restaurar, fuera de este: Enter aquí guarda, nunca restaura (criterio 19).
+            <button
+              type="submit"
+              form={formularioRestaurar}
+              className="-mt-3 flex w-fit items-center gap-1.5 rounded-full px-2 py-1 text-[13px] font-bold text-enlace hover:bg-tarjeta-hover"
+            >
+              <RotateCcw size={14} aria-hidden />
+              Restaurar la archivada
+            </button>
           ) : null}
 
           {tipoFijo ? (
@@ -150,7 +148,8 @@ function Campos({
 
           <fieldset ref={zonaIconos} className="flex min-w-0 flex-col gap-2">
             <legend className="mb-1.5 text-[12px] font-semibold text-texto-3">Icono</legend>
-            <label className="relative">
+            {/* Sin JavaScript el buscador no filtra: no se muestra. */}
+            <label className="relative noscript:hidden">
               <Search
                 size={16}
                 aria-hidden
@@ -162,6 +161,10 @@ function Campos({
                 placeholder="Buscar: carro, café, mascota…"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
+                // Enter (o "Buscar" en el celular) solo busca: no envía el formulario con un icono sin elegir.
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") e.preventDefault();
+                }}
                 className="pl-10"
               />
             </label>
@@ -188,6 +191,13 @@ function Campos({
             {pendiente ? "Guardando…" : id === undefined ? "Crear categoría" : "Guardar cambios"}
           </Boton>
         </form>
+        {archivada !== undefined ? (
+          // Formulario aparte, sin nada visible: su único botón vive arriba, bajo el nombre, con form={id}.
+          <form id={formularioRestaurar} action={restaurarCategoriaAccion} className="hidden">
+            <input type="hidden" name="restaurar" value={archivada} />
+            {volver ? <input type="hidden" name="volver" value={volver} /> : null}
+          </form>
+        ) : null}
       </Tarjeta>
 
       <TarjetaPalida className="hidden lg:col-span-5 lg:block">
