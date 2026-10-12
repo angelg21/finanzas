@@ -30,9 +30,10 @@ export default async function NuevoGasto({ searchParams }: PageProps<"/nuevo/gas
   const enDolares = cuentas.filter((c) => c.moneda !== "VES");
   const forma = formas.find((f) => f === parametros.forma) ?? "dolares";
   const pedida = (id: unknown) => enDolares.find((c) => String(c.id) === id)?.id;
-  const cuentaId = String(pedida(parametros.cuenta) ?? cuentaPorDefecto ?? enDolares[0]?.id ?? "");
+  // Sin cuenta propia en dólares activa no se marca ninguna: la de la prima nunca se preselecciona (ADR 0006).
+  const cuentaId = String(pedida(parametros.cuenta) ?? cuentaPorDefecto ?? "");
   // La venta tiene su propio valor por defecto: Binance, aunque el último gasto fuera desde otra cuenta.
-  const cuentaVentaId = String(pedida(parametros.venta) ?? cuentaVentaPorDefecto ?? enDolares[0]?.id ?? "");
+  const cuentaVentaId = String(pedida(parametros.venta) ?? cuentaVentaPorDefecto ?? "");
   // Al volver de crear una categoría con "Nueva", llega ya elegida (criterio 25).
   const categoriaId = categorias.find((c) => String(c.id) === parametros.categoria)?.id.toString();
 
