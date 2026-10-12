@@ -7,6 +7,9 @@ const formatoNumero = new Intl.NumberFormat("es-VE", {
 
 const formatoEntero = new Intl.NumberFormat("es-VE", { maximumFractionDigits: 0 });
 
+/** Las monedas de las cuentas, como el enum `moneda` de la base. */
+export type Moneda = "USD" | "USDT" | "USDC" | "VES";
+
 /** Código corto que acompaña a la cifra. */
 const unidades: Record<string, string> = {
   USD: "USD",
@@ -104,12 +107,20 @@ export function usdDesdeBolivares(bsCentavos: number, tasaDm: number): number {
   return dividirRedondeando(BigInt(bsCentavos) * BigInt(DIEZMILESIMAS), BigInt(tasaDm));
 }
 
+/** Parte entera y los cuatro decimales de una tasa, sin pasar por coma flotante. */
+function partesTasa(tasaDm: number) {
+  const resto = tasaDm % DIEZMILESIMAS;
+  return { entero: (tasaDm - resto) / DIEZMILESIMAS, decimales: String(resto).padStart(4, "0") };
+}
+
+/** 2418000 → "241.8000": el texto que guarda la columna numeric(14,4). */
+export function tasaDecimal(tasaDm: number): string {
+  const { entero, decimales } = partesTasa(tasaDm);
+  return `${entero}.${decimales}`;
+}
+
 /** 2418000 → "241,80 Bs/USD". Al menos dos decimales y hasta cuatro si los tiene. */
 export function formatearTasa(tasaDm: number): string {
-  const resto = tasaDm % DIEZMILESIMAS;
-  const entero = (tasaDm - resto) / DIEZMILESIMAS;
-  const decimales = String(resto)
-    .padStart(4, "0")
-    .replace(/0{1,2}$/, "");
-  return `${formatoEntero.format(entero)},${decimales} Bs/USD`;
+  const { entero, decimales } = partesTasa(tasaDm);
+  return `${formatoEntero.format(entero)},${decimales.replace(/0{1,2}$/, "")} Bs/USD`;
 }

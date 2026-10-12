@@ -7,6 +7,7 @@ import {
   formatearEnteros,
   formatearTasa,
   partesCentavos,
+  tasaDecimal,
   usdDesdeBolivares,
 } from "./dinero";
 
@@ -108,6 +109,15 @@ describe("usdDesdeBolivares", () => {
   it("no acepta montos con decimales ni tasas no positivas", () => {
     expect(() => usdDesdeBolivares(0.5, 2_418_000)).toThrow();
     expect(() => usdDesdeBolivares(1_000, -1)).toThrow();
+  });
+});
+
+describe("tasaDecimal", () => {
+  it("escribe la tasa con cuatro decimales y punto, como la guarda la base", () => {
+    expect(tasaDecimal(2_418_000)).toBe("241.8000");
+    expect(tasaDecimal(365_432)).toBe("36.5432");
+    expect(tasaDecimal(12_345_000)).toBe("1234.5000");
+    expect(tasaDecimal(1)).toBe("0.0001");
   });
 });
 

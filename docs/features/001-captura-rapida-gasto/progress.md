@@ -7,7 +7,7 @@ Rama: `feat/001-captura-rapida-gasto`. Spec: `spec.md`.
 Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca con la fecha al cerrarla.
 
 - [x] T1 · (2026-10-11) `src/lib/dinero.ts`: `aTasa`, `bolivaresDesdeUsd`, `usdDesdeBolivares`, `formatearTasa`. Pruebas primero (criterios 6 y 7), verlas fallar, implementar.
-- [ ] T2 · `src/lib/gastos.ts`: `prepararGasto` para los tres casos con los números exactos de los criterios 1 a 4, el mínimo de 1 centavo del 7 y los errores de 5 y 6; `sobreSugerido` (8). `src/lib/fechas.ts`: `hoyEnCaracas` y `fechaValida` (11). Pruebas primero.
+- [x] T2 · (2026-10-11) `src/lib/gastos.ts`: `prepararGasto` para los tres casos con los números exactos de los criterios 1 a 4, el mínimo de 1 centavo del 7 y los errores de 5 y 6; `sobreSugerido` (8). `src/lib/fechas.ts`: `hoyEnCaracas` y `fechaValida` (11). Pruebas primero.
 - [ ] T3 · `src/db/consultas.ts`: categorías de gasto por uso en 90 días, cuentas activas con `es_propia`, sobres aptos para gasto, última cuenta propia en dólares usada en un gasto. `src/db/movimientos.ts`: `registrarMovimientos` en transacción. Lanzar `guardian-datos` antes de dar por cerrada.
 - [ ] T4 · `src/app/nuevo/gasto/acciones.ts`: `registrarGasto` con zod, confirmación de Inversión, revalidación de `/`, `/movimientos`, `/sobres`, `/cuentas` y estado de éxito con el resumen.
 - [ ] T5 · `/cuentas`: el total y el cuadre suman todas las cuentas activas, también la de la prima, que conserva su marca (criterio 16).
@@ -37,3 +37,4 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 Lo que se aprendió, lo que quedó fuera y por qué.
 
 - 2026-10-11 · Revisión de la spec antes de construir. Corregido: el gasto del criterio 2 vale 868 centavos, no 869 (doble redondeo). Decidido con el desarrollador: se permite gastar desde la cuenta de la prima y su saldo entra en el cuadre (criterio 16); la forma de pago empieza siempre en Dólares; montos sin separador de miles; "hoy" en hora de Caracas; un gasto en Bs que vale menos de medio centavo se guarda con 1 centavo; se acepta la diferencia cambiaria de la cuenta Bolívares.
+- 2026-10-11 · T2 sumó dos funciones puras que la spec no nombraba y la construcción necesita: `tasaDecimal` (la tasa como el texto `"241.8000"` que guarda `numeric(14,4)`) y `diaAnterior` (el atajo "Ayer"). `prepararGasto` recibe `hoy` como segundo argumento y devuelve todos los errores por campo a la vez.
