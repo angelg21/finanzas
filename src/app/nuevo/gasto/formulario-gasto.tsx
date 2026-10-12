@@ -199,8 +199,6 @@ function Campos({
               }
               defaultValue={valores.monto}
               onChange={(e) => setMonto(e.target.value)}
-              // Con un monto ya escrito (tras un error), teclear lo reemplaza en vez de anteponerse.
-              onFocus={(e) => e.currentTarget.select()}
               autoFocus={primeraVez || errores.monto !== undefined}
               aria-invalid={errores.monto ? true : undefined}
             />
