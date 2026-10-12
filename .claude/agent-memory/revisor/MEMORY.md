@@ -1,2 +1,2 @@
-- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — ★ bien probados; fallan los "por defecto" de Pantallas que la demo (toda importada) no ejercita
-- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, envío sin JS por $ACTION, MSYS_NO_PATHCONV, guardian en paralelo
+- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — ★ bien probados; fallan los "por defecto" y el useState perdido al remontar con key={ronda}
+- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, envío sin JS por $ACTION, Edge por DevTools para JS, guardián en paralelo
