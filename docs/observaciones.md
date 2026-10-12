@@ -66,7 +66,7 @@ Lista viva de las observaciones del usuario sobre la interfaz, lo que se cambió
 
 **Observación** (11 de octubre de 2026): de Gestor de Gastos le gustaba mucho poder agregar y eliminar categorías de gasto, y asociar a cada una un icono, elegido de una lista larga, y un color de una paleta. **Iconos, nunca emojis**: iconos de línea como los de la barra de navegación.
 
-**Estado**: funcionalidad nueva, fuera del alcance de la spec 001 ("crear categorías desde el formulario"). Se especifica con `/f-spec` cuando la 001 esté fusionada, porque cambia las píldoras de categoría del formulario de captura.
+**Estado**: hecho el 2026-10-11, como ampliación de la spec 001 (criterios 17 a 27), a pedido del desarrollador antes de verificar. Incluye la pantalla `/categorias` con pestañas Gastos e Ingresos; crear y editar con un buscador de 128 iconos de línea y doce colores; archivar en vez de borrar si hay movimientos; y los círculos en la captura de gasto con la píldora "Nueva". Lo guardado es el nombre del icono y del color (ADR 0008). Quedan fuera: el gasto programado (fase 2), un color libre fuera de la paleta, y los iconos en movimientos y gráficas.
 
 **Puntos de partida para la spec**:
 

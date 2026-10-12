@@ -25,13 +25,13 @@ Spec, sección final. Se construye cuando el desarrollador apruebe la ampliació
 - [x] T12 · (2026-10-11) Esquema: `icono` y `color` en `categorias`, con `pnpm db:generate`. Lanzar `guardian-datos` antes de `pnpm db:migrate`.
 - [x] T13 · (2026-10-11) Semillas: icono y color de las 15 categorías base; `db:seed` los asigna sin pisar los que el usuario cambió (26).
 - [x] T14 · (2026-10-11) Paleta: doce tokens en `globals.css`, con el contraste del icono blanco validado por script en claro y oscuro. Registro `src/components/iconos-categoria.tsx` y `CirculoCategoria` en `ui.tsx`.
-- [ ] T15 · `src/db`: consultas (por tipo con su número de movimientos, por id, archivadas) y operaciones (crear, actualizar, borrar o archivar, restaurar). Lanzar `guardian-datos`.
-- [ ] T16 · `src/app/categorias/acciones.ts`: crear, editar, eliminar o archivar y restaurar, con zod y `validarCategoria`.
-- [ ] T17 · Pantalla `/categorias`: pestañas Gastos e Ingresos, rejilla de círculos, "Crear" y "Archivadas (n)" (17 y 22).
-- [ ] T18 · `/categorias/nueva` y `/categorias/[id]`: vista previa, `SelectorIcono` con buscador, `SelectorColor`, guardar, y eliminar o archivar con su confirmación (18 a 21, 23 y 24).
-- [ ] T19 · Captura de gasto: píldoras con `CirculoCategoria`, píldora "Nueva" que vuelve con la categoría elegida, y accesos en la barra lateral y el menú (25 y 27).
-- [ ] T20 · Capturas de `/categorias`, crear y editar, y `/nuevo/gasto`, en claro y oscuro, comparadas con `docs/referencias/categorias-gestor-*.jpg`; ajustar.
-- [ ] T21 · Documentos: ADR "el color y el icono se guardan por nombre", diseño (piezas y paleta), plan y observación 8.
+- [x] T15 · (2026-10-11) `src/db`: consultas (por tipo con su número de movimientos, por id, archivadas) y operaciones (crear, actualizar, borrar o archivar, restaurar). Lanzar `guardian-datos`.
+- [x] T16 · (2026-10-11) `src/app/categorias/acciones.ts`: crear, editar, eliminar o archivar y restaurar, con zod y `validarCategoria`.
+- [x] T17 · (2026-10-11) Pantalla `/categorias`: pestañas Gastos e Ingresos, rejilla de círculos, "Crear" y "Archivadas (n)" (17 y 22).
+- [x] T18 · (2026-10-11) `/categorias/nueva` y `/categorias/[id]`: vista previa, `SelectorIcono` con buscador, `SelectorColor`, guardar, y eliminar o archivar con su confirmación (18 a 21, 23 y 24).
+- [x] T19 · (2026-10-11) Captura de gasto: píldoras con `CirculoCategoria`, píldora "Nueva" que vuelve con la categoría elegida, y accesos en la barra lateral y el menú (25 y 27).
+- [x] T20 · (2026-10-11) Capturas de `/categorias`, crear y editar, y `/nuevo/gasto`, en claro y oscuro, comparadas con `docs/referencias/categorias-gestor-*.jpg`; ajustar.
+- [x] T21 · (2026-10-11) Documentos: ADR "el color y el icono se guardan por nombre", diseño (piezas y paleta), plan y observación 8.
 
 ## Validación en navegador
 
@@ -94,3 +94,22 @@ Lo que se aprendió, lo que quedó fuera y por qué.
   - Paleta de doce tokens `--cat-*`. Todos dan 4,2:1 o más con el icono blanco. En oscuro, pino e índigo van más claros, porque contra la tarjeta oscura el círculo se perdía (1,8:1).
   - `src/components/paleta-categorias.test.ts` lee `globals.css` y fija esa regla para siempre. `iconos-categoria.test.ts` comprueba que los 128 nombres tienen icono, sin dibujos repetidos, y que lo desconocido cae en el valor por defecto.
   - Trampa encontrada: importar el icono `Map` de lucide tapaba el `Map` de JavaScript; se importa como `IconoMapa`.
+- 2026-10-11 · T15: `guardian-datos`, APTO CON CAMBIOS y, tras corregir, APTO. Lo medido y lo corregido:
+  - **Eliminar**: contaba y borraba sin bloquear la fila. Con un gasto guardándose a la vez daba error de clave foránea en vez de archivar. Ahora `bloquearYContar` hace `FOR UPDATE` antes de contar, y en la misma carrera archiva.
+  - **Editar**: la base dejaba cambiar el tipo de una categoría con movimientos (21 gastos quedaron con categoría de ingreso). `actualizarCategoria` lo impide también en la base.
+  - **Restaurar**: podía dejar dos activas con nombres equivalentes. Ahora busca una activa equivalente con `repetidaDe` y avisa en vez de restaurar.
+  - **Demo**: buscaba las categorías solo por nombre; ahora por nombre y tipo.
+  - **Residuo sin cerrar, de antes de la ampliación**: un gasto validado justo antes de cambiar el tipo de una categoría sin movimientos puede entrar después del cambio. Se cierra cuando `registrarMovimientos` compruebe el tipo de la categoría al insertar.
+- 2026-10-11 · T16 a T19, evidencia con los formularios enviados como un navegador sin JavaScript contra la base local:
+  - crear (18);
+  - repetida sin acentos ni mayúsculas, catálogo y nombre vacío (19);
+  - tipo fijo con movimientos (20);
+  - borrar sin movimientos y archivar Comida con sus 21 (21);
+  - archivadas, restaurar y la oferta de restaurar (22);
+  - volver a la captura con la categoría elegida (25); un `volver` hacia otra dirección se ignora.
+  - Restaurar con una "comida" activa insertada por SQL se negó con aviso.
+  - Todo lo de prueba se borró: quedan 15 categorías activas, Comida con sus 21 movimientos y 118 movimientos `demo-*`.
+- 2026-10-11 · T20, capturas de `/categorias`, crear y editar, y `/nuevo/gasto` en claro y oscuro, comparadas con `docs/referencias/categorias-gestor-*.jpg`. Ajustes:
+  - el icono elegido toma el color de la categoría, como en la referencia;
+  - al editar, la lista se desplaza hasta el icono elegido;
+  - el botón de archivar usa la variante `peligro`.
