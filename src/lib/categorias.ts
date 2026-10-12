@@ -204,7 +204,7 @@ export const categoriasBase: CategoriaBase[] = [
 const LARGO_MAXIMO = 40;
 
 /** Minúsculas, sin acentos y sin espacios de más: "  Educación " y "educacion" son la misma clave. */
-function clave(texto: string): string {
+export function claveDeNombre(texto: string): string {
   return texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim().replace(/\s+/g, " ");
 }
 
@@ -237,7 +237,9 @@ export function repetidaDe<T extends Existente>(
   existentes: T[],
   excluir?: number,
 ): T | undefined {
-  return existentes.find((c) => c.tipo === tipo && c.id !== excluir && clave(c.nombre) === clave(nombre));
+  return existentes.find(
+    (c) => c.tipo === tipo && c.id !== excluir && claveDeNombre(c.nombre) === claveDeNombre(nombre),
+  );
 }
 
 /** Criterios 19 y 20: nombre limpio y único en su tipo, icono y color del catálogo, tipo fijo si hay movimientos. */
@@ -276,9 +278,9 @@ export function destinoAlEliminar(movimientos: number): "borrar" | "archivar" {
 
 /** Criterio 23: iconos cuyo nombre o palabras contienen el texto, sin distinguir acentos ni mayúsculas. */
 export function buscarIconos(texto: string): IconoCategoria[] {
-  const buscado = clave(texto);
+  const buscado = claveDeNombre(texto);
   if (buscado === "") return iconosCategoria;
   return iconosCategoria.filter(
-    (i) => i.nombre.includes(buscado) || i.palabras.some((p) => clave(p).includes(buscado)),
+    (i) => i.nombre.includes(buscado) || i.palabras.some((p) => claveDeNombre(p).includes(buscado)),
   );
 }

@@ -6,6 +6,7 @@
  *   saldo      → un gasto en VES desde Bolívares
  * Es pura: recibe las cuentas ya leídas de la base y devuelve filas o un error por campo.
  */
+import { claveDeNombre } from "./categorias";
 import { type Moneda, aCentavos, aTasa, bolivaresDesdeUsd, tasaDecimal, usdDesdeBolivares } from "./dinero";
 import { fechaValida } from "./fechas";
 
@@ -181,14 +182,17 @@ export function saldosTras(filas: FilaMovimiento[], cuentas: SaldosPorId, sobres
   return { cuentas: c, sobres: s };
 }
 
-/** Familia va a Familia; Regalos, a Ocasiones; cualquier otra, a Gastos del mes. */
+/**
+ * Familia va a Familia; Regalos, a Ocasiones; cualquier otra, a Gastos del mes. Por la clave del nombre, como
+ * los nombres repetidos: "familia" también. Un renombre de verdad pierde la sugerencia (limitación aceptada).
+ */
 const sobrePorCategoria = new Map([
-  ["Familia", "Familia"],
-  ["Regalos", "Ocasiones"],
+  [claveDeNombre("Familia"), "Familia"],
+  [claveDeNombre("Regalos"), "Ocasiones"],
 ]);
 
 /** Sobre que se preselecciona al elegir la categoría (criterio 8), o null si ese sobre no existe. */
 export function sobreSugerido(nombreCategoria: string, sobres: { id: number; nombre: string }[]): number | null {
-  const nombre = sobrePorCategoria.get(nombreCategoria) ?? "Gastos del mes";
+  const nombre = sobrePorCategoria.get(claveDeNombre(nombreCategoria)) ?? "Gastos del mes";
   return sobres.find((s) => s.nombre === nombre)?.id ?? null;
 }

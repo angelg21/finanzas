@@ -252,4 +252,12 @@ describe("sobreSugerido (criterio 8)", () => {
   it("si el sobre sugerido no existe, no sugiere nada", () => {
     expect(sobreSugerido("Comida", [{ id: 3, nombre: "Familia" }])).toBeNull();
   });
+  it("compara el nombre sin mayúsculas, acentos ni espacios de más, como los nombres repetidos", () => {
+    expect(sobreSugerido("familia", sobres)).toBe(3);
+    expect(sobreSugerido("  FAMILIA ", sobres)).toBe(3);
+    expect(sobreSugerido("Régalos", sobres)).toBe(6);
+  });
+  it("una categoría renombrada de verdad pierde la sugerencia y va a Gastos del mes (limitación aceptada)", () => {
+    expect(sobreSugerido("Familia y casa", sobres)).toBe(2);
+  });
 });
