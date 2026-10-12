@@ -9,6 +9,7 @@ import { config } from "dotenv";
 import { like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { aTasa, bolivaresDesdeUsd, tasaDecimal } from "../lib/dinero";
 import * as schema from "./schema";
 
 config({ path: ".env.local" });
@@ -96,11 +97,13 @@ async function main() {
     origen: "importado",
     referenciaExterna: ref("gas"),
   });
-  /** Vende USDT por bolívares a una tasa y registra el gasto en Bs valorado en los dólares vendidos. */
-  const gastoEnBolivares = (fecha: string, usd: number, tasa: number, cat: string, nota: string): Nuevo[] => {
-    const bs = (Math.round((usd * tasa) / 100) * 100) / 100; // centavos de Bs
-    const bsCentavos = Math.round(usd * tasa);
-    void bs;
+  /**
+   * Vende USDT por bolívares a una tasa y registra el gasto en Bs valorado en los dólares vendidos.
+   * La aritmética es la de dinero.ts, en enteros: nunca float fuera de ella.
+   */
+  const gastoEnBolivares = (fecha: string, usd: number, tasa: string, cat: string, nota: string): Nuevo[] => {
+    const tasaDm = aTasa(tasa);
+    const bsCentavos = bolivaresDesdeUsd(usd, tasaDm);
     return [
       {
         fecha,
@@ -110,7 +113,7 @@ async function main() {
         montoUsdCentavos: usd,
         montoDestinoCentavos: bsCentavos,
         monedaDestino: "VES",
-        tasa: tasa.toFixed(4),
+        tasa: tasaDecimal(tasaDm),
         cuentaOrigenId: binance,
         cuentaDestinoId: bolivares,
         nota: `Cambio a Bs a ${tasa}`,
@@ -123,7 +126,7 @@ async function main() {
         montoCentavos: bsCentavos,
         moneda: "VES",
         montoUsdCentavos: usd,
-        tasa: tasa.toFixed(4),
+        tasa: tasaDecimal(tasaDm),
         cuentaOrigenId: bolivares,
         sobreOrigenId: gastos,
         categoriaId: categoria(cat, "gasto"),
@@ -190,12 +193,12 @@ async function main() {
     [24, 4_400, "Comida", "Mercado semanal"],
     [27, 1_200, "Hogar", "Limpieza"],
   ];
-  const tasas: Record<string, number> = {
-    "2026-06": 221.4,
-    "2026-07": 226.9,
-    "2026-08": 231.2,
-    "2026-09": 236.5,
-    "2026-10": 241.8,
+  const tasas: Record<string, string> = {
+    "2026-06": "221.4",
+    "2026-07": "226.9",
+    "2026-08": "231.2",
+    "2026-09": "236.5",
+    "2026-10": "241.8",
   };
   for (const m of meses) {
     for (const [dia, monto, cat, nota] of plantilla) {
