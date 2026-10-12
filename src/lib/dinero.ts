@@ -18,6 +18,11 @@ const unidades: Record<string, string> = {
   VES: "Bs",
 };
 
+/** "VES" → "Bs"; las demás monedas se muestran con su código. */
+export function unidadDe(moneda: string): string {
+  return unidades[moneda] ?? moneda;
+}
+
 /**
  * 123456 → { numero: "1.234,56", entero: "1.234", decimales: "56", unidad: "USD", negativo: false }
  * `entero` y `decimales` permiten atenuar los centavos en cifras grandes.
@@ -26,7 +31,7 @@ export function partesCentavos(centavos: number, moneda: string = "USD") {
   const negativo = centavos < 0;
   const numero = formatoNumero.format(Math.abs(centavos) / 100);
   const [entero, decimales = "00"] = numero.split(",");
-  return { numero, entero, decimales, unidad: unidades[moneda] ?? moneda, negativo };
+  return { numero, entero, decimales, unidad: unidadDe(moneda), negativo };
 }
 
 /** 123456 → "1.234,56 USD" (con signo si es negativo). */

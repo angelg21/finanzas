@@ -8,6 +8,7 @@ import {
   formatearTasa,
   partesCentavos,
   tasaDecimal,
+  unidadDe,
   usdDesdeBolivares,
 } from "./dinero";
 
@@ -57,6 +58,10 @@ describe("formatearCentavos y partesCentavos", () => {
   it("muestra el signo menos en negativos y lo separa en partes", () => {
     expect(formatearCentavos(-123_456)).toBe("−1.234,56 USD");
     expect(partesCentavos(-5)).toMatchObject({ entero: "0", decimales: "05", negativo: true });
+  });
+  it("unidadDe muestra Bs para los bolívares y el código para lo demás", () => {
+    expect(unidadDe("VES")).toBe("Bs");
+    expect(unidadDe("USDT")).toBe("USDT");
   });
   it("formatearEnteros redondea al dólar", () => {
     expect(formatearEnteros(123_456)).toBe("1.235");

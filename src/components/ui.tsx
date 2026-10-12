@@ -116,6 +116,7 @@ export function Cifra({
  *   navy    → verde pino sólida con texto blanco, sobre tarjetas pálidas o blancas
  *   blanca  → blanca translúcida con texto verde pino, sobre tarjetas pálidas
  *   positiva / negativa → como oscura, con el texto en verde o rojo
+ *   palida  → menta con texto verde pino: la opción activa, como la elegida en SelectorPildoras
  */
 export function Pildora({
   children,
@@ -123,7 +124,7 @@ export function Pildora({
   className = "",
 }: {
   children: ReactNode;
-  tono?: "oscura" | "hero" | "navy" | "blanca" | "positiva" | "negativa";
+  tono?: "oscura" | "hero" | "navy" | "blanca" | "positiva" | "negativa" | "palida";
   className?: string;
 }) {
   const estilos = {
@@ -133,6 +134,7 @@ export function Pildora({
     blanca: "bg-pildora-blanca text-palida-texto",
     positiva: "bg-pildora-hero text-positivo",
     negativa: "bg-pildora-hero text-negativo",
+    palida: "bg-palido text-palido-texto",
   }[tono];
   return (
     <span
@@ -143,12 +145,21 @@ export function Pildora({
   );
 }
 
-/** Cuadro azul pálido con iniciales, radio 10. */
-export function Avatar({ texto, className = "" }: { texto: string; className?: string }) {
+/** Cuadro azul pálido con iniciales, radio 10. `pequeno` para dentro de una píldora. */
+export function Avatar({
+  texto,
+  pequeno = false,
+  className = "",
+}: {
+  texto: string;
+  pequeno?: boolean;
+  className?: string;
+}) {
+  const tamano = pequeno ? "size-6 rounded-[8px] text-[10px]" : "size-11 rounded-avatar text-[13px]";
   return (
     <span
       aria-hidden
-      className={`grid size-11 shrink-0 place-items-center rounded-avatar bg-palido text-[13px] font-extrabold uppercase text-palido-texto ${className}`}
+      className={`grid shrink-0 place-items-center bg-palido font-extrabold uppercase text-palido-texto ${tamano} ${className}`}
     >
       {texto}
     </span>
