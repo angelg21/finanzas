@@ -24,7 +24,7 @@ export default async function Nuevo({ searchParams }: PageProps<"/nuevo">) {
           return (
             <Link
               key={t}
-              href={`/nuevo?tipo=${t}`}
+              href={t === "gasto" ? "/nuevo/gasto" : `/nuevo?tipo=${t}`}
               aria-current={activa ? "true" : undefined}
               className={`palida flex items-center gap-4 rounded-palida p-4 lg:flex-col lg:items-start lg:gap-5 lg:p-5 ${
                 activa ? "ring-2 ring-white" : ""
@@ -43,8 +43,7 @@ export default async function Nuevo({ searchParams }: PageProps<"/nuevo">) {
       </div>
       <Tarjeta>
         <p className="text-[13px] text-texto-2">
-          La captura rápida es el siguiente paso de construcción: un formulario de una sola pantalla que se llena en
-          menos de diez segundos desde el celular.
+          Gasto ya tiene su pantalla de captura rápida. Ingreso y Mover llegan en las siguientes features.
         </p>
       </Tarjeta>
     </main>

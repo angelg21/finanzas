@@ -15,13 +15,18 @@ const rutas: Ruta[] = [
   { href: "/cuentas", texto: "Cuentas", Icono: Landmark },
 ];
 
-const registrar: Ruta = { href: "/nuevo", texto: "Registrar", Icono: Plus };
+// El "+" y "Registrar movimiento" abren la captura de gasto, lo más frecuente (spec 001, criterio 15).
+// Ingreso y Mover siguen en el selector /nuevo; los dos cuentan como "Registrar".
+const registrar: Ruta = { href: "/nuevo/gasto", texto: "Registrar", Icono: Plus };
+const prefijoRegistrar = "/nuevo";
 
 function esActiva(href: string, ruta: string) {
+  if (href === registrar.href) return ruta.startsWith(prefijoRegistrar);
   return href === "/" ? ruta === "/" : ruta.startsWith(href);
 }
 
 function tituloDe(ruta: string) {
+  if (ruta.startsWith(registrar.href)) return "Nuevo gasto";
   if (esActiva(registrar.href, ruta)) return registrar.texto;
   return rutas.find((r) => esActiva(r.href, ruta))?.texto ?? "Finanzas";
 }

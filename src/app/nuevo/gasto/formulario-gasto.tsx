@@ -8,6 +8,7 @@ import { type Moneda, unidadDe } from "@/lib/dinero";
 import { diaAnterior } from "@/lib/fechas";
 import { type FormaPago, sobreSugerido } from "@/lib/gastos";
 import { type ErroresFormularioGasto, type EstadoGasto, type ValoresGasto, registrarGasto } from "./acciones";
+import { AntesYDespues, saldosAfectados } from "./antes-y-despues";
 import { ResumenGasto } from "./resumen-gasto";
 
 export type CuentaGasto = { id: number; nombre: string; moneda: Moneda; esPropia: boolean; saldoCentavos: number };
@@ -131,150 +132,167 @@ function Campos({
   // El sobre sugerido sigue a la categoría hasta que se elige un sobre a mano (criterio 8).
   const [sobreTocado, setSobreTocado] = useState(false);
   const [fecha, setFecha] = useState(valores.fecha);
+  // Lo tecleado, para el "Antes y después" de escritorio. Los campos siguen siendo no controlados.
+  const [monto, setMonto] = useState(valores.monto);
+  const [tasa, setTasa] = useState(valores.tasa);
+  const [vendido, setVendido] = useState(valores.vendido);
   const ayer = diaAnterior(hoy);
 
   const enDolares = cuentas.filter((c) => c.moneda !== "VES");
   const monedaCuenta = enDolares.find((c) => String(c.id) === cuentaId)?.moneda ?? "USD";
   const inversion = sobres.find((s) => s.tipo === "inversion");
   const confirmando = confirmar && inversion !== undefined && sobreId === String(inversion.id);
+  const afectados = saldosAfectados({ forma, monto, tasa, vendido, cuentaId, sobreId, cuentas, sobres, hoy });
 
   return (
-    <Tarjeta className="lg:col-span-7">
-      <form action={enviar} className="group/gasto flex flex-col gap-5">
-        <Campo etiqueta="Monto" error={errores.monto}>
-          <CampoMonto
-            name="monto"
-            moneda={forma === "dolares" ? monedaCuenta : "VES"}
-            defaultValue={valores.monto}
-            autoFocus={primeraVez || errores.monto !== undefined}
-            aria-invalid={errores.monto ? true : undefined}
-          />
-        </Campo>
+    <>
+      <Tarjeta className="lg:col-span-7">
+        <form action={enviar} className="group/gasto flex flex-col gap-5">
+          <Campo etiqueta="Monto" error={errores.monto}>
+            <CampoMonto
+              name="monto"
+              moneda={forma === "dolares" ? monedaCuenta : "VES"}
+              defaultValue={valores.monto}
+              onChange={(e) => setMonto(e.target.value)}
+              autoFocus={primeraVez || errores.monto !== undefined}
+              aria-invalid={errores.monto ? true : undefined}
+            />
+          </Campo>
 
-        <SelectorPildoras
-          etiqueta="Forma de pago"
-          name="forma"
-          opciones={formasPago}
-          valorInicial={valores.forma}
-          onCambio={(v) => setForma(v as FormaPago)}
-          envolver
-        />
-
-        <div className={soloEnDolares}>
           <SelectorPildoras
-            etiqueta={forma === "vendiendo" ? "Salen de" : "Cuenta"}
-            name="cuentaId"
-            opciones={enDolares.map((c) => ({
-              valor: String(c.id),
-              texto: c.nombre,
-              detalle: c.esPropia ? undefined : "a nombre de mi prima",
-            }))}
-            valorInicial={valores.cuentaId}
-            onCambio={setCuentaId}
-            error={errores.cuenta}
+            etiqueta="Forma de pago"
+            name="forma"
+            opciones={formasPago}
+            valorInicial={valores.forma}
+            onCambio={(v) => setForma(v as FormaPago)}
+            envolver
           />
-        </div>
 
-        <div className={`grid grid-cols-2 gap-3 ${soloEnBolivares}`}>
-          <div className={soloAlVender}>
-            <Campo etiqueta={`${unidadDe(monedaCuenta)} vendidos`} error={errores.vendido}>
+          <div className={soloEnDolares}>
+            <SelectorPildoras
+              etiqueta={forma === "vendiendo" ? "Salen de" : "Cuenta"}
+              name="cuentaId"
+              opciones={enDolares.map((c) => ({
+                valor: String(c.id),
+                texto: c.nombre,
+                detalle: c.esPropia ? undefined : "a nombre de mi prima",
+              }))}
+              valorInicial={valores.cuentaId}
+              onCambio={setCuentaId}
+              error={errores.cuenta}
+            />
+          </div>
+
+          <div className={`grid grid-cols-2 gap-3 ${soloEnBolivares}`}>
+            <div className={soloAlVender}>
+              <Campo etiqueta={`${unidadDe(monedaCuenta)} vendidos`} error={errores.vendido}>
+                <Entrada
+                  name="vendido"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  placeholder="20"
+                  defaultValue={valores.vendido}
+                  onChange={(e) => setVendido(e.target.value)}
+                />
+              </Campo>
+            </div>
+            <Campo etiqueta="Tasa Bs/USD" error={errores.tasa}>
               <Entrada
-                name="vendido"
+                name="tasa"
                 inputMode="decimal"
                 autoComplete="off"
-                placeholder="20"
-                defaultValue={valores.vendido}
+                placeholder="241,8"
+                defaultValue={valores.tasa}
+                onChange={(e) => setTasa(e.target.value)}
               />
             </Campo>
           </div>
-          <Campo etiqueta="Tasa Bs/USD" error={errores.tasa}>
+
+          <SelectorPildoras
+            etiqueta="Categoría"
+            name="categoriaId"
+            opciones={categorias.map((c) => ({ valor: String(c.id), texto: c.nombre, avatar: iniciales(c.nombre) }))}
+            valorInicial={valores.categoriaId}
+            onCambio={(v) => {
+              const nombre = categorias.find((c) => String(c.id) === v)?.nombre ?? "";
+              const sugerido = sobreSugerido(nombre, sobres);
+              if (!sobreTocado && sugerido !== null) setSobreId(String(sugerido));
+            }}
+            error={errores.categoria}
+          />
+
+          <SelectorPildoras
+            etiqueta="Sobre"
+            name="sobreId"
+            opciones={sobres.map((s) => ({
+              valor: String(s.id),
+              texto: s.nombre,
+              detalle: s.tipo === "inversion" ? "intocable" : undefined,
+            }))}
+            valor={sobreId}
+            onCambio={(v) => {
+              setSobreId(v);
+              setSobreTocado(true);
+            }}
+            error={errores.sobre}
+          />
+
+          <div className="flex flex-wrap items-end gap-3">
+            <SelectorPildoras
+              etiqueta="Fecha"
+              name="atajoFecha"
+              opciones={[
+                { valor: hoy, texto: "Hoy" },
+                { valor: ayer, texto: "Ayer" },
+              ]}
+              valor={fecha === hoy || fecha === ayer ? fecha : ""}
+              onCambio={setFecha}
+            />
             <Entrada
-              name="tasa"
-              inputMode="decimal"
+              type="date"
+              name="fecha"
+              aria-label="Otra fecha"
+              max={hoy}
+              value={fecha}
+              onChange={(e) => setFecha(e.target.value)}
+              className="w-auto min-w-0 flex-1"
+            />
+          </div>
+          {errores.fecha ? (
+            <p role="alert" className="-mt-3 text-[12px] font-semibold text-negativo">
+              {errores.fecha}
+            </p>
+          ) : null}
+
+          <Campo etiqueta="Nota">
+            <Entrada
+              name="nota"
+              placeholder="Opcional"
+              maxLength={200}
               autoComplete="off"
-              placeholder="241,8"
-              defaultValue={valores.tasa}
+              defaultValue={valores.nota}
             />
           </Campo>
-        </div>
 
-        <SelectorPildoras
-          etiqueta="Categoría"
-          name="categoriaId"
-          opciones={categorias.map((c) => ({ valor: String(c.id), texto: c.nombre, avatar: iniciales(c.nombre) }))}
-          valorInicial={valores.categoriaId}
-          onCambio={(v) => {
-            const nombre = categorias.find((c) => String(c.id) === v)?.nombre ?? "";
-            const sugerido = sobreSugerido(nombre, sobres);
-            if (!sobreTocado && sugerido !== null) setSobreId(String(sugerido));
-          }}
-          error={errores.categoria}
-        />
+          {confirmando ? (
+            <p role="alert" className="flex items-start gap-2 text-[13px] font-semibold text-negativo">
+              <CircleAlert size={16} className="mt-0.5 shrink-0" aria-hidden />
+              Inversión es intocable. ¿Gastar igual?
+              <input type="hidden" name="confirmarSobre" value={inversion.id} />
+            </p>
+          ) : null}
+          {errores.general ? (
+            <p role="alert" className="text-[13px] font-semibold text-negativo">
+              {errores.general}
+            </p>
+          ) : null}
 
-        <SelectorPildoras
-          etiqueta="Sobre"
-          name="sobreId"
-          opciones={sobres.map((s) => ({
-            valor: String(s.id),
-            texto: s.nombre,
-            detalle: s.tipo === "inversion" ? "intocable" : undefined,
-          }))}
-          valor={sobreId}
-          onCambio={(v) => {
-            setSobreId(v);
-            setSobreTocado(true);
-          }}
-          error={errores.sobre}
-        />
-
-        <div className="flex flex-wrap items-end gap-3">
-          <SelectorPildoras
-            etiqueta="Fecha"
-            name="atajoFecha"
-            opciones={[
-              { valor: hoy, texto: "Hoy" },
-              { valor: ayer, texto: "Ayer" },
-            ]}
-            valor={fecha === hoy || fecha === ayer ? fecha : ""}
-            onCambio={setFecha}
-          />
-          <Entrada
-            type="date"
-            name="fecha"
-            aria-label="Otra fecha"
-            max={hoy}
-            value={fecha}
-            onChange={(e) => setFecha(e.target.value)}
-            className="w-auto min-w-0 flex-1"
-          />
-        </div>
-        {errores.fecha ? (
-          <p role="alert" className="-mt-3 text-[12px] font-semibold text-negativo">
-            {errores.fecha}
-          </p>
-        ) : null}
-
-        <Campo etiqueta="Nota">
-          <Entrada name="nota" placeholder="Opcional" maxLength={200} autoComplete="off" defaultValue={valores.nota} />
-        </Campo>
-
-        {confirmando ? (
-          <p role="alert" className="flex items-start gap-2 text-[13px] font-semibold text-negativo">
-            <CircleAlert size={16} className="mt-0.5 shrink-0" aria-hidden />
-            Inversión es intocable. ¿Gastar igual?
-            <input type="hidden" name="confirmarSobre" value={inversion.id} />
-          </p>
-        ) : null}
-        {errores.general ? (
-          <p role="alert" className="text-[13px] font-semibold text-negativo">
-            {errores.general}
-          </p>
-        ) : null}
-
-        <Boton type="submit" disabled={pendiente} autoFocus={confirmando} className="w-full">
-          {pendiente ? "Guardando…" : confirmando ? "Sí, gastar de Inversión" : "Guardar gasto"}
-        </Boton>
-      </form>
-    </Tarjeta>
+          <Boton type="submit" disabled={pendiente} autoFocus={confirmando} className="w-full">
+            {pendiente ? "Guardando…" : confirmando ? "Sí, gastar de Inversión" : "Guardar gasto"}
+          </Boton>
+        </form>
+      </Tarjeta>
+      <AntesYDespues {...afectados} />
+    </>
   );
 }
