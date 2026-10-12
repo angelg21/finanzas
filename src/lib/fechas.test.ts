@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   celdasDelMes,
   diaAnterior,
+  esFecha,
   etiquetaFecha,
   fechaDesdeAtajo,
   fechaLarga,
@@ -47,6 +48,18 @@ describe("fechaValida (criterio 11)", () => {
     expect(fechaValida("2026-13-01", hoy)).toBe(false);
     expect(fechaValida("11/10/2026", hoy)).toBe(false);
     expect(fechaValida("2026-10-1", hoy)).toBe(false);
+  });
+});
+
+describe("esFecha: un día real en AAAA-MM-DD", () => {
+  it("acepta días reales, también el 29 de febrero bisiesto", () => {
+    expect(esFecha("2026-10-12")).toBe(true);
+    expect(esFecha("2028-02-29")).toBe(true);
+  });
+  it("rechaza lo vacío, los atajos, el texto y los días que no existen", () => {
+    for (const texto of ["", "hoy", "ayer", "abc", "2026-02-30", "2026-13-01", "2026-1-5", "12/10/2026"]) {
+      expect(esFecha(texto)).toBe(false);
+    }
   });
 });
 

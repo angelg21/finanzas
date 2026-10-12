@@ -5,8 +5,9 @@ import { useRef, useState } from "react";
 import {
   type Mes,
   celdasDelMes,
-  diaAnterior,
+  esFecha,
   etiquetaFecha,
+  fechaDesdeAtajo,
   fechaLarga,
   mesDe,
   moverMes,
@@ -21,9 +22,10 @@ const iniciales = ["L", "M", "M", "J", "V", "S", "D"];
  * ventana modal pequeña, con los tokens de la app en vez del selector del navegador, que no se puede
  * estilizar. No deja elegir días futuros. La ventana es un <dialog>: Escape la cierra, el foco queda dentro
  * y tocar fuera también la cierra.
- * La fecha viaja en un campo oculto: "hoy" o "ayer" si se eligió un atajo, para que el servidor los resuelva
- * al guardar (fechaDesdeAtajo) y no con el día en que se abrió la pantalla; si no, la fecha. Sin JavaScript,
- * un campo de fecha nativo dentro de <noscript> va antes con el mismo nombre, así que es el que se lee.
+ * `valor` es lo que viaja en el campo oculto, tal como se tocó: "hoy" o "ayer" si se tocó ese atajo, que el
+ * servidor resuelve al guardar (fechaDesdeAtajo) y no con el día en que se abrió la pantalla; o el día elegido
+ * en el calendario, que se guarda tal cual aunque coincida con hoy. Sin JavaScript, un campo de fecha nativo
+ * dentro de <noscript> va antes con el mismo nombre, así que es el que se lee, y las píldoras no se ven.
  */
 export function SelectorFecha({
   name,
@@ -39,9 +41,11 @@ export function SelectorFecha({
   error?: string;
 }) {
   const ventana = useRef<HTMLDialogElement>(null);
-  const ayer = diaAnterior(hoy);
-  const [vista, setVista] = useState<Mes>(() => mesDe(valor));
-  const otra = valor !== hoy && valor !== ayer;
+  // El día que representa el valor, para pintarlo; vacío si llegó algo que no es una fecha (sin JavaScript).
+  const resuelta = fechaDesdeAtajo(valor, hoy);
+  const dia = esFecha(resuelta) ? resuelta : "";
+  const [vista, setVista] = useState<Mes>(() => mesDe(dia || hoy));
+  const otra = valor !== "hoy" && valor !== "ayer" && dia !== "";
 
   const elegir = (fecha: string) => {
     onCambio(fecha);
@@ -56,37 +60,37 @@ export function SelectorFecha({
         <input
           type="date"
           name={name}
-          defaultValue={valor}
+          defaultValue={dia}
           max={hoy}
           aria-label="Fecha"
           className="h-12 w-full rounded-[14px] border border-tarjeta-borde bg-tarjeta-hover px-4 text-[15px] text-texto"
         />
       </noscript>
-      <input type="hidden" name={name} value={valor === hoy ? "hoy" : valor === ayer ? "ayer" : valor} />
+      <input type="hidden" name={name} value={valor} />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 noscript:hidden">
         <button
           type="button"
-          aria-pressed={valor === hoy}
-          onClick={() => elegir(hoy)}
-          className={estilo(valor === hoy)}
+          aria-pressed={valor === "hoy"}
+          onClick={() => elegir("hoy")}
+          className={estilo(valor === "hoy")}
         >
           Hoy
         </button>
         <button
           type="button"
-          aria-pressed={valor === ayer}
-          onClick={() => elegir(ayer)}
-          className={estilo(valor === ayer)}
+          aria-pressed={valor === "ayer"}
+          onClick={() => elegir("ayer")}
+          className={estilo(valor === "ayer")}
         >
           Ayer
         </button>
         <button
           type="button"
           aria-haspopup="dialog"
-          aria-label={otra ? `Otra fecha: ${fechaLarga(valor)}` : "Otra fecha"}
+          aria-label={otra ? `Otra fecha: ${fechaLarga(dia)}` : "Otra fecha"}
           onClick={() => {
-            setVista(mesDe(valor));
+            setVista(mesDe(dia || hoy));
             ventana.current?.showModal();
             // El foco va al día elegido, no a la primera flecha. Tras pintar el mes, que pudo cambiar.
             requestAnimationFrame(() =>
@@ -96,7 +100,7 @@ export function SelectorFecha({
           className={estilo(otra)}
         >
           <CalendarDays size={16} aria-hidden />
-          {otra ? etiquetaFecha(valor) : "Otra fecha"}
+          {otra ? etiquetaFecha(dia) : "Otra fecha"}
         </button>
       </div>
 
@@ -112,7 +116,7 @@ export function SelectorFecha({
         <Calendario
           vista={vista}
           alMover={(delta) => setVista((v) => moverMes(v, delta))}
-          valor={valor}
+          valor={dia}
           hoy={hoy}
           alElegir={elegir}
         />

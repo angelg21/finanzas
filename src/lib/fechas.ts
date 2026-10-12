@@ -35,15 +35,19 @@ export function fechaDesdeAtajo(texto: string, hoy: string): string {
   return texto;
 }
 
-/** Una fecha real en formato AAAA-MM-DD que no es posterior a `hoy`. */
-export function fechaValida(texto: string, hoy: string): boolean {
+/** Un día real en formato AAAA-MM-DD: "2026-02-30", "" o "hoy" no lo son. */
+export function esFecha(texto: string): boolean {
   const partes = /^(\d{4})-(\d{2})-(\d{2})$/.exec(texto);
   if (!partes) return false;
   const [anio, mes, dia] = partes.slice(1).map(Number);
   const d = new Date(Date.UTC(anio, mes - 1, dia));
-  const existe = d.getUTCFullYear() === anio && d.getUTCMonth() === mes - 1 && d.getUTCDate() === dia;
+  return d.getUTCFullYear() === anio && d.getUTCMonth() === mes - 1 && d.getUTCDate() === dia;
+}
+
+/** Una fecha real en formato AAAA-MM-DD que no es posterior a `hoy`. */
+export function fechaValida(texto: string, hoy: string): boolean {
   // Mismo formato de ancho fijo: comparar como texto es comparar como fecha.
-  return existe && texto <= hoy;
+  return esFecha(texto) && texto <= hoy;
 }
 
 /*
