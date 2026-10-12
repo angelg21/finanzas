@@ -261,3 +261,35 @@ Lo que se aprendió, lo que quedó fuera y por qué.
     - **Sobre ya marcado:** tocar "Gastos del mes" ya marcado y elegir Familia deja el sobre en 2. Sin tocarlo, Familia lo lleva a 3. Las pruebas del sobre de la segunda vuelta siguen igual (fila 722 en Familia, Inversión se mantiene).
     - `comprobar-001 --url` en verde y `/cuentas` dice "Cuadra con los sobres". Las filas de prueba se borraron: 118 movimientos `demo-*`.
   - `pnpm verify`: `estructura: 0 errores, 13 avisos`, `Tests 199 passed (199)`, `✓ verify:full en verde en 22.3 s`. El aviso nuevo es `src/components/formulario.tsx` con 321 líneas: siguen siendo solo las piezas de formulario.
+- 2026-10-12 · `/f-review`, cuarta vuelta.
+  - **`revisor`: NO APTO.** Los arreglos de la tercera vuelta se cumplen. Hallazgos nuevos:
+    1. **Media, datos, criterio 11. Lo introdujo `d79662e`.** El campo oculto mandaba "hoy" o "ayer" siempre que la fecha coincidiera con el hoy o el ayer de la página, no solo cuando se tocó el atajo. Un día elegido en el calendario de una pantalla que cruza la medianoche se recalculaba al guardar. Reproducido: con el 10 elegido en el calendario, la fila 735 quedó con el 11.
+    2. **Media-baja, sin JavaScript.** Con la fecha vacía en el campo nativo, la acción devuelve el error y, al volver a pintar, `etiquetaFecha("")` lanza: HTTP 500 y página en blanco. Viene del calendario (`8198791`).
+    3. **Baja, sin JavaScript.** Las píldoras Hoy, Ayer y Otra fecha se ven debajo del campo nativo y no hacen nada; "Hoy" sigue marcada.
+    4. **Pendientes de producto**: la tasa menor que 1, la prima en "Registrar otro" y la carrera de T15.
+  - El revisor cerró Edge por nombre de imagen (`taskkill //IM msedge.exe //F`): si el desarrollador tenía Edge abierto, se cerró. Lo anotó en su memoria para cerrarlo solo por PID.
+  - **Decisiones del desarrollador, 2026-10-12:**
+    - una tasa menor que 1 se rechaza con un error junto al campo (spec, criterio 6);
+    - "Registrar otro" repite la cuenta elegida a mano, también la de la prima. "Nunca se preselecciona" vale solo para los valores por defecto. Se aclara en la spec.
+  - **Corregido:**
+    - **Tasa** (`a5f8045`): la mínima es 1, con "Escribe la tasa en Bs por dólar, como 241,8". Criterio 6 de la spec al día. Las pruebas se escribieron primero y se vieron fallar (4 fallos).
+      - Las dos pruebas de la venta de 0 Bs se ajustaron a la regla nueva, no se debilitaron: 0,01 a 0,4 sigue sin guardar nada, ahora por la tasa, y el límite que entrega 1 céntimo pasa de 0,5 a 1.
+      - La guarda `recibidos <= 0` queda como defensa.
+    - **1, 2 y 3** (`9ebfce1`): el valor de `SelectorFecha` es literalmente lo que se tocó: "hoy" (también por defecto), "ayer" o el día del calendario, que se guarda tal cual aunque coincida con hoy. Un valor que no es fecha ya no rompe la página: `esFecha`, con la prueba primero y vista fallar, deja vacío el campo nativo y "Otra fecha" sin marcar. Sin JavaScript, las píldoras se ocultan con `noscript:` (`@media (scripting: none)`, Tailwind 4.3).
+      - Spec al día: el criterio 11, la fecha sin JavaScript y la aclaración de la prima. `docs/diseno.md` al día.
+  - **Evidencia** contra el build. Primero corrí la simulación de la medianoche con 3 h de atraso, pero en Caracas eran ya las 12:02 y no cruzaba; esas filas (747 a 751) se borraron. La repetí con 13 h de atraso (el servidor cree que son las 23:02 del 11):
+    - **A.** Pantalla abierta la víspera (campo oculto "hoy", "Hoy" marcado) y guardada tras la medianoche: fila 752 con `2026-10-12`.
+    - **B.** Gasto de noche: fila 753 con `2026-10-11`. "Registrar otro" a la mañana: fila 754 con `2026-10-12`.
+    - **D, la reproducción del revisor.** El día 10 elegido en el calendario la víspera: el campo oculto dice "2026-10-10" y la fila 755 tiene `2026-10-10`. El revisor obtenía el 11.
+    - **E.** El día 11, el "hoy" de la pantalla vieja, elegido en el calendario: la fila 756 tiene `2026-10-11`.
+    - **Sin JavaScript** (scripts desactivados):
+      - las píldoras de fecha no se ven;
+      - con la fecha nativa vacía, HTTP 200 y "Elige hoy o un día anterior", con el campo vacío;
+      - con tasa 0,4 del saldo, HTTP 200 y "Escribe la tasa en Bs por dólar, como 241,8".
+    - **POST directo** con `fecha` igual a "", "abc", "2026-02-30", "2099-01-01" y "<script>": todos HTTP 200 con el error junto a la fecha, y ninguna fila.
+    - **Regresiones:**
+      - las pruebas del sobre de la segunda y la tercera vuelta dan igual (fila 757 en Familia);
+      - la venta sin JavaScript sale de Binance con "Te quedan 2.736,00 Bs de vuelto";
+      - `comprobar-001 --url` en verde y `/cuentas` cuadra.
+    - Filas de prueba borradas: 118 movimientos `demo-*` y 5 cuentas activas.
+  - `pnpm verify`: `estructura: 0 errores, 13 avisos`, `Tests 205 passed (205)`, `✓ verify:full en verde en 22.1 s`.
