@@ -238,3 +238,26 @@ Lo que se aprendió, lo que quedó fuera y por qué.
     - Las filas 680 a 685 se borraron: 118 movimientos `demo-*` y 5 cuentas activas.
     - `comprobar-001 --url` en verde.
   - `pnpm verify`: `estructura: 0 errores, 12 avisos`, `Tests 196 passed (196)`, `✓ verify:full en verde en 20.5 s`. `formulario-gasto.tsx` tiene ahora 348 líneas y sigue siendo solo la captura.
+- 2026-10-12 · `/f-review`, tercera vuelta.
+  - **`revisor`: NO APTO.** Los hallazgos de la segunda vuelta quedaron corregidos y reproducidos. Hallazgos nuevos:
+    1. **Media, datos, criterio 11.** "Hoy" se calcula una vez, al dibujar la página, y viaja como fecha concreta en el campo oculto. Una pantalla abierta antes de las 00:00 de Caracas y guardada después, o "Registrar otro" a la mañana siguiente, guarda la fecha de ayer con "Hoy" marcado. Reproducido con un servidor de reloj atrasado y luego otro con la hora real bajo la misma pestaña (filas 715 y 717, `fecha = 2026-10-11`). A fin de mes, el gasto cae en el mes anterior.
+    2. **Baja, criterio 8.** Tocar el sobre que ya está marcado no cuenta como "tocado", porque un radio marcado no emite `change`. Luego, elegir Familia cambia el sobre.
+    3. **Baja, documentos.** `docs/diseno.md` dice todavía "píldoras desplazables en horizontal". `spec.md` dice que `CampoMonto` "recibe `moneda`".
+    4. **Pendiente de decidir, no son defectos:**
+       - la tasa menor que 1;
+       - "Registrar otro" tras un gasto desde la prima la deja marcada: el criterio 13 ("misma cuenta") choca con "la prima nunca se preselecciona";
+       - la carrera de T15.
+  - **Corregido:**
+    - **1** (`d79662e`): `SelectorFecha` manda "hoy" o "ayer" si se eligió un atajo, y la acción los resuelve con `fechaDesdeAtajo` y el hoy de Caracas del momento de guardar. La prueba se escribió primero y se vio fallar ("fechaDesdeAtajo is not a function"). Sin JavaScript manda el campo nativo, que va antes con el mismo nombre. Criterio 11 de la spec al día. "Ayer" también se resuelve al guardar: elegido la víspera y guardado tras la medianoche, es el día anterior al de guardar, igual que "Hoy".
+    - **2** (`63e1547`): `SelectorPildoras` recibe `alTocar`, que corre con cualquier clic en una opción, también la ya marcada.
+    - **3** (`a654042`): `docs/diseno.md` (píldoras envueltas, `alTocar`, la unidad de `CampoMonto`) y `spec.md` (`CampoMonto` recibe `unidad`).
+    - **Sin corregir, para el desarrollador:** los pendientes del punto 4.
+  - **Evidencia**, contra el build:
+    - **Cruce de la medianoche** con Edge manejado por DevTools: el servidor con el reloj atrasado 3 h (shim de `Date`) se cambia por uno con la hora real bajo la misma pestaña. En Caracas eran las 01:18 del 12.
+      - **Pantalla abierta la víspera:** el campo oculto dice "hoy", con "Hoy" marcado. Guardada tras la medianoche, la fila 718 tiene `fecha = 2026-10-12`.
+      - **Gasto de noche:** fila 719 con `2026-10-11`. Con "Registrar otro" a la mañana, la fila 720 tiene `2026-10-12`. El revisor obtenía `2026-10-11`.
+      - **"Ayer" elegido la víspera:** la fila 721 tiene `2026-10-11`.
+    - **Sin JavaScript** (scripts desactivados): los campos `fecha` llegan en el orden `date=2026-10-12` y luego `hidden=hoy`. Con el 5 de octubre elegido en el nativo, la fila 734 tiene `2026-10-05`: manda el nativo.
+    - **Sobre ya marcado:** tocar "Gastos del mes" ya marcado y elegir Familia deja el sobre en 2. Sin tocarlo, Familia lo lleva a 3. Las pruebas del sobre de la segunda vuelta siguen igual (fila 722 en Familia, Inversión se mantiene).
+    - `comprobar-001 --url` en verde y `/cuentas` dice "Cuadra con los sobres". Las filas de prueba se borraron: 118 movimientos `demo-*`.
+  - `pnpm verify`: `estructura: 0 errores, 13 avisos`, `Tests 199 passed (199)`, `✓ verify:full en verde en 22.3 s`. El aviso nuevo es `src/components/formulario.tsx` con 321 líneas: siguen siendo solo las piezas de formulario.
