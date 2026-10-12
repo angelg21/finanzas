@@ -365,3 +365,26 @@ Lo que se aprendió, lo que quedó fuera y por qué.
       - `comprobar-001 --url` en verde y `/cuentas` cuadra.
     - Filas de prueba borradas: 118 movimientos `demo-*` y 15 categorías activas de 15.
   - `pnpm verify`: `estructura: 0 errores, 14 avisos`, `Tests 215 passed (215)`, `✓ verify:full en verde en 46.8 s`.
+- 2026-10-12 · `/f-review`, octava vuelta.
+  - **`revisor`: NO APTO.** `pnpm verify` y los ★ en verde. Los dos defectos de datos vienen de `b63fba7`, el borrador en `sessionStorage`:
+    1. **Media-alta, datos, criterios 11, 12 y 25 y la regla de la prima.** El borrador se aplica a toda captura que se monte, no solo al volver de "Nueva", y solo se borra al guardar. Un intento abandonado reaparece por el mosaico "Gasto", el "+" o "Registrar movimiento" durante 30 minutos. Reproducido: quería 5 USD hoy y se guardaron una venta de 20 USDT y un gasto de 500 Bs con fecha de ayer (filas 854 y 855). Con la prima elegida antes de "Nueva", una captura nueva la abre marcada.
+    2. **Media, datos, criterio 13.** El `key` de la captura depende del borrador. Si caduca entre volver y guardar, el redibujo que trae `revalidatePath` monta la captura de nuevo: el gasto se guarda (fila 856), pero en vez de la confirmación aparece el formulario vacío, y el gasto queda a un toque de repetirse.
+    3. **Sin bloqueo.** Recargar antes de guardar recupera lo escrito al tocar "Nueva", no lo corregido después.
+  - Es la tercera vuelta seguida (6, 7 y 8) en que lo añadido para conservar lo escrito trae un defecto de datos nuevo. Se consulta al desarrollador el alcance antes de seguir.
+  - **Decisión del desarrollador, 2026-10-12:** conservar lo escrito al pasar por "Nueva" sale de esta feature. Queda como limitación en el criterio 25 y como observación 9 en `docs/observaciones.md`, con la salida de raíz: crear la categoría en una ventana dentro de la captura.
+  - **Hecho** (`13f1354`):
+    - `git revert` de `17efddd` y `b63fba7`; el revert se aplicó sin conflictos.
+    - Se conservan los demás arreglos de la revisión: restaurar vuelve a la captura con la categoría (`8a2405a`), Enter guarda (`97698c5`) y el monto se selecciona al recibir el foco, útil también tras un error.
+    - Las pruebas vuelven a ser 207: se fueron las del borrador, que ya no existe.
+  - **Evidencia** con Edge manejado por DevTools contra el build:
+    - **La reproducción de la octava vuelta.** Escribir 2100, "vendiendo", 20, 241,8, la Cuenta prima y "Ayer"; tocar "Nueva"; abandonar; entrar por el mosaico "Gasto" del inicio. La captura abre vacía, en Dólares, con Binance (no la prima), "hoy" y nada en la pestaña.
+    - **"Nueva" y crear con Enter:** vuelve a `/nuevo/gasto?categoria=103` con la categoría marcada y lo demás vacío, que es la limitación aceptada. Al recargar, igual.
+    - **Monto "0" y Guardar:** sale "Escribe un monto mayor que cero", el foco va al monto con "0" seleccionado (0-1) y teclear "15" da `15`.
+    - **Regresiones:**
+      - restaurar desde la captura, con y sin JavaScript, vuelve a `/nuevo/gasto?categoria=105`, y desde editar no toca la categoría editada;
+      - Enter tras la oferta de restaurar, al crear y al editar y con y sin JavaScript, guarda y no restaura;
+      - Enter en el buscador no envía nada;
+      - la venta sin JavaScript;
+      - `comprobar-001 --url` en verde y `/cuentas` cuadra.
+    - Base: 118 movimientos `demo-*` y 15 categorías activas de 15, sin filas ni categorías de prueba.
+  - `pnpm verify`: `estructura: 0 errores, 13 avisos`, `Tests 207 passed (207)`, `✓ verify:full en verde en 22.1 s`.
