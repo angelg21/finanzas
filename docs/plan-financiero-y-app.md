@@ -139,7 +139,7 @@ El dólar es la única unidad de cuenta. Todo se guarda y se muestra en dólares
 | Binance           | USDT        | Exchange             | Principal                                       |
 | Segunda billetera | USDC o USDT | Exchange o billetera | Parte del fondo de emergencia                   |
 | Efectivo          | USD         | Efectivo             | Parte pequeña del fondo                         |
-| Cuenta prima      | USD         | Tránsito             | Marcada como "no es mía legalmente", saldo bajo |
+| Cuenta prima      | USD         | Tránsito             | Marcada "a nombre de mi prima"; entra al cuadre |
 | Bolívares         | VES         | De paso              | Casi siempre en cero                            |
 
 **Gasto en bolívares, el único caso especial**
@@ -148,7 +148,7 @@ No hay tasas históricas, ni tasa BCV, ni pérdida cambiaria. Un gasto en bolív
 
 **Sobres y reparto**
 
-- Invariante: la suma de los sobres es igual a la suma de los saldos en dólares de las cuentas propias. Cada dólar tiene un trabajo.
+- Invariante: la suma de los sobres es igual a la suma de los saldos en dólares de todas las cuentas, también la de la prima: el dinero que la app registra ahí es tuyo aunque la cuenta no lo sea (ADR 0006). Cada dólar tiene un trabajo.
 - Los bolívares pertenecen siempre al sobre de gastos del mes.
 - Al registrar un ingreso, la app propone el reparto según las reglas: monto fijo a gastos, monto fijo a familia, el resto por prioridad y porcentaje, con tope en el sobre de emergencia. Se confirma con un clic y se puede ajustar.
 - Mover dinero entre sobres es una reasignación, no mueve dinero real. Mover dinero entre cuentas es una transferencia, no cambia los sobres.
@@ -215,11 +215,11 @@ Referencia antes de diseñar: Actual Budget, open source, usa exactamente el mod
 **Fase 1, dos semanas: usar desde el día uno**
 
 - Cuentas, categorías, movimientos con nota.
-- Flujo de gasto en bolívares.
+- Flujo de gasto en bolívares (feature 001).
 - Sobres con reglas de reparto y confirmación de un clic.
 - Importador de Gestor de Gastos.
 - Gráficas básicas: por mes y por categoría.
-- PWA instalable y formulario de captura rápida.
+- Formulario de captura rápida de gasto (feature 001) y PWA instalable (feature 002).
 
 **Fase 2, mes dos: reglas y captura por Telegram**
 
