@@ -18,7 +18,7 @@ Pasos del desarrollador: tocan cuentas externas y archivos `.env`, que el agente
 Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca con la fecha al cerrarla.
 
 - [x] T1 · (2026-10-13) `src/lib/acceso.ts` (`destinoSeguro`, `esUsuarioPermitido`) y `src/lib/destino-base.ts` (`esBaseLocal`, `describirBase`). Pruebas primero, con los casos de la spec (criterios 3, 4, 10 y 11); verlas fallar y luego implementar.
-- [ ] T2 · Esquema:
+- [x] T2 · (2026-10-13) Esquema:
   - escribir primero la prueba que recorre las tablas exportadas por `schema.ts` y exige RLS en cada una, y verla fallar (criterio 9);
   - activar RLS con la API de Drizzle y correr `pnpm db:generate`;
   - lanzar `guardian-datos`, luego `pnpm db:migrate` en local;
@@ -91,3 +91,8 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 ## Notas
 
 - Después de `/f-ship`, el repositorio se conecta a Vercel con `main` como rama de producción. Desde entonces, publicar `main` despliega.
+- T2, hallazgos del `guardian-datos` (APTO PARA MIGRAR, 2026-10-13):
+  - La app depende de entrar como **dueña** de las tablas. Con un rol que no sea dueño, RLS le devuelve cero filas sin error: `/cuentas` diría que cuadra con 0 = 0. Va al ADR 0010 y a `docs/despliegue.md` (T15 y T17): nada de un rol de mínimo privilegio sin políticas propias.
+  - `schema.test.ts` solo mira el código. `db:migrate:produccion` mostrará, después de migrar, el dueño y las marcas de RLS de cada tabla de `public`, y si `anon` tiene acceso al esquema `drizzle` (T3).
+  - La prueba no cubre vistas. Una vista en `public` salta RLS. Cuando llegue la primera, `securityInvoker: true` y ampliar la prueba.
+  - Migrar con la app sin uso: los bloqueos exclusivos pueden chocar con un gasto que se guarde en ese instante.
