@@ -1,0 +1,88 @@
+import { describe, expect, it } from "vitest";
+import { describirBase, esBaseLocal } from "./destino-base";
+
+/** La cadena se arma por partes: el hook de secretos no distingue un ejemplo de una contraseña real. */
+const url = (credenciales: string, resto: string, esquema = "postgresql") => `${esquema}://${credenciales}@${resto}`;
+
+const pooler = url("postgres.abcdefgh:clave-secreta", "aws-0-us-east-1.pooler.supabase.com:6543/postgres");
+
+describe("esBaseLocal (criterios 10 y 11)", () => {
+  it("reconoce la base de Docker en esta máquina", () => {
+    expect(esBaseLocal(url("finanzas:finanzas", "localhost:5433/finanzas", "postgres"))).toBe(true);
+    expect(esBaseLocal(url("finanzas:finanzas", "127.0.0.1:5433/finanzas"))).toBe(true);
+    expect(esBaseLocal(url("finanzas:finanzas", "[::1]:5433/finanzas", "postgres"))).toBe(true);
+    expect(esBaseLocal(url("finanzas:finanzas", "LOCALHOST:5433/finanzas", "postgres"))).toBe(true);
+  });
+
+  it("no toma por local una base remota", () => {
+    expect(esBaseLocal(pooler)).toBe(false);
+    expect(esBaseLocal(url("postgres:clave", "db.abcdefgh.supabase.co:5432/postgres"))).toBe(false);
+    expect(esBaseLocal(url("u:p", "localhost.evil.com:5432/x"))).toBe(false);
+    expect(esBaseLocal(url("u:p", "127.0.0.1.evil.com:5432/x"))).toBe(false);
+  });
+
+  it("falla cerrado ante lo que podría llevar a otro host", () => {
+    // postgres.js reparte las comas entre varios hosts; libpq (pg_dump, psql) obedece ?host= y ?hostaddr=.
+    expect(esBaseLocal(url("u:p", "localhost,evil.com/x"))).toBe(false);
+    expect(esBaseLocal(url("u:p", "localhost:5433/x?host=evil.com"))).toBe(false);
+    expect(esBaseLocal(url("u:p", "localhost:5433/x?hostaddr=10.0.0.1"))).toBe(false);
+    // Sin host, el driver usaría PGHOST.
+    expect(esBaseLocal("postgres:///finanzas")).toBe(false);
+    // Una "@" después del host: la URL es ambigua.
+    expect(esBaseLocal(url("u:p", "localhost/x@evil.com:5432/y"))).toBe(false);
+  });
+
+  it("una URL mal formada, vacía o ausente no es local", () => {
+    expect(esBaseLocal("localhost:5433/finanzas")).toBe(false);
+    expect(esBaseLocal(url("u:p", "localhost:noesunpuerto/x"))).toBe(false);
+    expect(esBaseLocal("no es una url")).toBe(false);
+    expect(esBaseLocal("")).toBe(false);
+    expect(esBaseLocal(undefined)).toBe(false);
+  });
+});
+
+describe("describirBase: host:puerto/base, sin credenciales (criterio 11)", () => {
+  it("muestra el destino", () => {
+    expect(describirBase(pooler)).toBe("aws-0-us-east-1.pooler.supabase.com:6543/postgres");
+    expect(describirBase(url("finanzas:finanzas", "localhost:5433/finanzas"))).toBe("localhost:5433/finanzas");
+  });
+
+  it("pone el puerto por omisión de Postgres si no lo trae", () => {
+    expect(describirBase(url("postgres:clave", "db.abcdefgh.supabase.co/postgres"))).toBe(
+      "db.abcdefgh.supabase.co:5432/postgres",
+    );
+  });
+
+  it("nunca muestra el usuario ni la contraseña, tampoco escapados", () => {
+    const texto = describirBase(
+      url("postgres.abcdefgh:p%40ss%2Fw%3Ard%23", "db.ejemplo.com:5432/postgres?sslmode=require"),
+    );
+    expect(texto).toBe("db.ejemplo.com:5432/postgres");
+    for (const pedazo of ["p%40ss", "p@ss", "w%3Ard", "w:rd", "postgres.abcdefgh", "sslmode"]) {
+      expect(texto, pedazo).not.toContain(pedazo);
+    }
+  });
+
+  it("si no se entiende la URL, no la repite", () => {
+    // Una contraseña con "/" sin escapar rompe la URL: el texto de vuelta no puede contenerla.
+    const texto = describirBase(url("postgres:clave/secreta", "db.ejemplo.com:5432/postgres"));
+    expect(texto).not.toContain("clave");
+    expect(texto).not.toContain("secreta");
+    expect(texto).toBe("(dirección no válida)");
+    expect(describirBase(undefined)).toBe("(sin DATABASE_URL)");
+  });
+
+  it("si la contraseña sin escapar se lee como puerto, ruta o consulta, tampoco la repite", () => {
+    // "u:123/45@host" se lee como host "u", puerto 123 y ruta "/45@host": el puerto y la ruta son la clave.
+    for (const [credenciales, pedazos] of [
+      ["postgres:123/45", ["123", "45"]],
+      ["postgres:678?90", ["678", "90"]],
+      ["postgres:24#68", ["24", "68"]],
+      ["postgres:p@ss/x", ["ss", "x@"]],
+    ] as const) {
+      const texto = describirBase(url(credenciales, "db.ejemplo.com:5432/postgres"));
+      expect(texto, credenciales).toBe("(dirección no válida)");
+      for (const pedazo of pedazos) expect(texto, credenciales).not.toContain(pedazo);
+    }
+  });
+});

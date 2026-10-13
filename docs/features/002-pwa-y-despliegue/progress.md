@@ -17,7 +17,7 @@ Pasos del desarrollador: tocan cuentas externas y archivos `.env`, que el agente
 
 Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca con la fecha al cerrarla.
 
-- [ ] T1 · `src/lib/acceso.ts` (`destinoSeguro`, `esUsuarioPermitido`) y `src/lib/destino-base.ts` (`esBaseLocal`, `describirBase`). Pruebas primero, con los casos de la spec (criterios 3, 4, 10 y 11); verlas fallar y luego implementar.
+- [x] T1 · (2026-10-13) `src/lib/acceso.ts` (`destinoSeguro`, `esUsuarioPermitido`) y `src/lib/destino-base.ts` (`esBaseLocal`, `describirBase`). Pruebas primero, con los casos de la spec (criterios 3, 4, 10 y 11); verlas fallar y luego implementar.
 - [ ] T2 · Esquema:
   - escribir primero la prueba que recorre las tablas exportadas por `schema.ts` y exige RLS en cada una, y verla fallar (criterio 9);
   - activar RLS con la API de Drizzle y correr `pnpm db:generate`;
