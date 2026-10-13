@@ -1,4 +1,5 @@
 - [Prima en el cuadre](project_prima-en-cuadre.md): ADR 0006; desactivar con saldo descuadra; demo 539300; sonda prima 537800; respaldo enDolares[0] preselecciona la prima
-- [Defectos de datos encontrados](project_defectos-datos-encontrados.md): abiertos (float en fondos.ts, pooler, tasa < 1, respaldo de la prima, escrituras ajenas) y cerrados (T13, T15, 64af718, 17bbedf, b1c3fa1)
+- [Defectos de datos encontrados](project_defectos-datos-encontrados.md): abiertos (float en fondos.ts, pooler, tasa < 1, respaldo de la prima, escrituras ajenas, RLS en vivo) y cerrados (T13, T15, 64af718, 17bbedf, b1c3fa1)
 - [Categorías: icono y color](project_categorias-icono-color.md): por nombre, sin check; T13, T14 y T15 aptos; for update en db; condiciones del importador
-- [Entorno de prueba](reference_entorno-de-prueba.md): .env.local denegado, generate denegado, copias desechables, acción fuera de Next, huella md5 del autor, git archive, docker logs, carreras
+- [Entorno de prueba](reference_entorno-de-prueba.md): .env.local denegado, generate denegado, copias desechables, acción fuera de Next, huella md5, git archive, docker logs, carreras, Docker apagado, mutaciones
+- [RLS en Supabase](project_rls-supabase.md): 0003 apta; la app vive de ser dueña; local no ejerce RLS; rol ajeno ve 0=0; FORCE prohibido; vistas

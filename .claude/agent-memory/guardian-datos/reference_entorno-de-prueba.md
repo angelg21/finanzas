@@ -25,4 +25,12 @@ metadata:
 - **Atribuir escrituras ajenas**: `docker logs --since <UTC> --timestamps finanzas-db` muestra cada insert fallido con su fila completa. Las filas borradas no salen en el log, pero se ven en `n_dead_tup` de `pg_stat_user_tables` y en el avance de la secuencia.
 - El autor sigue con las tareas siguientes mientras reviso. Comprobar la hora de modificación de los archivos revisados antes de dar el veredicto.
 
-Ver también [[defectos-datos-encontrados]].
+- **Docker Desktop puede estar apagado** (2026-10-13: nada escuchaba en 5433). Lo arranqué con `"/c/Program Files/Docker/Docker/Docker Desktop.exe" &` y esperé con `docker info`. Ojo: al arrancar también levanta los contenedores de otros proyectos (rielco, my-database, pgadmin4), que tienen política de reinicio. Decirlo en el informe.
+- **Git Bash convierte `/tmp/...`** en `C:/Users/.../Temp/...` en `docker exec ... -f /tmp/x.sql` y en los modificadores de `cmd /c mklink /J`. Hay que usar `MSYS_NO_PATHCONV=1`, o meter la ruta dentro de `sh -c "..."`.
+- Un comando compuesto con heredoc y `rm -rf` fue denegado. Los scripts se escriben con Write en el scratchpad y se corren aparte.
+- **Probar una prueba contra mutaciones sin tocar `src/`** (2026-10-13): copiar el archivo de prueba sin cambios y el código mutado a `scratchpad/mut/<caso>/src/...` (`mutar.py`), crear una unión con `MSYS_NO_PATHCONV=1 cmd /c mklink /J <scratch>\mut\node_modules <repo>\node_modules` y correr `./node_modules/.bin/vitest run --root <scratch>/mut/<caso>`. Al terminar, quitar la unión con `cmd /c rmdir`: un borrado recursivo del scratchpad vaciaría el `node_modules` del repo a través de ella.
+- En la base real, un insert dentro de BEGIN/ROLLBACK igual consume la secuencia, aunque lo rechace RLS. En la base real solo uso select, update y delete en la sonda; los insert van en la copia.
+- Para simular a un dueño sin superusuario, pasar la propiedad con `ALTER TABLE ... OWNER TO` tabla por tabla (las secuencias de identidad la siguen). Nunca `REASSIGN OWNED BY finanzas`: también reasigna objetos compartidos, como la base `finanzas` real. Los roles son de todo el clúster: primero `dropdb` de la copia, luego `drop role`.
+- Envoltorio `en-copia.mjs <copia> <usuario:clave|-> -- <cmd>`: se niega si `.env.local` no apunta a localhost:5433/finanzas, o si la copia no se llama `finanzas_*`. El "injected env (0)" confirma que manda la variable del entorno.
+
+Ver también [[defectos-datos-encontrados]] y [[rls-supabase]].
