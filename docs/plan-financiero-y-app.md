@@ -220,7 +220,7 @@ Referencia antes de diseñar: Actual Budget, open source, usa exactamente el mod
 - Importador de Gestor de Gastos.
 - Gráficas básicas: por mes y por categoría.
 - Formulario de captura rápida de gasto. **Hecho** en la feature 001, fusionada el 12 de octubre de 2026.
-- PWA instalable (feature 002).
+- PWA instalable y despliegue para usar la app a diario (feature 002): base en Supabase, Supabase Auth para un solo usuario, Vercel, y `/f-audit` antes de publicar.
 
 **Fase 2, mes dos: reglas y captura por Telegram**
 
