@@ -81,7 +81,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 
 ## Etapas
 
-- [ ] Spec leída y corregida por el desarrollador
+- [x] Spec leída y corregida por el desarrollador (2026-10-13)
 - [ ] Construida (todas las tareas con commit)
 - [ ] Validada en navegador
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba

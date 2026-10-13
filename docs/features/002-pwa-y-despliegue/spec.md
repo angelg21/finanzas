@@ -1,6 +1,6 @@
 # 002 · PWA instalable y despliegue
 
-Fecha: 2026-10-13. Estado: borrador.
+Fecha: 2026-10-13. Estado: aprobada.
 
 ## Para qué
 
