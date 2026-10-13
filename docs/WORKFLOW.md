@@ -25,7 +25,7 @@ Con un agente, escribir código dejó de ser el cuello de botella. **El cuello d
 | 4   | **Revisar** `/f-review NNN`           | informe del subagente `revisor`, adversarial y en contexto limpio                                                                                                                                                    | veredicto APTO PARA FUSIONAR                                                                    |
 | 5   | **Fusionar** `/f-ship NNN`            | historial limpio, rama fusionada en `main` y `main` publicada en el remoto privado; sin pull request                                                                                                                 | `pnpm verify` en verde aquí y ahora, y el autor repasó su diff línea por línea                  |
 
-**Etapa condicional:** `/f-audit <fase>` al cerrar cada fase del plan (la 2 trae el bot de Telegram y la 3 la clave de Binance). El revisor busca defectos; el auditor busca vías de ataque. No es el mismo trabajo.
+**Etapa condicional:** `/f-audit <fase>` al cerrar cada fase del plan (la 1 trae el despliegue y la autenticación, la 2 el chat con IA y las notificaciones push, y la 3 la clave de Binance). El revisor busca defectos; el auditor busca vías de ataque. No es el mismo trabajo.
 
 **Reglas de uso**
 
@@ -61,7 +61,7 @@ Permisos: lo rutinario corre solo (pnpm, git local, docker compose, curl a local
 
 - `revisor`: refuta el diff contra la spec y las reglas duras. No implementa.
 - `guardian-datos`: audita esquema, migraciones y consultas antes de aplicarlas; vigila el invariante y los centavos.
-- `auditor-seguridad`: busca vías de ataque concretas, paso a paso, al cerrar cada fase. Entra en escena con el bot de Telegram, la autenticación y la clave de Binance.
+- `auditor-seguridad`: busca vías de ataque concretas, paso a paso, al cerrar cada fase. Entra en escena con la autenticación, el despliegue, el chat con IA, las notificaciones push y la clave de Binance.
 
 **3. El autor, dueño y responsable.** No hay aprobación cruzada: con una persona sería un "aprobado" vacío. Lo que bloquea la fusión son los gates y el veredicto del revisor. Hueco conocido: nadie revisa el diff final si se cambia algo después de `/f-review`; si el cambio es sustancial, se vuelve a pasar.
 
@@ -94,6 +94,6 @@ La interfaz se construye solo dentro de Next, como componentes de React con Tail
 - **Modo plan por defecto**: con un solo desarrollador frena más de lo que protege. Los skills obligan a explorar antes de editar donde hace falta.
 - **Pruebas de navegador automatizadas y presupuesto de bundle**: el costo no se justifica para una persona; las capturas y la mirada del autor cubren el riesgo real.
 - **Verificación de fronteras entre módulos**: hay un solo módulo. Se añade el día que haya dos.
-- **Auditoría de seguridad en cada feature**: solo al cerrar fases, cuando entran Telegram, autenticación y claves externas.
+- **Auditoría de seguridad en cada feature**: solo al cerrar fases, cuando entran autenticación, despliegue, el chat con IA, las notificaciones push y claves externas.
 
 Se revisa esta lista al cerrar cada fase del plan.

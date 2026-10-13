@@ -156,16 +156,16 @@ No hay tasas históricas, ni tasa BCV, ni pérdida cambiaria. Un gasto en bolív
 
 **Modelo de datos**
 
-| Entidad               | Campos principales                                                                                                                                                                                                                  |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Cuenta                | nombre, moneda, tipo, es_propia                                                                                                                                                                                                     |
-| Sobre                 | nombre, tipo (gastos, familia, emergencia, meta, inversión), tope o meta, fecha objetivo                                                                                                                                            |
-| Categoría             | nombre, tipo (ingreso o gasto), icono y color por nombre (ADR 0008), activa o archivada, categoría padre                                                                                                                            |
-| Movimiento            | fecha, tipo (ingreso, gasto, transferencia, reasignación), monto original en centavos, moneda, monto en USD en centavos, tasa, cuenta origen, cuenta destino, categoría, sobre, nota, origen (manual, telegram, importado, binance) |
-| Regla de reparto      | orden, sobre destino, tipo (fijo o porcentaje), valor, tope                                                                                                                                                                         |
-| Pago programado       | nombre, monto, día del mes, categoría, sobre                                                                                                                                                                                        |
-| Posición de inversión | ticker, unidades, costo en USD                                                                                                                                                                                                      |
-| Aporte                | fecha, monto, posición, movimiento asociado                                                                                                                                                                                         |
+| Entidad               | Campos principales                                                                                                                                                                                                              |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cuenta                | nombre, moneda, tipo, es_propia                                                                                                                                                                                                 |
+| Sobre                 | nombre, tipo (gastos, familia, emergencia, meta, inversión), tope o meta, fecha objetivo                                                                                                                                        |
+| Categoría             | nombre, tipo (ingreso o gasto), icono y color por nombre (ADR 0008), activa o archivada, categoría padre                                                                                                                        |
+| Movimiento            | fecha, tipo (ingreso, gasto, transferencia, reasignación), monto original en centavos, moneda, monto en USD en centavos, tasa, cuenta origen, cuenta destino, categoría, sobre, nota, origen (manual, chat, importado, binance) |
+| Regla de reparto      | orden, sobre destino, tipo (fijo o porcentaje), valor, tope                                                                                                                                                                     |
+| Pago programado       | nombre, monto, día del mes, categoría, sobre                                                                                                                                                                                    |
+| Posición de inversión | ticker, unidades, costo en USD                                                                                                                                                                                                  |
+| Aporte                | fecha, monto, posición, movimiento asociado                                                                                                                                                                                     |
 
 Los montos se guardan como enteros en centavos. Nunca float.
 
@@ -175,8 +175,8 @@ Los montos se guardan como enteros en centavos. Nunca float.
 - Tailwind con shadcn/ui, Recharts para gráficas.
 - Supabase Auth, despliegue en Vercel, PWA instalable en el celular.
 - Vercel Cron para las reglas nocturnas.
-- Bot de Telegram con grammY.
-- Claude API con el SDK de TypeScript, modelo claude-opus-5-5 con tool use, para interpretar mensajes del bot y redactar el resumen semanal. Costo estimado por debajo de 1 $ al mes.
+- Chat dentro de la app y notificaciones push web desde la PWA, sin bot de Telegram (ADR 0009).
+- Claude API con el SDK de TypeScript, modelo claude-opus-5-5 con tool use, para interpretar los mensajes del chat y redactar el resumen semanal. Costo estimado por debajo de 1 $ al mes.
 - Finnhub para precios de ETF, fase 3.
 - API de Binance con clave de solo lectura para conciliar saldos, fase 3.
 
@@ -184,7 +184,7 @@ Todo cabe en capas gratuitas.
 
 **Dónde entra la IA y dónde no**
 
-- Sí: interpretar "gasté 12 en comida" desde Telegram. Redactar el resumen semanal en lenguaje humano. Responder preguntas sobre tus datos, por ejemplo cuánto gastaste en comida en agosto contra julio.
+- Sí: interpretar "gasté 12 en comida" desde el chat de la app. Redactar el resumen semanal en lenguaje humano. Responder preguntas sobre tus datos, por ejemplo cuánto gastaste en comida en agosto contra julio.
 - No: alertas de presupuesto, liquidez ociosa, pagos próximos, cuotas de metas, proyecciones. Todo eso son reglas y aritmética.
 
 **El riesgo número uno del proyecto**
@@ -222,11 +222,11 @@ Referencia antes de diseñar: Actual Budget, open source, usa exactamente el mod
 - Formulario de captura rápida de gasto. **Hecho** en la feature 001, fusionada el 12 de octubre de 2026.
 - PWA instalable y despliegue para usar la app a diario (feature 002): base en Supabase, Supabase Auth para un solo usuario, Vercel, y `/f-audit` antes de publicar.
 
-**Fase 2, mes dos: reglas y captura por Telegram**
+**Fase 2, mes dos: reglas y captura por chat**
 
 - Pagos programados.
-- Alertas por reglas enviadas por Telegram: desviación de presupuesto, liquidez ociosa en el sobre de gastos, pago próximo. Con botón de un clic para reasignar.
-- Captura por Telegram interpretada con IA.
+- Alertas por reglas enviadas como notificaciones push: desviación de presupuesto, liquidez ociosa en el sobre de gastos, pago próximo. Con botón de un clic para reasignar.
+- Captura por chat dentro de la app, interpretada con IA.
 - Metas con cuota mensual y fecha proyectada.
 - Simulador de escenarios con tres casos: pesimista, base, optimista. Variables: ingreso, gasto, retorno, una cifra de inflación en dólares.
 
@@ -234,7 +234,7 @@ Referencia antes de diseñar: Actual Budget, open source, usa exactamente el mod
 
 - Inversiones: aportes, posiciones, precio actual, rendimiento, distribución.
 - Panel de patrimonio: patrimonio neto en el tiempo, tasa de ahorro, meses de cobertura, ingreso pasivo dividido entre gastos.
-- Resumen semanal y preguntas sobre tus datos con IA.
+- Resumen semanal y preguntas sobre tus datos con IA, en el chat.
 - Conciliación con la API de Binance de solo lectura: movimientos que no registraste.
 
 **Bajo demanda, el día que haga falta y no antes**

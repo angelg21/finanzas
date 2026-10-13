@@ -6,7 +6,7 @@ argument-hint: [fase|completo]
 
 Auditar: **$ARGUMENTS**.
 
-1. Lee la fase correspondiente de la sección 6 del plan y lista qué entró en esta fase que amplíe la superficie de ataque: autenticación, bot de Telegram, API de Binance, despliegue, nuevas tablas o acciones.
+1. Lee la fase correspondiente de la sección 6 del plan y lista qué entró en esta fase que amplíe la superficie de ataque: autenticación, chat con IA, notificaciones push, API de Binance, despliegue, nuevas tablas o acciones.
 2. Lanza al subagente `auditor-seguridad` con:
    > Audita la fase $ARGUMENTS del plan. Busca vías de ataque concretas contra el código tal como está en `main`, siguiendo tu procedimiento. Reporta pasos para explotar cada una y cómo cerrarla.
 3. Lanza al subagente `guardian-datos` con:
