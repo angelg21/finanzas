@@ -12,6 +12,7 @@ import { config } from "dotenv";
 import { count, inArray, isNull, like, notLike, or } from "drizzle-orm";
 import { type EntradaGasto, type FilaMovimiento, prepararGasto } from "../src/lib/gastos";
 import { validarCategoria } from "../src/lib/categorias";
+import { exigirBaseLocal } from "../src/lib/destino-base";
 import { hoyEnCaracas } from "../src/lib/fechas";
 
 const REFERENCIA = "demo-comprobar-001";
@@ -35,6 +36,8 @@ function coincide(criterio: string, descripcion: string, fila: object | undefine
 
 async function main() {
   config({ path: ".env.local" });
+  // Escribe filas de demostración: solo en la base local (spec 002, criterio 10).
+  exigirBaseLocal(process.env.DATABASE_URL, "comprobar-001");
   const { db, categorias, movimientos } = await import("../src/db/index");
   const { registrarMovimientos } = await import("../src/db/movimientos");
   const { saldosPorCuenta, saldosPorSobre, categoriasDeGastoPorUso, movimientosRecientes } =

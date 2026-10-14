@@ -75,8 +75,10 @@ export function revisarArchivo(ruta, contenido) {
     if (/db\.execute\(\s*`[^`]*\$\{/.test(contenido)) {
       error("SQL con interpolación en db.execute. Usa el constructor de consultas o `sql` con parámetros.");
     }
-    if (/process\.env\.DATABASE_URL/.test(contenido) && !/src\/db\/(index|seed|semilla-demo)\.ts$/.test(rel)) {
-      aviso("Lee DATABASE_URL fuera de src/db. La conexión vive en src/db/index.ts.");
+    if (/process\.env\.DATABASE_URL/.test(contenido) && !/src\/db\/(index|conexion-script)\.ts$/.test(rel)) {
+      aviso(
+        "Lee DATABASE_URL fuera de su sitio. La app conecta en src/db/index.ts; los scripts, en src/db/conexion-script.ts.",
+      );
     }
     if (/NEXT_PUBLIC_[A-Z0-9_]*(KEY|SECRET|TOKEN|PASSWORD)/.test(contenido)) {
       error("Clave o secreto expuesto al navegador con NEXT_PUBLIC_.");

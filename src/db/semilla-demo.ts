@@ -4,24 +4,23 @@
  *   pnpm db:demo            → inserta (idempotente)
  *   pnpm db:demo:limpiar    → borra solo lo que insertó este script
  * Requiere haber corrido antes pnpm db:seed (cuentas, sobres y categorías).
+ * Insertar solo corre contra la base local, nunca en producción (spec 002, criterio 10). Limpiar corre en
+ * cualquier base, porque solo borra lo marcado demo-*.
  */
-import { config } from "dotenv";
 import { like } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
 import { aTasa, bolivaresDesdeUsd, tasaDecimal } from "../lib/dinero";
+import { conectar, terminarConError, urlDeEntorno, urlLocal } from "./conexion-script";
 import * as schema from "./schema";
-
-config({ path: ".env.local" });
 
 type Nuevo = typeof schema.movimientos.$inferInsert;
 
 async function main() {
-  if (!process.env.DATABASE_URL) throw new Error("Falta DATABASE_URL en .env.local");
-  const conexion = postgres(process.env.DATABASE_URL, { prepare: false, max: 1 });
-  const db = drizzle(conexion, { schema, casing: "snake_case" });
+  const limpiar = process.argv.includes("--limpiar");
+  const url = limpiar ? urlDeEntorno() : urlLocal("pnpm db:demo");
+  if (!url) throw new Error("Falta DATABASE_URL en .env.local");
+  const { db, conexion } = conectar(url);
 
-  if (process.argv.includes("--limpiar")) {
+  if (limpiar) {
     const borrados = await db
       .delete(schema.movimientos)
       .where(like(schema.movimientos.referenciaExterna, "demo-%"))
@@ -229,7 +228,4 @@ async function main() {
   await conexion.end();
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+main().catch(terminarConError);

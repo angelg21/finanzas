@@ -23,7 +23,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - activar RLS con la API de Drizzle y correr `pnpm db:generate`;
   - lanzar `guardian-datos`, luego `pnpm db:migrate` en local;
   - la app local se ve igual que antes.
-- [ ] T3 · Guardas de base:
+- [x] T3 · (2026-10-13) Guardas de base:
   - `db:demo` se niega fuera de local;
   - `drizzle.config.ts`, `db:migrate` y `db:seed` se niegan fuera de local;
   - `db:migrate:produccion` y `db:seed:produccion` leen `.env.produccion.local`, muestran el destino con `describirBase` y piden escribir `produccion` (criterios 10 y 11);
@@ -96,3 +96,14 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - `schema.test.ts` solo mira el código. `db:migrate:produccion` mostrará, después de migrar, el dueño y las marcas de RLS de cada tabla de `public`, y si `anon` tiene acceso al esquema `drizzle` (T3).
   - La prueba no cubre vistas. Una vista en `public` salta RLS. Cuando llegue la primera, `securityInvoker: true` y ampliar la prueba.
   - Migrar con la app sin uso: los bloqueos exclusivos pueden chocar con un gasto que se guarde en ese instante.
+- T3, `guardian-datos`: NO APTO en la primera vuelta y APTO en la segunda (2026-10-13). Lo que cambió por sus hallazgos:
+  - Una URL ilegible (contraseña con `/`, `?`, `#`, `@` o `,` sin escapar) ya no llega al driver, cuyo error repetía la URL entera. Los scripts imprimen solo el mensaje y la causa (`terminarConError`), y `src/db/index.ts` también la valida.
+  - `postgres.js` y `new URL` leían distinto algunas URL ambiguas. `conexion-script.test.ts` lo mide con el driver real, sin conectar.
+  - Producción exige `?sslmode=require` (uno solo) y una terminal real: una respuesta por tubería no pasa la confirmación.
+  - `db:migrate:produccion` revisa la base real después de migrar (`src/db/estado-base.ts`): tablas iguales al esquema, RLS, sin FORCE, de quien conecta, ninguna vista que salte RLS, `anon` fuera de `drizzle` y todas las migraciones del journal.
+  - `comprobar-001.ts` también exige la base local, porque escribe filas de demostración. La spec no lo pedía.
+  - Spec corregida con el desarrollador: `.env.produccion.local` usa el pooler en modo sesión, no la conexión directa (solo IPv6), y el `DATABASE_URL` de producción lleva `?sslmode=require`.
+- Pendientes para T15:
+  - Antes de crear `.env.produccion.local`, el desarrollador corre `pnpm db:seed:produccion` en su terminal. Debe decir "Falta .env.produccion.local". Si dice "…en una terminal", está en Git Bash (mintty): usar PowerShell o `winpty`.
+  - La primera vez con el archivo, escribir algo distinto de `produccion` debe responder "Cancelado". El agente no lo puede ensayar porque no escribe archivos `.env`.
+  - `docs/despliegue.md`: pooler de sesión con `?sslmode=require` para `.env.produccion.local`; pooler de transacción con `?sslmode=require` en Vercel; "Enforce SSL" en Supabase.

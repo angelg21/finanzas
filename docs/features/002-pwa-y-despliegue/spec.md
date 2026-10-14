@@ -96,11 +96,11 @@ El error se muestra encima del botón, en `negativo`, con `role="alert"`.
 - **Datos existentes**: la base local sigue igual y sigue siendo la de desarrollo y demostración. Producción nace vacía, con las migraciones y las semillas, y no se le copia nada de la local.
 - **Saldos en producción**: las cuentas arrancan en cero porque todavía no existen el saldo inicial (observación 3) ni los ingresos. Hasta esa feature, los gastos dejan las cuentas en negativo. Lo útil a diario es la captura y la lista de movimientos.
 - **Variables de entorno**:
-  - `DATABASE_URL`: en producción, el pooler de Supabase en modo transacción;
+  - `DATABASE_URL`: en producción, el pooler de Supabase en modo transacción, con `?sslmode=require`;
   - `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY`, solo de servidor;
   - `USUARIO_PERMITIDO`.
 
-  En local, `.env.local` apunta a la base de Docker y al proyecto de Supabase de desarrollo, y añade `HUMO_CORREO` y `HUMO_CLAVE` del usuario de prueba. `.env.produccion.local` guarda la cadena de conexión directa de producción, solo para migrar, sembrar y respaldar. Los archivos `.env` los escribe el desarrollador, no el agente.
+  En local, `.env.local` apunta a la base de Docker y al proyecto de Supabase de desarrollo, y añade `HUMO_CORREO` y `HUMO_CLAVE` del usuario de prueba. `.env.produccion.local` guarda la cadena del pooler de Supabase en modo sesión (puerto 5432, usuario `postgres.<ref>`, el mismo rol dueño de las tablas) con `?sslmode=require`, solo para migrar, sembrar y respaldar. No la conexión directa: en el plan gratuito es solo IPv6 y esta máquina no tiene IPv6 global; el modo transacción no sirve para `pg_dump`. (Corregido el 2026-10-13, en T3.) Los archivos `.env` los escribe el desarrollador, no el agente.
 
 ## Fuera de alcance
 
