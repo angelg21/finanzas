@@ -16,8 +16,9 @@ import { Avatar, CirculoCategoria } from "./ui";
   anillo menta al foco; botón principal verde pino en píldora; monto grande y opciones como píldoras.
 */
 
+// 16 px en el celular: con menos, Safari del iPhone amplía al enfocar y deja la página corrida de lado.
 const campoBase =
-  "h-12 w-full rounded-[14px] border border-tarjeta-borde bg-tarjeta-hover px-4 text-[15px] text-texto placeholder:text-texto-3 focus:outline-none focus:ring-2 focus:ring-palido";
+  "h-12 w-full rounded-[14px] border border-tarjeta-borde bg-tarjeta-hover px-4 text-[16px] text-texto placeholder:text-texto-3 focus:outline-none focus:ring-2 focus:ring-palido lg:text-[15px]";
 
 /** Mensaje de error junto al campo o al botón; `role="alert"` para que el lector de pantalla lo anuncie. */
 export function ErrorCampo({ children }: { children?: string }) {

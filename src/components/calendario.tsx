@@ -63,7 +63,7 @@ export function SelectorFecha({
           defaultValue={dia}
           max={hoy}
           aria-label="Fecha"
-          className="h-12 w-full rounded-[14px] border border-tarjeta-borde bg-tarjeta-hover px-4 text-[15px] text-texto"
+          className="h-12 w-full rounded-[14px] border border-tarjeta-borde bg-tarjeta-hover px-4 text-[16px] text-texto lg:text-[15px]"
         />
       </noscript>
       <input type="hidden" name={name} value={valor} />

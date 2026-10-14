@@ -7,7 +7,7 @@
  * - una versión nueva espera a que se cierre la app y toma el control en la siguiente apertura: sin skipWaiting.
  * Es la base del push de la fase 2; todavía no recibe notificaciones.
  */
-const VERSION = "1";
+const VERSION = "2";
 const CACHE = `finanzas-sin-conexion-v${VERSION}`;
 const PAGINA = "/sin-conexion";
 
@@ -37,7 +37,17 @@ self.addEventListener("install", (evento) => {
         recursos.push(...recursosDe(css, new URL(hoja, self.location.origin)));
       }
       await cache.addAll([...new Set(recursos)]);
-      await cache.put(PAGINA, pagina);
+      // Se guarda sin los scripts de Next: sus JS no están en esta caché y, sin red, uno que falte hace que Next
+      // cambie la página por su error global ("This page couldn't load"). Queda el script del tema, que va en línea,
+      // y "Reintentar" es un formulario que funciona sin JavaScript.
+      const sinNext = html
+        .replace(/<script\b[^>]*\bsrc="[^"]*"[^>]*><\/script>/g, "")
+        .replace(/<script>\(?self\.__next_f[\s\S]*?<\/script>/g, "")
+        .replace(/<link rel="preload" as="script"[^>]*>/g, "");
+      const cabeceras = new Headers(pagina.headers);
+      cabeceras.delete("content-length");
+      cabeceras.delete("content-encoding");
+      await cache.put(PAGINA, new Response(sinNext, { headers: cabeceras }));
     })(),
   );
 });

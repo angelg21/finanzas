@@ -65,6 +65,24 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - abrir sin red;
   - entrar y salir;
   - los tiempos de captura y de guardado, cronometrados y anotados (criterios 15 a 17, 20 y 21).
+
+  Primera vuelta, 2026-10-14, en el iPhone del desarrollador con la app instalada:
+  - **El icono** se ve bien.
+  - **El acceso directo "Registrar gasto"** no sale al mantener pulsado el icono. Es una limitación de iOS: Safari no admite los `shortcuts` del manifiesto, solo Android. El criterio 15 queda cumplido solo en Android.
+  - **La barra superior** queda bien con la muesca.
+  - **Registrar un gasto** es "muy rápido", sin cronometrar todavía.
+  - **Sin red:** se veía `/sin-conexion` y enseguida "This page couldn't load".
+    - No era una segunda navegación, sino el error global de Next. El HTML guardado traía sus scripts y, sin red, faltaba un chunk que no estaba en caché; Turbopack lo reintentaba, lanzaba `ChunkLoadError` y Next cambiaba la página por su error.
+    - Reproducido contra producción con Edge y CDP: 3 de 3.
+    - Arreglo: `sw.js` v2 guarda la página sin los scripts de Next (queda solo el del tema) y "Reintentar" funciona sin JavaScript.
+    - Comprobado con el build local en el puerto 3001, 2 de 2: la caché v2 trae un solo script y, sin red, el título final es "Sin conexión · Arca" sin excepción.
+    - En el iPhone se aplica después de cerrar la app del todo y volver a abrirla.
+  - **La página se arrastraba de lado.**
+    - No había nada que desbordara: medido en 11 rutas a 320, 375, 390 y 430 px.
+    - Era el zoom de Safari al enfocar un campo de menos de 16 px (15 px al entrar), que no se deshace. La ventana visual queda en 366 px y se corre 24 px.
+    - Arreglo: `campoBase` y la fecha sin JavaScript pasan a 16 px en el celular (15 en escritorio). Medido después: todos los campos en 16 px o más; con la escala de antes, el arrastre ya no corre la página.
+  - Faltan los tiempos cronometrados, los dos temas en el celular y entrar y salir.
+
 - [ ] T17 · Documentos:
   - ADR 0010 con `/f-adr` (Supabase solo en el servidor, dos proyectos, RLS con la API de datos apagada, migraciones de producción a mano, orden del primer despliegue);
   - el plan: la línea de la fase 1 marcada como hecha;
