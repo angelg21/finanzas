@@ -49,6 +49,6 @@ export const config = {
      * Todo menos lo que responde sin sesión: los archivos de Next, el favicon, el manifiesto, el service worker,
      * los iconos y /sin-conexion. Una ruta nueva queda cubierta sin tocar esta lista.
      */
-    "/((?!_next/static|_next/image|favicon\\.ico$|manifest\\.webmanifest$|sw\\.js$|sin-conexion$|icon$|icon/|apple-icon$).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico$|manifest\\.webmanifest$|sw\\.js$|sin-conexion$|icon$|icon/|apple-icon$|icono-adaptable$).*)",
   ],
 };

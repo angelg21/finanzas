@@ -46,7 +46,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - con sesión, entrando con el usuario de prueba: las rutas de siempre responden 200;
   - sin sesión: cada ruta redirige a `/entrar`, responden las públicas y están las cabeceras;
   - con `--url` para correr contra una URL remota en modo sin sesión (criterios 1, 13 y 14).
-- [ ] T9 · Pieza `Emblema` en SVG, aprobada por el desarrollador lado a lado con `logo-emblema.png`. Iconos generados con `ImageResponse`: favicon, `apple-icon` de 180, y 192, 512 y 512 adaptable, con margen extra para la flecha (criterio 16).
+- [x] T9 · (2026-10-13) Pieza `Emblema` en SVG, aprobada por el desarrollador lado a lado con `logo-emblema.png`. Iconos generados con `ImageResponse`: favicon, `apple-icon` de 180, y 192, 512 y 512 adaptable, con margen extra para la flecha (criterio 16).
 - [ ] T10 · Manifiesto con el acceso directo "Registrar gasto", `appleWebApp`, zonas seguras en la barra superior y en `NavInferior`, y la barra de estado que sigue al tema elegido (criterios 15 y 17). Panel Application de DevTools sin errores.
 - [ ] T11 · `/sw.js` y su registro desde una hoja `"use client"`, más la página estática `/sin-conexion` (criterios 18 y 20). En DevTools, con la red desconectada: navegar muestra `/sin-conexion`, ningún POST pasa por el service worker y la caché solo contiene lo de `/sin-conexion`.
 - [ ] T12 · Fallas al guardar en la captura y en los formularios de categorías y sobres: sin red, con la sesión vencida y con una versión vieja. El mensaje aparece junto al botón, lo escrito se conserva y nada se reintenta solo (criterio 19). Se prueba en Edge con la red desconectada y con las cookies borradas a mano.
@@ -161,3 +161,11 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - El modo con sesión espera las credenciales de "finanzas-dev": entrar, cookies `HttpOnly`, `SameSite=Lax` y `Secure`, las rutas, `/entrar` con sesión y salir.
   - Las rutas públicas de T9 a T11 (manifiesto, iconos, `/sw.js` con sus cabeceras y `/sin-conexion`) se suman a la lista del humo en su tarea.
   - Con las variables de Supabase ausentes, el 500 sale sin las cabeceras de seguridad. Es un error de configuración y falla cerrado igual.
+- T9 (2026-10-13):
+  - El desarrollador no tenía el logo en vector. Lo vectoricé desde `logo-emblema.png`: coincide en 99 % con el aro y la flecha y en 97,5 % con las barras. El desarrollador lo aprobó tal cual, con la vista lado a lado.
+  - Iconos generados en el build con `ImageResponse`:
+    - `/icon/32`, `/icon/192` y `/icon/512`, transparentes;
+    - `/apple-icon` de 180, sobre el panel claro;
+    - `/icono-adaptable` de 512: la punta de la flecha a 0,37 del lado, dentro de la zona segura de 0,40.
+  - Se borró el `favicon.ico` de Next: el favicon es `/icon/32`.
+  - Satori, el que dibuja para `ImageResponse`, falla con atributos o estilos `undefined`. `CuadroEmblema` no deja ninguno.

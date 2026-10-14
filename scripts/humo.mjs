@@ -43,7 +43,11 @@ const conDatos = [
 /** Lo único que responde sin sesión. */
 const publicas = [
   ["/entrar", 200],
-  ["/favicon.ico", 200],
+  ["/icon/32", 200],
+  ["/icon/192", 200],
+  ["/icon/512", 200],
+  ["/apple-icon", 200],
+  ["/icono-adaptable", 200],
 ];
 /** Con sesión, como antes de la autenticación. */
 const conSesion = [
@@ -227,7 +231,7 @@ if (!urlRemota) {
   let escucha = false;
   for (let i = 0; i < 60 && !escucha; i++) {
     try {
-      escucha = Boolean((await fetch(`${base}/favicon.ico`)).status);
+      escucha = Boolean((await fetch(`${base}/entrar`)).status);
     } catch {
       await new Promise((resolver) => setTimeout(resolver, 1000));
     }

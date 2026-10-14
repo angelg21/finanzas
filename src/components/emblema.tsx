@@ -32,6 +32,33 @@ const trazos = {
   ].join(""),
 };
 
+/**
+ * El emblema centrado en un cuadro, para los iconos que genera ImageResponse. `radio` es la fracción del lado a la
+ * que puede llegar el punto más lejano: con 0.37, la punta de la flecha cabe con margen en la zona segura del icono
+ * adaptable de Android (0.40); con 0.56, en las esquinas redondeadas de iOS. Sin `fondo`, transparente.
+ */
+export function CuadroEmblema({ lado, radio, fondo }: { lado: number; radio: number; fondo?: string }) {
+  const tamano = Math.min(lado, Math.floor((medidasEmblema.lado * radio * lado) / medidasEmblema.radioMaximo));
+  // Satori, que dibuja para ImageResponse, falla con atributos o estilos sin valor: aquí no hay ninguno.
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        ...(fondo ? { background: fondo } : {}),
+      }}
+    >
+      <svg viewBox={`0 0 ${medidasEmblema.lado} ${medidasEmblema.lado}`} width={tamano} height={tamano}>
+        <path d={trazos.oscuro} fill={verdesEmblema.oscuro} />
+        <path d={trazos.claro} fill={verdesEmblema.claro} />
+      </svg>
+    </div>
+  );
+}
+
 export function Emblema({ tamano, className }: { tamano: number; className?: string }) {
   return (
     <svg
