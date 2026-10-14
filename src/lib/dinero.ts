@@ -172,3 +172,16 @@ export function centavosATexto(centavos: number): string {
   const decimales = cifras.slice(-2);
   return `${centavos < 0 ? "-" : ""}${entero}${decimales === "00" ? "" : `,${decimales}`}`;
 }
+
+/**
+ * "221.4000" → "221,40 Bs/USD": la tasa como la devuelve la base. Si no es una tasa válida (cero, negativa, ilegible:
+ * la base no lo impide, un import podría traerla), se muestra el texto tal cual en vez de tumbar la página.
+ */
+export function formatearTasaGuardada(texto: string): string {
+  try {
+    return formatearTasa(aTasa(texto));
+  } catch {
+    // Una tasa rara no debe impedir ver el resto de los movimientos: se muestra cruda.
+    return texto;
+  }
+}

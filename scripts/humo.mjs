@@ -148,6 +148,21 @@ async function sinSesion() {
       `${r.status} ${ubicacion}`,
     );
   }
+  // Un POST con la cabecera de una acción y la de RSC: el proxy no lo distingue de una acción (Next le quita rsc y
+  // ?_rsc) y Next renderiza la página. Lo frena exigirSesion: la respuesta trae la redirección a /entrar y ningún
+  // dato (ADR 0011). Next contesta primero con un 307 a ?_rsc; se sigue, como haría un atacante.
+  {
+    const cabecerasRsc = { "next-action": "x", rsc: "1" };
+    let r = await pedir("/sobres/18", { method: "POST", headers: cabecerasRsc });
+    const rsc = r.headers.get("location") ?? "";
+    if (r.status === 307 && rsc.includes("_rsc")) {
+      await r.arrayBuffer();
+      r = await pedir(rsc.replace(base, ""), { method: "POST", headers: cabecerasRsc });
+    }
+    const cuerpo = await r.text();
+    const cortada = /NEXT_REDIRECT[^"]*\/entrar/.test(cuerpo) && !/Centavos|<title/.test(cuerpo);
+    comprobar(cortada, `POST /sobres/18 con next-action y rsc → ${r.status}, cortada por la sesión y sin datos`);
+  }
   // Otros métodos no pasan ni con la cabecera de una acción: Next renderizaría la página (auditoría T14, hallazgo 2).
   for (const metodo of ["PUT", "PATCH", "DELETE"]) {
     const r = await pedir("/sobres/3", { method: metodo, headers: { "next-action": "x" } });

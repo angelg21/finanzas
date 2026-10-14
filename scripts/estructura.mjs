@@ -147,11 +147,21 @@ export function revisarArchivo(ruta, contenido) {
           );
         }
       }
-      if (/^export\s+(?:const|let|var|function|default|\{)/m.test(contenido)) {
+      if (/^export\s+(?:const|let|var|function|default|\{)|^export\s+async\s+function\s*\*/m.test(contenido)) {
         error(
           'Un archivo "use server" solo exporta funciones async con nombre, para que la regla de la sesión las vea todas.',
         );
       }
+    }
+    if (conSesion && !delServidor && /["']use server["']/.test(contenido)) {
+      error('Una acción "use server" dentro de otro archivo: va en su acciones.ts, donde la regla de la sesión la ve.');
+    }
+    // Las de la raíz (icon, apple-icon, manifest) son públicas a propósito; dentro de (con-sesion) responderían sin ella.
+    if (
+      /\/\(con-sesion\)\//.test(rel) &&
+      /\/(opengraph-image|twitter-image|icon|apple-icon|sitemap|robots|manifest)\.(tsx?|jsx?)$/.test(rel)
+    ) {
+      error("Las rutas de metadatos son públicas: van fuera de (con-sesion), sin datos.");
     }
     if (conSesion && /\/page\.tsx$/.test(rel)) {
       const pagina = /^export\s+default\s+async\s+function\b/m.exec(contenido);
@@ -169,20 +179,37 @@ export function revisarArchivo(ruta, contenido) {
         if (conClave(funcion))
           error(`${funcion[1]} no empieza con \`await exigirSesion();\`: corre antes que la página.`);
       }
+      if (
+        /^export\s+(?:const|let|var)\s+(?:generateMetadata|generateViewport)\b|^export\s*\{[^}]*\b(?:generateMetadata|generateViewport)\b/m.test(
+          contenido,
+        )
+      ) {
+        error(
+          "generateMetadata y generateViewport se exportan como `function`, para que la regla de la sesión las vea.",
+        );
+      }
     }
-    if (conSesion && /\/layout\.tsx$/.test(rel)) {
-      const layout = /^export\s+default\s+async\s+function\b/m.exec(contenido);
-      if (layout && conClave(layout))
-        error("Un layout async lee datos: tiene que empezar con `await exigirSesion();`.");
+    // Lo que envuelve a la página: si es async puede leer datos; y nunca consulta la base, lo hace la página.
+    if (conSesion && /\/(layout|template|not-found|default|loading)\.tsx$/.test(rel)) {
+      const envoltorio = /^export\s+default\s+async\s+function\b/m.exec(contenido);
+      if (envoltorio && conClave(envoltorio))
+        error("Un layout, template o not-found async lee datos: tiene que empezar con `await exigirSesion();`.");
+      if (importsEnEjecucion(contenido).some((i) => i === "@/db" || i.startsWith("@/db/"))) {
+        error("Un layout o template no consulta la base: lo hace la página, después de exigir la sesión.");
+      }
     }
     if (conSesion && /\/route\.tsx?$/.test(rel)) {
       for (const manejador of contenido.matchAll(
-        /^export\s+(?:async\s+)?function\s+(GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)\b/gm,
+        /^export\s+(?:async\s+)?function\s*\*?\s*(GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)\b/gm,
       )) {
         if (conClave(manejador))
           error(`El manejador ${manejador[1]} de route.ts no empieza con \`await exigirSesion();\`.`);
       }
-      if (/^export\s+const\s+(?:GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)\b/m.test(contenido)) {
+      if (
+        /^export\s+(?:const|let|var)\s+(?:GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)\b|^export\s*\{[^}]*\b(?:GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)\b/m.test(
+          contenido,
+        )
+      ) {
         error("route.ts exporta sus manejadores como `function`, para que la regla de la sesión los vea.");
       }
     }

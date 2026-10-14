@@ -5,6 +5,7 @@ import {
   bolivaresDesdeUsd,
   centavosATexto,
   formatearCentavos,
+  formatearTasaGuardada,
   formatearEnteros,
   formatearTasa,
   partesCentavos,
@@ -191,5 +192,18 @@ describe("centavosATexto: el monto como se escribe en un campo, sin pasar por co
     for (const c of [1, 99, 100, 101, 2_147_483_647, 9_007_199_254_740_991]) {
       expect(aCentavos(centavosATexto(c)), String(c)).toBe(c);
     }
+  });
+});
+
+describe("formatearTasaGuardada: la tasa de la base, sin tumbar la página si viene rara (auditoría T14)", () => {
+  it("formatea la tasa como la guarda numeric(14,4)", () => {
+    expect(formatearTasaGuardada("221.4000")).toBe(formatearTasa(2214000));
+    expect(formatearTasaGuardada("36.2500")).toBe(formatearTasa(362500));
+  });
+
+  it("una tasa cero, negativa o ilegible se muestra tal cual, sin lanzar", () => {
+    expect(formatearTasaGuardada("0.0000")).toBe("0.0000");
+    expect(formatearTasaGuardada("-5.0000")).toBe("-5.0000");
+    expect(formatearTasaGuardada("abc")).toBe("abc");
   });
 });

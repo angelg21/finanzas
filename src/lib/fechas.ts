@@ -112,6 +112,12 @@ export function inicioDeMes(hoy: string, desplazamiento = 0): string {
   return `${anio}-${String(mes).padStart(2, "0")}-01`;
 }
 
+/** Días que faltan hasta el último del mes de `hoy` ("AAAA-MM-DD", de Caracas): "2026-10-14" → 17. */
+export function diasQueQuedanDelMes(hoy: string): number {
+  const { anio, mes, dia } = partes(hoy);
+  return new Date(Date.UTC(anio, mes, 0)).getUTCDate() - dia;
+}
+
 /** "AAAA-MM" de los últimos `meses` meses, del más viejo al de `hoy`. */
 export function clavesDeMeses(hoy: string, meses: number): string[] {
   return Array.from({ length: meses }, (_, i) => inicioDeMes(hoy, i - (meses - 1)).slice(0, 7));

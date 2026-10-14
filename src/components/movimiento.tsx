@@ -1,6 +1,6 @@
 import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, CalendarDays, Shuffle, Wallet } from "lucide-react";
 import type { MovimientoReciente } from "@/db/consultas";
-import { aTasa, formatearCentavos, formatearTasa } from "@/lib/dinero";
+import { formatearCentavos, formatearTasaGuardada } from "@/lib/dinero";
 import { Dato, Pildora, TarjetaPalida } from "./ui";
 
 /*
@@ -80,7 +80,7 @@ export function TarjetaMovimiento({ m }: { m: MovimientoReciente }) {
         {enBolivares ? (
           <Pildora tono="blanca">
             {formatearCentavos(m.montoCentavos, "VES")}
-            {m.tasa ? ` · ${formatearTasa(aTasa(m.tasa))}` : ""}
+            {m.tasa ? ` · ${formatearTasaGuardada(m.tasa)}` : ""}
           </Pildora>
         ) : null}
       </div>

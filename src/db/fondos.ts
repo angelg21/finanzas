@@ -7,6 +7,17 @@ import { aporteMensualCentavos, cabeEnRegla, totalAnualCentavos } from "@/lib/fo
 /** La base o la transacción en curso: las escrituras del desglose van juntas. */
 type Ejecutor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 
+/**
+ * Una transacción a la vez por sobre: dos ediciones simultáneas del desglose leerían las mismas partidas y la regla
+ * quedaría por debajo de lo que suman. El candado se suelta solo al terminar la transacción.
+ */
+async function bloquearDesglose(ejecutor: Ejecutor, sobreId: number) {
+  await ejecutor.execute(sql`select pg_advisory_xact_lock(${claveDesglose}, ${sobreId})`);
+}
+
+/** Espacio de los candados del desglose, para no chocar con otros candados de la app. */
+const claveDesglose = 2;
+
 /** El desglose daría un aporte mensual que no cabe en la regla; la transacción se deshace entera. */
 export class AporteFueraDeRango extends Error {}
 
@@ -37,6 +48,7 @@ export async function sincronizarAporte(sobreId: number, ejecutor: Ejecutor = db
  */
 export async function agregarPartidaYSincronizar(partida: NuevaPartidaSobre) {
   await db.transaction(async (tx) => {
+    await bloquearDesglose(tx, partida.sobreId);
     await tx.insert(partidasSobre).values(partida);
     await sincronizarAporte(partida.sobreId, tx);
   });
@@ -45,6 +57,7 @@ export async function agregarPartidaYSincronizar(partida: NuevaPartidaSobre) {
 /** Quita una ocasión del desglose y recalcula el aporte, en una sola transacción. */
 export async function eliminarPartidaYSincronizar(id: number, sobreId: number) {
   await db.transaction(async (tx) => {
+    await bloquearDesglose(tx, sobreId);
     await tx.delete(partidasSobre).where(and(eq(partidasSobre.id, id), eq(partidasSobre.sobreId, sobreId)));
     await sincronizarAporte(sobreId, tx);
   });

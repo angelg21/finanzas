@@ -14,6 +14,7 @@ import { aCentavos } from "@/lib/dinero";
 import { cabeEnRegla } from "@/lib/fondos";
 import { exigirSesion, leerSesion } from "@/app/sesion";
 import { mensajeDeFalla } from "@/lib/fallas";
+import { registrarFalla } from "@/app/registro-de-fallas";
 
 export type EstadoFormulario = { error?: string; ok?: number };
 
@@ -88,7 +89,8 @@ export async function agregarPartida(
     });
   } catch (error) {
     if (error instanceof AporteFueraDeRango) return { error: fueraDeRango };
-    throw error;
+    registrarFalla("No se pudo agregar la ocasión", error);
+    return { error: "No se pudo guardar. Intenta de nuevo." };
   }
   revalidar(sobreId);
   return { ok: Date.now() };
@@ -100,7 +102,12 @@ export async function eliminarPartida(formData: FormData) {
   const id = Number(formData.get("id"));
   const sobreId = Number(formData.get("sobreId"));
   if (!Number.isInteger(id) || !Number.isInteger(sobreId)) return;
-  await eliminarPartidaYSincronizar(id, sobreId);
+  try {
+    await eliminarPartidaYSincronizar(id, sobreId);
+  } catch (error) {
+    registrarFalla("No se pudo quitar la ocasión", error);
+    throw new Error("No se pudo quitar la ocasión.");
+  }
   revalidar(sobreId);
 }
 
@@ -115,7 +122,13 @@ export async function fijarAporteManual(
   if (!Number.isInteger(sobreId) || !(await esFondo(sobreId))) return { error: "Este sobre no admite aporte fijo." };
   const monto = leerMonto(String(formData.get("monto") ?? ""));
   if (monto === null) return { error: "El aporte debe ser un número mayor que cero y razonable." };
-  await fijarReglaFija(sobreId, monto);
+  try {
+    await fijarReglaFija(sobreId, monto);
+  } catch (error) {
+    if (error instanceof AporteFueraDeRango) return { error: fueraDeRango };
+    registrarFalla("No se pudo fijar el aporte", error);
+    return { error: "No se pudo guardar. Intenta de nuevo." };
+  }
   revalidar(sobreId);
   return { ok: Date.now() };
 }

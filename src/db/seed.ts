@@ -2,7 +2,7 @@
  * Datos iniciales según docs/plan-financiero-y-app.md.
  * Es idempotente: se puede correr varias veces, no duplica nada.
  *   pnpm db:seed              → la base local; se niega si .env.local apunta a otra
- *   pnpm db:seed:produccion   → producción, una sola vez, con ~/.finanzas/produccion.env y confirmación
+ *   pnpm db:seed:produccion   → producción, una sola vez, pegando la cadena en la terminal y confirmando
  */
 import { and, eq } from "drizzle-orm";
 import { categoriasBase, colorPorDefecto, iconoPorDefecto } from "../lib/categorias";

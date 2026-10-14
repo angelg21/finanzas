@@ -3,6 +3,7 @@ import {
   celdasDelMes,
   clavesDeMeses,
   diaAnterior,
+  diasQueQuedanDelMes,
   esFecha,
   etiquetaFecha,
   fechaDesdeAtajo,
@@ -139,5 +140,14 @@ describe("meses en hora de Caracas, no del servidor (auditoría T14, H5)", () =>
 
   it("las claves de los últimos meses, del más viejo al actual", () => {
     expect(clavesDeMeses("2026-02-10", 3)).toEqual(["2025-12", "2026-01", "2026-02"]);
+  });
+});
+
+describe("diasQueQuedanDelMes: desde el día de Caracas (auditoría T14)", () => {
+  it("cuenta los días que faltan hasta el último del mes", () => {
+    expect(diasQueQuedanDelMes("2026-10-31")).toBe(0);
+    expect(diasQueQuedanDelMes("2026-10-14")).toBe(17);
+    expect(diasQueQuedanDelMes("2028-02-01")).toBe(28);
+    expect(diasQueQuedanDelMes("2026-02-01")).toBe(27);
   });
 });

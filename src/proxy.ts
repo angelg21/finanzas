@@ -34,6 +34,9 @@ export async function proxy(peticion: NextRequest) {
     return conCookies(new NextResponse(null, { status: 405, headers: { Allow: "GET, HEAD, POST" } }), respuesta());
   }
   const navegacion = peticion.method === "GET" || peticion.method === "HEAD";
+  // Un POST con next-action pasa sin sesión: lo frena la acción, o la página si Next la renderiza. Next le quita al
+  // proxy la cabecera rsc y el ?_rsc, así que un POST con next-action y rsc, que Next atiende como petición RSC y no
+  // como acción, se ve igual que una acción: la página corre y exigirSesion la corta antes de leer nada (ADR 0011).
   const esAccion = peticion.method === "POST" && peticion.headers.has("next-action");
   const entrar = new URL("/entrar", peticion.url);
   entrar.searchParams.set("siguiente", pathname + search);

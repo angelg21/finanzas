@@ -14,6 +14,7 @@ import {
 import { type ErroresCategoria, type TipoCategoria, repetidaDe, validarCategoria } from "@/lib/categorias";
 import { exigirSesion, leerSesion } from "@/app/sesion";
 import { mensajeDeFalla } from "@/lib/fallas";
+import { registrarFalla } from "@/app/registro-de-fallas";
 
 /** Lo tecleado, para volver a llenar el formulario si hay que corregir. */
 export type ValoresCategoria = { nombre: string; tipo: TipoCategoria; icono: string; color: string };
@@ -89,10 +90,7 @@ export async function guardarCategoria(previo: EstadoCategoria, formData: FormDa
     }
   } catch (error) {
     // El índice único (tipo, nombre) es la última barrera si otra pestaña creó la misma a la vez.
-    console.error(
-      "No se pudo guardar la categoría",
-      (error as { cause?: { code?: string } }).cause?.code ?? "sin código",
-    );
+    registrarFalla("No se pudo guardar la categoría", error);
     return {
       ronda,
       estado: "error",
@@ -113,7 +111,12 @@ export async function eliminarCategoriaAccion(formData: FormData) {
   await exigirSesion();
   const categoria = await categoriaPorId(Number(texto(formData, "id")));
   if (!categoria) redirect("/categorias");
-  await eliminarCategoria(categoria.id);
+  try {
+    await eliminarCategoria(categoria.id);
+  } catch (error) {
+    registrarFalla("No se pudo eliminar la categoría", error);
+    throw new Error("No se pudo eliminar la categoría.");
+  }
   revalidar();
   redirect(`/categorias?tipo=${categoria.tipo}`);
 }
@@ -134,7 +137,12 @@ export async function restaurarCategoriaAccion(formData: FormData) {
   if (repetidaDe(categoria.nombre, categoria.tipo, activas, categoria.id)) {
     redirect(`/categorias?tipo=${categoria.tipo}&archivadas=1&aviso=nombre`);
   }
-  await restaurarCategoria(categoria.id);
+  try {
+    await restaurarCategoria(categoria.id);
+  } catch (error) {
+    registrarFalla("No se pudo restaurar la categoría", error);
+    throw new Error("No se pudo restaurar la categoría.");
+  }
   revalidar();
   const volver = texto(formData, "volver");
   if (destinos.has(volver) && categoria.tipo === "gasto") redirect(`${volver}?categoria=${categoria.id}`);

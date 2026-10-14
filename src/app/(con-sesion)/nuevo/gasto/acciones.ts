@@ -9,6 +9,7 @@ import { fechaDesdeAtajo, hoyEnCaracas } from "@/lib/fechas";
 import { esIdCaptura, referenciaDeCaptura, resolverReintento } from "@/lib/captura";
 import { mensajeDeFalla } from "@/lib/fallas";
 import { type ErroresGasto, type FormaPago, prepararGasto, saldosTras } from "@/lib/gastos";
+import { registrarFalla } from "@/app/registro-de-fallas";
 import { leerSesion } from "@/app/sesion";
 
 /** Lo que se tecleó, para volver a llenar el formulario si hay que corregir o confirmar. */
@@ -188,11 +189,7 @@ async function procesarGasto(formData: FormData): Promise<Resultado> {
   try {
     registro = await registrarCaptura(valores.idCaptura, filas);
   } catch (error) {
-    // Solo el código: el error del driver trae la consulta con sus parámetros (montos, notas) y acabaría en los registros.
-    console.error(
-      "No se pudo registrar el gasto",
-      (error as { cause?: { code?: string } }).cause?.code ?? "sin código",
-    );
+    registrarFalla("No se pudo registrar el gasto", error);
     return { estado: "error", errores: { general: "No se pudo guardar. Intenta de nuevo." }, valores };
   }
 

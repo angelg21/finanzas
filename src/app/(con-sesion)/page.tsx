@@ -16,6 +16,7 @@ import {
 } from "@/components/ui";
 import { gastadoEsteMes, movimientosRecientes, resumenMensual, saldosPorCuenta, saldosPorSobre } from "@/db/consultas";
 import { formatearCentavos, formatearEnteros } from "@/lib/dinero";
+import { diasQueQuedanDelMes, hoyEnCaracas } from "@/lib/fechas";
 import { exigirSesion } from "@/app/sesion";
 
 export const dynamic = "force-dynamic";
@@ -48,10 +49,9 @@ const pasoPorTipo: Record<string, SegmentoDona["paso"]> = {
   fondo: 6,
 };
 
+/** En hora de Caracas: el servidor (Vercel) corre en UTC. */
 function diasRestantesDelMes() {
-  const hoy = new Date();
-  const ultimo = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
-  return ultimo - hoy.getDate();
+  return diasQueQuedanDelMes(hoyEnCaracas(new Date()));
 }
 
 export default async function Inicio() {

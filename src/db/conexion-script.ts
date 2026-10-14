@@ -1,25 +1,18 @@
 /**
  * Conexión de los scripts de base (spec 002, criterios 10 y 11). Los comandos de siempre leen .env.local y solo
- * corren contra la base de Docker de esta máquina. Los de producción leen solo ~/.finanzas/produccion.env, exigen TLS,
- * muestran el destino sin credenciales y piden escribir "produccion" en una terminal antes de tocar nada. Sin una
- * terminal, se niegan: el agente nunca los corre.
+ * corren contra la base de Docker de esta máquina. Los de producción piden pegar la cadena de conexión, oculta, en una
+ * terminal: no existe en ningún archivo (auditoría T14, hallazgo 4). Exigen TLS, muestran el destino sin
+ * credenciales y piden escribir "produccion" antes de tocar nada. Sin una terminal, se niegan: el agente nunca los
+ * corre ni puede leer la cadena.
  */
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
 import readline from "node:readline";
-import { config, parse } from "dotenv";
+import { Writable } from "node:stream";
+import { config } from "dotenv";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { describirBase, esUrlLegible, exigeTls, exigirBaseLocal } from "../lib/destino-base";
 import * as schema from "./schema";
 
-/**
- * Fuera del repo (auditoría T14, hallazgo 4): ninguna búsqueda dentro del proyecto lo toca, y los hooks y las
- * reglas del agente niegan cualquier comando o lectura que lo nombre.
- */
-const archivoProduccion = path.join(os.homedir(), ".finanzas", "produccion.env");
-const archivoMostrado = "~/.finanzas/produccion.env";
 const contrasenaEscapada =
   "Escapa los caracteres especiales de la contraseña (/ ? # @ , % → %2F %3F %23 %40 %2C %25) o genera una sin ellos.";
 
@@ -34,35 +27,48 @@ export function urlLocal(comando: string): string {
   return exigirBaseLocal(urlDeEntorno(), comando);
 }
 
-/** DATABASE_URL de ~/.finanzas/produccion.env, después de que el desarrollador escribe "produccion". */
+/**
+ * La cadena de producción, pegada oculta en la terminal, después de que el desarrollador escribe "produccion". Nunca
+ * sale de un archivo ni del entorno: un DATABASE_URL de .env.local o del shell no decide a qué base se apunta.
+ */
 export async function urlProduccion(accion: string): Promise<string> {
   if (!process.stdin.isTTY) {
-    throw new Error("Los comandos de producción piden confirmación en una terminal; sin ella no corren.");
+    throw new Error(
+      "Los comandos de producción piden la cadena y la confirmación en una terminal; sin ella no corren.",
+    );
   }
-  if (!fs.existsSync(archivoProduccion)) {
-    throw new Error(`Falta ${archivoMostrado}. Los pasos están en docs/despliegue.md.`);
-  }
-  // Solo del archivo: un DATABASE_URL del entorno o de .env.local nunca decide a qué base se apunta.
-  const url = parse(fs.readFileSync(archivoProduccion)).DATABASE_URL;
-  if (!url) throw new Error(`Falta DATABASE_URL en ${archivoMostrado}.`);
-  if (!esUrlLegible(url))
-    throw new Error(`La DATABASE_URL de ${archivoMostrado} no se entiende. ${contrasenaEscapada}`);
-  if (!exigeTls(url)) throw new Error(`La DATABASE_URL de ${archivoMostrado} debe llevar ?sslmode=require.`);
+  const url = (await preguntar("Pega la cadena de conexión de producción (no se ve al pegar): ", true)).trim();
+  if (!url) throw new Error("Cancelado: no se pegó ninguna cadena.");
+  if (!esUrlLegible(url)) throw new Error(`La cadena no se entiende. ${contrasenaEscapada}`);
+  if (!exigeTls(url)) throw new Error("La cadena de producción debe llevar ?sslmode=require.");
   console.log(`\nVas a ${accion} en PRODUCCIÓN: ${describirBase(url)}`);
   const respuesta = await preguntar('Escribe "produccion" para continuar: ');
   if (respuesta.trim() !== "produccion") throw new Error("Cancelado: no se tocó la base.");
   return url;
 }
 
-/** Lo que escribe el desarrollador; vacío si la entrada se cierra sin respuesta. */
-function preguntar(texto: string): Promise<string> {
+/**
+ * Lo que escribe el desarrollador; vacío si la entrada se cierra sin respuesta. Con `oculto`, lo que se escribe no
+ * se repite en pantalla: ni en la terminal ni en su historial queda la cadena.
+ */
+function preguntar(texto: string, oculto = false): Promise<string> {
   return new Promise((resolver) => {
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    let callado = false;
+    const salida = new Writable({
+      write(trozo, codificacion, listo) {
+        if (!callado) process.stdout.write(trozo, codificacion);
+        listo();
+      },
+    });
+    const rl = readline.createInterface({ input: process.stdin, output: salida, terminal: true });
     rl.once("close", () => resolver(""));
     rl.question(texto, (respuesta) => {
+      if (oculto) process.stdout.write("\n");
       resolver(respuesta);
       rl.close();
     });
+    // La pregunta ya se escribió; desde aquí, lo que se teclea no se ve.
+    callado = oculto;
   });
 }
 

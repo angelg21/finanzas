@@ -4,7 +4,9 @@ import { CambioTema } from "@/components/tema";
 import { salir } from "./acciones";
 
 function fechaLarga() {
+  // En hora de Caracas: el servidor (Vercel) corre en UTC.
   const texto = new Intl.DateTimeFormat("es-VE", {
+    timeZone: "America/Caracas",
     weekday: "long",
     day: "numeric",
     month: "long",

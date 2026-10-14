@@ -4,19 +4,18 @@ import { TarjetaMovimiento } from "@/components/movimiento";
 import { Cifra, Tarjeta, TituloPagina } from "@/components/ui";
 import { movimientosRecientes, type MovimientoReciente } from "@/db/consultas";
 import { exigirSesion } from "@/app/sesion";
+import { diaAnterior, hoyEnCaracas } from "@/lib/fechas";
 
 export const metadata: Metadata = { title: "Movimientos" };
 export const dynamic = "force-dynamic";
 
+/** "Hoy" y "Ayer" según el día de Caracas: el servidor (Vercel) corre en UTC. */
 function etiquetaFecha(iso: string) {
+  const hoy = hoyEnCaracas(new Date());
+  if (iso === hoy) return "Hoy";
+  if (iso === diaAnterior(hoy)) return "Ayer";
   const [a, m, d] = iso.split("-").map(Number);
   const fecha = new Date(a, m - 1, d);
-  const hoy = new Date();
-  const ayer = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 1);
-  const mismo = (x: Date, y: Date) =>
-    x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate();
-  if (mismo(fecha, hoy)) return "Hoy";
-  if (mismo(fecha, ayer)) return "Ayer";
   const texto = new Intl.DateTimeFormat("es-VE", { weekday: "long", day: "numeric", month: "long" }).format(fecha);
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
