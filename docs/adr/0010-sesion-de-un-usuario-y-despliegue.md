@@ -78,3 +78,5 @@ La feature 002 publica la app, con todo el historial financiero, para usarla a d
 - **Un límite de intentos propio en la función:** en Vercel sin servidor cada instancia cuenta por su lado. Si hace falta, mejor el firewall.
 - **TOTP, llaves de acceso o PIN:** no hacen falta con una sola cuenta, el registro apagado y una contraseña larga del gestor. Se reconsideran cuando el push muestre datos con la pantalla bloqueada (fase 2).
 - **Formularios solo con JavaScript para poder atrapar las fallas:** rompería la regla de que funcionen sin él.
+
+Reemplazada en parte por 0011: la cadena de producción no se guarda en disco.
