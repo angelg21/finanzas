@@ -34,13 +34,15 @@ Cada una existe por una razón real. No se añaden reglas "por si acaso".
 - **Nombres del dominio en español**, como en el plan: cuentas, sobres, categorías, movimientos, reglas de reparto, partidas.
 - **Solo tokens de `globals.css` y piezas de `src/components/ui.tsx` y `formulario.tsx`.** Nunca `dark:` ni colores sueltos. Razón: dos diseños rechazados (ADR 0003).
 - **Nada de este proyecto se publica fuera del repo**: ni artifacts ni documentos en la nube. Razón: otras personas entran a esa cuenta.
-- **Migraciones solo con `pnpm db:generate` y `pnpm db:migrate`.** Nunca editar una migración ya generada; un hook escala a humano si se intenta.
+- **Migraciones solo con `pnpm db:generate` y `pnpm db:migrate`.** Nunca editar una migración ya generada; un hook escala a humano si se intenta. En producción solo `pnpm db:migrate:produccion`, que corre el desarrollador en una terminal; los comandos de siempre se niegan fuera de la base local (ADR 0010).
+- **La cadena de producción nunca pasa por el agente.** Vive fuera del repo, en la carpeta personal; ningún comando la nombra ni la lee (reglas `deny` y el hook `comandos.mjs`). Razón: lo que el agente lee queda en la transcripción.
+- **Sesión antes que nada** (ADR 0010): toda página, `generateMetadata`, layout async, `route.ts` y archivo `"use server"` fuera de `(sin-sesion)` empieza con `await exigirSesion()`, o con `leerSesion` y su `return`. Lo vigila el hook de estructura.
 - **Nunca debilitar, omitir ni borrar una prueba** para que el código pase. Si estorba, el error está en el código o en la spec.
 - **Datos de demostración siempre con referencia `demo-*`** (`pnpm db:demo`, `pnpm db:demo:limpiar`). Nunca mezclarlos con datos reales ni inventar datos sin marcar.
 - **Un archivo, una cosa.** Aviso a 320 líneas, techo a 700. Nunca partir por la mitad ni crear un `helpers`.
 - **Evidencia ejecutada, no afirmaciones.** Toda conclusión va con la salida del comando, la prueba o la captura.
 - **La captura rápida de un gasto es la función más importante.** Nada puede hacerla más lenta.
-- **Toda la interfaz es React dentro de Next.** Componentes `.tsx` con Tailwind y tokens; nunca archivos HTML o CSS sueltos para pantallas, maquetas o alternativas. Para comparar opciones, una ruta de la app. Única excepción: el envoltorio que `pnpm capturas` genera en `capturas/`, que es una herramienta y no se versiona.
+- **Toda la interfaz es React dentro de Next.** Componentes `.tsx` con Tailwind y tokens; nunca archivos HTML o CSS sueltos para pantallas, maquetas o alternativas. Para comparar opciones, una ruta de la app.
 - **Fronteras entre capas** (ADR 0005), vigiladas por el hook de estructura: `lib` no importa nada del proyecto ni React; `components` no toca la base; `db` no conoce la interfaz; las páginas no hablan con Drizzle.
 
 ## Arquitectura
@@ -62,19 +64,21 @@ Antes del código, viéndolas fallar: aritmética de dinero, reglas de reparto, 
 
 ## Comandos
 
-| Comando                            | Qué hace                                                              |
-| ---------------------------------- | --------------------------------------------------------------------- |
-| `pnpm dev`                         | servidor de desarrollo en http://localhost:3000                       |
-| `pnpm db:up` / `db:down`           | Postgres local en Docker, puerto 5433                                 |
-| `pnpm db:generate` / `db:migrate`  | migración desde `src/db/schema.ts` y aplicarla                        |
-| `pnpm db:seed`                     | cuentas, sobres, categorías y reglas iniciales (idempotente)          |
-| `pnpm db:demo` / `db:demo:limpiar` | datos de demostración marcados `demo-*`                               |
-| `pnpm verify:fast`                 | tipos, lint, formato, estructura, unitarias; lo corre el hook Stop    |
-| `pnpm verify`                      | lo anterior más build y humo de rutas; bloquea la fusión              |
-| `pnpm test` / `test:watch`         | pruebas unitarias                                                     |
-| `pnpm format`                      | Prettier sobre todo el repo                                           |
-| `pnpm estructura`                  | reglas de estructura sobre `src/`                                     |
-| `pnpm capturas [url] [-- /rutas]`  | capturas de escritorio y celular en ambos temas, en `capturas/`       |
-| `pnpm humo`                        | rutas del build respondiendo (necesita `pnpm build` y la base arriba) |
+| Comando                                                                        | Qué hace                                                                                                                        |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                                                                     | servidor de desarrollo en http://localhost:3000                                                                                 |
+| `pnpm db:up` / `db:down`                                                       | Postgres local en Docker, puerto 5433                                                                                           |
+| `pnpm db:generate` / `db:migrate`                                              | migración desde `src/db/schema.ts` y aplicarla                                                                                  |
+| `pnpm db:seed`                                                                 | cuentas, sobres, categorías y reglas iniciales (idempotente)                                                                    |
+| `pnpm db:demo` / `db:demo:limpiar`                                             | datos de demostración marcados `demo-*`                                                                                         |
+| `pnpm verify:fast`                                                             | tipos, lint, formato, estructura, unitarias; lo corre el hook Stop                                                              |
+| `pnpm verify`                                                                  | lo anterior más build y humo de rutas; bloquea la fusión                                                                        |
+| `pnpm test` / `test:watch`                                                     | pruebas unitarias                                                                                                               |
+| `pnpm format`                                                                  | Prettier sobre todo el repo                                                                                                     |
+| `pnpm estructura`                                                              | reglas de estructura sobre `src/`                                                                                               |
+| `pnpm capturas [url] [-- /rutas]`                                              | capturas de escritorio y celular en ambos temas, en `capturas/`; entra con el usuario de prueba (`--sin-sesion` para no entrar) |
+| `pnpm humo`                                                                    | el build sin sesión y con sesión: redirecciones, cabeceras, cookies, rutas y salir (necesita `pnpm build` y la base arriba)     |
+| `pnpm humo -- --url <origen> --sin-sesion`                                     | lo mismo sin sesión contra una URL ya publicada                                                                                 |
+| `pnpm db:migrate:produccion` / `db:seed:produccion` / `db:respaldo:produccion` | producción, con confirmación en una terminal; **los corre el desarrollador, nunca el agente**                                   |
 
 Los gates sellan el árbol al pasar; `--forzar` repite.
