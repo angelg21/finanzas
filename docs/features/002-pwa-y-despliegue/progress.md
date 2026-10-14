@@ -207,3 +207,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 - Observaciones nuevas, fuera de alcance:
   - no hay edición ni borrado de movimientos, así que "revísala en Movimientos" solo sirve para mirar;
   - un reintento que cruza la medianoche con el atajo "hoy" cambia de fecha y se toma como otra captura. El mensaje sigue siendo verdadero.
+- T13, en curso (2026-10-13):
+  - `X-Frame-Options: DENY` dejó sin servir el envoltorio de iframes de `pnpm capturas`. Ahora el celular se emula por DevTools (390 × 844) y sale una captura por ruta, sin envoltorio HTML. La excepción de CLAUDE.md sobre ese envoltorio queda obsoleta y se corrige en T17.
+  - Capturas de `/entrar` y `/sin-conexion` en escritorio y celular, claro y oscuro, revisadas contra "Pantallas": coinciden.
+  - Falta, con "finanzas-dev": `/nuevo/gasto` detrás del inicio de sesión, y en el celular por la red local entrar, salir, atrás después de salir y las fallas de T12.
