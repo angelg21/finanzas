@@ -29,7 +29,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - `db:migrate:produccion` y `db:seed:produccion` leen `.env.produccion.local`, muestran el destino con `describirBase` y piden escribir `produccion` (criterios 10 y 11);
   - comprobarlo con un `DATABASE_URL` remoto falso, sin conectar.
 - [x] T4 · (2026-10-13) `pnpm db:respaldo:produccion` con el `pg_dump` del contenedor, hacia `data/respaldos/AAAA-MM-DD.sql`, y la restauración de prueba en `finanzas_restauracion`, que compara el conteo y las sumas por tipo (criterio 12). Se ensaya contra la base local.
-- [ ] T5 · Supabase en el servidor:
+- [x] T5 · (2026-10-13) Supabase en el servidor:
   - instalar `@supabase/ssr` y `@supabase/supabase-js`;
   - crear el cliente de servidor con cookies `HttpOnly`;
   - escribir `exigirSesion()`, con `cache` y la comprobación de `USUARIO_PERMITIDO`;
@@ -119,3 +119,14 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - El respaldo no incluye `auth.users`. Va dicho en `docs/despliegue.md`.
   - Mirar `select version()` en producción: si el proyecto nace en Postgres 18, el `pg_dump` 17 se niega.
   - `pg_dump` por el pooler real en modo sesión sigue sin medirse.
+- T5, comprobado sin credenciales reales (2026-10-13):
+  - Sin `SUPABASE_URL` ni la clave en el entorno, toda ruta protegida responde 500 sin datos: falla cerrada.
+  - Con valores falsos, en un build de producción, sin sesión:
+    - GET y HEAD redirigen a `/entrar?siguiente=<ruta>`, con la consulta incluida y `Cache-Control: private, no-store`;
+    - un POST que no es server action recibe 401 sin cuerpo. Antes de ese cambio, un POST renderizaba la página con datos, porque el proxy no redirige POST;
+    - un POST con un id de acción inventado da 404.
+  - Una server action real sin sesión llega a la acción. La cierra `exigirSesion()` en T6.
+  - Queda para cuando el desarrollador cargue "finanzas-dev" en `.env.local`, y se comprueba en T7 con `/entrar`:
+    - entrar, renovar la sesión, la cookie `HttpOnly` y `SameSite=Lax`, y el cierre de una sesión de otro correo;
+    - que `getClaims` verifique en local, con `alg` ES256 o RS256.
+  - Para la auditoría: el límite de `/auth/v1/token` (150 cada 5 minutos por IP) es compartido entre entrar y renovar, y todo sale de la IP del servidor. Quien martille `/entrar` también frena las renovaciones. Evaluar un límite propio.
