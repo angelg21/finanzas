@@ -281,6 +281,10 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - corrió `pnpm db:seed:produccion`: "5 cuentas, 7 sobres, 15 categorías, 6 reglas de reparto".
   - **Incidente:** al armar la cadena, el desarrollador la pegó en el chat con la contraseña de la base. Se dio por expuesta y se cambió antes de migrar, por una de solo letras y cifras. La guarda de `urlProduccion` había rechazado la cadena rota (corchetes y `/` y `@` sin escapar) sin conectar ni mostrarla.
   - `vercel link` creó el proyecto "finanzas" en Vercel. No conectó el repositorio: la cuenta de Vercel no tenía GitHub como conexión de inicio de sesión. También agregó a `.gitignore` dos líneas repetidas, que se deshicieron porque la última volvía a ignorar `.env.example`.
+  - Después de la fusión, el desarrollador:
+    - conectó GitHub a su cuenta de Vercel y el repositorio al proyecto, con `main` como rama de producción;
+    - puso Node 22.x, la región iad1 y Standard Protection;
+    - cargó las cuatro variables solo en Production.
 - **Fusión adelantada (2026-10-14).** El desarrollador decidió fusionar en `main` y publicarla ya, para que Vercel despliegue desde `main` y no desde esta rama. Se hizo con `pnpm verify` en verde, sin `/f-verify` ni `/f-review`. Quedan pendientes y se hacen sobre `main`:
   - T15: conectar el repositorio, las variables, el despliegue, el humo contra producción, la prueba en el celular y el primer respaldo;
   - T16 y T17;
