@@ -1,0 +1,150 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
+import {
+  actualizarCategoria,
+  categoriaPorId,
+  categoriasConUso,
+  crearCategoria,
+  eliminarCategoria,
+  restaurarCategoria,
+} from "@/db/categorias";
+import { type ErroresCategoria, type TipoCategoria, repetidaDe, validarCategoria } from "@/lib/categorias";
+import { exigirSesion, leerSesion } from "@/app/sesion";
+import { mensajeDeFalla } from "@/lib/fallas";
+import { registrarFalla } from "@/app/registro-de-fallas";
+
+/** Lo tecleado, para volver a llenar el formulario si hay que corregir. */
+export type ValoresCategoria = { nombre: string; tipo: TipoCategoria; icono: string; color: string };
+
+export type EstadoCategoria = { ronda: number } & (
+  | { estado: "inicial" }
+  /** `archivada`: id de una archivada con el mismo nombre, para ofrecer restaurarla (criterio 19). */
+  | { estado: "error"; errores: ErroresCategoria & { general?: string }; valores: ValoresCategoria; archivada?: number }
+);
+
+/** A dónde puede volver el formulario tras crear: solo rutas conocidas, nunca una dirección cualquiera. */
+const destinos = new Set(["/nuevo/gasto"]);
+
+const texto = (formData: FormData, nombre: string) => {
+  const valor = formData.get(nombre);
+  return typeof valor === "string" ? valor : "";
+};
+
+function revalidar() {
+  for (const ruta of ["/categorias", "/nuevo/gasto", "/movimientos", "/"]) revalidatePath(ruta);
+}
+
+function valoresDe(formData: FormData): ValoresCategoria {
+  return {
+    nombre: texto(formData, "nombre"),
+    tipo: texto(formData, "tipo") === "ingreso" ? "ingreso" : "gasto",
+    icono: texto(formData, "icono"),
+    color: texto(formData, "color"),
+  };
+}
+
+/** Crea o edita (si llega `id`) una categoría. Al terminar, vuelve a la lista o a la captura de gasto. */
+export async function guardarCategoria(previo: EstadoCategoria, formData: FormData): Promise<EstadoCategoria> {
+  const sesion = await leerSesion();
+  if (!sesion) {
+    // Sin redirigir: el formulario muestra el mensaje y conserva lo escrito (spec 002, criterio 19).
+    const general = mensajeDeFalla("sesion", "no se guardó");
+    return { ronda: (previo?.ronda ?? 0) + 1, estado: "error", errores: { general }, valores: valoresDe(formData) };
+  }
+  const ronda = (previo?.ronda ?? 0) + 1;
+  const valores = valoresDe(formData);
+  const id = z.coerce.number().int().positive().safeParse(texto(formData, "id"));
+  const editando = texto(formData, "id") !== "";
+
+  const existentes = await categoriasConUso();
+  const actual = editando && id.success ? existentes.find((c) => c.id === id.data) : undefined;
+  if (editando && !actual) {
+    return { ronda, estado: "error", errores: { general: "Esa categoría ya no existe" }, valores };
+  }
+
+  const validada = validarCategoria(
+    { ...valores, edicion: actual && { id: actual.id, tipo: actual.tipo, movimientos: actual.movimientos } },
+    existentes,
+  );
+  if (!validada.ok) {
+    return { ronda, estado: "error", errores: validada.errores, valores, archivada: validada.archivada };
+  }
+
+  let guardada: number;
+  try {
+    if (actual) {
+      // La base vuelve a comprobar el tipo con la fila bloqueada: un movimiento pudo llegar después de validar.
+      const resultado = await actualizarCategoria(actual.id, validada.valores);
+      if (resultado === "tipo-fijo") {
+        return { ronda, estado: "error", errores: { tipo: "Tiene movimientos: no puede cambiar de tipo" }, valores };
+      }
+      if (resultado === "no-existe") {
+        return { ronda, estado: "error", errores: { general: "Esa categoría ya no existe" }, valores };
+      }
+      guardada = actual.id;
+    } else {
+      guardada = await crearCategoria(validada.valores);
+    }
+  } catch (error) {
+    // El índice único (tipo, nombre) es la última barrera si otra pestaña creó la misma a la vez.
+    registrarFalla("No se pudo guardar la categoría", error);
+    return {
+      ronda,
+      estado: "error",
+      errores: { general: "No se pudo guardar. Revisa el nombre e intenta de nuevo." },
+      valores,
+    };
+  }
+
+  revalidar();
+  // A la captura solo vuelve una de gasto: una de ingreso llegaría sin elegir y sin aviso (25).
+  const volver = texto(formData, "volver");
+  if (destinos.has(volver) && validada.valores.tipo === "gasto") redirect(`${volver}?categoria=${guardada}`);
+  redirect(`/categorias?tipo=${validada.valores.tipo}`);
+}
+
+/** Criterio 21: borra la categoría si no tiene movimientos; si los tiene, la archiva. */
+export async function eliminarCategoriaAccion(formData: FormData) {
+  await exigirSesion();
+  const categoria = await categoriaPorId(Number(texto(formData, "id")));
+  if (!categoria) redirect("/categorias");
+  try {
+    await eliminarCategoria(categoria.id);
+  } catch (error) {
+    registrarFalla("No se pudo eliminar la categoría", error);
+    throw new Error("No se pudo eliminar la categoría.");
+  }
+  revalidar();
+  redirect(`/categorias?tipo=${categoria.tipo}`);
+}
+
+/**
+ * Criterios 19 y 22: restaura una archivada. Lee `restaurar` (el formulario aparte del botón "Restaurar la
+ * archivada", al crear o editar) o, si no viene, `id` (la lista de archivadas). Si se llegó desde la
+ * captura, vuelve a ella con la categoría elegida, como al crear (25).
+ */
+export async function restaurarCategoriaAccion(formData: FormData) {
+  await exigirSesion();
+  const id = Number(texto(formData, "restaurar") || texto(formData, "id"));
+  const existentes = await categoriasConUso();
+  const categoria = existentes.find((c) => c.id === id);
+  if (!categoria) redirect("/categorias");
+  // La base solo impide el nombre exacto: "Comida" archivada y "comida" activa acabarían las dos activas.
+  const activas = existentes.filter((c) => c.activa);
+  if (repetidaDe(categoria.nombre, categoria.tipo, activas, categoria.id)) {
+    redirect(`/categorias?tipo=${categoria.tipo}&archivadas=1&aviso=nombre`);
+  }
+  try {
+    await restaurarCategoria(categoria.id);
+  } catch (error) {
+    registrarFalla("No se pudo restaurar la categoría", error);
+    throw new Error("No se pudo restaurar la categoría.");
+  }
+  revalidar();
+  const volver = texto(formData, "volver");
+  if (destinos.has(volver) && categoria.tipo === "gasto") redirect(`${volver}?categoria=${categoria.id}`);
+  redirect(`/categorias?tipo=${categoria.tipo}`);
+}

@@ -41,6 +41,13 @@
       "Read(./.env)",
       "Read(./.env.local)",
       "Read(./.env.production)",
+      "Read(./.env.produccion.local)",
+      "Read(~/.finanzas/**)",
+      "Read(./.vercel/**)",
+      "Bash(pnpm db:migrate:produccion*)",
+      "Bash(pnpm db:seed:produccion*)",
+      "Bash(pnpm db:respaldo:produccion*)",
+      "Bash(*drizzle-kit push*)",
       "Bash(cat .env*)",
       "Bash(type .env*)",
       "Bash(rm -rf *)",
@@ -61,6 +68,10 @@
       {
         "matcher": "Edit|Write",
         "hooks": [{ "type": "command", "command": "node .claude/hooks/guardia.mjs", "timeout": 15 }]
+      },
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [{ "type": "command", "command": "node .claude/hooks/comandos.mjs", "timeout": 15 }]
       }
     ],
     "PostToolUse": [

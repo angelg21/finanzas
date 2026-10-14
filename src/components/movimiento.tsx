@@ -1,6 +1,6 @@
 import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, CalendarDays, Shuffle, Wallet } from "lucide-react";
 import type { MovimientoReciente } from "@/db/consultas";
-import { formatearCentavos } from "@/lib/dinero";
+import { formatearCentavos, formatearTasaGuardada } from "@/lib/dinero";
 import { Dato, Pildora, TarjetaPalida } from "./ui";
 
 /*
@@ -26,8 +26,6 @@ const iconoTipo = {
 function fechaCorta(iso: string) {
   return iso.split("-").reverse().join("-");
 }
-
-const formatoTasa = new Intl.NumberFormat("es-VE", { maximumFractionDigits: 2 });
 
 export function TarjetaMovimiento({ m }: { m: MovimientoReciente }) {
   const Icono = iconoTipo[m.tipo];
@@ -82,7 +80,7 @@ export function TarjetaMovimiento({ m }: { m: MovimientoReciente }) {
         {enBolivares ? (
           <Pildora tono="blanca">
             {formatearCentavos(m.montoCentavos, "VES")}
-            {m.tasa ? ` · tasa ${formatoTasa.format(Number(m.tasa))}` : ""}
+            {m.tasa ? ` · ${formatearTasaGuardada(m.tasa)}` : ""}
           </Pildora>
         ) : null}
       </div>

@@ -1,9 +1,11 @@
 "use client";
 
-import { History, House, Landmark, Menu, Plus, Tags, Wallet, X, type LucideIcon } from "lucide-react";
+import { History, House, Landmark, LogOut, Menu, Plus, Tags, Wallet, X, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { nombreApp } from "@/lib/marca";
+import { Emblema } from "./emblema";
 import { CambioTema } from "./tema";
 
 type Ruta = { href: string; texto: string; Icono: LucideIcon };
@@ -31,7 +33,7 @@ function esActiva(href: string, ruta: string) {
 function tituloDe(ruta: string) {
   if (ruta.startsWith(registrar.href)) return "Nuevo gasto";
   if (esActiva(registrar.href, ruta)) return registrar.texto;
-  return [...rutas, ...secundarias].find((r) => esActiva(r.href, ruta))?.texto ?? "Finanzas";
+  return [...rutas, ...secundarias].find((r) => esActiva(r.href, ruta))?.texto ?? nombreApp;
 }
 
 /** Título de la página actual, para la barra superior de escritorio. */
@@ -40,16 +42,12 @@ export function TituloRuta() {
   return <h1 className="text-[22px] font-bold tracking-tight">{tituloDe(ruta)}</h1>;
 }
 
-function Marca() {
+/** El emblema del logo y el nombre de la app. */
+export function Marca({ tamano = 38 }: { tamano?: number }) {
   return (
-    <span className="flex items-center gap-3">
-      <span
-        aria-hidden
-        className="grid size-9 place-items-center rounded-[12px] bg-pildora-navy text-[15px] font-bold text-white"
-      >
-        f
-      </span>
-      <span className="text-[19px] font-bold tracking-tight">finanzas</span>
+    <span className="flex items-center gap-2.5">
+      <Emblema tamano={tamano} />
+      <span className="text-[21px] font-extrabold tracking-tight">{nombreApp}</span>
     </span>
   );
 }
@@ -84,11 +82,31 @@ function BotonRegistrar({ alHacerClic }: { alHacerClic?: () => void }) {
   );
 }
 
+/** La acción de salir llega de la ruta: los componentes no conocen las acciones (ADR 0005). */
+type ConSalir = { salir: () => Promise<void> };
+
+/**
+ * "Salir", con la forma de un enlace lateral. Es un formulario con su server action: funciona sin JavaScript.
+ */
+function BotonSalir({ salir }: ConSalir) {
+  return (
+    <form action={salir}>
+      <button
+        type="submit"
+        className="flex w-full items-center gap-3 rounded-full px-4 py-3 text-[14px] font-semibold text-texto-2 hover:bg-tarjeta-hover hover:text-texto"
+      >
+        <LogOut size={20} strokeWidth={2} aria-hidden />
+        Salir
+      </button>
+    </form>
+  );
+}
+
 /** Barra lateral de escritorio. */
-export function BarraLateral() {
+export function BarraLateral({ salir }: ConSalir) {
   const ruta = usePathname();
   return (
-    <aside className="hidden w-[248px] shrink-0 flex-col border-r border-panel-borde px-5 py-7 lg:sticky lg:top-5 lg:flex lg:h-[calc(100dvh-40px)] lg:self-start">
+    <aside className="hidden w-[248px] shrink-0 flex-col border-r border-panel-borde px-5 py-7 lg:sticky lg:top-0 lg:flex lg:h-dvh lg:self-start">
       <Link href="/" className="mb-9 px-2">
         <Marca />
       </Link>
@@ -102,6 +120,7 @@ export function BarraLateral() {
       </div>
       <div className="mt-auto flex flex-col gap-3">
         <CambioTema conTexto />
+        <BotonSalir salir={salir} />
         <p className="px-2 text-[12px] leading-relaxed text-texto-3">
           Presupuesto por sobres. Cada dólar tiene un trabajo.
         </p>
@@ -111,7 +130,7 @@ export function BarraLateral() {
 }
 
 /** Botón de menú de la barra superior móvil, con su panel deslizante. */
-export function MenuMovil() {
+export function MenuMovil({ salir }: ConSalir) {
   const [abierto, setAbierto] = useState(false);
   const ruta = usePathname();
 
@@ -161,6 +180,7 @@ export function MenuMovil() {
               {[...rutas, ...secundarias].map((r) => (
                 <EnlaceLateral key={r.href} {...r} ruta={ruta} alHacerClic={cerrar} />
               ))}
+              <BotonSalir salir={salir} />
             </nav>
             <div className="mt-6">
               <BotonRegistrar alHacerClic={cerrar} />

@@ -1,35 +1,59 @@
 ---
 name: defectos-datos-encontrados
-description: Defectos y huecos de datos que encontré en auditorías (con fecha), para comprobar en la siguiente revisión si siguen abiertos
+description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 (2026-10-14)
 metadata:
   type: project
 ---
 
-Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos.
+Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Última revisión completa: segunda vuelta de T14 de 002, el 2026-10-14 (ver [[auditoria-t14-002]]).
 
-**Abiertos**
+**Abiertos, nuevos en la segunda vuelta de T14 (2026-10-14). Ninguno bloquea.**
 
-- **2026-10-11.** El check `movimientos_forma_por_tipo` solo valida la forma. Medido con BEGIN/ROLLBACK, la base aceptó un gasto con sobre "Por asignar", categoría de ingreso, moneda VES desde una cuenta USDT y desde una cuenta inactiva. La acción de servidor tiene que validar los ids contra las consultas de cuentas, sobres y categorías activas, y tomar la moneda de la cuenta leída de la base. (Así se hizo en T4; vigilarlo en cada acción nueva que escriba movimientos.)
-- **2026-10-12, /f-review de 001, baja.** `db:seed` cuenta y luego inserta las categorías sin `onConflictDoNothing`. Dos semillas a la vez en una base vacía: una sale con 23505 (`categorias_tipo_nombre_unico`) y código 1 (2 de 3 rondas medidas). Los datos quedan bien: 15 distintas. Además, una categoría nueva en `categoriasBase` nunca llega a una base existente, tampoco a Supabase. Y si alguien vacía la tabla, vuelven las 15 (medido).
-- **2026-10-12, baja, para /f-audit.** `src/lib/fondos.ts:9` (`aporteMensualCentavos`) hace `Math.ceil(totalAnual / 12 / 100) * 100`, una división en flotante fuera de `dinero.ts`, y `src/db/fondos.ts` guarda el resultado en `reglas_reparto.valor`. Medido: 0 diferencias contra BigInt en 0..2e7 y en 5e6 montos al azar hasta 2^53. Viene de 7b7972c, que ya está en main. Ahora es el único flotante sobre montos que queda en el camino a la base.
-- **2026-10-11.** Mezcla de demo y datos de prueba. Los gastos que se guardan desde el formulario llevan `origen=manual` y `referencia_externa=null`, así que `db:demo:limpiar` no los borra. Al limpiar la demo quedan saldos negativos (el cuadre se mantiene) y quedan datos inventados sin marcar.
-- **2026-10-11.** La transacción de `registrarMovimientos` (drizzle → `client.begin` de postgres-js, con `prepare: false`) es correcta por diseño. No se pudo ejecutar contra el pooler de Supabase porque no hay pooler local. Queda pendiente para `/f-audit` antes de desplegar.
-- **2026-10-11, T15.** Ventana residual del criterio 20. Un gasto se valida contra `categoriasDeGastoPorUso`. Si en ese momento confirma el cambio de tipo de una categoría sin movimientos, el gasto se inserta después con una categoría de ingreso (medido: 1 fila). Es el mismo hueco del check que solo valida la forma. Se cierra cuando `registrarMovimientos` compruebe el tipo de la categoría al insertar.
-- **2026-10-11, T15.** El índice único `(tipo, nombre)` es exacto: la base aceptó "Mascotas" y "mascotas" a la vez. Solo `repetidaDe` (con `clave()`) lo detiene. `repetidaDe` devuelve la primera equivalente. Si ya existen una archivada y una activa equivalentes, restaurar una tercera las deja dos activas (medido con Gimnasio, GIMNASIO y gimnasio). La app no llega a ese estado por sí misma; el importador sí podría. El importador debe buscar una activa equivalente, no la primera.
+- **Baja.** Carrera en el desglose. `agregarPartidaYSincronizar` lee las partidas sin bloquear nada. Con dos envíos a la vez (dos pestañas, o un doble clic sin JS), la regla queda calculada sin la partida del otro. Medido: 19 de 20 rondas con la regla por debajo del desglose. No toca el cuadre, y la próxima edición lo recalcula. Corrección: `select ... for update` de la regla o del sobre al empezar la transacción, o `pg_advisory_xact_lock(sobreId)`.
+- **Baja, solo pantalla.** Tres sitios siguen con el reloj del servidor (UTC en Vercel), de 20:00 a 24:00 de Caracas:
+  - `fechaLarga` en `(con-sesion)/layout.tsx`;
+  - `diasRestantesDelMes` en `(con-sesion)/page.tsx`;
+  - `etiquetaFecha` en `movimientos/page.tsx`: un gasto de hoy sale como "Ayer".
 
-- **2026-10-12, /f-review 001, segunda vuelta, baja.** `src/app/nuevo/gasto/page.tsx`, líneas 33 y 35: el respaldo `enDolares[0]` preselecciona la prima si no queda ninguna cuenta propia en dólares activa. Ver [[prima-en-cuadre]].
-- **2026-10-12, observación de spec.** El arreglo 17bbedf solo rechaza ventas que entregan 0 Bs. Una tasa por debajo de 1, como un error al teclear "0,4" en vez de "40", infla el valor en USD del gasto en Bs. Medido: 1 Bs a 0,5 se guardó como 200 centavos de USD. 2100 Bs a 0,4 serían 5250 USD. El cuadre se mantiene, pero el sobre se vacía. La spec solo exige una tasa mayor que cero.
-- **2026-10-12, 00:48 a 00:51, durante mi segunda revisión de 001 (ya resuelto).** El subagente revisor escribió de forma temporal en la base real: movimientos sin `demo-*`, ids 660 a 674, notas "revisor-1" y "revisor-2". Mientras existieron, el cuadre se mantuvo (537932) y la preselección cambió: el último gasto manual quedó desde Efectivo. A las 00:51 ya los había borrado. El contenido volvió a ser idéntico al inicial y solo avanzó la secuencia, de 659 a 674. Si vuelve a pasar y las filas no desaparecen, es otro caso de "mezcla de demo y datos de prueba".
-- **2026-10-12, 21:58 UTC, durante mi revisión de b1c3fa1 (ya resuelto).** Otro proceso escribió en la base real filas `demo-comprobar-001-*` con `origen=manual`. Una falló `movimientos_monto_positivo`: un gasto de 210000 Bs con 0 USD. Las borró: el contenido quedó idéntico y la secuencia pasó de 1011 a 1022. Lo atribuí con `docker logs finanzas-db`.
+  Medido con TZ=UTC el 31 de octubre a las 21:00: "domingo, 1 de noviembre" y 29 días restantes.
 
-**Cerrados**
+- **Baja.** `movimiento.tsx` ahora llama a `aTasa(m.tasa)`, que lanza si la tasa es ≤ 0. La base no tiene un check `tasa > 0`: una fila así, metida por SQL o por el futuro importador, tumbaría la lista de movimientos y el inicio. Las 4 tasas que hay hoy pasan la ida y vuelta.
+- **Info.** `fijarAporteManual` no comprueba que el sobre no tenga desglose; solo lo oculta la página. El campo `mes` de zod responde en inglés ("Invalid input", "Too big…"). Solo se ve con peticiones fabricadas.
+- **Info.** Un error de `fs` al leer la cadena de producción imprimiría la ruta completa con el usuario de Windows, solo en la terminal propia. Los mensajes normales muestran `~/.finanzas/produccion.env`.
 
-- 64af718 (2026-10-12): la venta ya no hereda la cuenta del último gasto. Medido con la acción real en una copia: con `cuentaVentaId` igual a Bolívares, a una cuenta inactiva, a 99999, vacío, "01", " 1", "1e0", "0x1" o con inyección, sale el error de cuenta y no se escribe ninguna fila. Un formulario viejo que no envía el campo también falla sin escribir. Además, `cuentaId` se ignora al vender, y `cuentaVentaId` al pagar en dólares.
-- 17bbedf (2026-10-12): 0,01 a 0,4 se rechaza sin escribir filas; 0,01 a 0,5 entrega 1 centavo de Bs.
-- b1c3fa1 (2026-10-12): `semilla-demo.ts` ya no usa flotantes. Las tasas son texto y pasan por `aTasa`, `bolivaresDesdeUsd` y `tasaDecimal`; la variable `bs` desapareció. Medido en una copia con el código de b1c3fa1~1 y con el nuevo: las mismas huellas sobre las 118 filas (la del autor, 6819eb1d..., y la estricta, 162472e7...), cuadre 539300, idempotente. Además, 0 diferencias entre el cálculo viejo y el nuevo en las 10 combinaciones de la demo y en una rejilla de 1e6. La tasa "241.8" de octubre no se usa, porque en octubre no hay gastos en Bs.
+**Abiertos de antes**
 
-- T3 de 001: `aCentavos`/`aTasa` aceptaban "0x10", "1e3" y redondeaban "1.005" en flotante. Se corrigió en b8c1a07; en T12 ya no hay `Number()` sobre el texto completo.
-- T13 de 001 (bfd4636): la semilla ya no revive las categorías renombradas ni las borradas, porque solo inserta en una tabla vacía. Además, completa icono y color solo si las dos columnas siguen por defecto. Medido: Ocio→Diversión y Educación borrada no volvieron, una con (etiqueta, azul) quedó intacta, y (etiqueta, pizarra) recibió su icono, que es el residual aceptado. Revisado otra vez en /f-review (2026-10-12) con el mismo resultado; además, (bus, pizarra) quedó intacta y una archivada recibió el icono sin reactivarse.
-- T15 de 001, corregido el 2026-10-11 (sin commit al revisar). `bloquearYContar` hace `for update` y luego cuenta. Con eso, `eliminarCategoria` en carrera archiva en vez de lanzar 23503, y `actualizarCategoria` devuelve "tipo-fijo" (también en carrera, y también a través de `guardarCategoria`). Restaurar con una activa equivalente redirige con `aviso=nombre`. La demo busca por (nombre, tipo): con un "Familia" de ingreso quedan 0 movimientos con el tipo cruzado. Todo medido.
+- **Baja.** `reglas_reparto.valor` sigue siendo `integer`. Desde 790ee93 lo vigila `cabeEnRegla`: el tope de 21.474.836,47 USD se rechaza con un mensaje y sin escribir.
+- **Info.** `guardarCategoria` guarda como gasto, sin avisar, cualquier `tipo` distinto de "ingreso".
+- **2026-10-11.** El check `movimientos_forma_por_tipo` solo valida la forma. La base acepta un sobre "Por asignar", una categoría de ingreso, VES desde una cuenta USDT o una cuenta inactiva; lo frena la acción (22 de 22 manipulaciones rechazadas en T14). Tampoco hay checks para `tasa > 0`, `monto_destino > 0` ni `tope > 0`. Vigilar en cada escritor nuevo, sobre todo en el importador.
+- **2026-10-11, T15 de 001.** Una categoría que cambia de tipo durante la validación de un gasto. La unicidad de categorías distingue mayúsculas en la base y no en `lib`.
+- **2026-10-12.** Dos `db:seed` a la vez en una base vacía: una sale con 23505.
+- **2026-10-11.** `captura-*` no lo borra `db:demo:limpiar`.
+- **Pendientes de T15.** El pooler de transacción, sin medir. Residuales de T3, T4 y T12: `tsx ... --produccion` solo lo frena `isTTY`; la restauración corre como superusuario; falta `auth.users`; comprobar PG 18; faltan las pruebas de base de `registrarCaptura`. Ver [[guardas-produccion]], [[respaldo-produccion]] y [[captura-idempotente]].
 
-Ver también [[prima-en-cuadre]], [[categorias-icono-color]] y [[entorno-de-prueba]].
+**Cerrados en la segunda vuelta de T14 (790ee93, 2026-10-14), con medición**
+
+- **H1. TLS en la app.** `conexionSegura` en `index.ts`. Mediciones en [[auditoria-t14-002]].
+- **H2/H3. Partida y regla en una transacción.** `agregarPartidaYSincronizar` y `eliminarPartidaYSincronizar`, con `AporteFueraDeRango`: rollback con 0 filas, y borrar recalcula (1700 → 900). Al quitar la última partida, la regla se queda como está, a propósito.
+- **H4. Sin flotante en los formularios.** `centavosATexto` hace la ida y vuelta exacta, también con 2147483647. `formatearTasa(aTasa())`.
+- **H5. Mes de Caracas en las consultas.** En `consultas.ts`, TZ=UTC y la zona de Caracas dan lo mismo: 14200 y septiembre-octubre, igual que el SQL.
+- **H6. Nota de la prima.** La base nueva nace con la nota del ADR 0006. La local conserva la vieja, como se esperaba.
+- **H7. `veces` y `mes` solo con cifras.** Se rechazan "0x10", "1e1", " 3", "3.0", "+3" y "３". Una `veces` vacía vale 1 y un `mes` vacío queda en null.
+
+**Cerrados antes:**
+
+- afc2286: BigInt en los fondos;
+- `enDolares[0]`;
+- tasa < 1;
+- `sslmode` repetido y AggregateError;
+- RLS en vivo, 10 de 10;
+- 64af718, 17bbedf, b1c3fa1, b8c1a07 y bfd4636;
+- `for update` en categorías.
+
+**Escrituras ajenas en la base real (resueltas):** las del revisor el 2026-10-12, ids 660 a 674, y `demo-comprobar-001-*`. Método para atribuirlas en [[entorno-de-prueba]].
+
+**Why:** el dinero que no cuadra no se ve en pantalla. Sin esta lista, cada revisión empieza de cero y repite mediciones.
+
+**How to apply:** en cada revisión, cruzar lo abierto con el código actual (grep y git log) antes de citarlo. Cuando algo se cierre, moverlo a "Cerrados" con la evidencia.
+
+Ver también [[prima-en-cuadre]], [[categorias-icono-color]], [[rls-supabase]] y [[entorno-de-prueba]].

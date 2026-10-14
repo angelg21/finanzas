@@ -10,6 +10,9 @@
  *     transferencia  → mueve dinero real entre dos cuentas, no toca sobres
  *     reasignacion   → mueve propósito entre dos sobres, no toca cuentas
  * - Las columnas se nombran en snake_case en la base (casing: "snake_case" en drizzle.config.ts).
+ * - Toda tabla lleva .enableRLS() y ninguna política (spec 002, criterio 9): con la clave publicable de
+ *   Supabase no se lee ni se escribe ninguna fila. La app entra como dueña de las tablas y no la afecta.
+ *   Lo vigila src/db/schema.test.ts.
  */
 import { relations, sql } from "drizzle-orm";
 import {
@@ -73,7 +76,7 @@ export const cuentas = pgTable(
     creadoEn: creadoEn(),
   },
   (t) => [uniqueIndex("cuentas_nombre_unico").on(t.nombre)],
-);
+).enableRLS();
 
 /** Para qué es el dinero. La suma de los sobres es igual a la suma en USD de todas las cuentas (ADR 0006). */
 export const sobres = pgTable(
@@ -92,7 +95,7 @@ export const sobres = pgTable(
     creadoEn: creadoEn(),
   },
   (t) => [uniqueIndex("sobres_nombre_unico").on(t.nombre)],
-);
+).enableRLS();
 
 export const categorias = pgTable(
   "categorias",
@@ -113,7 +116,7 @@ export const categorias = pgTable(
     creadoEn: creadoEn(),
   },
   (t) => [uniqueIndex("categorias_tipo_nombre_unico").on(t.tipo, t.nombre)],
-);
+).enableRLS();
 
 export const movimientos = pgTable(
   "movimientos",
@@ -138,7 +141,10 @@ export const movimientos = pgTable(
     categoriaId: integer().references(() => categorias.id),
     nota: text(),
     origen: origenMovimientoEnum().notNull().default("manual"),
-    /** Id en la fuente externa (Gestor de Gastos, Binance). Evita importar dos veces lo mismo. */
+    /**
+     * Id en la fuente externa (Gestor de Gastos, Binance), o "captura-<uuid>-<tipo>" en un gasto registrado a mano
+     * (src/lib/captura.ts). Evita registrar dos veces lo mismo.
+     */
     referenciaExterna: text(),
     creadoEn: creadoEn(),
   },
@@ -173,7 +179,7 @@ export const movimientos = pgTable(
       end`,
     ),
   ],
-);
+).enableRLS();
 
 /**
  * Cómo se reparte un ingreso entre sobres, en orden.
@@ -198,7 +204,7 @@ export const reglasReparto = pgTable(
     uniqueIndex("reglas_reparto_sobre_unico").on(t.sobreId),
     check("reglas_reparto_valor_positivo", sql`${t.valor} > 0`),
   ],
-);
+).enableRLS();
 
 /**
  * Desglose anual de un sobre de tipo fondo: cada ocasión prevista con su monto y cuántas veces al año ocurre.
@@ -227,7 +233,7 @@ export const partidasSobre = pgTable(
     check("partidas_sobre_monto_positivo", sql`${t.montoCentavos} > 0 and ${t.vecesPorAnio} > 0`),
     check("partidas_sobre_mes_valido", sql`${t.mes} is null or (${t.mes} between 1 and 12)`),
   ],
-);
+).enableRLS();
 
 // ---------- Relaciones (para db.query) ----------
 

@@ -1,0 +1,287 @@
+# 002 · Progreso
+
+Rama: `feat/002-pwa-y-despliegue`. Spec: `spec.md`.
+
+## Antes de construir
+
+Pasos del desarrollador: tocan cuentas externas y archivos `.env`, que el agente no escribe.
+
+- Antes de T5, crear en Supabase el proyecto "finanzas-dev", apagar el registro de usuarios nuevos y crear el usuario de prueba. Añadir a `.env.local`:
+  - `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` de ese proyecto;
+  - `USUARIO_PERMITIDO`, con el correo del usuario de prueba;
+  - `HUMO_CORREO` y `HUMO_CLAVE`.
+- Antes de T9, buscar el logo original en SVG o en alta resolución, si existe.
+- Antes de T15, crear el proyecto "finanzas" de producción y el de Vercel siguiendo `docs/despliegue.md`, que se escribe en T15.
+
+## Tareas
+
+Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca con la fecha al cerrarla.
+
+- [x] T1 · (2026-10-13) `src/lib/acceso.ts` (`destinoSeguro`, `esUsuarioPermitido`) y `src/lib/destino-base.ts` (`esBaseLocal`, `describirBase`). Pruebas primero, con los casos de la spec (criterios 3, 4, 10 y 11); verlas fallar y luego implementar.
+- [x] T2 · (2026-10-13) Esquema:
+  - escribir primero la prueba que recorre las tablas exportadas por `schema.ts` y exige RLS en cada una, y verla fallar (criterio 9);
+  - activar RLS con la API de Drizzle y correr `pnpm db:generate`;
+  - lanzar `guardian-datos`, luego `pnpm db:migrate` en local;
+  - la app local se ve igual que antes.
+- [x] T3 · (2026-10-13) Guardas de base:
+  - `db:demo` se niega fuera de local;
+  - `drizzle.config.ts`, `db:migrate` y `db:seed` se niegan fuera de local;
+  - `db:migrate:produccion` y `db:seed:produccion` leen `.env.produccion.local`, muestran el destino con `describirBase` y piden escribir `produccion` (criterios 10 y 11);
+  - comprobarlo con un `DATABASE_URL` remoto falso, sin conectar.
+- [x] T4 · (2026-10-13) `pnpm db:respaldo:produccion` con el `pg_dump` del contenedor, hacia `data/respaldos/AAAA-MM-DD.sql`, y la restauración de prueba en `finanzas_restauracion`, que compara el conteo y las sumas por tipo (criterio 12). Se ensaya contra la base local.
+- [x] T5 · (2026-10-13) Supabase en el servidor:
+  - instalar `@supabase/ssr` y `@supabase/supabase-js`;
+  - crear el cliente de servidor con cookies `HttpOnly`;
+  - escribir `exigirSesion()`, con `cache` y la comprobación de `USUARIO_PERMITIDO`;
+  - escribir `src/proxy.ts`: renueva la sesión y redirige a `/entrar?siguiente=`; su matcher deja fuera el manifiesto, `/sw.js`, los iconos, `/sin-conexion` y `_next` (criterios 1, 3, 6 y 8);
+  - leer antes la guía de autenticación y la de proxy en `node_modules/next/dist/docs/` y la de `@supabase/ssr`.
+- [x] T6 · (2026-10-13) Grupos de rutas:
+  - mover las rutas a `(con-sesion)` con el cascarón, y crear `(sin-sesion)` con el lienzo y el panel;
+  - `exigirSesion()` en cada página y en cada acción;
+  - una regla de estructura que lo exija en todo `acciones.ts` y en toda página fuera de `(sin-sesion)`;
+  - otra regla contra `NEXT_PUBLIC_` (criterios 1, 2 y 8);
+  - las rutas siguen respondiendo en las mismas direcciones.
+- [x] T7 · (2026-10-13) Pantalla `/entrar` y su acción: errores, límite de intentos, correo conservado, sin JavaScript, y redirección con `destinoSeguro`. "Salir" en `BarraLateral` y en `MenuMovil`, y `Cache-Control: private, no-store` en las páginas con datos (criterios 3, 4, 5 y 7).
+- [x] T8 · (2026-10-13) Cabeceras en `next.config.ts` (criterio 14). Humo con dos modos:
+  - con sesión, entrando con el usuario de prueba: las rutas de siempre responden 200;
+  - sin sesión: cada ruta redirige a `/entrar`, responden las públicas y están las cabeceras;
+  - con `--url` para correr contra una URL remota en modo sin sesión (criterios 1, 13 y 14).
+- [x] T9 · (2026-10-13) Pieza `Emblema` en SVG, aprobada por el desarrollador lado a lado con `logo-emblema.png`. Iconos generados con `ImageResponse`: favicon, `apple-icon` de 180, y 192, 512 y 512 adaptable, con margen extra para la flecha (criterio 16).
+- [x] T10 · (2026-10-13) Manifiesto con el acceso directo "Registrar gasto", `appleWebApp`, zonas seguras en la barra superior y en `NavInferior`, y la barra de estado que sigue al tema elegido (criterios 15 y 17). Panel Application de DevTools sin errores.
+- [x] T11 · (2026-10-13) `/sw.js` y su registro desde una hoja `"use client"`, más la página estática `/sin-conexion` (criterios 18 y 20). En DevTools, con la red desconectada: navegar muestra `/sin-conexion`, ningún POST pasa por el service worker y la caché solo contiene lo de `/sin-conexion`.
+- [x] T12 · (2026-10-13) Fallas al guardar en la captura y en los formularios de categorías y sobres: sin red, con la sesión vencida y con una versión vieja. El mensaje aparece junto al botón, lo escrito se conserva y nada se reintenta solo (criterio 19). Se prueba en Edge con la red desconectada y con las cookies borradas a mano.
+- [x] T13 · (2026-10-14) `pnpm capturas -- /entrar /sin-conexion /nuevo/gasto` en claro y oscuro, comparadas con las referencias y con "Pantallas". En el celular, por la red local: entrar, salir, atrás después de salir, y la captura detrás del inicio de sesión.
+- [x] T14 · (2026-10-14) `/f-audit completo` sobre la rama, antes de exponer nada. Cada hallazgo se cierra o se acepta con un ADR (criterio 13).
+- [ ] T15 · `docs/despliegue.md` con los pasos exactos y `.vercelignore`. El desarrollador:
+  - crea "finanzas" en la misma región que Vercel, con la API de datos apagada, el registro apagado y su usuario;
+  - corre `db:migrate:produccion` y `db:seed:produccion`;
+  - crea el proyecto de Vercel sin conectar el repositorio, con las variables solo en Production y la región igual a la de la base, y despliega desde la rama con la CLI.
+
+  Después corren `pnpm humo -- --url <producción> --sin-sesion` y el primer respaldo (criterios 12 y 13).
+
+- [ ] T16 · En el celular, con la app instalada:
+  - el icono y el acceso directo;
+  - las zonas seguras y la barra de estado en los dos temas;
+  - abrir sin red;
+  - entrar y salir;
+  - los tiempos de captura y de guardado, cronometrados y anotados (criterios 15 a 17, 20 y 21).
+- [ ] T17 · Documentos:
+  - ADR 0010 con `/f-adr` (Supabase solo en el servidor, dos proyectos, RLS con la API de datos apagada, migraciones de producción a mano, orden del primer despliegue);
+  - el plan: la línea de la fase 1 marcada como hecha;
+  - `docs/diseno.md`: `Emblema`, `/entrar`, `/sin-conexion`, los iconos y la excepción de color del logo;
+  - `CLAUDE.md`: los comandos nuevos, la regla de migraciones con su variante de producción y los modos del humo;
+  - `docs/WORKFLOW.md`, si cambió el orden de la auditoría;
+  - las observaciones, si cambió algo.
+
+## Validación en navegador
+
+El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. Sin esta nota no se pasa a `/f-verify`.
+
+- 2026-10-14, el desarrollador, en la computadora y en el celular por la red local:
+  - miró el acceso nuevo, partido en dos en escritorio y como una sola composición en el celular;
+  - miró la app a pantalla completa y la marca "Arca" con su emblema;
+  - aprobó todo ("listo perfecto"), después de pedir y ver el ajuste del acceso en el celular.
+- Comprobado por el agente en Edge, contra el build con "finanzas-dev":
+  - entrar con `siguiente`;
+  - salir, y atrás dos veces después de salir sin ver datos;
+  - la captura detrás del inicio de sesión;
+  - las tres fallas al guardar.
+
+  Las capturas de `/entrar`, `/sin-conexion` y `/nuevo/gasto` en escritorio y celular, claro y oscuro, coinciden con "Pantallas" y con el cambio del 2026-10-14.
+
+## Etapas
+
+- [x] Spec leída y corregida por el desarrollador (2026-10-13)
+- [ ] Construida (todas las tareas con commit)
+- [x] Validada en navegador (2026-10-14)
+- [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
+- [ ] Revisada: veredicto APTO PARA FUSIONAR
+- [x] Fusionada en `main` el 2026-10-14, por decisión del desarrollador antes de verificar y revisar (ver notas)
+
+## Notas
+
+- Después de `/f-ship`, el repositorio se conecta a Vercel con `main` como rama de producción. Desde entonces, publicar `main` despliega.
+- T2, hallazgos del `guardian-datos` (APTO PARA MIGRAR, 2026-10-13):
+  - La app depende de entrar como **dueña** de las tablas. Con un rol que no sea dueño, RLS le devuelve cero filas sin error: `/cuentas` diría que cuadra con 0 = 0. Va al ADR 0010 y a `docs/despliegue.md` (T15 y T17): nada de un rol de mínimo privilegio sin políticas propias.
+  - `schema.test.ts` solo mira el código. `db:migrate:produccion` mostrará, después de migrar, el dueño y las marcas de RLS de cada tabla de `public`, y si `anon` tiene acceso al esquema `drizzle` (T3).
+  - La prueba no cubre vistas. Una vista en `public` salta RLS. Cuando llegue la primera, `securityInvoker: true` y ampliar la prueba.
+  - Migrar con la app sin uso: los bloqueos exclusivos pueden chocar con un gasto que se guarde en ese instante.
+- T3, `guardian-datos`: NO APTO en la primera vuelta y APTO en la segunda (2026-10-13). Lo que cambió por sus hallazgos:
+  - Una URL ilegible (contraseña con `/`, `?`, `#`, `@` o `,` sin escapar) ya no llega al driver, cuyo error repetía la URL entera. Los scripts imprimen solo el mensaje y la causa (`terminarConError`), y `src/db/index.ts` también la valida.
+  - `postgres.js` y `new URL` leían distinto algunas URL ambiguas. `conexion-script.test.ts` lo mide con el driver real, sin conectar.
+  - Producción exige `?sslmode=require` (uno solo) y una terminal real: una respuesta por tubería no pasa la confirmación.
+  - `db:migrate:produccion` revisa la base real después de migrar (`src/db/estado-base.ts`): tablas iguales al esquema, RLS, sin FORCE, de quien conecta, ninguna vista que salte RLS, `anon` fuera de `drizzle` y todas las migraciones del journal.
+  - `comprobar-001.ts` también exige la base local, porque escribe filas de demostración. La spec no lo pedía.
+  - Spec corregida con el desarrollador: `.env.produccion.local` usa el pooler en modo sesión, no la conexión directa (solo IPv6), y el `DATABASE_URL` de producción lleva `?sslmode=require`.
+- Pendientes para T15:
+  - Antes de crear `.env.produccion.local`, el desarrollador corre `pnpm db:seed:produccion` en su terminal. Debe decir "Falta .env.produccion.local". Si dice "…en una terminal", está en Git Bash (mintty): usar PowerShell o `winpty`.
+  - La primera vez con el archivo, escribir algo distinto de `produccion` debe responder "Cancelado". El agente no lo puede ensayar porque no escribe archivos `.env`.
+  - `docs/despliegue.md`: pooler de sesión con `?sslmode=require` para `.env.produccion.local`; pooler de transacción con `?sslmode=require` en Vercel; "Enforce SSL" en Supabase.
+- T4, `guardian-datos`: NO APTO en la primera vuelta y APTO en la segunda (2026-10-13). Lo que cambió:
+  - La contraseña entra a `pg_dump` en `PGPASSWORD`, nunca en sus argumentos, que lista cualquiera con acceso a Docker.
+  - Un `%` mal escapado o `%00` invalida la URL, porque libpq repetía la clave en su error.
+  - Se compara cada tabla del esquema (filas y huella md5 en UTC), los movimientos por tipo y las migraciones. Antes, el primer respaldo, con `movimientos` vacía, se daba por bueno sin comparar nada.
+  - `finanzas_restauracion` se borra siempre, también si falla. El volcado se llama `.sql.sin-comprobar` hasta que cuadra.
+  - El guardián lo midió también en modo `--produccion` contra la imagen de Supabase con TLS: 11 ✓.
+- Para T14 y T15, del guardián en T4:
+  - Restaurar con un rol NOSUPERUSER, por si un esquema de producción manipulado ejecuta código al restaurar.
+  - `pnpm exec tsx src/db/respaldo.ts --produccion` no cae bajo el `deny`: lo frena solo la comprobación de terminal.
+  - El respaldo no incluye `auth.users`. Va dicho en `docs/despliegue.md`.
+  - Mirar `select version()` en producción: si el proyecto nace en Postgres 18, el `pg_dump` 17 se niega.
+  - `pg_dump` por el pooler real en modo sesión sigue sin medirse.
+- T5, comprobado sin credenciales reales (2026-10-13):
+  - Sin `SUPABASE_URL` ni la clave en el entorno, toda ruta protegida responde 500 sin datos: falla cerrada.
+  - Con valores falsos, en un build de producción, sin sesión:
+    - GET y HEAD redirigen a `/entrar?siguiente=<ruta>`, con la consulta incluida y `Cache-Control: private, no-store`;
+    - un POST que no es server action recibe 401 sin cuerpo. Antes de ese cambio, un POST renderizaba la página con datos, porque el proxy no redirige POST;
+    - un POST con un id de acción inventado da 404.
+  - Una server action real sin sesión llega a la acción. La cierra `exigirSesion()` en T6.
+  - Queda para cuando el desarrollador cargue "finanzas-dev" en `.env.local`, y se comprueba en T7 con `/entrar`:
+    - entrar, renovar la sesión, la cookie `HttpOnly` y `SameSite=Lax`, y el cierre de una sesión de otro correo;
+    - que `getClaims` verifique en local, con `alg` ES256 o RS256.
+  - Para la auditoría: el límite de `/auth/v1/token` (150 cada 5 minutos por IP) es compartido entre entrar y renovar, y todo sale de la IP del servidor. Quien martille `/entrar` también frena las renovaciones. Evaluar un límite propio.
+- T6 (2026-10-13):
+  - Las rutas pasaron a `(con-sesion)`, con el cascarón en su layout. El build lista las mismas direcciones que antes.
+  - Las reglas de estructura se probaron con contenidos sintéticos. Cada caso da lo esperado:
+    - página sin la sesión, con la sesión en segundo lugar, o síncrona: error;
+    - página dentro de `(sin-sesion)`: sin error;
+    - una acción sin la sesión: error con su nombre;
+    - una acción exportada como `const`: error;
+    - `NEXT_PUBLIC_` en `src/` o en `next.config.ts`: error.
+  - Mover las carpetas exigió detener `pnpm dev`: Windows no deja renombrar lo que el servidor vigila.
+  - `pnpm humo` espera 200 en las rutas y fallará hasta T8, cuando entre con el usuario de prueba. `pnpm verify` completo no pasa hasta entonces.
+- T7 (2026-10-13):
+  - Comprobado con Supabase falso, en un build de producción:
+    - `/entrar` responde 200 con `Cache-Control: private, no-store`;
+    - trae los campos y atributos de la spec, con `siguiente` en el formulario;
+    - enviado sin JavaScript (multipart, como un navegador), vuelve con el mensaje de error, el correo conservado y sin la contraseña en la respuesta.
+  - Pendiente de "finanzas-dev", en T13, en el navegador: contraseña equivocada, límite de intentos, correo ajeno, entrar con `siguiente`, salir y "atrás" después de salir.
+  - Decisiones:
+    - `entrar` siempre pregunta a Supabase, también por un correo que no es el permitido, para no delatar cuál es por el tiempo de respuesta;
+    - "Salir" cierra solo la sesión de este dispositivo (`scope: "local"`): salir en la computadora no saca al celular. La spec no lo fijaba;
+    - las acciones de `(sin-sesion)` quedan fuera de la regla de sesión, porque `entrar` es la que la crea.
+  - El `Emblema` de `/entrar` llega con T9.
+- T8 (2026-10-13):
+  - Con Supabase falso, en un build de producción, `pnpm humo -- --sin-sesion` pasa:
+    - 11 rutas redirigen a `/entrar` con su `siguiente` y sin datos;
+    - dos POST que no son acción reciben 401;
+    - `/entrar` y el favicon responden;
+    - las cinco cabeceras están en todas las respuestas, redirecciones incluidas.
+  - `--url` funciona contra un servidor ya levantado y se niega sin `--sin-sesion`. Contra un servidor roto, falla en voz alta.
+  - El modo con sesión espera las credenciales de "finanzas-dev": entrar, cookies `HttpOnly`, `SameSite=Lax` y `Secure`, las rutas, `/entrar` con sesión y salir.
+  - Las rutas públicas de T9 a T11 (manifiesto, iconos, `/sw.js` con sus cabeceras y `/sin-conexion`) se suman a la lista del humo en su tarea.
+  - Con las variables de Supabase ausentes, el 500 sale sin las cabeceras de seguridad. Es un error de configuración y falla cerrado igual.
+- T9 (2026-10-13):
+  - El desarrollador no tenía el logo en vector. Lo vectoricé desde `logo-emblema.png`: coincide en 99 % con el aro y la flecha y en 97,5 % con las barras. El desarrollador lo aprobó tal cual, con la vista lado a lado.
+  - Iconos generados en el build con `ImageResponse`:
+    - `/icon/32`, `/icon/192` y `/icon/512`, transparentes;
+    - `/apple-icon` de 180, sobre el panel claro;
+    - `/icono-adaptable` de 512: la punta de la flecha a 0,37 del lado, dentro de la zona segura de 0,40.
+  - Se borró el `favicon.ico` de Next: el favicon es `/icon/32`.
+  - Satori, el que dibuja para `ImageResponse`, falla con atributos o estilos `undefined`. `CuadroEmblema` no deja ninguno.
+- T10 (2026-10-13):
+  - El manifiesto se sirve sin sesión, con los campos de la spec, el acceso directo "Registrar gasto" y los tres iconos. El humo lo comprueba.
+  - El `<head>` lleva `apple-mobile-web-app-*`, `mobile-web-app-capable` y el enlace al manifiesto.
+  - Las zonas seguras ya estaban en la barra superior, en `NavInferior` y en `(sin-sesion)`.
+  - La barra de estado:
+    - los `theme-color` del layout siguen al sistema; el script del tema los reescribe con el color del tema elegido al cargar y al cambiar;
+    - en iPhone, `statusBarStyle: "default"`, que desde iOS 15 toma `theme-color`;
+    - se valida en el celular en T16, y el panel Application de DevTools en T13.
+- T11 (2026-10-13), comprobado en Edge sin ventana manejado por CDP, contra el build:
+  - el service worker queda activo con alcance `/`, y la única caché, `finanzas-sin-conexion-v1`, guarda `/sin-conexion`, su CSS y sus seis fuentes;
+  - con el servidor apagado (corte real), navegar a `/movimientos` muestra la página sin conexión con sus estilos y sin saldos;
+  - un POST sin red falla en la red, sin pasar por el service worker, y la caché no crece al navegar.
+
+  La misma prueba en Node, con un `self` simulado, confirma que no intercepta POST ni RSC. Se formaliza en `/f-verify`.
+
+- El service worker activa la _navigation preload_, para que la navegación salga a la red mientras arranca y no frene la captura (criterio 21).
+- "Reintentar" es un formulario GET a la dirección actual, porque el JavaScript de la página no queda guardado.
+- La versión de la caché (`VERSION` en `public/sw.js`) se sube a mano si cambia lo que necesita `/sin-conexion`. Mientras tanto, la página y su CSS guardados son una foto coherente del build en que se instaló.
+- T12 (2026-10-13):
+  - Se midió primero el comportamiento de partida: en Edge, una acción sin red lanzaba `TypeError: Failed to fetch` y la pantalla se perdía.
+  - Ahora `conFallas` (`src/lib/fallas.ts`) envuelve las acciones con estado y convierte la falla en estado del formulario: el mensaje junto al botón, lo escrito en su sitio y ningún reintento automático. Hay un mensaje por causa:
+    - sin red;
+    - versión vieja (`UnrecognizedActionError`);
+    - otra.
+  - Las redirecciones de Next pasan sin tocarse.
+  - Para que el formulario siga funcionando sin JavaScript, la envoltura copia las marcas internas con que React pinta el formulario (`$$FORM_ACTION`, `$$IS_SIGNATURE_EQUAL` y `bind`). Va al ADR 0010.
+  - La sesión vencida no redirige en las acciones con estado: `leerSesion` y un `return` con el mensaje. La regla de estructura acepta ese patrón y sigue rechazando cualquier otro.
+  - Sin JavaScript, un formulario enviado sin sesión va con 303 a `/entrar`. Antes recibía un 401 en blanco.
+  - En categorías y sobres el mensaje es el mismo sin nombrar el gasto ("Sin conexión: no se guardó."), porque la spec no fijaba el texto para esos formularios.
+  - Ampliación del criterio 19, aprobada por el desarrollador: un reintento tras un corte a medias no duplica.
+    - Cada captura lleva un UUID que viaja con lo tecleado y se guarda en `referencia_externa` (`captura-<id>-<tipo>`).
+    - `registrarCaptura` atrapa solo el choque del índice único, lee lo guardado y `resolverReintento` decide. Es "ya estaba" solo si es lo mismo y de hace 15 minutos o menos; si no, avisa y entrega un id nuevo.
+    - `guardian-datos`: NO APTO en la primera vuelta (la confirmación mentía y una captura podía quedar a medias) y APTO en la segunda, medido con la acción real, en carrera y con el cuadre intacto.
+  - Pendiente con "finanzas-dev", en T13: la prueba en Edge de los tres mensajes, con la red cortada, con las cookies borradas a mano y con una versión vieja.
+- Para `/f-verify`, del guardián en T12: el criterio 19 ★ necesita una prueba contra la base de `registrarCaptura`, con al menos un cambio de forma de pago entre intentos, un cambio de monto y una carrera. Puede ser un script estilo `comprobar-001` con referencias `demo-*`.
+- Observaciones nuevas, fuera de alcance:
+  - no hay edición ni borrado de movimientos, así que "revísala en Movimientos" solo sirve para mirar;
+  - un reintento que cruza la medianoche con el atajo "hoy" cambia de fecha y se toma como otra captura. El mensaje sigue siendo verdadero.
+- T13, en curso (2026-10-13):
+  - `X-Frame-Options: DENY` dejó sin servir el envoltorio de iframes de `pnpm capturas`. Ahora el celular se emula por DevTools (390 × 844) y sale una captura por ruta, sin envoltorio HTML. La excepción de CLAUDE.md sobre ese envoltorio queda obsoleta y se corrige en T17.
+  - Capturas de `/entrar` y `/sin-conexion` en escritorio y celular, claro y oscuro, revisadas contra "Pantallas": coinciden.
+  - Falta, con "finanzas-dev": `/nuevo/gasto` detrás del inicio de sesión, y en el celular por la red local entrar, salir, atrás después de salir y las fallas de T12.
+- Con "finanzas-dev" cargado (2026-10-14), comprobado:
+  - `pnpm humo` completo pasa:
+    - sin sesión: 11 redirecciones, POST con 303, las públicas y las cabeceras;
+    - con sesión: entrar, cookie `HttpOnly`, `SameSite=Lax` y `Secure`, las rutas, `/entrar` con sesión, salir y las cookies borradas.
+  - El token va firmado con ES256 y trae `kid`: `getClaims` verifica en el servidor de la app, sin ir al de Auth (criterio 21).
+  - Contraseña equivocada y correo inexistente: el mismo "Correo o contraseña incorrectos." y ninguna cookie. Con otro `USUARIO_PERMITIDO`, la cuenta válida recibe el mismo mensaje y no le queda ninguna cookie (criterio 3).
+  - T12 en Edge con sesión: sin red, con las cookies borradas y con una versión vieja (el id de la acción cambiado en el camino), cada falla muestra su mensaje, conserva el monto y no confirma. La base siguió con 118 movimientos.
+  - Los formularios envueltos con `conFallas` (gasto, categoría y desglose de un fondo) siguen trayendo los campos de server action: funcionan sin JavaScript.
+  - Atrás después de salir (criterio 7), en Edge contra el build: entrar con `siguiente=/movimientos` lleva ahí; salir lleva a `/entrar` sin datos, y atrás dos veces se queda en `/entrar`, sin datos.
+  - `pnpm capturas` entra con el usuario de prueba y saca escritorio y celular por DevTools. `/nuevo/gasto` detrás del inicio de sesión se ve como antes, y "Salir" queda junto a `CambioTema`.
+- Cambios de diseño pedidos por el desarrollador (2026-10-14), aplicados sin ronda de pruebas, a pedido suyo:
+  1. `/entrar` y `/sin-conexion` a pantalla completa, partidas en dos: la marca a un lado y el formulario al otro, y en el celular la marca arriba.
+  2. La app a pantalla completa en escritorio, sin el panel flotante sobre el gris.
+  3. El emblema con el nombre "Arca" (`src/lib/marca.ts`) en la barra lateral, en la barra superior del celular, en la pestaña y en el manifiesto.
+
+  `docs/diseno.md` describe todavía el panel flotante y el lienzo visible en escritorio: se corrige en T17, igual que el resto de la spec y CLAUDE.md.
+
+- 2026-10-14: el desarrollador aprobó el escritorio y pidió un acceso más vivo en el celular. Ahora la marca es el fondo de toda la pantalla, con anillos alrededor del disco y las tres píldoras, y el formulario va en una hoja clara que flota sobre ella. Al rehacerlo se habían perdido los anillos en todos los anchos: un var() sin definir dentro de una variable de `:root` invalida el degradado. Corregido, y el escritorio quedó idéntico.
+- T14, `/f-audit completo` (2026-10-14), dos vueltas de `auditor-seguridad` y de `guardian-datos`. El resumen y las decisiones están en el plan, sección 6, y en los ADR 0010 y 0011.
+  - Cerrado y verificado:
+    - la redirección abierta;
+    - la lectura sin sesión por métodos raros y por `generateMetadata`;
+    - TLS obligatorio en la app;
+    - la cadena de producción, que ya no existe en disco: se pega oculta en la terminal;
+    - los registros solo con el código del error (`registrarFalla`);
+    - partida y aporte en una transacción, con un candado por sobre y dentro del integer;
+    - sin flotantes fuera de `dinero.ts`;
+    - el mes, el encabezado, los días que quedan y "Hoy" o "Ayer" en hora de Caracas;
+    - la nota de la prima;
+    - veces y mes solo con cifras;
+    - una tasa rara que ya no tumba la página;
+    - la regla de estructura, que cubre `generateMetadata`, layouts y templates async, `route.ts` (también reexportados), `"use server"` en cualquier archivo y metadatos dentro de `(con-sesion)`.
+  - `pnpm verify` en verde: 288 pruebas, build y humo. El humo prueba PUT, PATCH y DELETE (405) y la petición RSC sin sesión: cortada y sin datos.
+  - Aceptado:
+    - el límite de intentos compartido;
+    - TLS sin verificar el certificado;
+    - sesiones sin corte inmediato, con su procedimiento;
+    - la petición RSC que el proxy no ve: Next le quita `rsc` y `?_rsc`, y la frena la sesión en la página;
+    - menores.
+- Para T15 (`docs/despliegue.md`), del auditor:
+  - **Variables solo en Production:** desmarcar Preview y Development, y nunca correr `vercel env pull`, `vercel pull` ni `vercel build` (los niega el hook).
+  - **`.vercelignore` como lista de permitidos:** `/*`, y luego `!src/`, `!public/`, `!package.json`, `!pnpm-lock.yaml`, `!pnpm-workspace.yaml`, `!next.config.ts`, `!tsconfig.json` y `!postcss.config.mjs`. Revisar la pestaña Source después del primer despliegue.
+  - **El usuario de prueba no entra en producción:** otro `SUPABASE_URL` y otro `USUARIO_PERMITIDO`.
+  - **Deployment Protection en Standard.**
+  - **Supabase de producción:**
+    - registro e inicio anónimo apagados;
+    - Data API apagada;
+    - "Enforce SSL";
+    - sin OAuth;
+    - claves ES256;
+    - comprobar que no sea Postgres 18.
+  - El procedimiento ante una sesión robada o un ataque al límite de intentos (ADR 0010).
+  - **El `DATABASE_URL` de Vercel:** el pooler de transacción con `?sslmode=require`.
+- T15, en curso (2026-10-14). El desarrollador:
+  - creó el proyecto "finanzas" de producción siguiendo `docs/despliegue.md`, paso 1;
+  - comprobó que es PostgreSQL 17.11, la misma versión del `pg_dump` del contenedor;
+  - corrió `pnpm db:migrate:produccion`: "Migraciones aplicadas." y 10 de 10 ✓ (las 6 tablas dueñas, con RLS y sin FORCE; 6 en public y 6 en el esquema; ninguna vista; `anon` fuera de `drizzle`; 4 de 4 migraciones);
+  - corrió `pnpm db:seed:produccion`: "5 cuentas, 7 sobres, 15 categorías, 6 reglas de reparto".
+  - **Incidente:** al armar la cadena, el desarrollador la pegó en el chat con la contraseña de la base. Se dio por expuesta y se cambió antes de migrar, por una de solo letras y cifras. La guarda de `urlProduccion` había rechazado la cadena rota (corchetes y `/` y `@` sin escapar) sin conectar ni mostrarla.
+  - `vercel link` creó el proyecto "finanzas" en Vercel. No conectó el repositorio: la cuenta de Vercel no tenía GitHub como conexión de inicio de sesión. También agregó a `.gitignore` dos líneas repetidas, que se deshicieron porque la última volvía a ignorar `.env.example`.
+- **Fusión adelantada (2026-10-14).** El desarrollador decidió fusionar en `main` y publicarla ya, para que Vercel despliegue desde `main` y no desde esta rama. Se hizo con `pnpm verify` en verde, sin `/f-verify` ni `/f-review`. Quedan pendientes y se hacen sobre `main`:
+  - T15: conectar el repositorio, las variables, el despliegue, el humo contra producción, la prueba en el celular y el primer respaldo;
+  - T16 y T17;
+  - las pruebas de `/f-verify` y la revisión de `/f-review`.

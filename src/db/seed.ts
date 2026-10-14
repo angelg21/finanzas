@@ -1,21 +1,17 @@
 /**
  * Datos iniciales según docs/plan-financiero-y-app.md.
  * Es idempotente: se puede correr varias veces, no duplica nada.
- * Correr con: pnpm db:seed
+ *   pnpm db:seed              → la base local; se niega si .env.local apunta a otra
+ *   pnpm db:seed:produccion   → producción, una sola vez, pegando la cadena en la terminal y confirmando
  */
-import { config } from "dotenv";
 import { and, eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
 import { categoriasBase, colorPorDefecto, iconoPorDefecto } from "../lib/categorias";
+import { conectar, terminarConError, urlLocal, urlProduccion } from "./conexion-script";
 import * as schema from "./schema";
 
-config({ path: ".env.local" });
-
 async function main() {
-  if (!process.env.DATABASE_URL) throw new Error("Falta DATABASE_URL en .env.local");
-  const conexion = postgres(process.env.DATABASE_URL, { prepare: false, max: 1 });
-  const db = drizzle(conexion, { schema, casing: "snake_case" });
+  const url = process.argv.includes("--produccion") ? await urlProduccion("sembrar") : urlLocal("pnpm db:seed");
+  const { db, conexion } = conectar(url);
 
   // Cuentas: sección 4, "Cuentas y monedas".
   await db
@@ -36,7 +32,7 @@ async function main() {
         tipo: "transito",
         esPropia: false,
         orden: 4,
-        nota: "No es mía legalmente. Solo tránsito, saldo bajo.",
+        nota: "A nombre de mi prima. El dinero es mío y entra al cuadre con los sobres (ADR 0006).",
       },
       { nombre: "Bolívares", moneda: "VES", tipo: "banco", orden: 5, nota: "De paso. Casi siempre en cero." },
     ])
@@ -140,7 +136,4 @@ async function main() {
   await conexion.end();
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+main().catch(terminarConError);

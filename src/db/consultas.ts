@@ -1,6 +1,7 @@
 import { and, desc, eq, gte, ne, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "./index";
+import { clavesDeMeses, hoyEnCaracas, inicioDeMes } from "@/lib/fechas";
 import { categorias, cuentas, movimientos, partidasSobre, reglasReparto, sobres } from "./schema";
 
 /** Saldo de cada sobre activo, en centavos de dólar. */
@@ -57,15 +58,9 @@ export async function saldosPorCuenta() {
     .orderBy(cuentas.orden, cuentas.id);
 }
 
-function claveMes(fecha: Date) {
-  return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}`;
-}
-
-/** Primer día del mes actual en formato ISO (fecha local del servidor). */
+/** Primer día del mes de Caracas, movido `desplazamiento` meses: el servidor (Vercel) corre en UTC. */
 function inicioDelMes(desplazamiento = 0) {
-  const hoy = new Date();
-  const d = new Date(hoy.getFullYear(), hoy.getMonth() + desplazamiento, 1);
-  return `${claveMes(d)}-01`;
+  return inicioDeMes(hoyEnCaracas(new Date()), desplazamiento);
 }
 
 export type ResumenMes = { mes: string; ingresosCentavos: number; gastosCentavos: number };
@@ -91,19 +86,11 @@ export async function resumenMensual(meses = 6): Promise<ResumenMes[]> {
     .orderBy(sql`1`);
 
   const porMes = new Map(filas.map((f) => [f.mes, f]));
-  const hoy = new Date();
-  const resultado: ResumenMes[] = [];
-  for (let i = meses - 1; i >= 0; i--) {
-    const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
-    const clave = claveMes(d);
-    const f = porMes.get(clave);
-    resultado.push({
-      mes: clave,
-      ingresosCentavos: f?.ingresosCentavos ?? 0,
-      gastosCentavos: f?.gastosCentavos ?? 0,
-    });
-  }
-  return resultado;
+  return clavesDeMeses(hoyEnCaracas(new Date()), meses).map((clave) => ({
+    mes: clave,
+    ingresosCentavos: porMes.get(clave)?.ingresosCentavos ?? 0,
+    gastosCentavos: porMes.get(clave)?.gastosCentavos ?? 0,
+  }));
 }
 
 /** Total gastado en USD en el mes actual. */

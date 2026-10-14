@@ -221,6 +221,32 @@ Referencia antes de diseñar: Actual Budget, open source, usa exactamente el mod
 - Gráficas básicas: por mes y por categoría.
 - Formulario de captura rápida de gasto. **Hecho** en la feature 001, fusionada el 12 de octubre de 2026.
 - PWA instalable y despliegue para usar la app a diario (feature 002): base en Supabase, Supabase Auth para un solo usuario, Vercel, y `/f-audit` antes de publicar.
+  - **Auditoría completa (`/f-audit completo`), 2026-10-14, sobre la rama de la 002, en dos vueltas.**
+    - `auditor-seguridad` encontró:
+      - una redirección abierta tras entrar;
+      - lectura sin sesión por métodos raros y por los metadatos;
+      - el límite de intentos compartido;
+      - la cadena de producción al alcance del agente;
+      - TLS sin verificar el certificado;
+      - sesiones sin corte inmediato;
+      - datos en los registros;
+      - en la segunda vuelta, la petición RSC que el proxy no distingue y huecos en la regla de estructura.
+    - `guardian-datos` encontró:
+      - TLS opcional en la app;
+      - escrituras sueltas en el desglose y su carrera;
+      - el aporte fuera del rango de un integer;
+      - un flotante fuera de `dinero.ts`;
+      - el mes y otros relojes en la hora del servidor;
+      - la nota de la prima;
+      - entradas laxas;
+      - una tasa que tumbaba la página.
+    - **Cerrado:** todo lo anterior salvo los riesgos aceptados. La cadena de producción ya no existe en disco y se pega en la terminal. Verificado en la segunda vuelta de los dos y con `pnpm verify`.
+    - **Aceptado con ADR 0010 y 0011:**
+      - el límite de intentos compartido;
+      - TLS sin verificar el certificado;
+      - sesiones sin corte inmediato, con su procedimiento;
+      - la petición RSC frenada solo por la sesión en la página;
+      - menores (`reglas_reparto.valor` integer, tipo de categoría desconocido, restauración como superusuario, `auth.users` fuera del respaldo).
 
 **Fase 2, mes dos: reglas y captura por chat**
 

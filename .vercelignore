@@ -1,0 +1,11 @@
+# Lista de permitidos (auditoría T14 de la feature 002): a Vercel sube solo lo que el build necesita. Con una lista
+# de prohibidos, un CSV exportado, un volcado o un archivo de entorno que quedara en la raíz subiría sin querer.
+/*
+!src/
+!public/
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!next.config.ts
+!tsconfig.json
+!postcss.config.mjs

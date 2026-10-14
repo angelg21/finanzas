@@ -1,4 +1,9 @@
-- [Prima en el cuadre](project_prima-en-cuadre.md): ADR 0006; desactivar con saldo descuadra; demo 539300; sonda prima 537800; respaldo enDolares[0] preselecciona la prima
-- [Defectos de datos encontrados](project_defectos-datos-encontrados.md): abiertos (float en fondos.ts, pooler, tasa < 1, respaldo de la prima, escrituras ajenas) y cerrados (T13, T15, 64af718, 17bbedf, b1c3fa1)
+- [Auditoría T14 de 002](project_auditoria-t14-002.md): 1.ª vuelta NO APLICAR (TLS); 2.ª vuelta 790ee93 SEGURO DE APLICAR, H1-H7 medidos; qué mirar en T15
+- [Defectos de datos encontrados](project_defectos-datos-encontrados.md): abiertos (carrera del desglose, reloj UTC en 3 pantallas, tasa<=0 tumba lista, residuales T15) y cerrados H1-H7
+- [Prima en el cuadre](project_prima-en-cuadre.md): ADR 0006; desactivar con saldo descuadra; demo 539300; sonda prima 537800; enDolares[0] ya quitado
 - [Categorías: icono y color](project_categorias-icono-color.md): por nombre, sin check; T13, T14 y T15 aptos; for update en db; condiciones del importador
-- [Entorno de prueba](reference_entorno-de-prueba.md): .env.local denegado, generate denegado, copias desechables, acción fuera de Next, huella md5 del autor, git archive, docker logs, carreras
+- [Entorno de prueba](reference_entorno-de-prueba.md): hook niega nombrar archivos de entorno o la carpeta de producción en Bash; generate denegado; copias; sonda Supabase; scripts t14/v2-*
+- [RLS en Supabase](project_rls-supabase.md): 0003 apta; app dueña; en Supabase postgres tiene BYPASSRLS; anon/authenticated con GRANT pero 0 filas; FORCE prohibido; vistas
+- [Guardas de producción](project_guardas-produccion.md): T3 de 002 NO APTO y luego APTO; migrador = drizzle-kit; postgres-js lee la URL distinto; deny cerrado en db17a31
+- [Respaldo de producción](project_respaldo-produccion.md): T4 de 002 NO APTO y luego APTO; volcado Supabase→vanilla sano; PGPASSWORD; huellas por tabla; residuales T15
+- [Captura idempotente](project_captura-idempotente.md): T12 de 002 NO APTO y luego APTO; 23505 + huella + 15 min; residuales: id reutilizado idéntico, sin editar movimientos, pruebas de base en f-verify

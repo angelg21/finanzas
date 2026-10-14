@@ -22,6 +22,34 @@ function capaDe(rel) {
   return null;
 }
 
+/** Variables NEXT_PUBLIC_ que pueden llegar al navegador (spec 002, criterio 8). Hoy, ninguna. */
+const PUBLICAS_PERMITIDAS = [];
+
+/**
+ * Lo que sigue a la llave que abre el cuerpo de la función que empieza en `inicio`: salta los parámetros, con sus
+ * paréntesis anidados, y el tipo de retorno. Con un tipo de retorno literal ({ ... }) se confunde y la regla falla:
+ * mejor un tipo con nombre.
+ */
+function cuerpoDesde(contenido, inicio) {
+  let i = contenido.indexOf("(", inicio);
+  if (i < 0) return "";
+  for (let abiertos = 0; i < contenido.length; i++) {
+    if (contenido[i] === "(") abiertos++;
+    else if (contenido[i] === ")" && --abiertos === 0) break;
+  }
+  const llave = contenido.indexOf("{", i);
+  return llave < 0 ? "" : contenido.slice(llave + 1).trimStart();
+}
+
+/**
+ * Si el cuerpo empieza verificando la sesión (spec 002, criterio 2): `await exigirSesion();`, que redirige, o, en
+ * las acciones con estado, `const sesion = await leerSesion();` seguido de un `if (!sesion)` que responde con
+ * `return` sin hacer nada más (criterio 19: el formulario muestra el mensaje y no pierde la pantalla).
+ */
+const empiezaConSesion = (cuerpo) =>
+  /^(?:const \w+ = )?await exigirSesion\(\);/.test(cuerpo) ||
+  /^const (\w+) = await leerSesion\(\);\s*if \(!\1\)\s*(?:return\b|\{(?:(?!await)[^}])*\breturn\b)/.test(cuerpo);
+
 /** Módulos importados en tiempo de ejecución. Los `import type` no acoplan y no cuentan. */
 function importsEnEjecucion(contenido) {
   const patron = /^import\s+(?!type\b)[^;]*?from\s+["']([^"']+)["']/gm;
@@ -75,11 +103,10 @@ export function revisarArchivo(ruta, contenido) {
     if (/db\.execute\(\s*`[^`]*\$\{/.test(contenido)) {
       error("SQL con interpolación en db.execute. Usa el constructor de consultas o `sql` con parámetros.");
     }
-    if (/process\.env\.DATABASE_URL/.test(contenido) && !/src\/db\/(index|seed|semilla-demo)\.ts$/.test(rel)) {
-      aviso("Lee DATABASE_URL fuera de src/db. La conexión vive en src/db/index.ts.");
-    }
-    if (/NEXT_PUBLIC_[A-Z0-9_]*(KEY|SECRET|TOKEN|PASSWORD)/.test(contenido)) {
-      error("Clave o secreto expuesto al navegador con NEXT_PUBLIC_.");
+    if (/process\.env\.DATABASE_URL/.test(contenido) && !/src\/db\/(index|conexion-script)\.ts$/.test(rel)) {
+      aviso(
+        "Lee DATABASE_URL fuera de su sitio. La app conecta en src/db/index.ts; los scripts, en src/db/conexion-script.ts.",
+      );
     }
     if (/\.(toFixed|toLocaleString)\([^)]*\)\s*\+\s*["'`] ?USD/.test(contenido)) {
       aviso("Formatea dinero con formatearCentavos, no concatenando la unidad a mano.");
@@ -102,6 +129,100 @@ export function revisarArchivo(ruta, contenido) {
     }
     if (capa === "app" && !/\/acciones\.ts$/.test(rel) && desde("drizzle-orm")) {
       error("Una página no habla con Drizzle directamente. Pon la consulta en src/db/consultas.ts.");
+    }
+
+    // Spec 002, criterio 2: cada acción, cada página y todo lo que lee datos antes que ella verifican la sesión por
+    // su cuenta, sin fiarse del proxy: su matcher, una ruta movida o un método raro las dejarían sin cubrir
+    // (auditoría T14, hallazgo 2). Lo de (sin-sesion) es lo único que responde sin sesión: /entrar, cuya acción la
+    // crea, /sin-conexion y el icono adaptable. El layout raíz envuelve también a /entrar.
+    const conSesion = capa === "app" && !/\/\(sin-sesion\)\//.test(rel) && !/(^|\/)src\/app\/layout\.tsx$/.test(rel);
+    const conClave = (m) => !empiezaConSesion(cuerpoDesde(contenido, m.index));
+    const delServidor =
+      /\/acciones\.ts$/.test(rel) || /^\s*(?:(?:\/\*[\s\S]*?\*\/|\/\/[^\n]*)\s*)*["']use server["']/.test(contenido);
+    if (conSesion && delServidor) {
+      for (const accion of contenido.matchAll(/^export\s+async\s+function\s+(\w+)/gm)) {
+        if (conClave(accion)) {
+          error(
+            `La acción ${accion[1]} no empieza verificando la sesión (\`await exigirSesion();\` o \`leerSesion\` con su \`if (!sesion) return\`).`,
+          );
+        }
+      }
+      if (/^export\s+(?:const|let|var|function|default|\{)|^export\s+async\s+function\s*\*/m.test(contenido)) {
+        error(
+          'Un archivo "use server" solo exporta funciones async con nombre, para que la regla de la sesión las vea todas.',
+        );
+      }
+    }
+    if (conSesion && !delServidor && /["']use server["']/.test(contenido)) {
+      error('Una acción "use server" dentro de otro archivo: va en su acciones.ts, donde la regla de la sesión la ve.');
+    }
+    // Las de la raíz (icon, apple-icon, manifest) son públicas a propósito; dentro de (con-sesion) responderían sin ella.
+    if (
+      /\/\(con-sesion\)\//.test(rel) &&
+      /\/(opengraph-image|twitter-image|icon|apple-icon|sitemap|robots|manifest)\.(tsx?|jsx?)$/.test(rel)
+    ) {
+      error("Las rutas de metadatos son públicas: van fuera de (con-sesion), sin datos.");
+    }
+    if (conSesion && /\/page\.tsx$/.test(rel)) {
+      const pagina = /^export\s+default\s+async\s+function\b/m.exec(contenido);
+      if (!pagina || conClave(pagina)) {
+        error(
+          "La página no empieza con `await exigirSesion();` en su función async por defecto. Sin sesión solo responde lo de (sin-sesion).",
+        );
+      }
+    }
+    if (conSesion && /\/(page|layout)\.tsx$/.test(rel)) {
+      // Next las corre antes que la página: lo que lean, se filtra aunque la página pida la sesión.
+      for (const funcion of contenido.matchAll(
+        /^export\s+(?:async\s+)?function\s+(generateMetadata|generateViewport)\b/gm,
+      )) {
+        if (conClave(funcion))
+          error(`${funcion[1]} no empieza con \`await exigirSesion();\`: corre antes que la página.`);
+      }
+      if (
+        /^export\s+(?:const|let|var)\s+(?:generateMetadata|generateViewport)\b|^export\s*\{[^}]*\b(?:generateMetadata|generateViewport)\b/m.test(
+          contenido,
+        )
+      ) {
+        error(
+          "generateMetadata y generateViewport se exportan como `function`, para que la regla de la sesión las vea.",
+        );
+      }
+    }
+    // Lo que envuelve a la página: si es async puede leer datos; y nunca consulta la base, lo hace la página.
+    if (conSesion && /\/(layout|template|not-found|default|loading)\.tsx$/.test(rel)) {
+      const envoltorio = /^export\s+default\s+async\s+function\b/m.exec(contenido);
+      if (envoltorio && conClave(envoltorio))
+        error("Un layout, template o not-found async lee datos: tiene que empezar con `await exigirSesion();`.");
+      if (importsEnEjecucion(contenido).some((i) => i === "@/db" || i.startsWith("@/db/"))) {
+        error("Un layout o template no consulta la base: lo hace la página, después de exigir la sesión.");
+      }
+    }
+    if (conSesion && /\/route\.tsx?$/.test(rel)) {
+      for (const manejador of contenido.matchAll(
+        /^export\s+(?:async\s+)?function\s*\*?\s*(GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)\b/gm,
+      )) {
+        if (conClave(manejador))
+          error(`El manejador ${manejador[1]} de route.ts no empieza con \`await exigirSesion();\`.`);
+      }
+      if (
+        /^export\s+(?:const|let|var)\s+(?:GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)\b|^export\s*\{[^}]*\b(?:GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)\b/m.test(
+          contenido,
+        )
+      ) {
+        error("route.ts exporta sus manejadores como `function`, para que la regla de la sesión los vea.");
+      }
+    }
+  }
+
+  // Spec 002, criterio 8: ninguna variable llega al navegador. El cliente de Supabase vive solo en el servidor.
+  if (enSrc || /(^|\/)next\.config\.[cm]?[jt]s$/.test(rel)) {
+    for (const [nombre] of contenido.matchAll(/NEXT_PUBLIC_[A-Z0-9_]*/g)) {
+      if (!PUBLICAS_PERMITIDAS.includes(nombre)) {
+        error(
+          `${nombre}: Next la mete en el código del navegador. Ninguna variable es pública (lista de permitidas vacía).`,
+        );
+      }
     }
   }
 
@@ -131,7 +252,7 @@ const esPrincipal = process.argv[1] && path.resolve(process.argv[1]) === fileURL
 if (esPrincipal) {
   const args = process.argv.slice(2);
   const archivos = args.includes("--todo")
-    ? listarTs(path.join(process.cwd(), "src"))
+    ? [...listarTs(path.join(process.cwd(), "src")), path.join(process.cwd(), "next.config.ts")]
     : args.filter((a) => !a.startsWith("--")).map((a) => path.resolve(a));
   let errores = 0;
   let avisos = 0;

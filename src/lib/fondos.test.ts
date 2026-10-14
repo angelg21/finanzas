@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aporteMensualCentavos, totalAnualCentavos } from "./fondos";
+import { aporteMensualCentavos, cabeEnRegla, totalAnualCentavos } from "./fondos";
 
 describe("totalAnualCentavos", () => {
   it("suma monto por veces al año", () => {
@@ -24,5 +24,16 @@ describe("aporteMensualCentavos", () => {
   });
   it("cero da cero", () => {
     expect(aporteMensualCentavos(0)).toBe(0);
+  });
+});
+
+describe("cabeEnRegla: el aporte se guarda en una columna integer (auditoría T14, H2 y H3)", () => {
+  it("acepta de un centavo hasta el máximo de un integer de Postgres", () => {
+    expect(cabeEnRegla(1)).toBe(true);
+    expect(cabeEnRegla(2_147_483_647)).toBe(true);
+  });
+
+  it("rechaza cero, negativos, fracciones y lo que no cabe", () => {
+    for (const c of [0, -1, 1.5, 2_147_483_648, Number.MAX_SAFE_INTEGER]) expect(cabeEnRegla(c), String(c)).toBe(false);
   });
 });
