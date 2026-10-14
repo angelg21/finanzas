@@ -48,7 +48,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - con `--url` para correr contra una URL remota en modo sin sesión (criterios 1, 13 y 14).
 - [x] T9 · (2026-10-13) Pieza `Emblema` en SVG, aprobada por el desarrollador lado a lado con `logo-emblema.png`. Iconos generados con `ImageResponse`: favicon, `apple-icon` de 180, y 192, 512 y 512 adaptable, con margen extra para la flecha (criterio 16).
 - [x] T10 · (2026-10-13) Manifiesto con el acceso directo "Registrar gasto", `appleWebApp`, zonas seguras en la barra superior y en `NavInferior`, y la barra de estado que sigue al tema elegido (criterios 15 y 17). Panel Application de DevTools sin errores.
-- [ ] T11 · `/sw.js` y su registro desde una hoja `"use client"`, más la página estática `/sin-conexion` (criterios 18 y 20). En DevTools, con la red desconectada: navegar muestra `/sin-conexion`, ningún POST pasa por el service worker y la caché solo contiene lo de `/sin-conexion`.
+- [x] T11 · (2026-10-13) `/sw.js` y su registro desde una hoja `"use client"`, más la página estática `/sin-conexion` (criterios 18 y 20). En DevTools, con la red desconectada: navegar muestra `/sin-conexion`, ningún POST pasa por el service worker y la caché solo contiene lo de `/sin-conexion`.
 - [ ] T12 · Fallas al guardar en la captura y en los formularios de categorías y sobres: sin red, con la sesión vencida y con una versión vieja. El mensaje aparece junto al botón, lo escrito se conserva y nada se reintenta solo (criterio 19). Se prueba en Edge con la red desconectada y con las cookies borradas a mano.
 - [ ] T13 · `pnpm capturas -- /entrar /sin-conexion /nuevo/gasto` en claro y oscuro, comparadas con las referencias y con "Pantallas". En el celular, por la red local: entrar, salir, atrás después de salir, y la captura detrás del inicio de sesión.
 - [ ] T14 · `/f-audit completo` sobre la rama, antes de exponer nada. Cada hallazgo se cierra o se acepta con un ADR (criterio 13).
@@ -177,3 +177,12 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
     - los `theme-color` del layout siguen al sistema; el script del tema los reescribe con el color del tema elegido al cargar y al cambiar;
     - en iPhone, `statusBarStyle: "default"`, que desde iOS 15 toma `theme-color`;
     - se valida en el celular en T16, y el panel Application de DevTools en T13.
+- T11 (2026-10-13), comprobado en Edge sin ventana manejado por CDP, contra el build:
+  - el service worker queda activo con alcance `/`, y la única caché, `finanzas-sin-conexion-v1`, guarda `/sin-conexion`, su CSS y sus seis fuentes;
+  - con el servidor apagado (corte real), navegar a `/movimientos` muestra la página sin conexión con sus estilos y sin saldos;
+  - un POST sin red falla en la red, sin pasar por el service worker, y la caché no crece al navegar.
+
+  La misma prueba en Node, con un `self` simulado, confirma que no intercepta POST ni RSC. Se formaliza en `/f-verify`.
+- El service worker activa la *navigation preload*, para que la navegación salga a la red mientras arranca y no frene la captura (criterio 21).
+- "Reintentar" es un formulario GET a la dirección actual, porque el JavaScript de la página no queda guardado.
+- La versión de la caché (`VERSION` en `public/sw.js`) se sube a mano si cambia lo que necesita `/sin-conexion`. Mientras tanto, la página y su CSS guardados son una foto coherente del build en que se instaló.

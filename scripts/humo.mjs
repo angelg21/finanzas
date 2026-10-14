@@ -43,6 +43,8 @@ const conDatos = [
 /** Lo único que responde sin sesión. */
 const publicas = [
   ["/entrar", 200],
+  ["/sin-conexion", 200],
+  ["/sw.js", 200],
   ["/manifest.webmanifest", 200],
   ["/icon/32", 200],
   ["/icon/192", 200],
@@ -152,6 +154,19 @@ async function sinSesion() {
   }
 }
 
+/** Criterio 14: el service worker nunca se guarda en caché y lleva su propia CSP. */
+async function cabecerasDelServiceWorker() {
+  const r = await pedir("/sw.js");
+  await r.arrayBuffer();
+  const esperadas = {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self'; script-src 'self'",
+  };
+  for (const [nombre, valor] of Object.entries(esperadas)) {
+    comprobar(r.headers.get(nombre) === valor, `/sw.js ${nombre}`, `${r.headers.get(nombre)}`);
+  }
+}
+
 async function entrarYSalir() {
   config({ path: ".env.local", quiet: true });
   const correo = process.env.HUMO_CORREO;
@@ -247,6 +262,7 @@ if (!urlRemota) {
 
 try {
   await sinSesion();
+  await cabecerasDelServiceWorker();
   if (!soloSinSesion) await entrarYSalir();
 } finally {
   matar();

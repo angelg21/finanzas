@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Roboto_Flex } from "next/font/google";
+import { RegistroServiceWorker } from "@/components/registro-service-worker";
 import { scriptTemaInicial } from "@/components/tema";
 import "./globals.css";
 
@@ -39,7 +40,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: scriptTemaInicial }} />
       </head>
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        {children}
+        <RegistroServiceWorker />
+      </body>
     </html>
   );
 }
