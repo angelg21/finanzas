@@ -301,47 +301,100 @@ body::before {
 }
 
 /*
-  Lado de la marca en /entrar y /sin-conexion: el verde pino del hero con brillos menta, anillos que repiten el aro
+  Acceso (/entrar y /sin-conexion). La marca es el verde pino del hero con brillos menta, anillos que repiten el aro
   del emblema alrededor del disco y la textura de puntos de la referencia.
+  - Celular: la marca es el fondo de toda la pantalla y el formulario va en una hoja clara que flota sobre ella.
+  - Escritorio: la pantalla partida en dos, la marca a la izquierda y el formulario sobre el panel a la derecha.
 */
-.marca-acceso {
-  position: relative;
-  overflow: hidden;
-  background:
+:root {
+  --fondo-marca:
     radial-gradient(55% 45% at 88% 8%, var(--marca-brillo) 0%, transparent 70%),
     radial-gradient(65% 55% at 0% 100%, var(--marca-brillo-2) 0%, transparent 70%),
     linear-gradient(150deg, var(--hero-a) 0%, var(--hero-b) 100%);
-  color: #ffffff;
+  --puntos-marca: radial-gradient(var(--hero-puntos) 1px, transparent 1.6px);
 }
-.marca-acceso::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    circle at 50% var(--centro-anillos, 38%),
-    transparent 0 140px,
-    var(--marca-anillo) 140px 141px,
-    transparent 141px 210px,
-    var(--marca-anillo) 210px 211px,
-    transparent 211px 300px,
-    var(--marca-anillo) 300px 301px,
-    transparent 301px
-  );
+.acceso,
+.acceso-marca {
+  position: relative;
 }
-.marca-acceso::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: radial-gradient(var(--hero-puntos) 1px, transparent 1.6px);
-  background-size: 9px 9px;
-  -webkit-mask-image: radial-gradient(40% 40% at 12% 10%, #000 0%, transparent 70%);
-  mask-image: radial-gradient(40% 40% at 12% 10%, #000 0%, transparent 70%);
-}
-.marca-acceso > * {
+.acceso > *,
+.acceso-marca > * {
   position: relative;
   z-index: 1;
+}
+@media (max-width: 63.999rem) {
+  .acceso {
+    overflow: hidden;
+    background: var(--fondo-marca);
+  }
+  .acceso::before,
+  .acceso::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  /* Los anillos alrededor del disco del emblema, a unos 140 px del borde de arriba. */
+  .acceso::before {
+    background: radial-gradient(
+      circle at 50% 140px,
+      transparent 0 92px,
+      var(--marca-anillo) 92px 93px,
+      transparent 93px 150px,
+      var(--marca-anillo) 150px 151px,
+      transparent 151px 230px,
+      var(--marca-anillo) 230px 231px,
+      transparent 231px
+    );
+  }
+  .acceso::after {
+    background-image: var(--puntos-marca);
+    background-size: 9px 9px;
+    -webkit-mask-image: radial-gradient(60% 30% at 10% 4%, #000 0%, transparent 70%);
+    mask-image: radial-gradient(60% 30% at 10% 4%, #000 0%, transparent 70%);
+  }
+  /* La hoja clara del formulario, flotando sobre la marca. */
+  .acceso-hoja {
+    background: linear-gradient(180deg, var(--panel-a) 0%, var(--panel-b) 100%);
+    border: 1px solid var(--panel-borde);
+    border-radius: 28px;
+    box-shadow: var(--sombra-panel);
+  }
+}
+@media (min-width: 64rem) {
+  .acceso {
+    background: linear-gradient(180deg, var(--panel-a) 0%, var(--panel-b) 100%);
+  }
+  .acceso-marca {
+    overflow: hidden;
+    background: var(--fondo-marca);
+  }
+  .acceso-marca::before,
+  .acceso-marca::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  /* Escritas aquí y no en una variable de :root: un var() sin definir allí invalidaría el degradado entero. */
+  .acceso-marca::before {
+    background: radial-gradient(
+      circle at 50% 38%,
+      transparent 0 140px,
+      var(--marca-anillo) 140px 141px,
+      transparent 141px 210px,
+      var(--marca-anillo) 210px 211px,
+      transparent 211px 300px,
+      var(--marca-anillo) 300px 301px,
+      transparent 301px
+    );
+  }
+  .acceso-marca::after {
+    background-image: var(--puntos-marca);
+    background-size: 9px 9px;
+    -webkit-mask-image: radial-gradient(40% 40% at 12% 10%, #000 0%, transparent 70%);
+    mask-image: radial-gradient(40% 40% at 12% 10%, #000 0%, transparent 70%);
+  }
 }
 
 /* El disco claro del emblema, con un halo que lo despega del verde. */

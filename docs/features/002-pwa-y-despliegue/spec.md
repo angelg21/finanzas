@@ -61,7 +61,7 @@ No cambia el plan. Al cerrar se marca la línea de la fase 1 como hecha.
 
 **Cambio del desarrollador, 2026-10-14.** Lo que sigue sobre el marco de `/entrar` y `/sin-conexion` quedó así:
 
-- **Acceso:** pantalla completa partida en dos. De un lado la marca: el verde pino con brillos menta y anillos, el emblema sobre un disco claro, "Arca", el lema y tres píldoras. Del otro, el formulario con el título "Entrar". En el celular, la marca arriba con las esquinas inferiores redondeadas y el formulario debajo.
+- **Acceso:** pantalla completa partida en dos. De un lado la marca: el verde pino con brillos menta y anillos, el emblema sobre un disco claro, "Arca", el lema y tres píldoras. Del otro, el formulario con el título "Entrar". En el celular (ajustado el mismo día), la marca es el fondo de toda la pantalla, con las tres píldoras, y el formulario va en una hoja clara que flota sobre ella.
 - **App:** a pantalla completa también en escritorio, sin el panel flotante sobre el lienzo.
 - **Marca:** el emblema con el nombre "Arca" (constante en `src/lib/marca.ts`) en lugar del cuadro con la "f" y "finanzas".
 

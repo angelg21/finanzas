@@ -227,3 +227,5 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   3. El emblema con el nombre "Arca" (`src/lib/marca.ts`) en la barra lateral, en la barra superior del celular, en la pestaña y en el manifiesto.
 
   `docs/diseno.md` describe todavía el panel flotante y el lienzo visible en escritorio: se corrige en T17, igual que el resto de la spec y CLAUDE.md.
+
+- 2026-10-14: el desarrollador aprobó el escritorio y pidió un acceso más vivo en el celular. Ahora la marca es el fondo de toda la pantalla, con anillos alrededor del disco y las tres píldoras, y el formulario va en una hoja clara que flota sobre ella. Al rehacerlo se habían perdido los anillos en todos los anchos: un var() sin definir dentro de una variable de `:root` invalida el degradado. Corregido, y el escritorio quedó idéntico.
