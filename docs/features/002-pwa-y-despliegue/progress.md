@@ -51,7 +51,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 - [x] T11 · (2026-10-13) `/sw.js` y su registro desde una hoja `"use client"`, más la página estática `/sin-conexion` (criterios 18 y 20). En DevTools, con la red desconectada: navegar muestra `/sin-conexion`, ningún POST pasa por el service worker y la caché solo contiene lo de `/sin-conexion`.
 - [x] T12 · (2026-10-13) Fallas al guardar en la captura y en los formularios de categorías y sobres: sin red, con la sesión vencida y con una versión vieja. El mensaje aparece junto al botón, lo escrito se conserva y nada se reintenta solo (criterio 19). Se prueba en Edge con la red desconectada y con las cookies borradas a mano.
 - [x] T13 · (2026-10-14) `pnpm capturas -- /entrar /sin-conexion /nuevo/gasto` en claro y oscuro, comparadas con las referencias y con "Pantallas". En el celular, por la red local: entrar, salir, atrás después de salir, y la captura detrás del inicio de sesión.
-- [ ] T14 · `/f-audit completo` sobre la rama, antes de exponer nada. Cada hallazgo se cierra o se acepta con un ADR (criterio 13).
+- [x] T14 · (2026-10-14) `/f-audit completo` sobre la rama, antes de exponer nada. Cada hallazgo se cierra o se acepta con un ADR (criterio 13).
 - [ ] T15 · `docs/despliegue.md` con los pasos exactos y `.vercelignore`. El desarrollador:
   - crea "finanzas" en la misma región que Vercel, con la API de datos apagada, el registro apagado y su usuario;
   - corre `db:migrate:produccion` y `db:seed:produccion`;
@@ -239,3 +239,38 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   `docs/diseno.md` describe todavía el panel flotante y el lienzo visible en escritorio: se corrige en T17, igual que el resto de la spec y CLAUDE.md.
 
 - 2026-10-14: el desarrollador aprobó el escritorio y pidió un acceso más vivo en el celular. Ahora la marca es el fondo de toda la pantalla, con anillos alrededor del disco y las tres píldoras, y el formulario va en una hoja clara que flota sobre ella. Al rehacerlo se habían perdido los anillos en todos los anchos: un var() sin definir dentro de una variable de `:root` invalida el degradado. Corregido, y el escritorio quedó idéntico.
+- T14, `/f-audit completo` (2026-10-14), dos vueltas de `auditor-seguridad` y de `guardian-datos`. El resumen y las decisiones están en el plan, sección 6, y en los ADR 0010 y 0011.
+  - Cerrado y verificado:
+    - la redirección abierta;
+    - la lectura sin sesión por métodos raros y por `generateMetadata`;
+    - TLS obligatorio en la app;
+    - la cadena de producción, que ya no existe en disco: se pega oculta en la terminal;
+    - los registros solo con el código del error (`registrarFalla`);
+    - partida y aporte en una transacción, con un candado por sobre y dentro del integer;
+    - sin flotantes fuera de `dinero.ts`;
+    - el mes, el encabezado, los días que quedan y "Hoy" o "Ayer" en hora de Caracas;
+    - la nota de la prima;
+    - veces y mes solo con cifras;
+    - una tasa rara que ya no tumba la página;
+    - la regla de estructura, que cubre `generateMetadata`, layouts y templates async, `route.ts` (también reexportados), `"use server"` en cualquier archivo y metadatos dentro de `(con-sesion)`.
+  - `pnpm verify` en verde: 288 pruebas, build y humo. El humo prueba PUT, PATCH y DELETE (405) y la petición RSC sin sesión: cortada y sin datos.
+  - Aceptado:
+    - el límite de intentos compartido;
+    - TLS sin verificar el certificado;
+    - sesiones sin corte inmediato, con su procedimiento;
+    - la petición RSC que el proxy no ve: Next le quita `rsc` y `?_rsc`, y la frena la sesión en la página;
+    - menores.
+- Para T15 (`docs/despliegue.md`), del auditor:
+  - **Variables solo en Production:** desmarcar Preview y Development, y nunca correr `vercel env pull`, `vercel pull` ni `vercel build` (los niega el hook).
+  - **`.vercelignore` como lista de permitidos:** `/*`, y luego `!src/`, `!public/`, `!package.json`, `!pnpm-lock.yaml`, `!pnpm-workspace.yaml`, `!next.config.ts`, `!tsconfig.json` y `!postcss.config.mjs`. Revisar la pestaña Source después del primer despliegue.
+  - **El usuario de prueba no entra en producción:** otro `SUPABASE_URL` y otro `USUARIO_PERMITIDO`.
+  - **Deployment Protection en Standard.**
+  - **Supabase de producción:**
+    - registro e inicio anónimo apagados;
+    - Data API apagada;
+    - "Enforce SSL";
+    - sin OAuth;
+    - claves ES256;
+    - comprobar que no sea Postgres 18.
+  - El procedimiento ante una sesión robada o un ataque al límite de intentos (ADR 0010).
+  - **El `DATABASE_URL` de Vercel:** el pooler de transacción con `?sslmode=require`.
