@@ -42,7 +42,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - otra regla contra `NEXT_PUBLIC_` (criterios 1, 2 y 8);
   - las rutas siguen respondiendo en las mismas direcciones.
 - [x] T7 · (2026-10-13) Pantalla `/entrar` y su acción: errores, límite de intentos, correo conservado, sin JavaScript, y redirección con `destinoSeguro`. "Salir" en `BarraLateral` y en `MenuMovil`, y `Cache-Control: private, no-store` en las páginas con datos (criterios 3, 4, 5 y 7).
-- [ ] T8 · Cabeceras en `next.config.ts` (criterio 14). Humo con dos modos:
+- [x] T8 · (2026-10-13) Cabeceras en `next.config.ts` (criterio 14). Humo con dos modos:
   - con sesión, entrando con el usuario de prueba: las rutas de siempre responden 200;
   - sin sesión: cada ruta redirige a `/entrar`, responden las públicas y están las cabeceras;
   - con `--url` para correr contra una URL remota en modo sin sesión (criterios 1, 13 y 14).
@@ -151,3 +151,13 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
     - "Salir" cierra solo la sesión de este dispositivo (`scope: "local"`): salir en la computadora no saca al celular. La spec no lo fijaba;
     - las acciones de `(sin-sesion)` quedan fuera de la regla de sesión, porque `entrar` es la que la crea.
   - El `Emblema` de `/entrar` llega con T9.
+- T8 (2026-10-13):
+  - Con Supabase falso, en un build de producción, `pnpm humo -- --sin-sesion` pasa:
+    - 11 rutas redirigen a `/entrar` con su `siguiente` y sin datos;
+    - dos POST que no son acción reciben 401;
+    - `/entrar` y el favicon responden;
+    - las cinco cabeceras están en todas las respuestas, redirecciones incluidas.
+  - `--url` funciona contra un servidor ya levantado y se niega sin `--sin-sesion`. Contra un servidor roto, falla en voz alta.
+  - El modo con sesión espera las credenciales de "finanzas-dev": entrar, cookies `HttpOnly`, `SameSite=Lax` y `Secure`, las rutas, `/entrar` con sesión y salir.
+  - Las rutas públicas de T9 a T11 (manifiesto, iconos, `/sw.js` con sus cabeceras y `/sin-conexion`) se suman a la lista del humo en su tarea.
+  - Con las variables de Supabase ausentes, el 500 sale sin las cabeceras de seguridad. Es un error de configuración y falla cerrado igual.
