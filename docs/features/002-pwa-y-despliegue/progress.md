@@ -50,7 +50,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 - [x] T10 · (2026-10-13) Manifiesto con el acceso directo "Registrar gasto", `appleWebApp`, zonas seguras en la barra superior y en `NavInferior`, y la barra de estado que sigue al tema elegido (criterios 15 y 17). Panel Application de DevTools sin errores.
 - [x] T11 · (2026-10-13) `/sw.js` y su registro desde una hoja `"use client"`, más la página estática `/sin-conexion` (criterios 18 y 20). En DevTools, con la red desconectada: navegar muestra `/sin-conexion`, ningún POST pasa por el service worker y la caché solo contiene lo de `/sin-conexion`.
 - [x] T12 · (2026-10-13) Fallas al guardar en la captura y en los formularios de categorías y sobres: sin red, con la sesión vencida y con una versión vieja. El mensaje aparece junto al botón, lo escrito se conserva y nada se reintenta solo (criterio 19). Se prueba en Edge con la red desconectada y con las cookies borradas a mano.
-- [ ] T13 · `pnpm capturas -- /entrar /sin-conexion /nuevo/gasto` en claro y oscuro, comparadas con las referencias y con "Pantallas". En el celular, por la red local: entrar, salir, atrás después de salir, y la captura detrás del inicio de sesión.
+- [x] T13 · (2026-10-14) `pnpm capturas -- /entrar /sin-conexion /nuevo/gasto` en claro y oscuro, comparadas con las referencias y con "Pantallas". En el celular, por la red local: entrar, salir, atrás después de salir, y la captura detrás del inicio de sesión.
 - [ ] T14 · `/f-audit completo` sobre la rama, antes de exponer nada. Cada hallazgo se cierra o se acepta con un ADR (criterio 13).
 - [ ] T15 · `docs/despliegue.md` con los pasos exactos y `.vercelignore`. El desarrollador:
   - crea "finanzas" en la misma región que Vercel, con la API de datos apagada, el registro apagado y su usuario;
@@ -77,13 +77,23 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 
 El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. Sin esta nota no se pasa a `/f-verify`.
 
--
+- 2026-10-14, el desarrollador, en la computadora y en el celular por la red local:
+  - miró el acceso nuevo, partido en dos en escritorio y como una sola composición en el celular;
+  - miró la app a pantalla completa y la marca "Arca" con su emblema;
+  - aprobó todo ("listo perfecto"), después de pedir y ver el ajuste del acceso en el celular.
+- Comprobado por el agente en Edge, contra el build con "finanzas-dev":
+  - entrar con `siguiente`;
+  - salir, y atrás dos veces después de salir sin ver datos;
+  - la captura detrás del inicio de sesión;
+  - las tres fallas al guardar.
+
+  Las capturas de `/entrar`, `/sin-conexion` y `/nuevo/gasto` en escritorio y celular, claro y oscuro, coinciden con "Pantallas" y con el cambio del 2026-10-14.
 
 ## Etapas
 
 - [x] Spec leída y corregida por el desarrollador (2026-10-13)
 - [ ] Construida (todas las tareas con commit)
-- [ ] Validada en navegador
+- [x] Validada en navegador (2026-10-14)
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
 - [ ] Fusionada en `main` el AAAA-MM-DD
