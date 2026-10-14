@@ -6,7 +6,7 @@
  *   pnpm humo -- --url <origen> --sin-sesion    → contra una URL ya publicada, sin levantar nada
  *
  * Sin sesión: cada ruta con datos redirige a /entrar?siguiente=<ruta> sin datos en el cuerpo, un POST que no es
- * una acción recibe 401, responden las rutas públicas y toda respuesta trae las cabeceras de seguridad.
+ * una acción va con 303 a /entrar, responden las rutas públicas y toda respuesta trae las cabeceras de seguridad.
  * Con sesión: entra con HUMO_CORREO y HUMO_CLAVE (.env.local) por el formulario de /entrar, como un navegador sin
  * JavaScript; comprueba las cookies (HttpOnly, SameSite=Lax, Secure), que las rutas responden, y sale.
  * Sin --url requiere la base local arriba (pnpm db:up) y un build hecho (verify lo hace antes).
@@ -137,10 +137,16 @@ async function sinSesion() {
     const faltan = cabecerasQueFaltan(r);
     if (faltan.length) comprobar(false, `${ruta}: cabeceras`, `faltan ${faltan.join(", ")}`);
   }
+  // Un POST que no es una acción (así llega un formulario enviado sin JavaScript) va a /entrar sin datos.
   for (const ruta of ["/movimientos", "/nuevo/gasto"]) {
     const r = await pedir(ruta, { method: "POST" });
     const cuerpo = await r.text();
-    comprobar(r.status === 401 && cuerpo.length === 0, `POST ${ruta} → ${r.status}, sin cuerpo`);
+    const ubicacion = r.headers.get("location") ?? "";
+    comprobar(
+      r.status === 303 && ubicacion.includes(`/entrar?siguiente=${encodeURIComponent(ruta)}`) && cuerpo.length < 300,
+      `POST ${ruta} → ${r.status} a /entrar`,
+      `${r.status} ${ubicacion}`,
+    );
   }
   for (const [ruta, esperado] of publicas) {
     const r = await pedir(ruta);

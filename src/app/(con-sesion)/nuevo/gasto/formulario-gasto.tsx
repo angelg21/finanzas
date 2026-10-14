@@ -16,8 +16,9 @@ import {
 import { Tarjeta } from "@/components/ui";
 import { type Moneda, unidadDe } from "@/lib/dinero";
 import { type FormaPago, sobreSugerido } from "@/lib/gastos";
-import { type ErroresFormularioGasto, type EstadoGasto, type ValoresGasto, registrarGasto } from "./acciones";
+import type { ErroresFormularioGasto, EstadoGasto, ValoresGasto } from "./acciones";
 import { AntesYDespues, saldosAfectados } from "./antes-y-despues";
+import { registrarConFallas } from "./registrar-con-fallas";
 import { ResumenGasto } from "./resumen-gasto";
 
 export type CuentaGasto = { id: number; nombre: string; moneda: Moneda; esPropia: boolean; saldoCentavos: number };
@@ -51,7 +52,7 @@ const soloAlVender = "hidden group-has-[[name=forma][value=vendiendo]:checked]/g
 const soloEnBolivares = "group-has-[[name=forma][value=dolares]:checked]/gasto:hidden";
 const soloDelSaldo = "hidden group-has-[[name=forma][value=saldo]:checked]/gasto:block";
 
-type Inicial = { forma: FormaPago; cuentaId: string; cuentaVentaId: string; categoriaId?: string };
+type Inicial = { forma: FormaPago; cuentaId: string; cuentaVentaId: string; categoriaId?: string; idCaptura: string };
 
 /** Captura de gasto. "Registrar otro" la vuelve a montar con la misma forma de pago y las mismas cuentas. */
 export function FormularioGasto({ inicial, ...datos }: Datos & { inicial: Inicial }) {
@@ -61,8 +62,8 @@ export function FormularioGasto({ inicial, ...datos }: Datos & { inicial: Inicia
       key={captura.numero}
       {...datos}
       inicial={captura}
-      alRegistrarOtro={(forma, cuentaId, cuentaVentaId) =>
-        setCaptura((c) => ({ numero: c.numero + 1, forma, cuentaId, cuentaVentaId }))
+      alRegistrarOtro={(forma, cuentaId, cuentaVentaId, idCaptura) =>
+        setCaptura((c) => ({ numero: c.numero + 1, forma, cuentaId, cuentaVentaId, idCaptura }))
       }
     />
   );
@@ -74,9 +75,9 @@ function Captura({
   ...datos
 }: Datos & {
   inicial: Inicial;
-  alRegistrarOtro: (forma: FormaPago, cuentaId: string, cuentaVentaId: string) => void;
+  alRegistrarOtro: (forma: FormaPago, cuentaId: string, cuentaVentaId: string, idCaptura: string) => void;
 }) {
-  const [estado, enviar, pendiente] = useActionState<EstadoGasto, FormData>(registrarGasto, {
+  const [estado, enviar, pendiente] = useActionState<EstadoGasto, FormData>(registrarConFallas, {
     ronda: 0,
     estado: "inicial",
   });
@@ -93,7 +94,9 @@ function Captura({
         forma={estado.forma}
         cuentaId={estado.cuentaId}
         cuentaVentaId={estado.cuentaVentaId}
-        alRegistrarOtro={() => alRegistrarOtro(estado.forma, estado.cuentaId, estado.cuentaVentaId)}
+        alRegistrarOtro={() =>
+          alRegistrarOtro(estado.forma, estado.cuentaId, estado.cuentaVentaId, estado.siguienteCaptura)
+        }
       />
     );
   }
@@ -118,6 +121,7 @@ function Captura({
           // "Hoy" como atajo, no como la fecha de hoy: se resuelve al guardar (criterio 11).
           fecha: "hoy",
           nota: "",
+          idCaptura: inicial.idCaptura,
         }
       : estado.valores;
 
@@ -187,6 +191,7 @@ function Campos({
     <>
       <Tarjeta className="lg:col-span-7">
         <form action={enviar} className="group/gasto flex flex-col gap-5">
+          <input type="hidden" name="idCaptura" value={valores.idCaptura} />
           <Campo etiqueta="Monto" error={errores.monto}>
             <CampoMonto
               name="monto"

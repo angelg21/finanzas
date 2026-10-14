@@ -49,7 +49,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 - [x] T9 · (2026-10-13) Pieza `Emblema` en SVG, aprobada por el desarrollador lado a lado con `logo-emblema.png`. Iconos generados con `ImageResponse`: favicon, `apple-icon` de 180, y 192, 512 y 512 adaptable, con margen extra para la flecha (criterio 16).
 - [x] T10 · (2026-10-13) Manifiesto con el acceso directo "Registrar gasto", `appleWebApp`, zonas seguras en la barra superior y en `NavInferior`, y la barra de estado que sigue al tema elegido (criterios 15 y 17). Panel Application de DevTools sin errores.
 - [x] T11 · (2026-10-13) `/sw.js` y su registro desde una hoja `"use client"`, más la página estática `/sin-conexion` (criterios 18 y 20). En DevTools, con la red desconectada: navegar muestra `/sin-conexion`, ningún POST pasa por el service worker y la caché solo contiene lo de `/sin-conexion`.
-- [ ] T12 · Fallas al guardar en la captura y en los formularios de categorías y sobres: sin red, con la sesión vencida y con una versión vieja. El mensaje aparece junto al botón, lo escrito se conserva y nada se reintenta solo (criterio 19). Se prueba en Edge con la red desconectada y con las cookies borradas a mano.
+- [x] T12 · (2026-10-13) Fallas al guardar en la captura y en los formularios de categorías y sobres: sin red, con la sesión vencida y con una versión vieja. El mensaje aparece junto al botón, lo escrito se conserva y nada se reintenta solo (criterio 19). Se prueba en Edge con la red desconectada y con las cookies borradas a mano.
 - [ ] T13 · `pnpm capturas -- /entrar /sin-conexion /nuevo/gasto` en claro y oscuro, comparadas con las referencias y con "Pantallas". En el celular, por la red local: entrar, salir, atrás después de salir, y la captura detrás del inicio de sesión.
 - [ ] T14 · `/f-audit completo` sobre la rama, antes de exponer nada. Cada hallazgo se cierra o se acepta con un ADR (criterio 13).
 - [ ] T15 · `docs/despliegue.md` con los pasos exactos y `.vercelignore`. El desarrollador:
@@ -183,6 +183,27 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - un POST sin red falla en la red, sin pasar por el service worker, y la caché no crece al navegar.
 
   La misma prueba en Node, con un `self` simulado, confirma que no intercepta POST ni RSC. Se formaliza en `/f-verify`.
-- El service worker activa la *navigation preload*, para que la navegación salga a la red mientras arranca y no frene la captura (criterio 21).
+
+- El service worker activa la _navigation preload_, para que la navegación salga a la red mientras arranca y no frene la captura (criterio 21).
 - "Reintentar" es un formulario GET a la dirección actual, porque el JavaScript de la página no queda guardado.
 - La versión de la caché (`VERSION` en `public/sw.js`) se sube a mano si cambia lo que necesita `/sin-conexion`. Mientras tanto, la página y su CSS guardados son una foto coherente del build en que se instaló.
+- T12 (2026-10-13):
+  - Se midió primero el comportamiento de partida: en Edge, una acción sin red lanzaba `TypeError: Failed to fetch` y la pantalla se perdía.
+  - Ahora `conFallas` (`src/lib/fallas.ts`) envuelve las acciones con estado y convierte la falla en estado del formulario: el mensaje junto al botón, lo escrito en su sitio y ningún reintento automático. Hay un mensaje por causa:
+    - sin red;
+    - versión vieja (`UnrecognizedActionError`);
+    - otra.
+  - Las redirecciones de Next pasan sin tocarse.
+  - Para que el formulario siga funcionando sin JavaScript, la envoltura copia las marcas internas con que React pinta el formulario (`$$FORM_ACTION`, `$$IS_SIGNATURE_EQUAL` y `bind`). Va al ADR 0010.
+  - La sesión vencida no redirige en las acciones con estado: `leerSesion` y un `return` con el mensaje. La regla de estructura acepta ese patrón y sigue rechazando cualquier otro.
+  - Sin JavaScript, un formulario enviado sin sesión va con 303 a `/entrar`. Antes recibía un 401 en blanco.
+  - En categorías y sobres el mensaje es el mismo sin nombrar el gasto ("Sin conexión: no se guardó."), porque la spec no fijaba el texto para esos formularios.
+  - Ampliación del criterio 19, aprobada por el desarrollador: un reintento tras un corte a medias no duplica.
+    - Cada captura lleva un UUID que viaja con lo tecleado y se guarda en `referencia_externa` (`captura-<id>-<tipo>`).
+    - `registrarCaptura` atrapa solo el choque del índice único, lee lo guardado y `resolverReintento` decide. Es "ya estaba" solo si es lo mismo y de hace 15 minutos o menos; si no, avisa y entrega un id nuevo.
+    - `guardian-datos`: NO APTO en la primera vuelta (la confirmación mentía y una captura podía quedar a medias) y APTO en la segunda, medido con la acción real, en carrera y con el cuadre intacto.
+  - Pendiente con "finanzas-dev", en T13: la prueba en Edge de los tres mensajes, con la red cortada, con las cookies borradas a mano y con una versión vieja.
+- Para `/f-verify`, del guardián en T12: el criterio 19 ★ necesita una prueba contra la base de `registrarCaptura`, con al menos un cambio de forma de pago entre intentos, un cambio de monto y una carrera. Puede ser un script estilo `comprobar-001` con referencias `demo-*`.
+- Observaciones nuevas, fuera de alcance:
+  - no hay edición ni borrado de movimientos, así que "revísala en Movimientos" solo sirve para mirar;
+  - un reintento que cruza la medianoche con el atajo "hoy" cambia de fecha y se toma como otra captura. El mensaje sigue siendo verdadero.

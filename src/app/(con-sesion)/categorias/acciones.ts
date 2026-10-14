@@ -12,7 +12,8 @@ import {
   restaurarCategoria,
 } from "@/db/categorias";
 import { type ErroresCategoria, type TipoCategoria, repetidaDe, validarCategoria } from "@/lib/categorias";
-import { exigirSesion } from "@/app/sesion";
+import { exigirSesion, leerSesion } from "@/app/sesion";
+import { mensajeDeFalla } from "@/lib/fallas";
 
 /** Lo tecleado, para volver a llenar el formulario si hay que corregir. */
 export type ValoresCategoria = { nombre: string; tipo: TipoCategoria; icono: string; color: string };
@@ -35,16 +36,25 @@ function revalidar() {
   for (const ruta of ["/categorias", "/nuevo/gasto", "/movimientos", "/"]) revalidatePath(ruta);
 }
 
-/** Crea o edita (si llega `id`) una categoría. Al terminar, vuelve a la lista o a la captura de gasto. */
-export async function guardarCategoria(previo: EstadoCategoria, formData: FormData): Promise<EstadoCategoria> {
-  await exigirSesion();
-  const ronda = (previo?.ronda ?? 0) + 1;
-  const valores: ValoresCategoria = {
+function valoresDe(formData: FormData): ValoresCategoria {
+  return {
     nombre: texto(formData, "nombre"),
     tipo: texto(formData, "tipo") === "ingreso" ? "ingreso" : "gasto",
     icono: texto(formData, "icono"),
     color: texto(formData, "color"),
   };
+}
+
+/** Crea o edita (si llega `id`) una categoría. Al terminar, vuelve a la lista o a la captura de gasto. */
+export async function guardarCategoria(previo: EstadoCategoria, formData: FormData): Promise<EstadoCategoria> {
+  const sesion = await leerSesion();
+  if (!sesion) {
+    // Sin redirigir: el formulario muestra el mensaje y conserva lo escrito (spec 002, criterio 19).
+    const general = mensajeDeFalla("sesion", "no se guardó");
+    return { ronda: (previo?.ronda ?? 0) + 1, estado: "error", errores: { general }, valores: valoresDe(formData) };
+  }
+  const ronda = (previo?.ronda ?? 0) + 1;
+  const valores = valoresDe(formData);
   const id = z.coerce.number().int().positive().safeParse(texto(formData, "id"));
   const editando = texto(formData, "id") !== "";
 

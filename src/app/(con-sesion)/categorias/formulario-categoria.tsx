@@ -5,7 +5,27 @@ import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { Boton, Campo, Entrada, SelectorColor, SelectorIcono, SelectorPildoras } from "@/components/formulario";
 import { CirculoCategoria, Tarjeta, TarjetaPalida } from "@/components/ui";
 import { type TipoCategoria, buscarIconos } from "@/lib/categorias";
+import { conFallas, mensajeDeFalla } from "@/lib/fallas";
 import { type EstadoCategoria, type ValoresCategoria, guardarCategoria, restaurarCategoriaAccion } from "./acciones";
+
+/** Sin red o con una versión vieja, el mensaje junto al botón y lo escrito en su sitio (spec 002, criterio 19). */
+const guardarConFallas = conFallas<EstadoCategoria>(guardarCategoria, (previo, datos, causa) => {
+  const leer = (nombre: string) => {
+    const valor = datos.get(nombre);
+    return typeof valor === "string" ? valor : "";
+  };
+  return {
+    ronda: (previo?.ronda ?? 0) + 1,
+    estado: "error",
+    errores: { general: mensajeDeFalla(causa, "no se guardó") },
+    valores: {
+      nombre: leer("nombre"),
+      tipo: leer("tipo") === "ingreso" ? "ingreso" : "gasto",
+      icono: leer("icono"),
+      color: leer("color"),
+    },
+  };
+});
 
 const tipos = [
   { valor: "gasto", texto: "Gasto" },
@@ -28,7 +48,7 @@ export function FormularioCategoria({
   movimientos?: number;
   volver?: string;
 }) {
-  const [estado, enviar, pendiente] = useActionState<EstadoCategoria, FormData>(guardarCategoria, {
+  const [estado, enviar, pendiente] = useActionState<EstadoCategoria, FormData>(guardarConFallas, {
     ronda: 0,
     estado: "inicial",
   });

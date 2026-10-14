@@ -79,7 +79,8 @@ export default async function NuevoGasto({ searchParams }: PageProps<"/nuevo/gas
           saldoCentavos,
         }))}
         hoy={hoyEnCaracas(new Date())}
-        inicial={{ forma, cuentaId, cuentaVentaId, categoriaId }}
+        // Cada apertura es una captura nueva; el id viaja con lo tecleado y evita duplicar al reintentar.
+        inicial={{ forma, cuentaId, cuentaVentaId, categoriaId, idCaptura: crypto.randomUUID() }}
       />
     </main>
   );

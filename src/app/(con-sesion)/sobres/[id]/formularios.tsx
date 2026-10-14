@@ -3,7 +3,13 @@
 import { Plus, Trash2 } from "lucide-react";
 import { useActionState } from "react";
 import { Boton, Campo, Entrada, Selector } from "@/components/formulario";
+import { type CausaFalla, conFallas, mensajeDeFalla } from "@/lib/fallas";
 import { agregarPartida, eliminarPartida, fijarAporteManual, type EstadoFormulario } from "./acciones";
+
+/** Sin red o con una versión vieja, el mensaje junto al botón, sin perder la pantalla (spec 002, criterio 19). */
+const alFallar = (_previo: EstadoFormulario, _datos: FormData, causa: CausaFalla): EstadoFormulario => ({
+  error: mensajeDeFalla(causa, "no se guardó"),
+});
 
 export const nombresMes = [
   "Enero",
@@ -22,7 +28,7 @@ export const nombresMes = [
 
 /** Alta de una ocasión. Al guardar con éxito el formulario se reinicia (cambia su key). */
 export function FormularioPartida({ sobreId }: { sobreId: number }) {
-  const accion = agregarPartida.bind(null, sobreId);
+  const accion = conFallas(agregarPartida.bind(null, sobreId), alFallar);
   const [estado, enviar, pendiente] = useActionState<EstadoFormulario, FormData>(accion, {});
 
   return (
@@ -76,7 +82,7 @@ export function BotonEliminarPartida({ id, sobreId, nombre }: { id: number; sobr
 
 /** Aporte mensual a mano, para cuando todavía no hay desglose. */
 export function FormularioAporte({ sobreId, actualCentavos }: { sobreId: number; actualCentavos: number }) {
-  const accion = fijarAporteManual.bind(null, sobreId);
+  const accion = conFallas(fijarAporteManual.bind(null, sobreId), alFallar);
   const [estado, enviar, pendiente] = useActionState<EstadoFormulario, FormData>(accion, {});
   return (
     <form action={enviar} className="flex flex-col gap-3">

@@ -141,7 +141,10 @@ export const movimientos = pgTable(
     categoriaId: integer().references(() => categorias.id),
     nota: text(),
     origen: origenMovimientoEnum().notNull().default("manual"),
-    /** Id en la fuente externa (Gestor de Gastos, Binance). Evita importar dos veces lo mismo. */
+    /**
+     * Id en la fuente externa (Gestor de Gastos, Binance), o "captura-<uuid>-<tipo>" en un gasto registrado a mano
+     * (src/lib/captura.ts). Evita registrar dos veces lo mismo.
+     */
     referenciaExterna: text(),
     creadoEn: creadoEn(),
   },

@@ -4,9 +4,10 @@
  * cierra. Todo lo que pasa por aquí sale con Cache-Control: private, no-store, para que "atrás" después de salir no
  * muestre datos.
  *
- * No redirige los POST: una server action seguiría la redirección y fallaría sin decir nada. Sin sesión, un POST
- * que no es una server action recibe 401. Cada acción y cada página exigen la sesión por su cuenta
- * (src/app/sesion.ts): el proxy es la primera capa, no la única.
+ * No redirige los POST de las server actions: el fetch que las llama seguiría la redirección y fallaría sin decir
+ * nada; cada acción exige la sesión por su cuenta y responde ella misma (src/app/sesion.ts). Sin sesión, un POST que
+ * no es una server action (un formulario enviado sin JavaScript, o cualquier otro) va con 303 a /entrar: así la
+ * respuesta pide entrar y nada se escribe. El proxy es la primera capa, no la única.
  */
 import { type NextRequest, NextResponse } from "next/server";
 import { clienteSupabaseProxy } from "@/app/supabase";
@@ -28,16 +29,16 @@ export async function proxy(peticion: NextRequest) {
 
   const { pathname, search } = peticion.nextUrl;
   const navegacion = peticion.method === "GET" || peticion.method === "HEAD";
+  const entrar = new URL("/entrar", peticion.url);
+  entrar.searchParams.set("siguiente", pathname + search);
   let salida = respuesta();
   if (navegacion && !conSesion && pathname !== "/entrar") {
-    const entrar = new URL("/entrar", peticion.url);
-    entrar.searchParams.set("siguiente", pathname + search);
     salida = conCookies(NextResponse.redirect(entrar), salida);
   } else if (navegacion && conSesion && pathname === "/entrar") {
     salida = conCookies(NextResponse.redirect(new URL("/", peticion.url)), salida);
   } else if (!navegacion && !conSesion && pathname !== "/entrar" && !peticion.headers.has("next-action")) {
-    // Un POST que no es una server action renderizaría la página: sin sesión, ni eso.
-    salida = conCookies(new NextResponse(null, { status: 401 }), salida);
+    // 303: el navegador sigue con un GET, sin volver a enviar el formulario.
+    salida = conCookies(NextResponse.redirect(entrar, 303), salida);
   }
   salida.headers.set("Cache-Control", "private, no-store");
   return salida;

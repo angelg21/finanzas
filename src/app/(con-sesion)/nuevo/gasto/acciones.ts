@@ -3,11 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { categoriasDeGastoPorUso, saldosPorCuenta, sobresParaGasto } from "@/db/consultas";
-import { registrarMovimientos } from "@/db/movimientos";
+import { registrarCaptura } from "@/db/movimientos";
 import type { Moneda } from "@/lib/dinero";
 import { fechaDesdeAtajo, hoyEnCaracas } from "@/lib/fechas";
+import { esIdCaptura, referenciaDeCaptura, resolverReintento } from "@/lib/captura";
+import { mensajeDeFalla } from "@/lib/fallas";
 import { type ErroresGasto, type FormaPago, prepararGasto, saldosTras } from "@/lib/gastos";
-import { exigirSesion } from "@/app/sesion";
+import { leerSesion } from "@/app/sesion";
 
 /** Lo que se tecleó, para volver a llenar el formulario si hay que corregir o confirmar. */
 export type ValoresGasto = {
@@ -23,6 +25,8 @@ export type ValoresGasto = {
   sobreId: string;
   fecha: string;
   nota: string;
+  /** El UUID de esta captura (src/lib/captura.ts): el mismo en cada reintento, para no duplicar el gasto. */
+  idCaptura: string;
 };
 
 export type ErroresFormularioGasto = ErroresGasto & { categoria?: string; sobre?: string; general?: string };
@@ -49,8 +53,15 @@ type Resultado =
   | { estado: "error"; errores: ErroresFormularioGasto; valores: ValoresGasto }
   /** Sobre Inversión: hace falta un segundo clic (criterio 9). */
   | { estado: "confirmar"; valores: ValoresGasto }
-  /** "Registrar otro" reabre con la misma forma de pago y las mismas cuentas. */
-  | { estado: "guardado"; resumen: ResumenGasto; forma: FormaPago; cuentaId: string; cuentaVentaId: string };
+  /** "Registrar otro" reabre con la misma forma de pago y las mismas cuentas, y una captura nueva. */
+  | {
+      estado: "guardado";
+      resumen: ResumenGasto;
+      forma: FormaPago;
+      cuentaId: string;
+      cuentaVentaId: string;
+      siguienteCaptura: string;
+    };
 
 /**
  * `ronda` cuenta las respuestas. React reinicia el formulario al terminar cada acción; con la ronda como
@@ -72,7 +83,23 @@ const esquema = z.object({
   sobreId: z.string(),
   fecha: z.string().trim(),
   nota: z.string().trim().max(200, "La nota admite hasta 200 caracteres"),
+  // Sin un id de captura válido, la página es de antes de esta versión.
+  idCaptura: z.string().refine(esIdCaptura, mensajeDeFalla("version")),
 });
+
+const campos = [
+  "forma",
+  "monto",
+  "tasa",
+  "vendido",
+  "cuentaId",
+  "cuentaVentaId",
+  "categoriaId",
+  "sobreId",
+  "fecha",
+  "nota",
+  "idCaptura",
+] as const satisfies readonly (keyof ValoresGasto)[];
 
 /** Un campo como texto; si falta, vacío. */
 function campo(formData: FormData, nombre: keyof ValoresGasto | "confirmarSobre") {
@@ -80,9 +107,22 @@ function campo(formData: FormData, nombre: keyof ValoresGasto | "confirmarSobre"
   return typeof valor === "string" ? valor : "";
 }
 
-/** Registra un gasto (spec 001). Para `useActionState`. */
+/** Lo tecleado, campo por campo; una forma de pago desconocida vuelve como "dolares". */
+function tecleadoDe(formData: FormData): ValoresGasto {
+  const tecleado = Object.fromEntries(campos.map((nombre) => [nombre, campo(formData, nombre)]));
+  return { ...tecleado, forma: formas.safeParse(tecleado.forma).data ?? "dolares" } as ValoresGasto;
+}
+
+/**
+ * Registra un gasto (spec 001). Para `useActionState`. Con la sesión vencida no redirige: responde con el mensaje y
+ * lo tecleado, para que la pantalla no se pierda (spec 002, criterio 19).
+ */
 export async function registrarGasto(previo: EstadoGasto, formData: FormData): Promise<EstadoGasto> {
-  await exigirSesion();
+  const sesion = await leerSesion();
+  if (!sesion) {
+    const general = mensajeDeFalla("sesion");
+    return { ronda: (previo?.ronda ?? 0) + 1, estado: "error", errores: { general }, valores: tecleadoDe(formData) };
+  }
   return { ronda: (previo?.ronda ?? 0) + 1, ...(await procesarGasto(formData)) };
 }
 
@@ -92,18 +132,7 @@ export async function registrarGasto(previo: EstadoGasto, formData: FormData): P
  * la forma de la fila, no que el sobre sea "Por asignar" o la categoría de ingreso.
  */
 async function procesarGasto(formData: FormData): Promise<Resultado> {
-  const tecleado = {
-    forma: campo(formData, "forma"),
-    monto: campo(formData, "monto"),
-    tasa: campo(formData, "tasa"),
-    vendido: campo(formData, "vendido"),
-    cuentaId: campo(formData, "cuentaId"),
-    cuentaVentaId: campo(formData, "cuentaVentaId"),
-    categoriaId: campo(formData, "categoriaId"),
-    sobreId: campo(formData, "sobreId"),
-    fecha: campo(formData, "fecha"),
-    nota: campo(formData, "nota"),
-  };
+  const tecleado = Object.fromEntries(campos.map((nombre) => [nombre, campo(formData, nombre)]));
   /** Id del sobre Inversión cuando ya se confirmó el aviso. */
   const confirmarSobre = campo(formData, "confirmarSobre");
   const leido = esquema.safeParse(tecleado);
@@ -112,7 +141,7 @@ async function procesarGasto(formData: FormData): Promise<Resultado> {
     return {
       estado: "error",
       errores: { general: leido.error.issues[0]?.message ?? "Revisa los datos del formulario" },
-      valores: { ...tecleado, forma: formas.safeParse(tecleado.forma).data ?? "dolares" },
+      valores: tecleadoDe(formData),
     };
   }
   const valores = leido.data;
@@ -150,17 +179,45 @@ async function procesarGasto(formData: FormData): Promise<Resultado> {
 
   if (sobre.tipo === "inversion" && confirmarSobre !== String(sobre.id)) return { estado: "confirmar", valores };
 
+  // Cada fila con la referencia de esta captura: un reintento choca con el índice único y no duplica.
+  const filas = preparado.filas.map((f) => ({
+    ...f,
+    referenciaExterna: referenciaDeCaptura(valores.idCaptura, f.tipo),
+  }));
+  let registro: Awaited<ReturnType<typeof registrarCaptura>>;
   try {
-    await registrarMovimientos(preparado.filas);
+    registro = await registrarCaptura(valores.idCaptura, filas);
   } catch (error) {
     console.error("No se pudo registrar el gasto", error);
     return { estado: "error", errores: { general: "No se pudo guardar. Intenta de nuevo." }, valores };
   }
 
-  // Los saldos tras el gasto se calculan con los que ya se leyeron: sin otra consulta en la captura.
-  const despues = saldosTras(preparado.filas, Object.fromEntries(cuentas.map((c) => [c.id, c.saldoCentavos])), {
-    [sobre.id]: sobre.saldoCentavos,
-  });
+  let saldosCuentas = cuentas;
+  let saldoSobre = sobre.saldoCentavos;
+  if (!registro.nueva) {
+    // Ya había algo con este id. Solo es "ya estaba" si es lo mismo y reciente; si no, se avisa y el id cambia.
+    if (resolverReintento(registro.guardadas, filas, new Date()) === "otra") {
+      return {
+        estado: "error",
+        errores: {
+          general: "Esta captura ya se guardó antes: revísala en Movimientos y, si es otro gasto, vuelve a guardar.",
+        },
+        valores: { ...valores, idCaptura: crypto.randomUUID() },
+      };
+    }
+    // El choque solo se resuelve cuando el primer intento ya confirmó: releer trae los saldos con el gasto incluido.
+    const [cuentasAhora, sobresAhora] = await Promise.all([saldosPorCuenta(), sobresParaGasto()]);
+    saldosCuentas = cuentasAhora;
+    saldoSobre = sobresAhora.find((s) => s.id === sobre.id)?.saldoCentavos ?? sobre.saldoCentavos;
+  }
+
+  // Los saldos tras el gasto se calculan con los que ya se leyeron: sin otra consulta en la captura. Si ya
+  // estaba, los releídos ya lo incluyen y no se descuenta otra vez.
+  const despues = saldosTras(
+    registro.nueva ? preparado.filas : [],
+    Object.fromEntries(saldosCuentas.map((c) => [c.id, c.saldoCentavos])),
+    { [sobre.id]: saldoSobre },
+  );
   const gasto = preparado.filas.find((f) => f.tipo === "gasto") ?? preparado.filas[0];
   const cuentaDelGasto = cuentas.find((c) => c.id === gasto.cuentaOrigenId);
   const transferencia = preparado.filas.find((f) => f.tipo === "transferencia");
@@ -174,6 +231,7 @@ async function procesarGasto(formData: FormData): Promise<Resultado> {
     forma: valores.forma,
     cuentaId: valores.cuentaId,
     cuentaVentaId: valores.cuentaVentaId,
+    siguienteCaptura: crypto.randomUUID(),
     resumen: {
       montoCentavos: gasto.montoCentavos,
       moneda: gasto.moneda,

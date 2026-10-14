@@ -41,8 +41,14 @@ function cuerpoDesde(contenido, inicio) {
   return llave < 0 ? "" : contenido.slice(llave + 1).trimStart();
 }
 
-/** Si el cuerpo empieza verificando la sesión (spec 002, criterio 2). */
-const empiezaConSesion = (cuerpo) => /^(?:const \w+ = )?await exigirSesion\(\);/.test(cuerpo);
+/**
+ * Si el cuerpo empieza verificando la sesión (spec 002, criterio 2): `await exigirSesion();`, que redirige, o, en
+ * las acciones con estado, `const sesion = await leerSesion();` seguido de un `if (!sesion)` que responde con
+ * `return` sin hacer nada más (criterio 19: el formulario muestra el mensaje y no pierde la pantalla).
+ */
+const empiezaConSesion = (cuerpo) =>
+  /^(?:const \w+ = )?await exigirSesion\(\);/.test(cuerpo) ||
+  /^const (\w+) = await leerSesion\(\);\s*if \(!\1\)\s*(?:return\b|\{(?:(?!await)[^}])*\breturn\b)/.test(cuerpo);
 
 /** Módulos importados en tiempo de ejecución. Los `import type` no acoplan y no cuentan. */
 function importsEnEjecucion(contenido) {
@@ -132,7 +138,7 @@ export function revisarArchivo(ruta, contenido) {
       for (const accion of contenido.matchAll(/^export\s+async\s+function\s+(\w+)/gm)) {
         if (!empiezaConSesion(cuerpoDesde(contenido, accion.index))) {
           error(
-            `La acción ${accion[1]} no empieza con \`await exigirSesion();\`. Cada acción verifica la sesión antes que nada.`,
+            `La acción ${accion[1]} no empieza verificando la sesión (\`await exigirSesion();\` o \`leerSesion\` con su \`if (!sesion) return\`).`,
           );
         }
       }
