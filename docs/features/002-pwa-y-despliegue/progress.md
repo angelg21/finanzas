@@ -211,3 +211,13 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - `X-Frame-Options: DENY` dejó sin servir el envoltorio de iframes de `pnpm capturas`. Ahora el celular se emula por DevTools (390 × 844) y sale una captura por ruta, sin envoltorio HTML. La excepción de CLAUDE.md sobre ese envoltorio queda obsoleta y se corrige en T17.
   - Capturas de `/entrar` y `/sin-conexion` en escritorio y celular, claro y oscuro, revisadas contra "Pantallas": coinciden.
   - Falta, con "finanzas-dev": `/nuevo/gasto` detrás del inicio de sesión, y en el celular por la red local entrar, salir, atrás después de salir y las fallas de T12.
+- Con "finanzas-dev" cargado (2026-10-14), comprobado:
+  - `pnpm humo` completo pasa:
+    - sin sesión: 11 redirecciones, POST con 303, las públicas y las cabeceras;
+    - con sesión: entrar, cookie `HttpOnly`, `SameSite=Lax` y `Secure`, las rutas, `/entrar` con sesión, salir y las cookies borradas.
+  - El token va firmado con ES256 y trae `kid`: `getClaims` verifica en el servidor de la app, sin ir al de Auth (criterio 21).
+  - Contraseña equivocada y correo inexistente: el mismo "Correo o contraseña incorrectos." y ninguna cookie. Con otro `USUARIO_PERMITIDO`, la cuenta válida recibe el mismo mensaje y no le queda ninguna cookie (criterio 3).
+  - T12 en Edge con sesión: sin red, con las cookies borradas y con una versión vieja (el id de la acción cambiado en el camino), cada falla muestra su mensaje, conserva el monto y no confirma. La base siguió con 118 movimientos.
+  - Los formularios envueltos con `conFallas` (gasto, categoría y desglose de un fondo) siguen trayendo los campos de server action: funcionan sin JavaScript.
+  - Atrás después de salir (criterio 7), en Edge contra el build: entrar con `siguiente=/movimientos` lleva ahí; salir lleva a `/entrar` sin datos, y atrás dos veces se queda en `/entrar`, sin datos.
+  - `pnpm capturas` entra con el usuario de prueba y saca escritorio y celular por DevTools. `/nuevo/gasto` detrás del inicio de sesión se ve como antes, y "Salir" queda junto a `CambioTema`.
