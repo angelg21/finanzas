@@ -18,5 +18,10 @@ Migración 0003 (T2 de 002): seis `ENABLE ROW LEVEL SECURITY`, ninguna política
 - Exigir en T3/T15 (comando de producción o `docs/despliegue.md`) una comprobación en vivo tras migrar: dueño = `current_user`, `relrowsecurity` = t y `relforcerowsecurity` = f en todas las tablas de public, y `has_schema_privilege('anon','drizzle','USAGE')` = f. La prueba `schema.test.ts` solo mira el código: no ve un DISABLE hecho desde el panel. T3 lo añadió en `migrar-produccion.ts` (medido en copias: 6 tablas bien, anon f). Le falta fallar si no encuentra las tablas del esquema, porque hoy pasa con 0. Ver [[guardas-produccion]].
 - Hueco de `schema.test.ts`: no detecta vistas (`pgView`, medido). Una vista en public, por defecto sin security_invoker, corre con los permisos del dueño y salta el RLS. Si llega una vista: `securityInvoker: true` y ampliar la prueba. Además, la prueba solo cubre `schema.ts`; si `drizzle.config.ts` pasa a usar un glob, quedan fuera las tablas de otros archivos.
 - `drizzle.__drizzle_migrations` no tiene RLS y no hace falta: un rol con GRANT en public recibió "permission denied for schema drizzle".
+- **Imagen de Supabase 17.6.1.171, medido en T14 (2026-10-14).**
+  - Roles: `postgres` tiene rolsuper=f y **rolbypassrls=t**; `service_role` tiene bypassrls=t; `anon` y `authenticated` no tienen ni lo uno ni lo otro. En Supabase, la app entra como dueña y además salta RLS, así que un FORCE no la rompería allí, aunque sí rompe al dueño NOSUPERUSER del ensayo local.
+  - Tras migrar con el migrador real, `anon` y `authenticated` tienen GRANT SELECT, INSERT, UPDATE y DELETE sobre las tablas nuevas, por los privilegios por defecto de Supabase.
+  - Aun así, RLS les deja ver 0 filas, sus UPDATE y DELETE afectan 0 filas y el INSERT falla con "violates row-level security policy". La capa que los frena es RLS, y apagar la API de datos es la segunda.
+  - `service_role` lo ve todo: su clave no debe existir fuera del panel.
 
 Ver también [[defectos-datos-encontrados]] y [[entorno-de-prueba]].

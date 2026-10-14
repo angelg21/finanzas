@@ -1,39 +1,59 @@
 ---
 name: defectos-datos-encontrados
-description: Defectos y huecos de datos que encontré en auditorías (con fecha), para comprobar en la siguiente revisión si siguen abiertos
+description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la auditoría T14 de 002 (2026-10-14)
 metadata:
   type: project
 ---
 
-Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos.
+Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Última revisión completa: auditoría T14 de 002, el 2026-10-14 (ver [[auditoria-t14-002]]).
 
-**Abiertos**
+**Abiertos, nuevos en T14 (2026-10-14)**
 
-- **2026-10-11.** El check `movimientos_forma_por_tipo` solo valida la forma. Medido con BEGIN/ROLLBACK, la base aceptó un gasto con sobre "Por asignar", categoría de ingreso, moneda VES desde una cuenta USDT y desde una cuenta inactiva. La acción de servidor tiene que validar los ids contra las consultas de cuentas, sobres y categorías activas, y tomar la moneda de la cuenta leída de la base. (Así se hizo en T4; vigilarlo en cada acción nueva que escriba movimientos.)
-- **2026-10-12, /f-review de 001, baja.** `db:seed` cuenta y luego inserta las categorías sin `onConflictDoNothing`. Dos semillas a la vez en una base vacía: una sale con 23505 (`categorias_tipo_nombre_unico`) y código 1 (2 de 3 rondas medidas). Los datos quedan bien: 15 distintas. Además, una categoría nueva en `categoriasBase` nunca llega a una base existente, tampoco a Supabase. Y si alguien vacía la tabla, vuelven las 15 (medido).
-- **2026-10-12, baja, para /f-audit.** `src/lib/fondos.ts:9` (`aporteMensualCentavos`) hace `Math.ceil(totalAnual / 12 / 100) * 100`, una división en flotante fuera de `dinero.ts`, y `src/db/fondos.ts` guarda el resultado en `reglas_reparto.valor`. Medido: 0 diferencias contra BigInt en 0..2e7 y en 5e6 montos al azar hasta 2^53. Viene de 7b7972c, que ya está en main. Ahora es el único flotante sobre montos que queda en el camino a la base.
-- **2026-10-11.** Mezcla de demo y datos de prueba. Los gastos que se guardan desde el formulario llevan `origen=manual` y `referencia_externa=null`, así que `db:demo:limpiar` no los borra. Al limpiar la demo quedan saldos negativos (el cuadre se mantiene) y quedan datos inventados sin marcar.
-- **2026-10-11.** La transacción de `registrarMovimientos` (drizzle → `client.begin` de postgres-js, con `prepare: false`) es correcta por diseño. No se pudo ejecutar contra el pooler de Supabase porque no hay pooler local. Queda pendiente para `/f-audit` antes de desplegar. Seguía abierto en T2 de 002 (2026-10-13), y el despliegue es T15.
-- **2026-10-13, T2 de 002, baja.** RLS solo está verificado en el código (`schema.test.ts`). Falta una comprobación en vivo en producción (dueño, `relrowsecurity`, sin FORCE) y la prueba no cubre las vistas. Detalle en [[rls-supabase]]. En T3, `migrar-produccion.ts` ya hace esa comprobación en vivo, pero pasa con 0 tablas.
-- **2026-10-13, T3 de 002: NO APTO y luego APTO el mismo día.** Quedaron cerrados la fuga de clave por ERR_INVALID_URL, la URL ilegible en producción, `sslmode`, las URL ambiguas y la confirmación por tubería. Siguen abiertos, en baja: la causa de un AggregateError no se imprime, un `sslmode` repetido pasa la guarda, las vistas no se revisan y faltan los deny en `settings.json` antes de T15. Detalle en [[guardas-produccion]].
-- **2026-10-13, T4 de 002 (respaldo): NO APTO y luego APTO el mismo día.** Quedaron cerradas las dos fugas de clave (argumentos de pg_dump; libpq con `%`/`%00`), la comparación vacía y la limpieza a medias, todo medido también en modo `--produccion` contra la sonda con TLS. Residuales en baja: la restauración como superusuario, `exec --produccion` sin deny, `auth.users` fuera del respaldo y PG 18 en T15. Detalle en [[respaldo-produccion]].
-- **2026-10-13, T12 de 002 (captura idempotente): NO APTO y luego APTO el mismo día.** Primera vuelta: se tomaba un choque como "ya estaba" sin comparar, el throw llegaba después del commit y en carrera se veían saldos viejos. La segunda vuelta lo cierra con un insert plano, la captura del 23505, la comparación por huella y una ventana de 15 minutos (todo medido). Residuales en baja: contenido idéntico con un id reutilizado en menos de 15 min, sin edición de movimientos para el caso "otra", y faltan las pruebas de base para `/f-verify`. Detalle en [[captura-idempotente]]. Desde T12, los gastos del formulario llevan `captura-*` en vez de null: siguen sin borrarse con `db:demo:limpiar`, y `comprobar-001` se niega a correr si existen.
-- **2026-10-11, T15.** Ventana residual del criterio 20. Un gasto se valida contra `categoriasDeGastoPorUso`. Si en ese momento confirma el cambio de tipo de una categoría sin movimientos, el gasto se inserta después con una categoría de ingreso (medido: 1 fila). Es el mismo hueco del check que solo valida la forma. Se cierra cuando `registrarMovimientos` compruebe el tipo de la categoría al insertar.
-- **2026-10-11, T15.** El índice único `(tipo, nombre)` es exacto: la base aceptó "Mascotas" y "mascotas" a la vez. Solo `repetidaDe` (con `clave()`) lo detiene. `repetidaDe` devuelve la primera equivalente. Si ya existen una archivada y una activa equivalentes, restaurar una tercera las deja dos activas (medido con Gimnasio, GIMNASIO y gimnasio). La app no llega a ese estado por sí misma; el importador sí podría. El importador debe buscar una activa equivalente, no la primera.
+- **Media, bloquea T15.** `src/db/index.ts` (la conexión de la app) valida que la URL se lea bien, pero no exige TLS. Medido sin conectar: con la URL del pooler sin `sslmode`, postgres-js da `ssl=false` y `max=10`. Los scripts sí exigen TLS (`exigeTls`). El URI que muestra el panel de Supabase no trae `sslmode`, y pegarlo tal cual manda los datos sin cifrar. Corrección: si `!esBaseLocal(url) && !exigeTls(url)`, lanzar un error, con su prueba; o aceptarlo con un ADR y "Enforce SSL" comprobado.
+- **Media.** `agregarPartida` y `eliminarPartida` (en `sobres/[id]/acciones.ts`) y `fijarReglaFija` (en `db/fondos.ts`) hacen dos escrituras sin transacción. Medido con una partida de 300.000.000 USD: la partida se insertó, la regla quedó en 900 y la acción lanzó 22003 (`2500000900` no cabe en int4). El formulario diría "No se pudo guardar" con la partida ya guardada, y un reintento la duplicaría. No toca el cuadre.
+- **Baja.** `reglas_reparto.valor` es `integer` y guarda centavos en las reglas fijas, con tope de 21,4 M USD. Medido: un aporte manual de 21474837 lanza 22003 sin escribir.
+- **Baja.** Flotante fuera de `dinero.ts`: `formularios.tsx:96` pone `(actualCentavos / 100).toString()` y ese texto vuelve como monto. Medido: 0 diferencias en todo el rango de int4, pero falla por encima de 2^46 (104524 de 1e6), lo que importa si la columna se ensancha. Además, `movimiento.tsx:85` muestra `Number(m.tasa)`, solo en pantalla.
+- **Baja.** En UTC (Vercel), `inicioDelMes()` de `consultas.ts` usa la hora del servidor. Medido el 31 de octubre a las 21:00 de Caracas: "gastado este mes" da 0 y la gráfica ya abre noviembre. Solo afecta a lo que se muestra.
+- **Baja.** La nota de la cuenta prima en la semilla dice "Solo tránsito, saldo bajo", que contradice el ADR 0006. Se escribe una sola vez en producción.
+- **Baja.** `z.coerce.number` en `veces` y `mes` acepta "0x10" = 16 y "1e1" = 10, y `veces` multiplica dinero.
+- **Info.** `guardarCategoria` guarda como gasto, sin avisar, cualquier `tipo` distinto de "ingreso".
 
-- **2026-10-12, /f-review 001, segunda vuelta, baja.** `src/app/nuevo/gasto/page.tsx`, líneas 33 y 35: el respaldo `enDolares[0]` preselecciona la prima si no queda ninguna cuenta propia en dólares activa. Ver [[prima-en-cuadre]].
-- **2026-10-12, observación de spec.** El arreglo 17bbedf solo rechaza ventas que entregan 0 Bs. Una tasa por debajo de 1, como un error al teclear "0,4" en vez de "40", infla el valor en USD del gasto en Bs. Medido: 1 Bs a 0,5 se guardó como 200 centavos de USD. 2100 Bs a 0,4 serían 5250 USD. El cuadre se mantiene, pero el sobre se vacía. La spec solo exige una tasa mayor que cero.
-- **2026-10-12, 00:48 a 00:51, durante mi segunda revisión de 001 (ya resuelto).** El subagente revisor escribió de forma temporal en la base real: movimientos sin `demo-*`, ids 660 a 674, notas "revisor-1" y "revisor-2". Mientras existieron, el cuadre se mantuvo (537932) y la preselección cambió: el último gasto manual quedó desde Efectivo. A las 00:51 ya los había borrado. El contenido volvió a ser idéntico al inicial y solo avanzó la secuencia, de 659 a 674. Si vuelve a pasar y las filas no desaparecen, es otro caso de "mezcla de demo y datos de prueba".
-- **2026-10-12, 21:58 UTC, durante mi revisión de b1c3fa1 (ya resuelto).** Otro proceso escribió en la base real filas `demo-comprobar-001-*` con `origen=manual`. Una falló `movimientos_monto_positivo`: un gasto de 210000 Bs con 0 USD. Las borró: el contenido quedó idéntico y la secuencia pasó de 1011 a 1022. Lo atribuí con `docker logs finanzas-db`.
+**Abiertos de antes (código sin cambios en T14, no medidos otra vez)**
 
-**Cerrados**
+- **2026-10-11.** El check `movimientos_forma_por_tipo` solo valida la forma. La base acepta un sobre "Por asignar", una categoría de ingreso, VES desde una cuenta USDT o una cuenta inactiva. Lo frena la acción, que compara los ids con la base: en T14 hubo 22 de 22 manipulaciones rechazadas con 0 filas. Tampoco hay checks para `tasa > 0`, `monto_destino > 0` ni `tope > 0`. Vigilar en cada escritor nuevo, sobre todo en el importador.
+- **2026-10-11, T15 de 001.** Si una categoría cambia de tipo mientras se valida un gasto, el gasto puede quedar con una categoría de ingreso. Se cierra cuando la inserción compruebe el tipo.
+- **2026-10-11, T15 de 001.** La unicidad de categorías no distingue mayúsculas en `lib`, pero sí en la base. El importador debe buscar una activa equivalente.
+- **2026-10-12, baja.** Dos `db:seed` a la vez en una base vacía: una sale con 23505. Los datos quedan bien.
+- **2026-10-11.** Los gastos del formulario (`captura-*`) no los borra `db:demo:limpiar`. En local quedan mezclados con la demo.
+- **2026-10-11.** El pooler en modo transacción de Supabase no está medido; no hay uno local. Pendiente para T15.
+- **Residuales de T3, T4 y T12 de 002:**
+  - `pnpm exec tsx src/db/x.ts --produccion` solo lo frena `isTTY`;
+  - la restauración corre como superusuario;
+  - `auth.users` queda fuera del respaldo;
+  - falta comprobar que producción no sea PG 18;
+  - faltan las pruebas de base de `registrarCaptura` para `/f-verify`.
 
-- 64af718 (2026-10-12): la venta ya no hereda la cuenta del último gasto. Medido con la acción real en una copia: con `cuentaVentaId` igual a Bolívares, a una cuenta inactiva, a 99999, vacío, "01", " 1", "1e0", "0x1" o con inyección, sale el error de cuenta y no se escribe ninguna fila. Un formulario viejo que no envía el campo también falla sin escribir. Además, `cuentaId` se ignora al vender, y `cuentaVentaId` al pagar en dólares.
-- 17bbedf (2026-10-12): 0,01 a 0,4 se rechaza sin escribir filas; 0,01 a 0,5 entrega 1 centavo de Bs.
-- b1c3fa1 (2026-10-12): `semilla-demo.ts` ya no usa flotantes. Las tasas son texto y pasan por `aTasa`, `bolivaresDesdeUsd` y `tasaDecimal`; la variable `bs` desapareció. Medido en una copia con el código de b1c3fa1~1 y con el nuevo: las mismas huellas sobre las 118 filas (la del autor, 6819eb1d..., y la estricta, 162472e7...), cuadre 539300, idempotente. Además, 0 diferencias entre el cálculo viejo y el nuevo en las 10 combinaciones de la demo y en una rejilla de 1e6. La tasa "241.8" de octubre no se usa, porque en octubre no hay gastos en Bs.
+  Ver [[guardas-produccion]], [[respaldo-produccion]] y [[captura-idempotente]].
 
-- T3 de 001: `aCentavos`/`aTasa` aceptaban "0x10", "1e3" y redondeaban "1.005" en flotante. Se corrigió en b8c1a07; en T12 ya no hay `Number()` sobre el texto completo.
-- T13 de 001 (bfd4636): la semilla ya no revive las categorías renombradas ni las borradas, porque solo inserta en una tabla vacía. Además, completa icono y color solo si las dos columnas siguen por defecto. Medido: Ocio→Diversión y Educación borrada no volvieron, una con (etiqueta, azul) quedó intacta, y (etiqueta, pizarra) recibió su icono, que es el residual aceptado. Revisado otra vez en /f-review (2026-10-12) con el mismo resultado; además, (bus, pizarra) quedó intacta y una archivada recibió el icono sin reactivarse.
-- T15 de 001, corregido el 2026-10-11 (sin commit al revisar). `bloquearYContar` hace `for update` y luego cuenta. Con eso, `eliminarCategoria` en carrera archiva en vez de lanzar 23503, y `actualizarCategoria` devuelve "tipo-fijo" (también en carrera, y también a través de `guardarCategoria`). Restaurar con una activa equivalente redirige con `aviso=nombre`. La demo busca por (nombre, tipo): con un "Familia" de ingreso quedan 0 movimientos con el tipo cruzado. Todo medido.
+**Cerrados (verificados en T14, 2026-10-14)**
 
-Ver también [[prima-en-cuadre]], [[categorias-icono-color]] y [[entorno-de-prueba]].
+- **afc2286 (2026-10-12).** `aporteMensualCentavos` usa `repartirHaciaArriba` en BigInt. Ya no hay `Math.ceil` en `lib/fondos.ts`.
+- **Respaldo `enDolares[0]`.** Ya no existe en `nuevo/gasto/page.tsx`: sin una cuenta propia en dólares, no se marca ninguna.
+- **Tasa menor que 1.** `tasaMinima = aTasa("1")` en `gastos.ts`. Medido: vender a 0,4 se rechaza sin escribir.
+- **Residuales de T3.** Un `sslmode` repetido ya da false, y la causa de un AggregateError se imprime (medido: `Causa: ECONNREFUSED · ::1 · 127.0.0.1`).
+- **RLS en vivo.** `revisarEstadoBase` detecta tablas que faltan o sobran y vistas sin `security_invoker`. Medido sobre la imagen de Supabase: 10 de 10 ✓.
+- **Antes de T14:**
+  - 64af718: la venta ya no hereda la cuenta del último gasto;
+  - 17bbedf: se rechazan las ventas que entregan 0 Bs;
+  - b1c3fa1: la demo funciona sin flotantes (huella del autor 6819eb1d…, igual también en T14);
+  - b8c1a07: `aCentavos` y `aTasa` leen el texto, no `Number()`;
+  - bfd4636: la semilla no revive categorías;
+  - T15 de 001: `for update` en categorías.
+
+**Escrituras ajenas en la base real (resueltas):** las del revisor el 2026-10-12, ids 660 a 674, y `demo-comprobar-001-*` a las 21:58 UTC. Método para atribuirlas en [[entorno-de-prueba]].
+
+**Why:** el dinero que no cuadra no se ve en pantalla. Sin esta lista, cada revisión empieza de cero y repite mediciones.
+
+**How to apply:** en cada revisión, cruzar lo abierto con el código actual (grep y git log) antes de citarlo. Cuando algo se cierre, moverlo a "Cerrados" con la evidencia.
+
+Ver también [[prima-en-cuadre]], [[categorias-icono-color]], [[rls-supabase]] y [[entorno-de-prueba]].

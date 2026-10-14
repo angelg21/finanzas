@@ -49,4 +49,17 @@ metadata:
 - **Llamar una server action con sesión fuera de Next** (T12 de 002, 2026-10-13). Desde 002, las acciones llaman a `leerSesion` (cookies de Supabase), y el método de 2026-10-12 ya no basta. Se usa un `.cts` (CJS) en el scratchpad que, con `Module.createRequire(repo/package.json)`, registra módulos falsos en `req.cache`: `path.resolve(repo,"src/app/sesion.ts")` → `{leerSesion, exigirSesion}`, y `req.resolve("next/cache")` → `{revalidatePath(){}}`. Luego hace `req(path.resolve(repo, ".../acciones.ts"))`. Así la acción devuelve su estado completo, también "guardado", sin el error de "static generation store". Se corre con `node en-copia.mjs finanzas_t12 -- pnpm exec tsx "\"<scratch>/t12/accion.cts\"" <caso>`. El script se niega si la base no es `finanzas_t12*`.
 - **Apuntar el ensayo de un script a una copia**: `DATABASE_URL=postgresql://finanzas:finanzas@localhost:5433/finanzas_t4 pnpm exec tsx src/db/x.ts`. dotenv no la pisa ("injected env (0)"). La clave local "finanzas" es pública (docker-compose); al mostrar salidas, igual la tapo con sed.
 
-Ver también [[defectos-datos-encontrados]] y [[rls-supabase]].
+- **El scratchpad persiste entre sesiones** (2026-10-14): la misma ruta conserva `en-copia.mjs`, `invariante.sql`, `huella.sql`, `t12/`, `t4/` y `t14/`. Revisarlo antes de reescribir herramientas.
+- **Esquema contra snapshot sin `generate`** (T14): un `.cts` que con `createRequire` carga `drizzle-kit/api` y `src/db/schema.ts`, y llama a `generateDrizzleJson(schema, prev.id, undefined, "snake_case")` y luego a `generateMigration(prev, actual)`. Todo en memoria, nada en `drizzle/`. Resultado: 0 sentencias pendientes. El script está en `t14/diff-snapshot.cts`.
+- **Ensayo del primer despliegue** (T14):
+  - Base vacía: `create role t14_dueno login password ... nosuperuser nobypassrls` y `create database finanzas_t14_prod owner t14_dueno`.
+  - Para ver las fronteras de la transacción: `alter database <copia> set log_statement='all'`, y después `docker logs --since`.
+  - Migrar con `t14/migrar.mts` (el `conectar`, el `migrate` y la `revisarEstadoBase` reales), y luego `DATABASE_URL=...t14_dueno... pnpm db:seed`.
+  - Acciones con `t14/acciones.cts <gastos|manipulados|categorias|sobres>`: busca los ids por nombre y se niega fuera de `finanzas_t14_*` en 5433 o de la sonda en 54399.
+  - Para terminar: `dropdb` de las copias y `drop role`.
+- **Sonda de Supabase sin TLS para migrar y sembrar** (T14): `docker run -d --name finanzas-sonda-t14 -p 127.0.0.1:54399:5432 -e POSTGRES_PASSWORD=... -e JWT_SECRET=<32+> -e JWT_EXP=3600 public.ecr.aws/supabase/postgres:17.6.1.171`. Arranca en unos 15 s. Después `alter role postgres password ...` como `supabase_admin`, y se trabaja en la base `postgres`, que es donde están los privilegios por defecto de Supabase. Al final, `docker rm -f`.
+- **Reloj y zona en una sonda**: sustituir `globalThis.Date` por una subclase con el instante fijo antes de cargar el módulo, y correr con `TZ=UTC`. En Git Bash, `TZ=America/Caracas` llega como undefined a node, que entonces usa la zona de Windows (Caracas).
+- `pnpm db:seed` con `DATABASE_URL` en el entorno muestra "injected env (5)": son las demás variables de `.env.local`, y DATABASE_URL no se pisa. Lo confirma la huella de la copia.
+- `respaldo.ts` en ensayo deja `data/respaldos/AAAA-MM-DD-ensayo-local.sql`, en el árbol aunque git lo ignora: borrarlo con un `rm` de ruta exacta.
+
+Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].

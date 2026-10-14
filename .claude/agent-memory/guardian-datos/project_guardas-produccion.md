@@ -17,9 +17,10 @@ T3 de 002 (sin commit al revisar, 2026-10-13): `exigirBaseLocal` en `lib/destino
 
 **Residuales, sin bloquear:**
 
-- `terminarConError` no imprime la causa de un AggregateError: con ECONNREFUSED el mensaje viene vacío y la línea "Causa" no sale.
-- `?sslmode=require&sslmode=disable` pasa `exigeTls` y postgres-js usa `ssl:false`, porque gana la última.
-- Una vista en public no la marca nadie.
+- ~~`terminarConError` no imprime la causa de un AggregateError~~. Cerrado, medido en T14 (2026-10-14): `Causa: ECONNREFUSED · connect ECONNREFUSED ::1:5999 · …127.0.0.1:5999`.
+- ~~`?sslmode=require&sslmode=disable` pasa `exigeTls`~~. Cerrado, medido en T14: `exigeTls` exige exactamente un `sslmode`, y con dos da false.
+- ~~Una vista en public no la marca nadie~~. Cerrado: `revisarEstadoBase` marca las vistas sin `security_invoker` y las materializadas.
+- **Abierto en T14:** la conexión de la APP (`src/db/index.ts`) no exige TLS. Solo los scripts lo hacen. Ver [[auditoria-t14-002]].
 - ~~`settings.json` sin deny para `Read(./.env.produccion.local)` ni para los `:produccion`~~. Cerrado en db17a31 (visto el 2026-10-13): deny para Read y para los tres `pnpm db:*:produccion*`. Sigue abierto que `pnpm exec tsx src/db/<x>.ts --produccion` no coincide con el deny: el único guardia es isTTY.
 - **Tercer lector de la URL: libpq** (T4, pg_dump). Repetía la clave en su error con `%` sin escapar o `%00`. Cerrado en la segunda vuelta de T4: `leer` los rechaza, con prueba medida contra mutaciones, y además pg_dump ya no recibe la clave en la URL (va en PGPASSWORD). Ver [[respaldo-produccion]].
 - `isTTY` en la terminal del desarrollador no está medido.
