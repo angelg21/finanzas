@@ -96,7 +96,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 - [x] Validada en navegador (2026-10-14)
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
-- [ ] Fusionada en `main` el AAAA-MM-DD
+- [x] Fusionada en `main` el 2026-10-14, por decisión del desarrollador antes de verificar y revisar (ver notas)
 
 ## Notas
 
@@ -274,3 +274,14 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
     - comprobar que no sea Postgres 18.
   - El procedimiento ante una sesión robada o un ataque al límite de intentos (ADR 0010).
   - **El `DATABASE_URL` de Vercel:** el pooler de transacción con `?sslmode=require`.
+- T15, en curso (2026-10-14). El desarrollador:
+  - creó el proyecto "finanzas" de producción siguiendo `docs/despliegue.md`, paso 1;
+  - comprobó que es PostgreSQL 17.11, la misma versión del `pg_dump` del contenedor;
+  - corrió `pnpm db:migrate:produccion`: "Migraciones aplicadas." y 10 de 10 ✓ (las 6 tablas dueñas, con RLS y sin FORCE; 6 en public y 6 en el esquema; ninguna vista; `anon` fuera de `drizzle`; 4 de 4 migraciones);
+  - corrió `pnpm db:seed:produccion`: "5 cuentas, 7 sobres, 15 categorías, 6 reglas de reparto".
+  - **Incidente:** al armar la cadena, el desarrollador la pegó en el chat con la contraseña de la base. Se dio por expuesta y se cambió antes de migrar, por una de solo letras y cifras. La guarda de `urlProduccion` había rechazado la cadena rota (corchetes y `/` y `@` sin escapar) sin conectar ni mostrarla.
+  - `vercel link` creó el proyecto "finanzas" en Vercel. No conectó el repositorio: la cuenta de Vercel no tenía GitHub como conexión de inicio de sesión. También agregó a `.gitignore` dos líneas repetidas, que se deshicieron porque la última volvía a ignorar `.env.example`.
+- **Fusión adelantada (2026-10-14).** El desarrollador decidió fusionar en `main` y publicarla ya, para que Vercel despliegue desde `main` y no desde esta rama. Se hizo con `pnpm verify` en verde, sin `/f-verify` ni `/f-review`. Quedan pendientes y se hacen sobre `main`:
+  - T15: conectar el repositorio, las variables, el despliegue, el humo contra producción, la prueba en el celular y el primer respaldo;
+  - T16 y T17;
+  - las pruebas de `/f-verify` y la revisión de `/f-review`.

@@ -14,7 +14,7 @@ Ninguna de las tres se escribe en un archivo, ni en el repo ni fuera de él, y n
 
 ## Primer despliegue
 
-El orden importa (ADR 0010): auditoría hecha, base lista, despliegue desde la rama con la CLI, validación en el celular, `/f-ship` y, al final, conectar el repositorio a Vercel. Si se conecta antes, Vercel publica `main`, que todavía no tiene la autenticación.
+El orden importa (ADR 0010): auditoría hecha, base lista, la autenticación ya fusionada en `main` y, solo entonces, el repositorio conectado a Vercel. Si se conecta con una `main` sin autenticación, Vercel la publica abierta. En la feature 002 el desarrollador fusionó antes de desplegar (2026-10-14), así que Vercel despliega `main` desde el primer día.
 
 ### 1. Supabase: el proyecto "finanzas" de producción
 
@@ -59,11 +59,17 @@ pnpm db:seed:produccion
 
 Lo mismo: pegar, revisar el destino y escribir `produccion`. Se corre **una sola vez**. Debe terminar con 5 cuentas, 7 sobres, 15 categorías y 6 reglas de reparto.
 
-### 4. Vercel: el proyecto, sin conectar el repositorio
+### 4. Vercel: el proyecto y el repositorio
 
 1. Instala la CLI con `npm i -g vercel` y entra con `vercel login`.
-2. En la carpeta del proyecto, `vercel link`: crea un proyecto nuevo llamado `finanzas`. **No conectes el repositorio de Git.**
-3. En el panel de Vercel, **Settings** del proyecto:
+2. En la carpeta del proyecto, `vercel link`: crea un proyecto nuevo llamado `finanzas`. El directorio del código es `./`, y no hace falta cambiar ningún comando detectado. Después:
+   - deshaz las líneas que agrega al final de `.gitignore` (`git checkout -- .gitignore`), porque la última vuelve a ignorar `.env.example`;
+   - borra la línea `VERCEL_OIDC_TOKEN` que agrega a tu archivo de entorno local, porque la app no la usa.
+3. Conecta el repositorio:
+   - si `vercel link` no pudo, primero **Account Settings → Authentication → Login Connections → GitHub**;
+   - luego, en el proyecto, **Settings → Git → Connect Git Repository**, con la app de Vercel en GitHub limitada a **Only select repositories → finanzas**;
+   - la rama de producción es `main`.
+4. En el panel de Vercel, **Settings** del proyecto:
    - **Build and Deployment → Node.js Version**: 22.x.
    - **Functions → Function Region**: **Washington, D.C. (iad1)**, junto a Supabase en `us-east-1`.
    - **Environment Variables**: agrega las cuatro marcando **solo Production** (desmarca Preview y Development):
@@ -79,12 +85,9 @@ Lo mismo: pegar, revisar el destino y escribir `produccion`. Se corre **una sola
 
 Nunca corras `vercel env pull`, `vercel pull` ni `vercel build`: escriben las variables de producción en disco. El hook del agente también los niega.
 
-### 5. Desplegar desde la rama
+### 5. Desplegar
 
-```powershell
-git switch feat/002-pwa-y-despliegue
-vercel --prod
-```
+Cada `git push origin main` despliega producción. El primero, si `main` ya estaba publicada antes de cargar las variables: **Deployments → Redeploy** en el último. Las otras ramas solo generan vistas previas, sin las variables, que son solo de Production.
 
 Al terminar, en el despliegue, pestaña **Source**: deben estar solo `src/`, `public/` y los archivos de configuración del `.vercelignore`. Nada de `docs/`, `data/`, `capturas/`, CSV ni archivos de entorno.
 
@@ -99,10 +102,6 @@ Al terminar, en el despliegue, pestaña **Source**: deben estar solo `src/`, `pu
    ```
 
    Pide la cadena del pooler en modo sesión y `produccion`. Deja `data/respaldos/AAAA-MM-DD.sql`, que git ignora, y comprueba que restaurado da lo mismo que producción.
-
-### 7. Después de `/f-ship`
-
-En Vercel, **Settings → Git**: conecta el repositorio con `main` como rama de producción. Desde entonces, publicar `main` despliega.
 
 ## Operación
 
