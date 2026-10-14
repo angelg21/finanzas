@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BarraLateral, MenuMovil, NavInferior, TituloRuta } from "@/components/navegacion";
+import { BarraLateral, Marca, MenuMovil, NavInferior, TituloRuta } from "@/components/navegacion";
 import { CambioTema } from "@/components/tema";
 import { salir } from "./acciones";
 
@@ -33,19 +33,19 @@ export default function LayoutConSesion({ children }: LayoutProps<"/">) {
   return (
     <>
       {/*
-        Móvil: el panel ocupa toda la pantalla, como las pantallas de la referencia.
-        Escritorio: el panel flota sobre el lienzo con radio 28, barra lateral y contenido en rejilla.
+        La app ocupa la pantalla completa, también en escritorio (pedido del desarrollador, 2026-10-14): barra lateral
+        fija y el contenido con un ancho máximo para que no se estire en pantallas muy anchas.
       */}
-      <div className="panel mx-auto flex min-h-dvh w-full flex-col lg:my-5 lg:min-h-[calc(100dvh-40px)] lg:w-[calc(100%-40px)] lg:max-w-[1480px] lg:flex-row lg:rounded-panel lg:border lg:border-panel-borde lg:shadow-panel">
+      <div className="panel flex min-h-dvh w-full flex-col lg:flex-row">
         <BarraLateral salir={salir} />
 
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="mx-auto flex w-full min-w-0 max-w-[1400px] flex-1 flex-col">
           {/* Barra superior móvil: menú, marca, tema y avatar. */}
           <header className="flex items-center justify-between px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] lg:hidden">
             <div className="flex items-center gap-1">
               <MenuMovil salir={salir} />
-              <Link href="/" className="text-[19px] font-bold tracking-tight">
-                finanzas
+              <Link href="/" aria-label="Inicio">
+                <Marca tamano={30} />
               </Link>
             </div>
             <div className="flex items-center gap-2">

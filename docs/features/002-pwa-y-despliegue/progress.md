@@ -221,3 +221,9 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - Los formularios envueltos con `conFallas` (gasto, categoría y desglose de un fondo) siguen trayendo los campos de server action: funcionan sin JavaScript.
   - Atrás después de salir (criterio 7), en Edge contra el build: entrar con `siguiente=/movimientos` lleva ahí; salir lleva a `/entrar` sin datos, y atrás dos veces se queda en `/entrar`, sin datos.
   - `pnpm capturas` entra con el usuario de prueba y saca escritorio y celular por DevTools. `/nuevo/gasto` detrás del inicio de sesión se ve como antes, y "Salir" queda junto a `CambioTema`.
+- Cambios de diseño pedidos por el desarrollador (2026-10-14), aplicados sin ronda de pruebas, a pedido suyo:
+  1. `/entrar` y `/sin-conexion` a pantalla completa, partidas en dos: la marca a un lado y el formulario al otro, y en el celular la marca arriba.
+  2. La app a pantalla completa en escritorio, sin el panel flotante sobre el gris.
+  3. El emblema con el nombre "Arca" (`src/lib/marca.ts`) en la barra lateral, en la barra superior del celular, en la pestaña y en el manifiesto.
+
+  `docs/diseno.md` describe todavía el panel flotante y el lienzo visible en escritorio: se corrige en T17, igual que el resto de la spec y CLAUDE.md.

@@ -8,6 +8,7 @@
  *   pnpm capturas                         → contra el servidor de desarrollo en http://localhost:3000
  *   pnpm capturas http://localhost:3123   → contra otra dirección
  *   pnpm capturas -- /sobres /cuentas     → rutas concretas (por defecto: / /sobres /movimientos)
+ *   pnpm capturas -- --sin-sesion /entrar → sin entrar antes
  * En Git Bash, las rutas que empiezan por / se convierten en rutas de Windows: MSYS_NO_PATHCONV=1 node scripts/…
  */
 import { spawn } from "node:child_process";
@@ -96,7 +97,7 @@ try {
     });
   await cdp("Page.enable");
 
-  if (process.env.HUMO_CORREO && process.env.HUMO_CLAVE) {
+  if (!args.includes("--sin-sesion") && process.env.HUMO_CORREO && process.env.HUMO_CLAVE) {
     await cdp("Page.navigate", { url: `${base}/entrar` });
     await espera(2500);
     const credenciales = JSON.stringify([process.env.HUMO_CORREO, process.env.HUMO_CLAVE]);

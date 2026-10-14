@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { nombreApp } from "@/lib/marca";
 
 /**
  * Manifiesto de la app instalable (spec 002, criterio 15). Los colores repiten el panel claro (--panel-a): el
@@ -8,8 +9,8 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "Finanzas",
-    short_name: "Finanzas",
+    name: nombreApp,
+    short_name: nombreApp,
     description: "Presupuesto por sobres: cada dólar tiene un trabajo.",
     start_url: "/",
     scope: "/",

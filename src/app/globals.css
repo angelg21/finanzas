@@ -97,6 +97,12 @@
 
   --sombra-panel: 0 30px 80px rgba(20, 33, 29, 0.35);
   --sombra-tarjeta: 0 10px 30px rgba(20, 33, 29, 0.08);
+
+  /* Lado de la marca en el acceso: brillos sobre el verde pino y el disco claro donde se ve el emblema. */
+  --marca-brillo: rgba(207, 227, 212, 0.3);
+  --marca-brillo-2: rgba(77, 184, 137, 0.4);
+  --marca-anillo: rgba(255, 255, 255, 0.1);
+  --marca-disco: #f5f6f2;
 }
 
 :root[data-tema="oscuro"] {
@@ -164,6 +170,12 @@
 
   --sombra-panel: 0 30px 80px rgba(0, 0, 0, 0.5);
   --sombra-tarjeta: 0 0 0 0 transparent;
+
+  --marca-brillo: rgba(207, 227, 212, 0.16);
+  --marca-brillo-2: rgba(77, 184, 137, 0.28);
+  --marca-anillo: rgba(255, 255, 255, 0.08);
+  /* El emblema es imagen de marca: su disco sigue claro también en el tema oscuro. */
+  --marca-disco: #e8efe9;
 }
 
 @theme inline {
@@ -229,8 +241,9 @@
   --shadow-tarjeta: var(--sombra-tarjeta);
 }
 
+/* Al estirar la página en el celular asoma el fondo del panel, no el gris del lienzo. */
 html {
-  background: var(--lienzo-c);
+  background: var(--panel-a);
 }
 
 body {
@@ -285,6 +298,58 @@ body::before {
 }
 .hero > * {
   position: relative;
+}
+
+/*
+  Lado de la marca en /entrar y /sin-conexion: el verde pino del hero con brillos menta, anillos que repiten el aro
+  del emblema alrededor del disco y la textura de puntos de la referencia.
+*/
+.marca-acceso {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(55% 45% at 88% 8%, var(--marca-brillo) 0%, transparent 70%),
+    radial-gradient(65% 55% at 0% 100%, var(--marca-brillo-2) 0%, transparent 70%),
+    linear-gradient(150deg, var(--hero-a) 0%, var(--hero-b) 100%);
+  color: #ffffff;
+}
+.marca-acceso::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% var(--centro-anillos, 38%),
+    transparent 0 140px,
+    var(--marca-anillo) 140px 141px,
+    transparent 141px 210px,
+    var(--marca-anillo) 210px 211px,
+    transparent 211px 300px,
+    var(--marca-anillo) 300px 301px,
+    transparent 301px
+  );
+}
+.marca-acceso::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(var(--hero-puntos) 1px, transparent 1.6px);
+  background-size: 9px 9px;
+  -webkit-mask-image: radial-gradient(40% 40% at 12% 10%, #000 0%, transparent 70%);
+  mask-image: radial-gradient(40% 40% at 12% 10%, #000 0%, transparent 70%);
+}
+.marca-acceso > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* El disco claro del emblema, con un halo que lo despega del verde. */
+.disco-emblema {
+  background: var(--marca-disco);
+  box-shadow:
+    0 0 0 10px var(--marca-anillo),
+    0 24px 60px rgba(0, 0, 0, 0.28);
 }
 
 /* Botón principal verde pino, sin la textura del hero. */

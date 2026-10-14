@@ -43,7 +43,7 @@ No cambia el plan. Al cerrar se marca la línea de la fase 1 como hecha.
 
 **PWA**
 
-15. **Instalable.** El manifiesto dice nombre y nombre corto "Finanzas", `start_url` y `scope` en `/`, `display: standalone`, idioma `es`, los colores de fondo y de tema del `panel-a` claro, iconos de 192 y 512 y uno de 512 adaptable (_maskable_), y un acceso directo "Registrar gasto" a `/nuevo/gasto` al mantener presionado el icono en Android. Chrome en Android y Edge en escritorio ofrecen instalarla. En iPhone se instala con Compartir → "Añadir a inicio", gracias al `apple-icon` de 180 y a los metadatos `appleWebApp`. El panel Application de DevTools no muestra errores de manifiesto.
+15. **Instalable.** El manifiesto dice nombre y nombre corto "Arca" (antes "Finanzas"; cambio del desarrollador, 2026-10-14), `start_url` y `scope` en `/`, `display: standalone`, idioma `es`, los colores de fondo y de tema del `panel-a` claro, iconos de 192 y 512 y uno de 512 adaptable (_maskable_), y un acceso directo "Registrar gasto" a `/nuevo/gasto` al mantener presionado el icono en Android. Chrome en Android y Edge en escritorio ofrecen instalarla. En iPhone se instala con Compartir → "Añadir a inicio", gracias al `apple-icon` de 180 y a los metadatos `appleWebApp`. El panel Application de DevTools no muestra errores de manifiesto.
 16. **Icono.** Solo el emblema, nunca las letras (`docs/diseno.md`, "Logo"). Sale de una fuente vectorial, así que no se pixela a 512. En el adaptable, el emblema completo, punta de la flecha incluida, cabe en la zona segura con margen.
 17. **Pantalla completa sin choques.** En la app instalada, la barra superior no queda debajo de la barra de estado ni de la muesca, y `NavInferior` queda por encima del indicador de inicio (`env(safe-area-inset-*)`). La barra de estado sigue el tema elegido con `CambioTema`, no solo el del sistema.
 18. ★ **El service worker no guarda datos ni repite acciones.** Se registra `/sw.js` con alcance `/`. Al instalarse guarda solo `/sin-conexion` y lo que esa página necesita. En cada navegación va primero a la red y, sin red, responde `/sin-conexion`. Nunca guarda el HTML de otra ruta ni respuestas RSC, y no intercepta nada que no sea GET: las server actions pasan directo. No se activa `experimental.useOffline` de Next, porque reintenta las acciones al volver la conexión y eso puede duplicar un gasto. Una versión nueva toma el control en la siguiente apertura.
@@ -58,6 +58,12 @@ No cambia el plan. Al cerrar se marca la línea de la fase 1 como hecha.
 21. **Velocidad.** Con sesión vigente, en el celular y con 4G o wifi, abrir la captura desde el icono o desde el acceso directo hasta tener el foco en el monto toma 2 s o menos con la app ya abierta antes, y "Guardar gasto" responde en 1 s o menos. Las funciones de Vercel corren en la misma región que la base de Supabase. Mientras el token siga vigente, verificar la sesión no agrega una ida al servidor de Auth en cada solicitud. Se mide con cronómetro y se anota en `progress.md`.
 
 ## Pantallas
+
+**Cambio del desarrollador, 2026-10-14.** Lo que sigue sobre el marco de `/entrar` y `/sin-conexion` quedó así:
+
+- **Acceso:** pantalla completa partida en dos. De un lado la marca: el verde pino con brillos menta y anillos, el emblema sobre un disco claro, "Arca", el lema y tres píldoras. Del otro, el formulario con el título "Entrar". En el celular, la marca arriba con las esquinas inferiores redondeadas y el formulario debajo.
+- **App:** a pantalla completa también en escritorio, sin el panel flotante sobre el lienzo.
+- **Marca:** el emblema con el nombre "Arca" (constante en `src/lib/marca.ts`) en lugar del cuadro con la "f" y "finanzas".
 
 **Rutas nuevas** `/entrar` y `/sin-conexion`. Las rutas actuales no cambian de dirección. Se reparten en dos grupos:
 

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Roboto_Flex } from "next/font/google";
 import { RegistroServiceWorker } from "@/components/registro-service-worker";
 import { scriptTemaInicial } from "@/components/tema";
+import { nombreApp } from "@/lib/marca";
 import "./globals.css";
 
 // Variable con eje óptico: las cifras grandes y el texto pequeño usan dibujos distintos de la misma fuente.
@@ -13,10 +14,10 @@ const robotoFlex = Roboto_Flex({
 });
 
 export const metadata: Metadata = {
-  title: { default: "Finanzas", template: "%s · Finanzas" },
+  title: { default: nombreApp, template: `%s · ${nombreApp}` },
   description: "Presupuesto por sobres: cada dólar tiene un trabajo.",
   // iPhone: Compartir → "Añadir a inicio" abre la app a pantalla completa (spec 002, criterio 15).
-  appleWebApp: { capable: true, title: "Finanzas", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: nombreApp, statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

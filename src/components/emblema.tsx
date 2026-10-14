@@ -5,6 +5,8 @@
  * De aquí salen también el favicon y los iconos de la app instalada.
  */
 
+import { nombreApp } from "@/lib/marca";
+
 /** Los dos verdes del logo, medidos en el interior de sus piezas. */
 export const verdesEmblema = { oscuro: "#207656", claro: "#3fa36f" };
 
@@ -66,7 +68,7 @@ export function Emblema({ tamano, className }: { tamano: number; className?: str
       width={tamano}
       height={tamano}
       role="img"
-      aria-label="Finanzas"
+      aria-label={nombreApp}
       className={className}
     >
       <path d={trazos.oscuro} fill={verdesEmblema.oscuro} />

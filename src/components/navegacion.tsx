@@ -4,6 +4,8 @@ import { History, House, Landmark, LogOut, Menu, Plus, Tags, Wallet, X, type Luc
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { nombreApp } from "@/lib/marca";
+import { Emblema } from "./emblema";
 import { CambioTema } from "./tema";
 
 type Ruta = { href: string; texto: string; Icono: LucideIcon };
@@ -31,7 +33,7 @@ function esActiva(href: string, ruta: string) {
 function tituloDe(ruta: string) {
   if (ruta.startsWith(registrar.href)) return "Nuevo gasto";
   if (esActiva(registrar.href, ruta)) return registrar.texto;
-  return [...rutas, ...secundarias].find((r) => esActiva(r.href, ruta))?.texto ?? "Finanzas";
+  return [...rutas, ...secundarias].find((r) => esActiva(r.href, ruta))?.texto ?? nombreApp;
 }
 
 /** Título de la página actual, para la barra superior de escritorio. */
@@ -40,16 +42,12 @@ export function TituloRuta() {
   return <h1 className="text-[22px] font-bold tracking-tight">{tituloDe(ruta)}</h1>;
 }
 
-function Marca() {
+/** El emblema del logo y el nombre de la app. */
+export function Marca({ tamano = 38 }: { tamano?: number }) {
   return (
-    <span className="flex items-center gap-3">
-      <span
-        aria-hidden
-        className="grid size-9 place-items-center rounded-[12px] bg-pildora-navy text-[15px] font-bold text-white"
-      >
-        f
-      </span>
-      <span className="text-[19px] font-bold tracking-tight">finanzas</span>
+    <span className="flex items-center gap-2.5">
+      <Emblema tamano={tamano} />
+      <span className="text-[21px] font-extrabold tracking-tight">{nombreApp}</span>
     </span>
   );
 }
@@ -108,7 +106,7 @@ function BotonSalir({ salir }: ConSalir) {
 export function BarraLateral({ salir }: ConSalir) {
   const ruta = usePathname();
   return (
-    <aside className="hidden w-[248px] shrink-0 flex-col border-r border-panel-borde px-5 py-7 lg:sticky lg:top-5 lg:flex lg:h-[calc(100dvh-40px)] lg:self-start">
+    <aside className="hidden w-[248px] shrink-0 flex-col border-r border-panel-borde px-5 py-7 lg:sticky lg:top-0 lg:flex lg:h-dvh lg:self-start">
       <Link href="/" className="mb-9 px-2">
         <Marca />
       </Link>
