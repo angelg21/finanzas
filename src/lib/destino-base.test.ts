@@ -141,6 +141,19 @@ describe("esUrlLegible: una URL que se puede mostrar y usar sin riesgo de imprim
       expect(esUrlLegible(ilegible), String(ilegible)).toBe(false);
     }
   });
+
+  it("rechaza un % mal escapado o %00: libpq (pg_dump) repite la contraseña en su error", () => {
+    // pg_dump: error: invalid percent-encoded token: "Clave%zzSecreta"
+    for (const clave of ["Clave%zzSecreta", "Clave%00Secreta", "100%", "Clave%2"]) {
+      expect(
+        esUrlLegible(url(`postgres.abcdefgh:${clave}`, "aws-0-us-east-1.pooler.supabase.com:5432/postgres")),
+        clave,
+      ).toBe(false);
+    }
+    expect(esUrlLegible(url("postgres.abcdefgh:100%25", "aws-0-us-east-1.pooler.supabase.com:5432/postgres"))).toBe(
+      true,
+    );
+  });
 });
 
 describe("exigeTls: producción solo con TLS", () => {

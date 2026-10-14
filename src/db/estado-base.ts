@@ -15,7 +15,7 @@ import * as schema from "./schema";
 type EstadoTabla = { tabla: string; dueno: boolean; rls: boolean; forzado: boolean };
 export type Comprobacion = { ok: boolean; texto: string };
 
-const tablasDelEsquema = Object.values(schema)
+export const tablasDelEsquema = Object.values(schema)
   .filter((valor) => is(valor, PgTable))
   .map((tabla) => getTableConfig(tabla).name);
 

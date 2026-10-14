@@ -14,7 +14,7 @@ import * as schema from "./schema";
 
 const archivoProduccion = ".env.produccion.local";
 const contrasenaEscapada =
-  "Escapa los caracteres especiales de la contraseña (/ ? # @ , → %2F %3F %23 %40 %2C) o genera una sin ellos.";
+  "Escapa los caracteres especiales de la contraseña (/ ? # @ , % → %2F %3F %23 %40 %2C %25) o genera una sin ellos.";
 
 /** DATABASE_URL de .env.local, o del entorno, que manda. Sin exigir nada: solo para borrar lo marcado demo-*. */
 export function urlDeEntorno(): string | undefined {

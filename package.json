@@ -18,6 +18,7 @@
     "db:seed:produccion": "tsx src/db/seed.ts --produccion",
     "db:demo": "tsx src/db/semilla-demo.ts",
     "db:demo:limpiar": "tsx src/db/semilla-demo.ts --limpiar",
+    "db:respaldo:produccion": "tsx src/db/respaldo.ts --produccion",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run --passWithNoTests",

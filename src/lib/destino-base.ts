@@ -14,9 +14,12 @@ const modosConTls = new Set(["require", "verify-ca", "verify-full"]);
  *   "u", puerto 123 y ruta "/45@host". Por eso una "@" después del host la invalida.
  * - postgres.js toma el host tras la primera "@", no corta en "#" y reparte las comas entre varios hosts. Por eso
  *   se rechaza más de una "@", cualquier "#" y cualquier ",": escapadas (%40, %23, %2C) no molestan a ninguno.
+ * - libpq (pg_dump) es el tercero: un "%" que no va seguido de dos cifras hexadecimales, o un %00, le hace fallar
+ *   con un error que repite la contraseña.
  */
 function leer(url: string | undefined): URL | null {
   if (!url || url.split("@").length > 2 || url.includes("#") || url.includes(",")) return null;
+  if (/%(?![0-9a-f]{2})|%00/i.test(url)) return null;
   try {
     const leida = new URL(url);
     if (!/^postgres(ql)?:$/.test(leida.protocol) || !leida.hostname) return null;

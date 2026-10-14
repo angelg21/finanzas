@@ -28,7 +28,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - `drizzle.config.ts`, `db:migrate` y `db:seed` se niegan fuera de local;
   - `db:migrate:produccion` y `db:seed:produccion` leen `.env.produccion.local`, muestran el destino con `describirBase` y piden escribir `produccion` (criterios 10 y 11);
   - comprobarlo con un `DATABASE_URL` remoto falso, sin conectar.
-- [ ] T4 · `pnpm db:respaldo:produccion` con el `pg_dump` del contenedor, hacia `data/respaldos/AAAA-MM-DD.sql`, y la restauración de prueba en `finanzas_restauracion`, que compara el conteo y las sumas por tipo (criterio 12). Se ensaya contra la base local.
+- [x] T4 · (2026-10-13) `pnpm db:respaldo:produccion` con el `pg_dump` del contenedor, hacia `data/respaldos/AAAA-MM-DD.sql`, y la restauración de prueba en `finanzas_restauracion`, que compara el conteo y las sumas por tipo (criterio 12). Se ensaya contra la base local.
 - [ ] T5 · Supabase en el servidor:
   - instalar `@supabase/ssr` y `@supabase/supabase-js`;
   - crear el cliente de servidor con cookies `HttpOnly`;
@@ -107,3 +107,15 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - Antes de crear `.env.produccion.local`, el desarrollador corre `pnpm db:seed:produccion` en su terminal. Debe decir "Falta .env.produccion.local". Si dice "…en una terminal", está en Git Bash (mintty): usar PowerShell o `winpty`.
   - La primera vez con el archivo, escribir algo distinto de `produccion` debe responder "Cancelado". El agente no lo puede ensayar porque no escribe archivos `.env`.
   - `docs/despliegue.md`: pooler de sesión con `?sslmode=require` para `.env.produccion.local`; pooler de transacción con `?sslmode=require` en Vercel; "Enforce SSL" en Supabase.
+- T4, `guardian-datos`: NO APTO en la primera vuelta y APTO en la segunda (2026-10-13). Lo que cambió:
+  - La contraseña entra a `pg_dump` en `PGPASSWORD`, nunca en sus argumentos, que lista cualquiera con acceso a Docker.
+  - Un `%` mal escapado o `%00` invalida la URL, porque libpq repetía la clave en su error.
+  - Se compara cada tabla del esquema (filas y huella md5 en UTC), los movimientos por tipo y las migraciones. Antes, el primer respaldo, con `movimientos` vacía, se daba por bueno sin comparar nada.
+  - `finanzas_restauracion` se borra siempre, también si falla. El volcado se llama `.sql.sin-comprobar` hasta que cuadra.
+  - El guardián lo midió también en modo `--produccion` contra la imagen de Supabase con TLS: 11 ✓.
+- Para T14 y T15, del guardián en T4:
+  - Restaurar con un rol NOSUPERUSER, por si un esquema de producción manipulado ejecuta código al restaurar.
+  - `pnpm exec tsx src/db/respaldo.ts --produccion` no cae bajo el `deny`: lo frena solo la comprobación de terminal.
+  - El respaldo no incluye `auth.users`. Va dicho en `docs/despliegue.md`.
+  - Mirar `select version()` en producción: si el proyecto nace en Postgres 18, el `pg_dump` 17 se niega.
+  - `pg_dump` por el pooler real en modo sesión sigue sin medirse.
