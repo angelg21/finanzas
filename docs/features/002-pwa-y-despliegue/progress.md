@@ -285,6 +285,12 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
     - conectó GitHub a su cuenta de Vercel y el repositorio al proyecto, con `main` como rama de producción;
     - puso Node 22.x, la región iad1 y Standard Protection;
     - cargó las cuatro variables solo en Production.
+  - El primer despliegue entró, pero falló al consultar la base. Los registros de Vercel (`vercel logs`) mostraron dos causas, una tras otra, y el desarrollador corrigió `DATABASE_URL` y redesplegó:
+    - `ECONNREFUSED 127.0.0.1:5433`: la variable tenía la cadena local;
+    - `28P01 password authentication failed`: la contraseña no era la de la base. Se armó desde la cadena del pooler en modo sesión, cambiando solo el puerto a 6543.
+  - Después, sin errores en los registros de producción.
+  - Humo contra producción (2026-10-14), `node scripts/humo.mjs --url https://arca-ag.vercel.app --sin-sesion`: once rutas a `/entrar`, POST a 303, la petición RSC "cortada por la sesión y sin datos", PUT/PATCH/DELETE a 405 y las cabeceras de las rutas públicas y de `sw.js`. Última línea: "✓ humo: todo responde como debe." (criterio 12).
+  - Faltan: la prueba de que el usuario de prueba no entra en producción y el primer respaldo (criterio 13).
 - **Fusión adelantada (2026-10-14).** El desarrollador decidió fusionar en `main` y publicarla ya, para que Vercel despliegue desde `main` y no desde esta rama. Se hizo con `pnpm verify` en verde, sin `/f-verify` ni `/f-review`. Quedan pendientes y se hacen sobre `main`:
   - T15: conectar el repositorio, las variables, el despliegue, el humo contra producción, la prueba en el celular y el primer respaldo;
   - T16 y T17;
