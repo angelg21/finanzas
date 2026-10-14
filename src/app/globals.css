@@ -64,10 +64,6 @@
   --positivo: #2f8f66;
   --negativo: #c9544e;
 
-  --nav: rgba(255, 255, 255, 0.72);
-  --nav-borde: rgba(20, 33, 29, 0.08);
-  --nav-inactivo: #7f8d87;
-
   --serie-a: #0e3b32;
   --serie-b: #5aa381;
   --rejilla: rgba(20, 33, 29, 0.08);
@@ -154,10 +150,6 @@
   --positivo: #5ccf96;
   --negativo: #ff7b72;
 
-  --nav: rgba(11, 22, 19, 0.88);
-  --nav-borde: rgba(255, 255, 255, 0.08);
-  --nav-inactivo: #7f918a;
-
   --serie-a: #b9d6c2;
   --serie-b: #4d9d78;
   --rejilla: rgba(255, 255, 255, 0.08);
@@ -204,9 +196,6 @@
   --color-enlace: var(--enlace);
   --color-positivo: var(--positivo);
   --color-negativo: var(--negativo);
-  --color-nav: var(--nav);
-  --color-nav-borde: var(--nav-borde);
-  --color-nav-inactivo: var(--nav-inactivo);
   --color-serie-a: var(--serie-a);
   --color-serie-b: var(--serie-b);
   --color-rejilla: var(--rejilla);

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BarraLateral, Marca, MenuMovil, NavInferior, TituloRuta } from "@/components/navegacion";
+import { BarraLateral, BotonFlotanteRegistrar, Marca, MenuMovil, TituloRuta } from "@/components/navegacion";
 import { CambioTema } from "@/components/tema";
 import { salir } from "./acciones";
 
@@ -27,8 +27,7 @@ function Avatar() {
 }
 
 /**
- * El cascarón de las pantallas con datos (spec 002): barra lateral, barras superiores, menú móvil y navegación
- * inferior. Cada página de este grupo exige la sesión por su cuenta; el layout no la comprueba, porque al navegar
+ * El cascarón de las pantallas con datos (spec 002): barra lateral, barras superiores, menú móvil y el "+" flotante. Cada página de este grupo exige la sesión por su cuenta; el layout no la comprueba, porque al navegar
  * entre páginas no se vuelve a ejecutar.
  */
 export default function LayoutConSesion({ children }: LayoutProps<"/">) {
@@ -68,10 +67,10 @@ export default function LayoutConSesion({ children }: LayoutProps<"/">) {
             </div>
           </header>
 
-          <div className="flex-1 px-4 pb-28 pt-1 lg:px-8 lg:pb-10 lg:pt-4 xl:px-10">{children}</div>
+          <div className="flex-1 px-4 pb-24 pt-1 lg:px-8 lg:pb-10 lg:pt-4 xl:px-10">{children}</div>
         </div>
       </div>
-      <NavInferior />
+      <BotonFlotanteRegistrar />
     </>
   );
 }

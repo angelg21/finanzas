@@ -19,7 +19,7 @@ const rutas: Ruta[] = [
 
 // El "+" y "Registrar movimiento" abren la captura de gasto, lo más frecuente (spec 001, criterio 15).
 // Ingreso y Mover siguen en el selector /nuevo; los dos cuentan como "Registrar".
-/** En la barra lateral y el menú, no en la barra inferior, que ya tiene sus cinco accesos. */
+/** En la barra lateral y el menú, después de las principales. */
 const secundarias: Ruta[] = [{ href: "/categorias", texto: "Categorías", Icono: Tags }];
 
 const registrar: Ruta = { href: "/nuevo/gasto", texto: "Registrar", Icono: Plus };
@@ -199,66 +199,20 @@ export function MenuMovil({ salir }: ConSalir) {
 }
 
 /**
- * Barra inferior móvil, como la de la referencia de colores: una píldora flotante con botones
- * redondos; el activo se ensancha y muestra su nombre junto a un círculo verde pino.
+ * El "+" flotante del celular, abajo a la derecha: registrar un gasto queda a un toque y al alcance del pulgar.
+ * Reemplaza a la barra inferior (pedido del desarrollador, 2026-10-14); lo demás está en el menú. No sale en las
+ * pantallas de registrar, donde taparía el botón de guardar.
  */
-export function NavInferior() {
+export function BotonFlotanteRegistrar() {
   const ruta = usePathname();
-  const [inicio, movimientos, sobres, cuentas] = rutas;
-  const orden = [inicio, movimientos, registrar, sobres, cuentas];
-
+  if (esActiva(registrar.href, ruta)) return null;
   return (
-    <nav
-      aria-label="Principal"
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-20 flex justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden"
+    <Link
+      href={registrar.href}
+      aria-label="Registrar movimiento"
+      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-20 boton-pino grid size-14 place-items-center rounded-full shadow-tarjeta lg:hidden"
     >
-      <div
-        className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-nav-borde bg-nav p-1.5 shadow-tarjeta"
-        style={{ backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)" }}
-      >
-        {orden.map((r) => {
-          const activa = esActiva(r.href, ruta);
-          const central = r.href === registrar.href;
-          if (central) {
-            return (
-              <Link
-                key={r.href}
-                href={r.href}
-                aria-label="Registrar movimiento"
-                aria-current={activa ? "page" : undefined}
-                className="grid size-11 place-items-center rounded-full bg-pildora-navy text-white"
-              >
-                <Plus size={22} strokeWidth={2.6} aria-hidden />
-              </Link>
-            );
-          }
-          if (activa) {
-            return (
-              <Link
-                key={r.href}
-                href={r.href}
-                aria-current="page"
-                className="tarjeta flex h-11 items-center gap-2 rounded-full pl-4 pr-1 text-[13px] font-semibold text-texto"
-              >
-                {r.texto}
-                <span className="grid size-9 place-items-center rounded-full bg-pildora-navy text-white">
-                  <r.Icono size={17} strokeWidth={2.2} aria-hidden />
-                </span>
-              </Link>
-            );
-          }
-          return (
-            <Link
-              key={r.href}
-              href={r.href}
-              aria-label={r.texto}
-              className="tarjeta grid size-11 place-items-center rounded-full text-nav-inactivo hover:text-texto"
-            >
-              <r.Icono size={20} strokeWidth={2} aria-hidden />
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
+      <Plus size={26} strokeWidth={2.6} aria-hidden />
+    </Link>
   );
 }
