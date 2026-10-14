@@ -14,12 +14,15 @@ const robotoFlex = Roboto_Flex({
 export const metadata: Metadata = {
   title: { default: "Finanzas", template: "%s · Finanzas" },
   description: "Presupuesto por sobres: cada dólar tiene un trabajo.",
+  // iPhone: Compartir → "Añadir a inicio" abre la app a pantalla completa (spec 002, criterio 15).
+  appleWebApp: { capable: true, title: "Finanzas", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // Los colores de --panel-a. Siguen al sistema hasta que el script del tema los cambia por los del tema elegido.
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f5f6f2" },
     { media: "(prefers-color-scheme: dark)", color: "#15241f" },

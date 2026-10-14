@@ -8,11 +8,24 @@ type Tema = "claro" | "oscuro";
 const CLAVE = "tema";
 
 /**
- * Script que corre antes de pintar para que no haya destello de tema.
- * Sin preferencia guardada, sigue al sistema operativo.
- * Debe ser autónomo: no importa nada.
+ * Color de la barra de estado del celular para cada tema: el de --panel-a, que el meta theme-color no puede leer.
+ * Con el tema elegido manda este y no el del sistema (spec 002, criterio 17).
  */
-export const scriptTemaInicial = `(function(){var d=document.documentElement;try{var q=new URLSearchParams(location.search).get("${CLAVE}");if(q==="claro"||q==="oscuro"){localStorage.setItem("${CLAVE}",q);}var t=localStorage.getItem("${CLAVE}");if(t!=="claro"&&t!=="oscuro"){t=matchMedia("(prefers-color-scheme: dark)").matches?"oscuro":"claro";}d.dataset.tema=t;}catch(e){d.dataset.tema="claro";}})();`;
+const barraDeEstado: Record<Tema, string> = { claro: "#f5f6f2", oscuro: "#15241f" };
+
+/**
+ * Script que corre antes de pintar para que no haya destello de tema. Sin preferencia guardada, sigue al sistema
+ * operativo. También pinta la barra de estado con el tema elegido: los meta theme-color del layout siguen al
+ * sistema, y se reescriben al cargar. Debe ser autónomo: no importa nada.
+ */
+export const scriptTemaInicial = `(function(){var d=document.documentElement;var c=${JSON.stringify(barraDeEstado)};function b(){var m=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<m.length;i++){m[i].setAttribute("content",c[d.dataset.tema]);}}try{var q=new URLSearchParams(location.search).get("${CLAVE}");if(q==="claro"||q==="oscuro"){localStorage.setItem("${CLAVE}",q);}var t=localStorage.getItem("${CLAVE}");if(t!=="claro"&&t!=="oscuro"){t=matchMedia("(prefers-color-scheme: dark)").matches?"oscuro":"claro";}d.dataset.tema=t;}catch(e){d.dataset.tema="claro";}b();document.addEventListener("DOMContentLoaded",b);})();`;
+
+/** Pinta la barra de estado del celular con el color del tema. */
+function pintarBarraDeEstado(tema: Tema) {
+  for (const meta of document.querySelectorAll('meta[name="theme-color"]')) {
+    meta.setAttribute("content", barraDeEstado[tema]);
+  }
+}
 
 function temaActual(): Tema {
   try {
@@ -42,6 +55,7 @@ function fijarTema(tema: Tema) {
     // el cambio dura hasta recargar
   }
   document.documentElement.dataset.tema = tema;
+  pintarBarraDeEstado(tema);
   oyentes.forEach((o) => o());
 }
 

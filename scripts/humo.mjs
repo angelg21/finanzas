@@ -43,6 +43,7 @@ const conDatos = [
 /** Lo único que responde sin sesión. */
 const publicas = [
   ["/entrar", 200],
+  ["/manifest.webmanifest", 200],
   ["/icon/32", 200],
   ["/icon/192", 200],
   ["/icon/512", 200],

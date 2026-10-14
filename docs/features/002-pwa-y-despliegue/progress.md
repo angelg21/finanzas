@@ -47,7 +47,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - sin sesión: cada ruta redirige a `/entrar`, responden las públicas y están las cabeceras;
   - con `--url` para correr contra una URL remota en modo sin sesión (criterios 1, 13 y 14).
 - [x] T9 · (2026-10-13) Pieza `Emblema` en SVG, aprobada por el desarrollador lado a lado con `logo-emblema.png`. Iconos generados con `ImageResponse`: favicon, `apple-icon` de 180, y 192, 512 y 512 adaptable, con margen extra para la flecha (criterio 16).
-- [ ] T10 · Manifiesto con el acceso directo "Registrar gasto", `appleWebApp`, zonas seguras en la barra superior y en `NavInferior`, y la barra de estado que sigue al tema elegido (criterios 15 y 17). Panel Application de DevTools sin errores.
+- [x] T10 · (2026-10-13) Manifiesto con el acceso directo "Registrar gasto", `appleWebApp`, zonas seguras en la barra superior y en `NavInferior`, y la barra de estado que sigue al tema elegido (criterios 15 y 17). Panel Application de DevTools sin errores.
 - [ ] T11 · `/sw.js` y su registro desde una hoja `"use client"`, más la página estática `/sin-conexion` (criterios 18 y 20). En DevTools, con la red desconectada: navegar muestra `/sin-conexion`, ningún POST pasa por el service worker y la caché solo contiene lo de `/sin-conexion`.
 - [ ] T12 · Fallas al guardar en la captura y en los formularios de categorías y sobres: sin red, con la sesión vencida y con una versión vieja. El mensaje aparece junto al botón, lo escrito se conserva y nada se reintenta solo (criterio 19). Se prueba en Edge con la red desconectada y con las cookies borradas a mano.
 - [ ] T13 · `pnpm capturas -- /entrar /sin-conexion /nuevo/gasto` en claro y oscuro, comparadas con las referencias y con "Pantallas". En el celular, por la red local: entrar, salir, atrás después de salir, y la captura detrás del inicio de sesión.
@@ -169,3 +169,11 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
     - `/icono-adaptable` de 512: la punta de la flecha a 0,37 del lado, dentro de la zona segura de 0,40.
   - Se borró el `favicon.ico` de Next: el favicon es `/icon/32`.
   - Satori, el que dibuja para `ImageResponse`, falla con atributos o estilos `undefined`. `CuadroEmblema` no deja ninguno.
+- T10 (2026-10-13):
+  - El manifiesto se sirve sin sesión, con los campos de la spec, el acceso directo "Registrar gasto" y los tres iconos. El humo lo comprueba.
+  - El `<head>` lleva `apple-mobile-web-app-*`, `mobile-web-app-capable` y el enlace al manifiesto.
+  - Las zonas seguras ya estaban en la barra superior, en `NavInferior` y en `(sin-sesion)`.
+  - La barra de estado:
+    - los `theme-color` del layout siguen al sistema; el script del tema los reescribe con el color del tema elegido al cargar y al cambiar;
+    - en iPhone, `statusBarStyle: "default"`, que desde iOS 15 toma `theme-color`;
+    - se valida en el celular en T16, y el panel Application de DevTools en T13.
