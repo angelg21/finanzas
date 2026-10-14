@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CirculoCategoria, EncabezadoTarjeta, Pildora, Tarjeta } from "@/components/ui";
 import { type CategoriaConUso, categoriasConUso } from "@/db/categorias";
 import { restaurarCategoriaAccion } from "./acciones";
+import { exigirSesion } from "@/app/sesion";
 
 export const metadata: Metadata = { title: "Categorías" };
 export const dynamic = "force-dynamic";
@@ -20,6 +21,7 @@ const pestanas = [
  * `?archivadas=1` muestra las archivadas para restaurarlas.
  */
 export default async function Categorias({ searchParams }: PageProps<"/categorias">) {
+  await exigirSesion();
   const parametros = await searchParams;
   const tipo = parametros.tipo === "ingreso" ? "ingreso" : "gasto";
   const verArchivadas = parametros.archivadas === "1";

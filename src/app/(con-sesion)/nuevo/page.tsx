@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { Tarjeta, TituloPagina } from "@/components/ui";
+import { exigirSesion } from "@/app/sesion";
 
 export const metadata: Metadata = { title: "Registrar" };
 
@@ -12,6 +13,7 @@ const opciones = [
 ] as const;
 
 export default async function Nuevo({ searchParams }: PageProps<"/nuevo">) {
+  await exigirSesion();
   const { tipo } = await searchParams;
   const elegido = typeof tipo === "string" ? tipo : null;
 

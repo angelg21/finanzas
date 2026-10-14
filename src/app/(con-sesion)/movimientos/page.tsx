@@ -3,6 +3,7 @@ import { ArrowDownLeft, ArrowUpRight, PiggyBank } from "lucide-react";
 import { TarjetaMovimiento } from "@/components/movimiento";
 import { Cifra, Tarjeta, TituloPagina } from "@/components/ui";
 import { movimientosRecientes, type MovimientoReciente } from "@/db/consultas";
+import { exigirSesion } from "@/app/sesion";
 
 export const metadata: Metadata = { title: "Movimientos" };
 export const dynamic = "force-dynamic";
@@ -43,6 +44,7 @@ function Resumen({
 }
 
 export default async function Movimientos() {
+  await exigirSesion();
   const movimientos = await movimientosRecientes(60);
 
   const grupos = new Map<string, MovimientoReciente[]>();

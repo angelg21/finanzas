@@ -12,6 +12,7 @@ import {
   restaurarCategoria,
 } from "@/db/categorias";
 import { type ErroresCategoria, type TipoCategoria, repetidaDe, validarCategoria } from "@/lib/categorias";
+import { exigirSesion } from "@/app/sesion";
 
 /** Lo tecleado, para volver a llenar el formulario si hay que corregir. */
 export type ValoresCategoria = { nombre: string; tipo: TipoCategoria; icono: string; color: string };
@@ -36,6 +37,7 @@ function revalidar() {
 
 /** Crea o edita (si llega `id`) una categoría. Al terminar, vuelve a la lista o a la captura de gasto. */
 export async function guardarCategoria(previo: EstadoCategoria, formData: FormData): Promise<EstadoCategoria> {
+  await exigirSesion();
   const ronda = (previo?.ronda ?? 0) + 1;
   const valores: ValoresCategoria = {
     nombre: texto(formData, "nombre"),
@@ -95,6 +97,7 @@ export async function guardarCategoria(previo: EstadoCategoria, formData: FormDa
 
 /** Criterio 21: borra la categoría si no tiene movimientos; si los tiene, la archiva. */
 export async function eliminarCategoriaAccion(formData: FormData) {
+  await exigirSesion();
   const categoria = await categoriaPorId(Number(texto(formData, "id")));
   if (!categoria) redirect("/categorias");
   await eliminarCategoria(categoria.id);
@@ -108,6 +111,7 @@ export async function eliminarCategoriaAccion(formData: FormData) {
  * captura, vuelve a ella con la categoría elegida, como al crear (25).
  */
 export async function restaurarCategoriaAccion(formData: FormData) {
+  await exigirSesion();
   const id = Number(texto(formData, "restaurar") || texto(formData, "id"));
   const existentes = await categoriasConUso();
   const categoria = existentes.find((c) => c.id === id);

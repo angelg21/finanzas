@@ -14,6 +14,7 @@ import {
 } from "@/components/ui";
 import { saldosPorCuenta, saldosPorSobre } from "@/db/consultas";
 import { formatearCentavos } from "@/lib/dinero";
+import { exigirSesion } from "@/app/sesion";
 
 export const metadata: Metadata = { title: "Cuentas" };
 export const dynamic = "force-dynamic";
@@ -27,6 +28,7 @@ const nombreTipo: Record<string, string> = {
 };
 
 export default async function Cuentas() {
+  await exigirSesion();
   const [cuentas, sobres] = await Promise.all([saldosPorCuenta(), saldosPorSobre()]);
   // Todas las cuentas, también la de la prima: el dinero que la app registra ahí es mío aunque la cuenta
   // no lo sea, y desde ella también se gasta (spec 001, criterio 16).

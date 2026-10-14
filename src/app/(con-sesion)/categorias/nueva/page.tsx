@@ -3,6 +3,7 @@ import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { colorPorDefecto, iconoPorDefecto } from "@/lib/categorias";
 import { FormularioCategoria } from "../formulario-categoria";
+import { exigirSesion } from "@/app/sesion";
 
 export const metadata: Metadata = { title: "Nueva categoría" };
 
@@ -11,6 +12,7 @@ export const metadata: Metadata = { title: "Nueva categoría" };
  * viene de la píldora "Nueva" de la captura y vuelve allí con la categoría elegida (criterio 25).
  */
 export default async function NuevaCategoria({ searchParams }: PageProps<"/categorias/nueva">) {
+  await exigirSesion();
   const parametros = await searchParams;
   const volver = parametros.volver === "/nuevo/gasto" ? parametros.volver : undefined;
   // Desde la captura de gasto, la categoría nueva es de gasto: una de ingreso no se podría elegir allí (25).

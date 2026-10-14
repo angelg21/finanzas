@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db, partidasSobre, sobres } from "@/db";
 import { fijarReglaFija, sincronizarAporte } from "@/db/fondos";
 import { aCentavos } from "@/lib/dinero";
+import { exigirSesion } from "@/app/sesion";
 
 export type EstadoFormulario = { error?: string; ok?: number };
 
@@ -42,6 +43,7 @@ export async function agregarPartida(
   _previo: EstadoFormulario,
   formData: FormData,
 ): Promise<EstadoFormulario> {
+  await exigirSesion();
   if (!Number.isInteger(sobreId) || !(await esFondo(sobreId))) return { error: "Este sobre no admite desglose." };
   const datos = esquemaPartida.safeParse({
     nombre: formData.get("nombre"),
@@ -67,6 +69,7 @@ export async function agregarPartida(
 
 /** Quita una ocasión del desglose y recalcula el aporte. */
 export async function eliminarPartida(formData: FormData) {
+  await exigirSesion();
   const id = Number(formData.get("id"));
   const sobreId = Number(formData.get("sobreId"));
   if (!Number.isInteger(id) || !Number.isInteger(sobreId)) return;
@@ -81,6 +84,7 @@ export async function fijarAporteManual(
   _previo: EstadoFormulario,
   formData: FormData,
 ): Promise<EstadoFormulario> {
+  await exigirSesion();
   if (!Number.isInteger(sobreId) || !(await esFondo(sobreId))) return { error: "Este sobre no admite aporte fijo." };
   const monto = leerMonto(String(formData.get("monto") ?? ""));
   if (monto === null) return { error: "El aporte debe ser un número mayor que cero." };

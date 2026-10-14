@@ -22,6 +22,28 @@ function capaDe(rel) {
   return null;
 }
 
+/** Variables NEXT_PUBLIC_ que pueden llegar al navegador (spec 002, criterio 8). Hoy, ninguna. */
+const PUBLICAS_PERMITIDAS = [];
+
+/**
+ * Lo que sigue a la llave que abre el cuerpo de la función que empieza en `inicio`: salta los parámetros, con sus
+ * paréntesis anidados, y el tipo de retorno. Con un tipo de retorno literal ({ ... }) se confunde y la regla falla:
+ * mejor un tipo con nombre.
+ */
+function cuerpoDesde(contenido, inicio) {
+  let i = contenido.indexOf("(", inicio);
+  if (i < 0) return "";
+  for (let abiertos = 0; i < contenido.length; i++) {
+    if (contenido[i] === "(") abiertos++;
+    else if (contenido[i] === ")" && --abiertos === 0) break;
+  }
+  const llave = contenido.indexOf("{", i);
+  return llave < 0 ? "" : contenido.slice(llave + 1).trimStart();
+}
+
+/** Si el cuerpo empieza verificando la sesión (spec 002, criterio 2). */
+const empiezaConSesion = (cuerpo) => /^(?:const \w+ = )?await exigirSesion\(\);/.test(cuerpo);
+
 /** Módulos importados en tiempo de ejecución. Los `import type` no acoplan y no cuentan. */
 function importsEnEjecucion(contenido) {
   const patron = /^import\s+(?!type\b)[^;]*?from\s+["']([^"']+)["']/gm;
@@ -80,9 +102,6 @@ export function revisarArchivo(ruta, contenido) {
         "Lee DATABASE_URL fuera de su sitio. La app conecta en src/db/index.ts; los scripts, en src/db/conexion-script.ts.",
       );
     }
-    if (/NEXT_PUBLIC_[A-Z0-9_]*(KEY|SECRET|TOKEN|PASSWORD)/.test(contenido)) {
-      error("Clave o secreto expuesto al navegador con NEXT_PUBLIC_.");
-    }
     if (/\.(toFixed|toLocaleString)\([^)]*\)\s*\+\s*["'`] ?USD/.test(contenido)) {
       aviso("Formatea dinero con formatearCentavos, no concatenando la unidad a mano.");
     }
@@ -104,6 +123,40 @@ export function revisarArchivo(ruta, contenido) {
     }
     if (capa === "app" && !/\/acciones\.ts$/.test(rel) && desde("drizzle-orm")) {
       error("Una página no habla con Drizzle directamente. Pon la consulta en src/db/consultas.ts.");
+    }
+
+    // Spec 002, criterio 2: cada acción y cada página con datos verifican la sesión por su cuenta, sin fiarse del
+    // proxy, cuyo matcher o una ruta movida pueden dejarlas sin cubrir.
+    if (capa === "app" && /\/acciones\.ts$/.test(rel)) {
+      for (const accion of contenido.matchAll(/^export\s+async\s+function\s+(\w+)/gm)) {
+        if (!empiezaConSesion(cuerpoDesde(contenido, accion.index))) {
+          error(
+            `La acción ${accion[1]} no empieza con \`await exigirSesion();\`. Cada acción verifica la sesión antes que nada.`,
+          );
+        }
+      }
+      if (/^export\s+(?:const|let|var|function|default|\{)/m.test(contenido)) {
+        error("acciones.ts solo exporta funciones async con nombre, para que la regla de la sesión las vea todas.");
+      }
+    }
+    if (capa === "app" && /\/page\.tsx$/.test(rel) && !/\/\(sin-sesion\)\//.test(rel)) {
+      const pagina = /^export\s+default\s+async\s+function\b/m.exec(contenido);
+      if (!pagina || !empiezaConSesion(cuerpoDesde(contenido, pagina.index))) {
+        error(
+          "La página no empieza con `await exigirSesion();` en su función async por defecto. Sin sesión solo responde lo de (sin-sesion).",
+        );
+      }
+    }
+  }
+
+  // Spec 002, criterio 8: ninguna variable llega al navegador. El cliente de Supabase vive solo en el servidor.
+  if (enSrc || /(^|\/)next\.config\.[cm]?[jt]s$/.test(rel)) {
+    for (const [nombre] of contenido.matchAll(/NEXT_PUBLIC_[A-Z0-9_]*/g)) {
+      if (!PUBLICAS_PERMITIDAS.includes(nombre)) {
+        error(
+          `${nombre}: Next la mete en el código del navegador. Ninguna variable es pública (lista de permitidas vacía).`,
+        );
+      }
     }
   }
 
@@ -133,7 +186,7 @@ const esPrincipal = process.argv[1] && path.resolve(process.argv[1]) === fileURL
 if (esPrincipal) {
   const args = process.argv.slice(2);
   const archivos = args.includes("--todo")
-    ? listarTs(path.join(process.cwd(), "src"))
+    ? [...listarTs(path.join(process.cwd(), "src")), path.join(process.cwd(), "next.config.ts")]
     : args.filter((a) => !a.startsWith("--")).map((a) => path.resolve(a));
   let errores = 0;
   let avisos = 0;

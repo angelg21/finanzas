@@ -8,12 +8,14 @@ import { categoriaPorId } from "@/db/categorias";
 import { destinoAlEliminar } from "@/lib/categorias";
 import { eliminarCategoriaAccion } from "../acciones";
 import { FormularioCategoria } from "../formulario-categoria";
+import { exigirSesion } from "@/app/sesion";
 
 export const metadata: Metadata = { title: "Editar categoría" };
 export const dynamic = "force-dynamic";
 
 /** Editar categoría (spec 001, criterios 20 y 21): el mismo formulario y, debajo, eliminar o archivar. */
 export default async function EditarCategoria({ params }: PageProps<"/categorias/[id]">) {
+  await exigirSesion();
   const { id } = await params;
   const categoria = await categoriaPorId(Number(id));
   if (!categoria) notFound();

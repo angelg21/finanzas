@@ -35,7 +35,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - escribir `exigirSesion()`, con `cache` y la comprobación de `USUARIO_PERMITIDO`;
   - escribir `src/proxy.ts`: renueva la sesión y redirige a `/entrar?siguiente=`; su matcher deja fuera el manifiesto, `/sw.js`, los iconos, `/sin-conexion` y `_next` (criterios 1, 3, 6 y 8);
   - leer antes la guía de autenticación y la de proxy en `node_modules/next/dist/docs/` y la de `@supabase/ssr`.
-- [ ] T6 · Grupos de rutas:
+- [x] T6 · (2026-10-13) Grupos de rutas:
   - mover las rutas a `(con-sesion)` con el cascarón, y crear `(sin-sesion)` con el lienzo y el panel;
   - `exigirSesion()` en cada página y en cada acción;
   - una regla de estructura que lo exija en todo `acciones.ts` y en toda página fuera de `(sin-sesion)`;
@@ -130,3 +130,13 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
     - entrar, renovar la sesión, la cookie `HttpOnly` y `SameSite=Lax`, y el cierre de una sesión de otro correo;
     - que `getClaims` verifique en local, con `alg` ES256 o RS256.
   - Para la auditoría: el límite de `/auth/v1/token` (150 cada 5 minutos por IP) es compartido entre entrar y renovar, y todo sale de la IP del servidor. Quien martille `/entrar` también frena las renovaciones. Evaluar un límite propio.
+- T6 (2026-10-13):
+  - Las rutas pasaron a `(con-sesion)`, con el cascarón en su layout. El build lista las mismas direcciones que antes.
+  - Las reglas de estructura se probaron con contenidos sintéticos. Cada caso da lo esperado:
+    - página sin la sesión, con la sesión en segundo lugar, o síncrona: error;
+    - página dentro de `(sin-sesion)`: sin error;
+    - una acción sin la sesión: error con su nombre;
+    - una acción exportada como `const`: error;
+    - `NEXT_PUBLIC_` en `src/` o en `next.config.ts`: error.
+  - Mover las carpetas exigió detener `pnpm dev`: Windows no deja renombrar lo que el servidor vigila.
+  - `pnpm humo` espera 200 en las rutas y fallará hasta T8, cuando entre con el usuario de prueba. `pnpm verify` completo no pasa hasta entonces.

@@ -18,6 +18,7 @@ import { movimientosDeSobre, partidasDeSobre, reglaDeSobre, sobrePorId, type Mov
 import { aporteMensualCentavos, totalAnualCentavos } from "@/lib/fondos";
 import { formatearCentavos } from "@/lib/dinero";
 import { BotonEliminarPartida, FormularioAporte, FormularioPartida, nombresMes } from "./formularios";
+import { exigirSesion } from "@/app/sesion";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +58,7 @@ function efectoEnSobre(m: MovimientoReciente, nombreSobre: string) {
 }
 
 export default async function DetalleSobre({ params }: PageProps<"/sobres/[id]">) {
+  await exigirSesion();
   const { id } = await params;
   const sobreId = Number(id);
   if (!Number.isInteger(sobreId)) notFound();

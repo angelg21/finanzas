@@ -7,6 +7,7 @@ import { registrarMovimientos } from "@/db/movimientos";
 import type { Moneda } from "@/lib/dinero";
 import { fechaDesdeAtajo, hoyEnCaracas } from "@/lib/fechas";
 import { type ErroresGasto, type FormaPago, prepararGasto, saldosTras } from "@/lib/gastos";
+import { exigirSesion } from "@/app/sesion";
 
 /** Lo que se tecleó, para volver a llenar el formulario si hay que corregir o confirmar. */
 export type ValoresGasto = {
@@ -81,6 +82,7 @@ function campo(formData: FormData, nombre: keyof ValoresGasto | "confirmarSobre"
 
 /** Registra un gasto (spec 001). Para `useActionState`. */
 export async function registrarGasto(previo: EstadoGasto, formData: FormData): Promise<EstadoGasto> {
+  await exigirSesion();
   return { ronda: (previo?.ronda ?? 0) + 1, ...(await procesarGasto(formData)) };
 }
 

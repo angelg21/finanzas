@@ -16,6 +16,7 @@ import {
 } from "@/components/ui";
 import { gastadoEsteMes, movimientosRecientes, resumenMensual, saldosPorCuenta, saldosPorSobre } from "@/db/consultas";
 import { formatearCentavos, formatearEnteros } from "@/lib/dinero";
+import { exigirSesion } from "@/app/sesion";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,7 @@ function diasRestantesDelMes() {
 }
 
 export default async function Inicio() {
+  await exigirSesion();
   const [sobres, cuentas, gastado, resumen, recientes] = await Promise.all([
     saldosPorSobre(),
     saldosPorCuenta(),

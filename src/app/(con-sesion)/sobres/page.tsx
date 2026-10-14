@@ -14,6 +14,7 @@ import {
 } from "@/components/ui";
 import { saldosPorSobre } from "@/db/consultas";
 import { formatearCentavos, formatearEnteros } from "@/lib/dinero";
+import { exigirSesion } from "@/app/sesion";
 
 export const metadata: Metadata = { title: "Sobres" };
 export const dynamic = "force-dynamic";
@@ -43,6 +44,7 @@ function fechaCorta(iso: string) {
 }
 
 export default async function Sobres() {
+  await exigirSesion();
   const sobres = await saldosPorSobre();
   const total = sobres.reduce((acc, s) => acc + s.saldoCentavos, 0);
   const porAsignar = sobres.find((s) => s.tipo === "por_asignar");

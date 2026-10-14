@@ -10,6 +10,7 @@ import {
 } from "@/db/consultas";
 import { hoyEnCaracas } from "@/lib/fechas";
 import { FormularioGasto } from "./formulario-gasto";
+import { exigirSesion } from "@/app/sesion";
 
 export const metadata: Metadata = { title: "Nuevo gasto" };
 export const dynamic = "force-dynamic";
@@ -18,6 +19,7 @@ const formas = ["dolares", "vendiendo", "saldo"] as const;
 
 /** Captura rápida de gasto (spec 001). `?forma=`, `?cuenta=` y `?venta=` vienen de "Registrar otro" sin JavaScript. */
 export default async function NuevoGasto({ searchParams }: PageProps<"/nuevo/gasto">) {
+  await exigirSesion();
   const parametros = await searchParams;
   const [categorias, sobres, cuentas, cuentaPorDefecto, cuentaVentaPorDefecto] = await Promise.all([
     categoriasDeGastoPorUso(),
