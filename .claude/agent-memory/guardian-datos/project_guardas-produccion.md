@@ -20,7 +20,8 @@ T3 de 002 (sin commit al revisar, 2026-10-13): `exigirBaseLocal` en `lib/destino
 - `terminarConError` no imprime la causa de un AggregateError: con ECONNREFUSED el mensaje viene vacío y la línea "Causa" no sale.
 - `?sslmode=require&sslmode=disable` pasa `exigeTls` y postgres-js usa `ssl:false`, porque gana la última.
 - Una vista en public no la marca nadie.
-- `settings.json` sin deny para `Read(./.env.produccion.local)` ni para los `:produccion`: lo decide el desarrollador y tiene que estar antes de que el archivo exista (T15).
+- ~~`settings.json` sin deny para `Read(./.env.produccion.local)` ni para los `:produccion`~~. Cerrado en db17a31 (visto el 2026-10-13): deny para Read y para los tres `pnpm db:*:produccion*`. Sigue abierto que `pnpm exec tsx src/db/<x>.ts --produccion` no coincide con el deny: el único guardia es isTTY.
+- **Tercer lector de la URL: libpq** (T4, pg_dump). Repetía la clave en su error con `%` sin escapar o `%00`. Cerrado en la segunda vuelta de T4: `leer` los rechaza, con prueba medida contra mutaciones, y además pg_dump ya no recibe la clave en la URL (va en PGPASSWORD). Ver [[respaldo-produccion]].
 - `isTTY` en la terminal del desarrollador no está medido.
 - `src/db/index.ts` (la app) no valida la URL.
 
