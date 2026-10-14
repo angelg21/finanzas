@@ -19,8 +19,8 @@ import { Avatar, CirculoCategoria } from "./ui";
 const campoBase =
   "h-12 w-full rounded-[14px] border border-tarjeta-borde bg-tarjeta-hover px-4 text-[15px] text-texto placeholder:text-texto-3 focus:outline-none focus:ring-2 focus:ring-palido";
 
-/** Mensaje de error junto al campo; `role="alert"` para que el lector de pantalla lo anuncie. */
-function ErrorCampo({ children }: { children?: string }) {
+/** Mensaje de error junto al campo o al botón; `role="alert"` para que el lector de pantalla lo anuncie. */
+export function ErrorCampo({ children }: { children?: string }) {
   return children ? (
     <span role="alert" className="text-[12px] font-semibold text-negativo">
       {children}

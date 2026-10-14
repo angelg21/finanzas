@@ -1,6 +1,6 @@
 "use client";
 
-import { History, House, Landmark, Menu, Plus, Tags, Wallet, X, type LucideIcon } from "lucide-react";
+import { History, House, Landmark, LogOut, Menu, Plus, Tags, Wallet, X, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -84,8 +84,28 @@ function BotonRegistrar({ alHacerClic }: { alHacerClic?: () => void }) {
   );
 }
 
+/** La acción de salir llega de la ruta: los componentes no conocen las acciones (ADR 0005). */
+type ConSalir = { salir: () => Promise<void> };
+
+/**
+ * "Salir", con la forma de un enlace lateral. Es un formulario con su server action: funciona sin JavaScript.
+ */
+function BotonSalir({ salir }: ConSalir) {
+  return (
+    <form action={salir}>
+      <button
+        type="submit"
+        className="flex w-full items-center gap-3 rounded-full px-4 py-3 text-[14px] font-semibold text-texto-2 hover:bg-tarjeta-hover hover:text-texto"
+      >
+        <LogOut size={20} strokeWidth={2} aria-hidden />
+        Salir
+      </button>
+    </form>
+  );
+}
+
 /** Barra lateral de escritorio. */
-export function BarraLateral() {
+export function BarraLateral({ salir }: ConSalir) {
   const ruta = usePathname();
   return (
     <aside className="hidden w-[248px] shrink-0 flex-col border-r border-panel-borde px-5 py-7 lg:sticky lg:top-5 lg:flex lg:h-[calc(100dvh-40px)] lg:self-start">
@@ -102,6 +122,7 @@ export function BarraLateral() {
       </div>
       <div className="mt-auto flex flex-col gap-3">
         <CambioTema conTexto />
+        <BotonSalir salir={salir} />
         <p className="px-2 text-[12px] leading-relaxed text-texto-3">
           Presupuesto por sobres. Cada dólar tiene un trabajo.
         </p>
@@ -111,7 +132,7 @@ export function BarraLateral() {
 }
 
 /** Botón de menú de la barra superior móvil, con su panel deslizante. */
-export function MenuMovil() {
+export function MenuMovil({ salir }: ConSalir) {
   const [abierto, setAbierto] = useState(false);
   const ruta = usePathname();
 
@@ -161,6 +182,7 @@ export function MenuMovil() {
               {[...rutas, ...secundarias].map((r) => (
                 <EnlaceLateral key={r.href} {...r} ruta={ruta} alHacerClic={cerrar} />
               ))}
+              <BotonSalir salir={salir} />
             </nav>
             <div className="mt-6">
               <BotonRegistrar alHacerClic={cerrar} />

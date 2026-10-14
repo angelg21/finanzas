@@ -41,7 +41,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - una regla de estructura que lo exija en todo `acciones.ts` y en toda página fuera de `(sin-sesion)`;
   - otra regla contra `NEXT_PUBLIC_` (criterios 1, 2 y 8);
   - las rutas siguen respondiendo en las mismas direcciones.
-- [ ] T7 · Pantalla `/entrar` y su acción: errores, límite de intentos, correo conservado, sin JavaScript, y redirección con `destinoSeguro`. "Salir" en `BarraLateral` y en `MenuMovil`, y `Cache-Control: private, no-store` en las páginas con datos (criterios 3, 4, 5 y 7).
+- [x] T7 · (2026-10-13) Pantalla `/entrar` y su acción: errores, límite de intentos, correo conservado, sin JavaScript, y redirección con `destinoSeguro`. "Salir" en `BarraLateral` y en `MenuMovil`, y `Cache-Control: private, no-store` en las páginas con datos (criterios 3, 4, 5 y 7).
 - [ ] T8 · Cabeceras en `next.config.ts` (criterio 14). Humo con dos modos:
   - con sesión, entrando con el usuario de prueba: las rutas de siempre responden 200;
   - sin sesión: cada ruta redirige a `/entrar`, responden las públicas y están las cabeceras;
@@ -140,3 +140,14 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
     - `NEXT_PUBLIC_` en `src/` o en `next.config.ts`: error.
   - Mover las carpetas exigió detener `pnpm dev`: Windows no deja renombrar lo que el servidor vigila.
   - `pnpm humo` espera 200 en las rutas y fallará hasta T8, cuando entre con el usuario de prueba. `pnpm verify` completo no pasa hasta entonces.
+- T7 (2026-10-13):
+  - Comprobado con Supabase falso, en un build de producción:
+    - `/entrar` responde 200 con `Cache-Control: private, no-store`;
+    - trae los campos y atributos de la spec, con `siguiente` en el formulario;
+    - enviado sin JavaScript (multipart, como un navegador), vuelve con el mensaje de error, el correo conservado y sin la contraseña en la respuesta.
+  - Pendiente de "finanzas-dev", en T13, en el navegador: contraseña equivocada, límite de intentos, correo ajeno, entrar con `siguiente`, salir y "atrás" después de salir.
+  - Decisiones:
+    - `entrar` siempre pregunta a Supabase, también por un correo que no es el permitido, para no delatar cuál es por el tiempo de respuesta;
+    - "Salir" cierra solo la sesión de este dispositivo (`scope: "local"`): salir en la computadora no saca al celular. La spec no lo fijaba;
+    - las acciones de `(sin-sesion)` quedan fuera de la regla de sesión, porque `entrar` es la que la crea.
+  - El `Emblema` de `/entrar` llega con T9.

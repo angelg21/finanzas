@@ -127,7 +127,8 @@ export function revisarArchivo(ruta, contenido) {
 
     // Spec 002, criterio 2: cada acción y cada página con datos verifican la sesión por su cuenta, sin fiarse del
     // proxy, cuyo matcher o una ruta movida pueden dejarlas sin cubrir.
-    if (capa === "app" && /\/acciones\.ts$/.test(rel)) {
+    // Lo de (sin-sesion) es lo único que responde sin sesión: /entrar, cuya acción la crea, y /sin-conexion.
+    if (capa === "app" && /\/acciones\.ts$/.test(rel) && !/\/\(sin-sesion\)\//.test(rel)) {
       for (const accion of contenido.matchAll(/^export\s+async\s+function\s+(\w+)/gm)) {
         if (!empiezaConSesion(cuerpoDesde(contenido, accion.index))) {
           error(
