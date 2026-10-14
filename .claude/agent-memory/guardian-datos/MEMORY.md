@@ -1,8 +1,8 @@
-- [Auditoría T14 de 002](project_auditoria-t14-002.md): 2026-10-14 NO APLICAR solo por TLS en db/index.ts; ensayo de despliegue medido (vanilla y Supabase); qué mirar en T15
-- [Defectos de datos encontrados](project_defectos-datos-encontrados.md): abiertos (TLS app, partidas sin transacción, valor int4, flotante en formularios, UTC, residuales) y cerrados (fondos BigInt, enDolares[0], tasa<1)
+- [Auditoría T14 de 002](project_auditoria-t14-002.md): 1.ª vuelta NO APLICAR (TLS); 2.ª vuelta 790ee93 SEGURO DE APLICAR, H1-H7 medidos; qué mirar en T15
+- [Defectos de datos encontrados](project_defectos-datos-encontrados.md): abiertos (carrera del desglose, reloj UTC en 3 pantallas, tasa<=0 tumba lista, residuales T15) y cerrados H1-H7
 - [Prima en el cuadre](project_prima-en-cuadre.md): ADR 0006; desactivar con saldo descuadra; demo 539300; sonda prima 537800; enDolares[0] ya quitado
 - [Categorías: icono y color](project_categorias-icono-color.md): por nombre, sin check; T13, T14 y T15 aptos; for update en db; condiciones del importador
-- [Entorno de prueba](reference_entorno-de-prueba.md): .env.local denegado, generate denegado (diff en memoria con drizzle-kit/api), copias, ensayo de despliegue, sonda Supabase, scratchpad persistente
+- [Entorno de prueba](reference_entorno-de-prueba.md): hook niega nombrar archivos de entorno o la carpeta de producción en Bash; generate denegado; copias; sonda Supabase; scripts t14/v2-*
 - [RLS en Supabase](project_rls-supabase.md): 0003 apta; app dueña; en Supabase postgres tiene BYPASSRLS; anon/authenticated con GRANT pero 0 filas; FORCE prohibido; vistas
 - [Guardas de producción](project_guardas-produccion.md): T3 de 002 NO APTO y luego APTO; migrador = drizzle-kit; postgres-js lee la URL distinto; deny cerrado en db17a31
 - [Respaldo de producción](project_respaldo-produccion.md): T4 de 002 NO APTO y luego APTO; volcado Supabase→vanilla sano; PGPASSWORD; huellas por tabla; residuales T15

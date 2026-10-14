@@ -1,3 +1,3 @@
-- [Auditoría T14 de la 002](project_auditoria-fase1-002.md) — 2026-10-14: redirección abierta y lectura sin sesión bloquean publicar; qué repetir primero
-- [Superficie de la fase 2](project_superficie-fase2.md) — next-action salta el proxy; route.ts y metadata fuera de la regla de estructura; push y claves nuevas
-- [Técnicas de ataque local](reference_tecnicas-ataque-local.md) — build en 3131, invocar acciones a mano, usuario de prueba sin imprimir, Edge por CDP
+- [Auditoría T14 de la 002](project_auditoria-fase1-002.md) — 2026-10-14, dos vueltas: 1 y 2 cerrados; 4 y 7 parciales; qué repetir primero
+- [Superficie de la fase 2](project_superficie-fase2.md) — POST next-action + rsc:1 renderiza sin proxy; huecos probados de la regla de estructura; push
+- [Técnicas de ataque local](reference_tecnicas-ataque-local.md) — build en 3131, acciones a mano, hook comandos.mjs, MSYS_NO_PATHCONV, Edge por CDP

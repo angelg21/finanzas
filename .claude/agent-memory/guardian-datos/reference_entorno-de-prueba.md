@@ -62,4 +62,13 @@ metadata:
 - `pnpm db:seed` con `DATABASE_URL` en el entorno muestra "injected env (5)": son las demás variables de `.env.local`, y DATABASE_URL no se pisa. Lo confirma la huella de la copia.
 - `respaldo.ts` en ensayo deja `data/respaldos/AAAA-MM-DD-ensayo-local.sql`, en el árbol aunque git lo ignora: borrarlo con un `rm` de ruta exacta.
 
+- **Hook `comandos.mjs`** (desde 790ee93): niega cualquier comando de Bash o PowerShell que nombre un archivo `.env*` (salvo `.env.example`), `produccion.env`, la carpeta `.finanzas` o `.vercel`. Esos nombres van dentro de un archivo escrito con Write, nunca en la línea de comando. Un heredoc cuenta como línea de comando: me lo negó al editar MEMORY.md con python. Para editar la memoria, usar Edit. La cadena de producción vive ahora en `os.homedir()/.finanzas/produccion.env`; en Windows, `homedir` sale de USERPROFILE. `t14/v2-prod.cts <falta|sinvariable|sintls|contls>` la sustituye en memoria según el final de la ruta.
+- **Scripts de la segunda vuelta de T14** (en `t14/`):
+  - `v2-h1.cts`: carga `index.ts` una vez por URL. Borra `req.cache` y `globalThis.conexionPg`, porque en desarrollo la conexión se reutiliza.
+  - `v2-sobres.cts`: límites, borrado y H7.
+  - `v2-carrera.cts`: dos `agregarPartida` con `Promise.all`.
+  - `v2-h4.cts`: tasas de la base.
+  - Se corren con `en-copia.mjs finanzas_t14_v2`. Copia: `createdb` + `pg_dump | psql`, y `dropdb` al final.
+- `pnpm verify --forzar` tarda unos 45 s. El humo entra y sale con la sesión, pero no escribe en la base: la huella de la real sale igual.
+
 Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].

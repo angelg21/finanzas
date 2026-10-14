@@ -1,18 +1,20 @@
 ---
 name: auditoria-fase1-002
-description: Hallazgos de /f-audit completo sobre feat/002-pwa-y-despliegue (T14, 2026-10-14) y cuáles bloquean publicar; revisar su cierre en la próxima auditoría
+description: Hallazgos de /f-audit sobre feat/002-pwa-y-despliegue (T14, 2026-10-14), su segunda vuelta en 790ee93 y lo que quedó abierto o aceptado en ADR 0010
 metadata:
   type: project
 ---
 
-Auditoría T14 de la feature 002 (rama `feat/002-pwa-y-despliegue`, commit adb227d), 2026-10-14. Veredicto: NO publicar hasta cerrar 1 y 2.
+Auditoría T14 de la feature 002 (rama `feat/002-pwa-y-despliegue`), 2026-10-14. Primera vuelta en adb227d, segunda en 790ee93.
 
-1. **Redirección abierta (criterio 4 ★), bloquea.** `destinoSeguro` devuelve la cadena cruda; `/.//evil.com`, `/%2e//evil.com` y `/a/..//evil.com` pasan y se normalizan a la ruta `//evil.com`. Con JavaScript, el router de Next navega a `http://evil.com/...` tras entrar (medido en Edge con CDP). Sin JavaScript es inocuo (Location relativa y Next responde 308 a `/evil.com`).
-2. **Lectura sin sesión (criterios 1 y 2 ★), bloquea.** `PUT`/`PATCH`/`DELETE` con cabecera `next-action` (cualquier valor) saltan el proxy y Next renderiza la página. `generateMetadata` de `/sobres/[id]` consulta la base antes de `exigirSesion` y deja el nombre del sobre en `<title>`, enumerable por id.
-3. Límite de intentos de Supabase compartido: un 429 al renovar, con el token vencido, hace que auth-js 2.117.2 borre la sesión. Riesgo de disponibilidad: decidir una regla del firewall de Vercel o aceptarlo con ADR.
-4. `.claude/settings.json` deja `grep`, `sed -n`, `node` y `pnpm` sin preguntar, y eso lee `.env.produccion.local` sin pasar por el `deny`. Cerrar antes de crear ese archivo (T15).
-5. Bajos: `sslmode=require` sin verificar certificado (postgres.js pone `rejectUnauthorized=false` y SCRAM sin enlace de canal); una sesión robada dura 400 días y revocarla tarda hasta que vence el JWT; `console.error` de un DrizzleQueryError escribe monto y nota en los registros de Vercel.
+1. **Redirección abierta: CERRADA en 790ee93.** `destinoSeguro` devuelve `pathname+search+hash` normalizado y rechaza `//`. En Edge con el usuario de prueba, `/.//`, `/%2e//`, `/a/..//` acaban en `/`; `/%2F%2F...` y `/%5C%5C...` se quedan en el origen (404). Ninguna petición a otro host.
+2. **Lectura sin sesión: CERRADA para los datos.** PUT/PATCH/DELETE/OPTIONS dan 405; `generateMetadata` de `/sobres/[id]` exige sesión; las respuestas de todos los ids miden igual. Pero el proxy sigue sin ser barrera: ver [[superficie-fase2]] (POST con `next-action` y `rsc: 1`).
+3. Límite de intentos: aceptado en ADR 0010.
+4. **Cadena de producción al alcance del agente: PARCIAL.** Se movió a `~/.finanzas/produccion.env` y el hook `comandos.mjs` niega comandos que la nombren, pero el hook solo mira el texto del comando: comodines, comillas partidas, nombres cortos 8.3 (el volumen los genera), `node -e` (en `allow`) o un script escrito con Write lo leen sin preguntar. ADR 0010 dice "el agente no puede leerla": es falso. Arreglo de fondo: que `urlProduccion` la pida oculta en la terminal y no exista en disco.
+5. TLS sin verificar certificado: aceptado en ADR 0010; `conexionSegura` comprobado.
+6. Revocación: aceptado en ADR 0010.
+7. **Registros: PARCIAL.** Los dos `console.error` solo llevan el código, pero `agregarPartida` relanza y `fijarAporteManual`/`eliminarPartida` no atrapan: Next hace `console.error` del DrizzleQueryError, cuyo mensaje trae los parámetros.
 
 **Why:** criterio 13 de la spec: Vercel no recibe la cadena de producción hasta que cada hallazgo esté cerrado o aceptado con ADR.
 
-**How to apply:** en la próxima auditoría, repetir primero el PUT con `next-action` y la redirección con `/.//`, y ver que existan en `acceso.test.ts` y en el humo. Ver [[superficie-fase2]] y [[tecnicas-ataque-local]].
+**How to apply:** en la próxima auditoría, repetir primero `POST` con `next-action: x` + `rsc: 1` sin cookies (seguir el 307 a `?_rsc`) y ver si el proxy ya lo corta; mirar si `urlProduccion` sigue leyendo un archivo. Ver [[tecnicas-ataque-local]].
