@@ -86,7 +86,7 @@ describe("conFallas: la acción envuelta nunca pierde la pantalla", () => {
     const accion = Object.assign(async (previo: Estado) => previo, {
       $$FORM_ACTION: formAction,
       $$IS_SIGNATURE_EQUAL: firmaIgual,
-      bind: vi.fn((..._argumentos: unknown[]) => ligada),
+      bind: vi.fn<(...argumentos: unknown[]) => typeof ligada>(() => ligada),
     });
     const envuelta = conFallas(accion, alFallar) as typeof accion;
     expect(envuelta.$$FORM_ACTION).toBe(formAction);

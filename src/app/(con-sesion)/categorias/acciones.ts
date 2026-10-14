@@ -89,7 +89,10 @@ export async function guardarCategoria(previo: EstadoCategoria, formData: FormDa
     }
   } catch (error) {
     // El índice único (tipo, nombre) es la última barrera si otra pestaña creó la misma a la vez.
-    console.error("No se pudo guardar la categoría", error);
+    console.error(
+      "No se pudo guardar la categoría",
+      (error as { cause?: { code?: string } }).cause?.code ?? "sin código",
+    );
     return {
       ronda,
       estado: "error",

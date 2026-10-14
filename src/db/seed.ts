@@ -2,7 +2,7 @@
  * Datos iniciales según docs/plan-financiero-y-app.md.
  * Es idempotente: se puede correr varias veces, no duplica nada.
  *   pnpm db:seed              → la base local; se niega si .env.local apunta a otra
- *   pnpm db:seed:produccion   → producción, una sola vez, con .env.produccion.local y confirmación
+ *   pnpm db:seed:produccion   → producción, una sola vez, con ~/.finanzas/produccion.env y confirmación
  */
 import { and, eq } from "drizzle-orm";
 import { categoriasBase, colorPorDefecto, iconoPorDefecto } from "../lib/categorias";
@@ -32,7 +32,7 @@ async function main() {
         tipo: "transito",
         esPropia: false,
         orden: 4,
-        nota: "No es mía legalmente. Solo tránsito, saldo bajo.",
+        nota: "A nombre de mi prima. El dinero es mío y entra al cuadre con los sobres (ADR 0006).",
       },
       { nombre: "Bolívares", moneda: "VES", tipo: "banco", orden: 5, nota: "De paso. Casi siempre en cero." },
     ])

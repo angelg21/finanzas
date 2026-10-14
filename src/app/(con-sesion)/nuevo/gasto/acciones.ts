@@ -188,7 +188,11 @@ async function procesarGasto(formData: FormData): Promise<Resultado> {
   try {
     registro = await registrarCaptura(valores.idCaptura, filas);
   } catch (error) {
-    console.error("No se pudo registrar el gasto", error);
+    // Solo el código: el error del driver trae la consulta con sus parámetros (montos, notas) y acabaría en los registros.
+    console.error(
+      "No se pudo registrar el gasto",
+      (error as { cause?: { code?: string } }).cause?.code ?? "sin código",
+    );
     return { estado: "error", errores: { general: "No se pudo guardar. Intenta de nuevo." }, valores };
   }
 

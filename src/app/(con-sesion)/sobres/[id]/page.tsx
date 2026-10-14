@@ -33,6 +33,7 @@ const nombreTipo: Record<string, string> = {
 };
 
 export async function generateMetadata({ params }: PageProps<"/sobres/[id]">): Promise<Metadata> {
+  await exigirSesion();
   const { id } = await params;
   const sobre = await sobrePorId(Number(id));
   return { title: sobre ? sobre.nombre : "Sobre" };

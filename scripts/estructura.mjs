@@ -131,27 +131,59 @@ export function revisarArchivo(ruta, contenido) {
       error("Una página no habla con Drizzle directamente. Pon la consulta en src/db/consultas.ts.");
     }
 
-    // Spec 002, criterio 2: cada acción y cada página con datos verifican la sesión por su cuenta, sin fiarse del
-    // proxy, cuyo matcher o una ruta movida pueden dejarlas sin cubrir.
-    // Lo de (sin-sesion) es lo único que responde sin sesión: /entrar, cuya acción la crea, y /sin-conexion.
-    if (capa === "app" && /\/acciones\.ts$/.test(rel) && !/\/\(sin-sesion\)\//.test(rel)) {
+    // Spec 002, criterio 2: cada acción, cada página y todo lo que lee datos antes que ella verifican la sesión por
+    // su cuenta, sin fiarse del proxy: su matcher, una ruta movida o un método raro las dejarían sin cubrir
+    // (auditoría T14, hallazgo 2). Lo de (sin-sesion) es lo único que responde sin sesión: /entrar, cuya acción la
+    // crea, /sin-conexion y el icono adaptable. El layout raíz envuelve también a /entrar.
+    const conSesion = capa === "app" && !/\/\(sin-sesion\)\//.test(rel) && !/(^|\/)src\/app\/layout\.tsx$/.test(rel);
+    const conClave = (m) => !empiezaConSesion(cuerpoDesde(contenido, m.index));
+    const delServidor =
+      /\/acciones\.ts$/.test(rel) || /^\s*(?:(?:\/\*[\s\S]*?\*\/|\/\/[^\n]*)\s*)*["']use server["']/.test(contenido);
+    if (conSesion && delServidor) {
       for (const accion of contenido.matchAll(/^export\s+async\s+function\s+(\w+)/gm)) {
-        if (!empiezaConSesion(cuerpoDesde(contenido, accion.index))) {
+        if (conClave(accion)) {
           error(
             `La acción ${accion[1]} no empieza verificando la sesión (\`await exigirSesion();\` o \`leerSesion\` con su \`if (!sesion) return\`).`,
           );
         }
       }
       if (/^export\s+(?:const|let|var|function|default|\{)/m.test(contenido)) {
-        error("acciones.ts solo exporta funciones async con nombre, para que la regla de la sesión las vea todas.");
+        error(
+          'Un archivo "use server" solo exporta funciones async con nombre, para que la regla de la sesión las vea todas.',
+        );
       }
     }
-    if (capa === "app" && /\/page\.tsx$/.test(rel) && !/\/\(sin-sesion\)\//.test(rel)) {
+    if (conSesion && /\/page\.tsx$/.test(rel)) {
       const pagina = /^export\s+default\s+async\s+function\b/m.exec(contenido);
-      if (!pagina || !empiezaConSesion(cuerpoDesde(contenido, pagina.index))) {
+      if (!pagina || conClave(pagina)) {
         error(
           "La página no empieza con `await exigirSesion();` en su función async por defecto. Sin sesión solo responde lo de (sin-sesion).",
         );
+      }
+    }
+    if (conSesion && /\/(page|layout)\.tsx$/.test(rel)) {
+      // Next las corre antes que la página: lo que lean, se filtra aunque la página pida la sesión.
+      for (const funcion of contenido.matchAll(
+        /^export\s+(?:async\s+)?function\s+(generateMetadata|generateViewport)\b/gm,
+      )) {
+        if (conClave(funcion))
+          error(`${funcion[1]} no empieza con \`await exigirSesion();\`: corre antes que la página.`);
+      }
+    }
+    if (conSesion && /\/layout\.tsx$/.test(rel)) {
+      const layout = /^export\s+default\s+async\s+function\b/m.exec(contenido);
+      if (layout && conClave(layout))
+        error("Un layout async lee datos: tiene que empezar con `await exigirSesion();`.");
+    }
+    if (conSesion && /\/route\.tsx?$/.test(rel)) {
+      for (const manejador of contenido.matchAll(
+        /^export\s+(?:async\s+)?function\s+(GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)\b/gm,
+      )) {
+        if (conClave(manejador))
+          error(`El manejador ${manejador[1]} de route.ts no empieza con \`await exigirSesion();\`.`);
+      }
+      if (/^export\s+const\s+(?:GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)\b/m.test(contenido)) {
+        error("route.ts exporta sus manejadores como `function`, para que la regla de la sesión los vea.");
       }
     }
   }

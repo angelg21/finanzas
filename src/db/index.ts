@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { esUrlLegible } from "../lib/destino-base";
+import { conexionSegura, esUrlLegible } from "../lib/destino-base";
 import * as schema from "./schema";
 
 if (!process.env.DATABASE_URL) {
@@ -9,6 +9,10 @@ if (!process.env.DATABASE_URL) {
 // El error de URL inválida del driver repite la cadena entera, contraseña incluida, y acabaría en los registros.
 if (!esUrlLegible(process.env.DATABASE_URL)) {
   throw new Error("DATABASE_URL no se entiende. Escapa los caracteres especiales de la contraseña.");
+}
+// Una base remota solo con TLS: el URI del panel de Supabase no trae sslmode y, pegado tal cual, viajaría sin cifrar.
+if (!conexionSegura(process.env.DATABASE_URL)) {
+  throw new Error("La DATABASE_URL de una base remota debe llevar ?sslmode=require.");
 }
 
 // En desarrollo Next recarga módulos con cada cambio; reutilizamos la conexión

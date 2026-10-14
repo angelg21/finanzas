@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   celdasDelMes,
+  clavesDeMeses,
   diaAnterior,
   esFecha,
   etiquetaFecha,
@@ -8,6 +9,7 @@ import {
   fechaLarga,
   fechaValida,
   hoyEnCaracas,
+  inicioDeMes,
   mesDe,
   moverMes,
   nombreMes,
@@ -123,5 +125,19 @@ describe("mesDe", () => {
   it("el mes de una fecha, para abrir el calendario donde está la elegida", () => {
     expect(mesDe("2026-10-09")).toEqual({ anio: 2026, mes: 10 });
     expect(mesDe("2025-01-31")).toEqual({ anio: 2025, mes: 1 });
+  });
+});
+
+describe("meses en hora de Caracas, no del servidor (auditoría T14, H5)", () => {
+  it("el inicio del mes sale del día de Caracas", () => {
+    // 31 de octubre a las 21:00 en Caracas ya es 1 de noviembre en UTC, como en Vercel.
+    const hoy = hoyEnCaracas(new Date("2026-11-01T01:00:00Z"));
+    expect(inicioDeMes(hoy)).toBe("2026-10-01");
+    expect(inicioDeMes(hoy, -5)).toBe("2026-05-01");
+    expect(inicioDeMes("2026-01-15", -1)).toBe("2025-12-01");
+  });
+
+  it("las claves de los últimos meses, del más viejo al actual", () => {
+    expect(clavesDeMeses("2026-02-10", 3)).toEqual(["2025-12", "2026-01", "2026-02"]);
   });
 });

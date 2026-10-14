@@ -58,6 +58,14 @@ export function exigeTls(url: string | undefined): boolean {
 }
 
 /**
+ * Si la app puede usar esta conexión: sin TLS solo con la base de esta máquina; con una remota, solo si la URL
+ * obliga a TLS. El URI que muestra el panel de Supabase no trae sslmode y, pegado tal cual, viajaría sin cifrar.
+ */
+export function conexionSegura(url: string | undefined): boolean {
+  return esBaseLocal(url) || exigeTls(url);
+}
+
+/**
  * La URL, si es local. Si no, un error que nombra el comando y el destino sin credenciales: los comandos de
  * siempre nunca tocan una base remota; contra producción solo corren los que la nombran.
  */

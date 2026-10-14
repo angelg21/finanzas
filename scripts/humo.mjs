@@ -148,6 +148,16 @@ async function sinSesion() {
       `${r.status} ${ubicacion}`,
     );
   }
+  // Otros métodos no pasan ni con la cabecera de una acción: Next renderizaría la página (auditoría T14, hallazgo 2).
+  for (const metodo of ["PUT", "PATCH", "DELETE"]) {
+    const r = await pedir("/sobres/3", { method: metodo, headers: { "next-action": "x" } });
+    const cuerpo = await r.text();
+    comprobar(
+      r.status === 405 && !cuerpo.includes("<title"),
+      `${metodo} /sobres/3 con next-action → ${r.status}, sin página`,
+      `${r.status}, ${cuerpo.length} bytes`,
+    );
+  }
   for (const [ruta, esperado] of publicas) {
     const r = await pedir(ruta);
     await r.arrayBuffer();

@@ -161,3 +161,14 @@ export function formatearTasa(tasaDm: number): string {
   const { entero, decimales } = partesTasa(tasaDm);
   return `${formatoEntero.format(entero)},${decimales.replace(/0{1,2}$/, "")} Bs/USD`;
 }
+
+/**
+ * 2550 → "25,50"; 2500 → "25". El monto como se escribe en un campo, para su valor inicial: aCentavos lo lee igual.
+ * Con las cifras como texto, nunca pasa por coma flotante.
+ */
+export function centavosATexto(centavos: number): string {
+  const cifras = String(Math.abs(centavos)).padStart(3, "0");
+  const entero = cifras.slice(0, -2);
+  const decimales = cifras.slice(-2);
+  return `${centavos < 0 ? "-" : ""}${entero}${decimales === "00" ? "" : `,${decimales}`}`;
+}

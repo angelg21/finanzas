@@ -4,7 +4,7 @@
  * una base local aparte, finanzas_restauracion, y compara con el origen cada tabla del esquema (filas y huella), los
  * movimientos por tipo (cantidad y suma de monto_usd_centavos) y las migraciones aplicadas: un respaldo que no se
  * puede restaurar no es un respaldo. Pase lo que pase, borra finanzas_restauracion, para no dejar otra copia.
- *   pnpm db:respaldo:produccion        → producción, con .env.produccion.local y confirmación
+ *   pnpm db:respaldo:produccion        → producción, con ~/.finanzas/produccion.env y confirmación
  *   pnpm exec tsx src/db/respaldo.ts   → ensayo con la base local
  * El volcado se escribe como .sql.sin-comprobar y solo pasa a .sql cuando la restauración cuadra. La contraseña
  * entra al contenedor en PGPASSWORD y la URL sin ella, ambas como variables de entorno: nunca en los argumentos de

@@ -3,6 +3,7 @@ import {
   aCentavos,
   aTasa,
   bolivaresDesdeUsd,
+  centavosATexto,
   formatearCentavos,
   formatearEnteros,
   formatearTasa,
@@ -174,5 +175,21 @@ describe("repartirHaciaArriba: un total entre partes, hacia arriba al múltiplo,
     expect(() => repartirHaciaArriba(10.5, 12, 100)).toThrow(RangeError);
     expect(() => repartirHaciaArriba(100, 0, 100)).toThrow(RangeError);
     expect(() => repartirHaciaArriba(100, 12, 0)).toThrow(RangeError);
+  });
+});
+
+describe("centavosATexto: el monto como se escribe en un campo, sin pasar por coma flotante (auditoría T14, H4)", () => {
+  it("con coma decimal y sin decimales si son cero", () => {
+    expect(centavosATexto(2550)).toBe("25,50");
+    expect(centavosATexto(2500)).toBe("25");
+    expect(centavosATexto(5)).toBe("0,05");
+    expect(centavosATexto(0)).toBe("0");
+    expect(centavosATexto(-1234)).toBe("-12,34");
+  });
+
+  it("vuelve igual por aCentavos en todo el rango, también por encima de lo que aguanta un flotante", () => {
+    for (const c of [1, 99, 100, 101, 2_147_483_647, 9_007_199_254_740_991]) {
+      expect(aCentavos(centavosATexto(c)), String(c)).toBe(c);
+    }
   });
 });

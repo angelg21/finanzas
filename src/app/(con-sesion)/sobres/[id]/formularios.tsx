@@ -3,6 +3,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import { useActionState } from "react";
 import { Boton, Campo, Entrada, Selector } from "@/components/formulario";
+import { centavosATexto } from "@/lib/dinero";
 import { type CausaFalla, conFallas, mensajeDeFalla } from "@/lib/fallas";
 import { agregarPartida, eliminarPartida, fijarAporteManual, type EstadoFormulario } from "./acciones";
 
@@ -93,7 +94,7 @@ export function FormularioAporte({ sobreId, actualCentavos }: { sobreId: number;
         <Entrada
           name="monto"
           inputMode="decimal"
-          defaultValue={(actualCentavos / 100).toString()}
+          defaultValue={centavosATexto(actualCentavos)}
           required
           autoComplete="off"
         />

@@ -61,3 +61,28 @@ describe("esUsuarioPermitido: un solo usuario (criterio 3)", () => {
     expect(esUsuarioPermitido("", permitido)).toBe(false);
   });
 });
+
+describe("destinoSeguro: lo que el navegador normaliza a // también se rechaza (auditoría T14, hallazgo 1)", () => {
+  it("rechaza los puntos y las barras que acaban en otro dominio", () => {
+    for (const siguiente of [
+      "/.//evil.com",
+      "/%2e//evil.com",
+      "/%2E%2E//evil.com",
+      "/a/..//evil.com",
+      "/././/evil.com/x",
+    ]) {
+      expect(destinoSeguro(siguiente), siguiente).toBe("/");
+    }
+  });
+
+  it("no vuelve a /entrar aunque llegue disfrazada", () => {
+    for (const siguiente of ["/./entrar", "/a/../entrar", "/%2e/entrar?x=1"]) {
+      expect(destinoSeguro(siguiente), siguiente).toBe("/");
+    }
+  });
+
+  it("devuelve la ruta ya normalizada, no el texto crudo", () => {
+    expect(destinoSeguro("/a/../sobres")).toBe("/sobres");
+    expect(destinoSeguro("/./movimientos?x=1#y")).toBe("/movimientos?x=1#y");
+  });
+});

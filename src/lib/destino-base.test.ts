@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describirBase, esBaseLocal, esUrlLegible, exigirBaseLocal, exigeTls } from "./destino-base";
+import { conexionSegura, describirBase, esBaseLocal, esUrlLegible, exigirBaseLocal, exigeTls } from "./destino-base";
 
 /** La cadena se arma por partes: el hook de secretos no distingue un ejemplo de una contraseña real. */
 const url = (credenciales: string, resto: string, esquema = "postgresql") => `${esquema}://${credenciales}@${resto}`;
@@ -175,5 +175,18 @@ describe("exigeTls: producción solo con TLS", () => {
   it("rechaza un sslmode repetido: postgres.js usa el último y la guarda vería el primero", () => {
     expect(exigeTls(`${pooler}?sslmode=require&sslmode=disable`)).toBe(false);
     expect(exigeTls(`${pooler}?sslmode=require&sslmode=require`)).toBe(false);
+  });
+});
+
+describe("conexionSegura: la app solo habla sin TLS con la base de esta máquina (auditoría T14, H1)", () => {
+  it("una base local no necesita TLS", () => {
+    expect(conexionSegura(url("finanzas:finanzas", "localhost:5433/finanzas", "postgres"))).toBe(true);
+  });
+
+  it("una remota solo con sslmode=require o más", () => {
+    expect(conexionSegura(`${pooler}?sslmode=require`)).toBe(true);
+    expect(conexionSegura(pooler)).toBe(false);
+    expect(conexionSegura(`${pooler}?sslmode=prefer`)).toBe(false);
+    expect(conexionSegura(undefined)).toBe(false);
   });
 });

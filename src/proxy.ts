@@ -28,7 +28,13 @@ export async function proxy(peticion: NextRequest) {
   if (data?.claims && !conSesion) await supabase.auth.signOut();
 
   const { pathname, search } = peticion.nextUrl;
+  // Solo GET, HEAD y POST: con PUT, PATCH o DELETE Next renderiza la página, y una cabecera next-action la
+  // colaba sin sesión (auditoría T14, hallazgo 2).
+  if (!["GET", "HEAD", "POST"].includes(peticion.method)) {
+    return conCookies(new NextResponse(null, { status: 405, headers: { Allow: "GET, HEAD, POST" } }), respuesta());
+  }
   const navegacion = peticion.method === "GET" || peticion.method === "HEAD";
+  const esAccion = peticion.method === "POST" && peticion.headers.has("next-action");
   const entrar = new URL("/entrar", peticion.url);
   entrar.searchParams.set("siguiente", pathname + search);
   let salida = respuesta();
@@ -36,7 +42,7 @@ export async function proxy(peticion: NextRequest) {
     salida = conCookies(NextResponse.redirect(entrar), salida);
   } else if (navegacion && conSesion && pathname === "/entrar") {
     salida = conCookies(NextResponse.redirect(new URL("/", peticion.url)), salida);
-  } else if (!navegacion && !conSesion && pathname !== "/entrar" && !peticion.headers.has("next-action")) {
+  } else if (!navegacion && !esAccion && !conSesion && pathname !== "/entrar") {
     // 303: el navegador sigue con un GET, sin volver a enviar el formulario.
     salida = conCookies(NextResponse.redirect(entrar, 303), salida);
   }

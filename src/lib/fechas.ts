@@ -103,6 +103,20 @@ export function mesDe(fecha: string): Mes {
   return { anio, mes };
 }
 
+/**
+ * El primer día del mes de `hoy` ("AAAA-MM-DD", de Caracas), movido `desplazamiento` meses: "2026-10-31" → "2026-10-01".
+ * Las consultas del mes parten de aquí y no del reloj del servidor, que en Vercel es UTC.
+ */
+export function inicioDeMes(hoy: string, desplazamiento = 0): string {
+  const { anio, mes } = moverMes(mesDe(hoy), desplazamiento);
+  return `${anio}-${String(mes).padStart(2, "0")}-01`;
+}
+
+/** "AAAA-MM" de los últimos `meses` meses, del más viejo al de `hoy`. */
+export function clavesDeMeses(hoy: string, meses: number): string[] {
+  return Array.from({ length: meses }, (_, i) => inicioDeMes(hoy, i - (meses - 1)).slice(0, 7));
+}
+
 /** Suma o resta meses cruzando el año: { 2026, 1 } − 1 → { 2025, 12 }. */
 export function moverMes({ anio, mes }: Mes, delta: number): Mes {
   const total = anio * 12 + (mes - 1) + delta;

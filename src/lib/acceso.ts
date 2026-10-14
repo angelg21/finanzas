@@ -16,11 +16,12 @@ export function destinoSeguro(siguiente: string | null | undefined): string {
   if (!siguiente || !siguiente.startsWith("/") || siguiente.startsWith("//")) return "/";
   // El navegador lee "\" como "/" y quita los controles: "/\evil.com" y "/\t/evil.com" acaban en "//evil.com".
   if (siguiente.includes("\\") || tieneControles(siguiente)) return "/";
-  // Segunda capa: el mismo analizador del navegador no puede sacarla de este origen.
-  if (new URL(siguiente, origenInterno).origin !== origenInterno) return "/";
-  const ruta = siguiente.split(/[?#]/)[0];
-  if (ruta === "/entrar" || ruta === "/entrar/") return "/";
-  return siguiente;
+  // Se juzga y se devuelve la forma que deja el mismo analizador del navegador, no el texto crudo: "/.//x",
+  // "/%2e//x" o "/a/..//x" se normalizan a "//x", que el navegador leería como otro dominio.
+  const url = new URL(siguiente, origenInterno);
+  if (url.origin !== origenInterno || url.pathname.startsWith("//")) return "/";
+  if (url.pathname === "/entrar" || url.pathname === "/entrar/") return "/";
+  return url.pathname + url.search + url.hash;
 }
 
 const normalizar = (correo: string | null | undefined) => (correo ?? "").trim().toLowerCase();
