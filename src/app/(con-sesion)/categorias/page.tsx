@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Plus, RotateCcw } from "lucide-react";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { CirculoCategoria, EncabezadoTarjeta, Pildora, Tarjeta } from "@/components/ui";
+import { Pestanas } from "@/components/pestanas";
+import { CirculoCategoria, EncabezadoTarjeta, Tarjeta } from "@/components/ui";
 import { type CategoriaConUso, categoriasConUso } from "@/db/categorias";
 import { restaurarCategoriaAccion } from "./acciones";
 import { exigirSesion } from "@/app/sesion";
@@ -34,23 +35,11 @@ export default async function Categorias({ searchParams }: PageProps<"/categoria
     <main className="flex flex-col gap-4 lg:gap-5">
       <header className="flex flex-col gap-3 px-1 lg:px-0">
         <h1 className="text-[24px] font-extrabold tracking-tight lg:hidden">Categorías</h1>
-        <nav aria-label="Tipo de categoría" className="tarjeta flex w-fit items-center gap-1 rounded-full p-1">
-          {pestanas.map((p) =>
-            p.tipo === tipo ? (
-              <span key={p.tipo} aria-current="page">
-                <Pildora tono="palida">{p.texto}</Pildora>
-              </span>
-            ) : (
-              <Link
-                key={p.tipo}
-                href={`/categorias?tipo=${p.tipo}`}
-                className="rounded-full px-2.5 py-1 text-[12px] font-bold text-texto-2 hover:text-texto"
-              >
-                {p.texto}
-              </Link>
-            ),
-          )}
-        </nav>
+        <Pestanas
+          etiqueta="Tipo de categoría"
+          activa={tipo}
+          opciones={pestanas.map((p) => ({ clave: p.tipo, texto: p.texto, href: `/categorias?tipo=${p.tipo}` }))}
+        />
       </header>
 
       <Tarjeta>

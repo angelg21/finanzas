@@ -24,11 +24,15 @@ const rayasCss = "repeating-linear-gradient(45deg, var(--dona-5) 0 1.5px, #fffff
 const puntosCss = "radial-gradient(var(--dona-5) 0.9px, #ffffff 1.1px)";
 const esPatron = (paso: SegmentoDona["paso"]): paso is 5 | 6 => paso === 5 || paso === 6;
 
-function sector(cx: number, cy: number, rExt: number, rInt: number, a0: number, a1: number) {
+/** El trazo de un sector del anillo, de `a0` a `a1` en radianes. También lo usa `GraficaCategorias`. */
+export function sector(cx: number, cy: number, rExt: number, rInt: number, a0: number, a1: number) {
   const barrido = Math.min(a1 - a0, Math.PI * 2 - 0.0001);
   const fin = a0 + barrido;
   const grande = barrido > Math.PI ? 1 : 0;
-  const p = (r: number, a: number) => [cx + r * Math.cos(a), cy + r * Math.sin(a)] as const;
+  // Redondeado a milésimas: Math.cos y Math.sin difieren en los últimos decimales entre Node y el navegador, y el
+  // trazo del servidor no coincidiría con el de la hidratación.
+  const redondo = (n: number) => Math.round(n * 1000) / 1000;
+  const p = (r: number, a: number) => [redondo(cx + r * Math.cos(a)), redondo(cy + r * Math.sin(a))] as const;
   const [x0, y0] = p(rExt, a0);
   const [x1, y1] = p(rExt, fin);
   const [x2, y2] = p(rInt, fin);

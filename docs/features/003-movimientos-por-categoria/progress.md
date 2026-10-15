@@ -15,7 +15,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - el icono y el color de la categoría en `baseMovimientos`;
   - revisión de `guardian-datos`;
   - comprobado contra la base local con `pnpm db:demo`: la suma por categoría de octubre coincide con un `select` a mano.
-- [ ] T4 · Piezas:
+- [x] T4 · (2026-10-14) Piezas:
   - `Pestanas` en `ui.tsx`, y `/categorias` pasa a usarla sin cambio visible;
   - `FilaMovimiento` en `movimiento.tsx`, para gasto, ingreso, transferencia y reasignación;
   - `GraficaCategorias`, que importa `sector` de `grafica-dona.tsx`.
@@ -67,3 +67,6 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
     - una suma de más de 2^53 centavos daría error en vez de perderse;
     - el total por día de Mover mezcla tipos, y la pantalla no lo muestra;
     - las tres consultas no comparten una lectura común, algo aceptado con un solo usuario.
+- T4:
+  - `Pestanas` quedó en `src/components/pestanas.tsx` y no en `ui.tsx`, que ya tenía 300 líneas.
+  - `sector` redondea a milésimas: `Math.cos` y `Math.sin` daban distinto en los últimos decimales entre Node y Edge, y el anillo no hidrataba igual (aviso de React en el registro del servidor). Vale también para `GraficaDona`. Después del cambio, sin avisos nuevos.
