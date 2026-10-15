@@ -52,6 +52,16 @@ export function nivelDeSobre({
   return { porcentaje: null, alcanzado: false, negativo: false };
 }
 
+/**
+ * Para pintar el icono: como nivelDeSobre, pero una medida que no es un entero seguro (un dato que solo entra por SQL)
+ * da un icono sin medida en vez de lanzar. Así no tumba el ingreso ni el reparto, que lo leen, ni deja el monto en
+ * un error de los registros.
+ */
+export function nivelParaIcono(medida: MedidaDeSobre): NivelDeSobre {
+  const enteros = Object.values(medida).every((v) => v === null || Number.isSafeInteger(v));
+  return enteros ? nivelDeSobre(medida) : { porcentaje: null, alcanzado: false, negativo: false };
+}
+
 /** El tono del anillo de Sobres por tipo: 1 pino profundo, 2 verde, 3 blanco, 4 salvia gris, 5 rayado, 6 puntos. */
 export type PasoDeSobre = 1 | 2 | 3 | 4 | 5 | 6;
 

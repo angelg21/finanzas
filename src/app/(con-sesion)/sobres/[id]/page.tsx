@@ -18,7 +18,7 @@ import {
 import { movimientosDeSobre, partidasDeSobre, reglaDeSobre, sobrePorId, type MovimientoReciente } from "@/db/consultas";
 import { aporteMensualCentavos, totalAnualCentavos } from "@/lib/fondos";
 import { formatearCentavos } from "@/lib/dinero";
-import { nivelDeSobre } from "@/lib/sobres";
+import { nivelParaIcono } from "@/lib/sobres";
 import { BotonEliminarPartida, FormularioAporte, FormularioPartida, nombresMes } from "./formularios";
 import { exigirSesion } from "@/app/sesion";
 
@@ -80,7 +80,7 @@ export default async function DetalleSobre({ params }: PageProps<"/sobres/[id]">
   const aporteManual = regla?.tipo === "fijo" ? regla.valor : null;
   const aporte = aporteCalculado ?? aporteManual ?? 0;
   const avance = sobre.topeCentavos ? sobre.saldoCentavos / sobre.topeCentavos : null;
-  const nivel = nivelDeSobre({
+  const nivel = nivelParaIcono({
     saldoCentavos: sobre.saldoCentavos,
     topeCentavos: sobre.topeCentavos,
     anualCentavos: partidas.length > 0 ? totalAnual : null,

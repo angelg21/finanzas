@@ -1,5 +1,5 @@
 import { and, eq, sql } from "drizzle-orm";
-import { type NivelDeSobre, nivelDeSobre } from "@/lib/sobres";
+import { type NivelDeSobre, nivelParaIcono } from "@/lib/sobres";
 import { saldosPorSobre } from "./consultas";
 import { db } from "./index";
 import { partidasSobre, reglasReparto } from "./schema";
@@ -19,7 +19,8 @@ async function medidasPorSobre() {
     db
       .select({
         sobreId: partidasSobre.sobreId,
-        centavos: sql<number>`sum(${partidasSobre.montoCentavos} * ${partidasSobre.vecesPorAnio})::bigint`.mapWith(
+        // En numeric, que no desborda: una suma fuera de los enteros seguros la descarta nivelParaIcono.
+        centavos: sql<number>`sum(${partidasSobre.montoCentavos}::numeric * ${partidasSobre.vecesPorAnio})`.mapWith(
           Number,
         ),
       })
@@ -40,7 +41,7 @@ export async function sobresConNivel(): Promise<
   const [sobres, { fijoDe, anualDe }] = await Promise.all([saldosPorSobre(), medidasPorSobre()]);
   return sobres.map((s) => ({
     ...s,
-    nivel: nivelDeSobre({
+    nivel: nivelParaIcono({
       saldoCentavos: s.saldoCentavos,
       topeCentavos: s.topeCentavos,
       anualCentavos: anualDe.get(s.id) ?? null,

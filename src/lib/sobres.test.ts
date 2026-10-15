@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nivelDeSobre, pasoDeSobre } from "./sobres";
+import { nivelDeSobre, nivelParaIcono, pasoDeSobre } from "./sobres";
 
 const vacio = { topeCentavos: null, anualCentavos: null, fijoMensualCentavos: null };
 
@@ -79,6 +79,23 @@ describe("nivelDeSobre: cuánto de lleno está un sobre, para su icono", () => {
   it("lanza con centavos que no son enteros", () => {
     expect(() => nivelDeSobre({ ...vacio, saldoCentavos: 1.5 })).toThrow();
     expect(() => nivelDeSobre({ ...vacio, saldoCentavos: 1, topeCentavos: 0.5 })).toThrow();
+  });
+});
+
+describe("nivelParaIcono: el icono nunca tumba la pantalla que lo pinta", () => {
+  it("con medidas en enteros, el mismo nivel que nivelDeSobre", () => {
+    const medida = { ...vacio, saldoCentavos: 2_050_00, topeCentavos: 2_700_00 };
+    expect(nivelParaIcono(medida)).toEqual(nivelDeSobre(medida));
+    expect(nivelParaIcono({ ...vacio, saldoCentavos: -5_00 })).toEqual(
+      nivelDeSobre({ ...vacio, saldoCentavos: -5_00 }),
+    );
+  });
+
+  it("con una medida que no es un entero seguro, sin porcentaje y sin lanzar (ni el monto en un error)", () => {
+    const sinMedida = { porcentaje: null, alcanzado: false, negativo: false };
+    expect(nivelParaIcono({ ...vacio, saldoCentavos: 10_00, topeCentavos: 2 ** 53 + 2 })).toEqual(sinMedida);
+    expect(nivelParaIcono({ ...vacio, saldoCentavos: 10_00, anualCentavos: 1.8e19 })).toEqual(sinMedida);
+    expect(nivelParaIcono({ ...vacio, saldoCentavos: 1.5, fijoMensualCentavos: 450_00 })).toEqual(sinMedida);
   });
 });
 
