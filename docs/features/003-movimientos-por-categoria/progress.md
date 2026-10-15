@@ -9,7 +9,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 - [x] T1 · (2026-10-14) `src/lib/periodos.ts` con sus pruebas, viéndolas fallar primero:
   - `rangoDePeriodo`, `moverPeriodo`, `esPeriodoActual`, `etiquetaPeriodo` y `leerFiltros`;
   - semanas que cruzan mes y año, febrero bisiesto, 31 de enero más un mes, y parámetros inválidos que caen en Gastos del mes actual (criterios 5, 6 y 9).
-- [ ] T2 · `src/lib/distribucion.ts` con sus pruebas, viéndolas fallar primero: `distribuirPorCategoria`, con orden de mayor a menor, total exacto en centavos, mayor residuo que suma 100, "<1 %" y total cero (criterios 1 y 2).
+- [x] T2 · (2026-10-14) `src/lib/distribucion.ts` con sus pruebas, viéndolas fallar primero: `distribuirPorCategoria`, con orden de mayor a menor, total exacto en centavos, mayor residuo que suma 100, "<1 %" y total cero (criterios 1 y 2).
 - [ ] T3 · `src/db/movimientos-del-periodo.ts`:
   - `totalesPorCategoria`, `movimientosDelPeriodo` y `contarMovimientosDelPeriodo`;
   - el icono y el color de la categoría en `baseMovimientos`;
@@ -58,3 +58,4 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - el primer respaldo;
   - T17;
   - `/f-verify` y `/f-review`.
+- T2: con los montos de la referencia (125, 91,12 y 85,30), la otra app muestra 41 %, 30 % y 28 %, que suman 99. Aquí da 42, 30 y 28: el punto que falta va al residuo mayor (criterio 2).
