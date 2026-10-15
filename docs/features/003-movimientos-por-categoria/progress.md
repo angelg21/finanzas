@@ -39,16 +39,16 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 
 El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. Sin esta nota no se pasa a `/f-verify`.
 
--
+- 2026-10-14: el desarrollador revisó `/movimientos` en el navegador ("ok perfecto") y pidió el calendario (T8); después lo dio por bueno.
 
 ## Etapas
 
 - [x] Spec leída y aprobada por el desarrollador, sin cambios (2026-10-14)
 - [x] Construida (todas las tareas con commit, 2026-10-14)
-- [ ] Validada en navegador
+- [x] Validada en navegador (2026-10-14)
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
-- [ ] Fusionada en `main` el AAAA-MM-DD
+- [x] Fusionada en `main` el 2026-10-14, por decisión del desarrollador sin verificar ni revisar (ver notas)
 
 ## Notas
 
@@ -80,3 +80,5 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - Mover, con "Binance → Bolívares … recibe 1.182,50 Bs" y "Por asignar → Emergencia".
 
   La fila del gasto en bolívares muestra "1.182,50 Bs · 236,50 Bs/USD".
+
+- **Fusión directa (2026-10-14).** El desarrollador pidió fusionar sin `/f-verify` ni `/f-review` para seguir con la siguiente feature: "no es algo tan complicado". Quedan pendientes las pruebas de los ★ que no son funciones puras (cada pestaña con su tipo y bolívares contra la base, y la lista larga) y la revisión del `revisor`.

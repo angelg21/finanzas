@@ -1,6 +1,6 @@
 # 003 · Movimientos por tipo con gráfica por categoría
 
-Fecha: 2026-10-14. Estado: aprobada.
+Fecha: 2026-10-14. Estado: fusionada.
 
 ## Para qué
 
