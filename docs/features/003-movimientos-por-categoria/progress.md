@@ -19,11 +19,11 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - `Pestanas` en `ui.tsx`, y `/categorias` pasa a usarla sin cambio visible;
   - `FilaMovimiento` en `movimiento.tsx`, para gasto, ingreso, transferencia y reasignación;
   - `GraficaCategorias`, que importa `sector` de `grafica-dona.tsx`.
-- [ ] T5 · `/movimientos` en móvil:
+- [x] T5 · (2026-10-14) `/movimientos` en móvil:
   - pestañas, periodo con flechas, anillo con leyenda filtrable, lista por día con su total, "200 de N" y los vacíos;
   - funciona sin JavaScript;
   - mirado con `pnpm capturas` en claro y oscuro (criterios 7 a 14).
-- [ ] T6 · Escritorio y pestaña Mover:
+- [x] T6 · (2026-10-14) Escritorio y pestaña Mover:
   - rejilla 5 + 7 con el anillo fijo;
   - Mover sin anillo, con origen → destino y el monto recibido si cambia de moneda;
   - capturas en los dos anchos y temas, comparadas con `docs/referencias/movimientos-referencia.jpg` (criterios 11 y 16).
@@ -70,3 +70,10 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 - T4:
   - `Pestanas` quedó en `src/components/pestanas.tsx` y no en `ui.tsx`, que ya tenía 300 líneas.
   - `sector` redondea a milésimas: `Math.cos` y `Math.sin` daban distinto en los últimos decimales entre Node y Edge, y el anillo no hidrataba igual (aviso de React en el registro del servidor). Vale también para `GraficaDona`. Después del cambio, sin avisos nuevos.
+- T5 y T6 salieron juntas: son la misma página. Mirado con `pnpm capturas` en escritorio y celular, claro y oscuro:
+  - Gastos de septiembre de 2026: anillo de 522,50 USD con 8 categorías, porcentajes de 35 a 2;
+  - Comida filtrada, con las demás porciones atenuadas;
+  - Ingresos del año, con la flecha siguiente apagada;
+  - Mover, con "Binance → Bolívares … recibe 1.182,50 Bs" y "Por asignar → Emergencia".
+
+  La fila del gasto en bolívares muestra "1.182,50 Bs · 236,50 Bs/USD".
