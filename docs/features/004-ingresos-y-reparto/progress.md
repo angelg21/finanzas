@@ -48,14 +48,14 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 
 El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. Sin esta nota no se pasa a `/f-verify`.
 
--
+- 2026-10-15: el desarrollador revisó las pantallas en el navegador y las dio por buenas sin anotar observaciones: `/nuevo/ingreso`, `/sobres/repartir`, `/sobres/reglas` y sus accesos, más los iconos de sobres, los últimos movimientos del inicio y los círculos de las cuentas. No detalló anchos.
 
 ## Etapas
 
 - [x] Spec leída y aprobada por el desarrollador (2026-10-14)
 - [x] Construida (todas las tareas con commit, 2026-10-14)
-- [ ] Validada en navegador
-- [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
+- [x] Validada en navegador (2026-10-15)
+- [x] Verificada: `pnpm verify` en verde, cada ★ con su prueba (2026-10-15)
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
 - [ ] Fusionada en `main` el AAAA-MM-DD
 
@@ -91,3 +91,17 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 - 2026-10-15, **fuera del pipeline, por decisión del desarrollador**: los sobres pasan de iniciales a `IconoSobre` (observación 10). No está en la spec de la 004; va en esta rama, en su propio commit, para validarlo junto con ella. Toca `/sobres`, el inicio, `/sobres/[id]` y las filas de `TarjetaReparto`; `datosDelReparto` trae además el tipo y el nivel de cada sobre. `nivelDeSobre` y `pasoDeSobre` en `src/lib/sobres.ts` con sus pruebas; el mapa de tonos del anillo, que estaba repetido en el inicio y en `/sobres`, sale de ahí. `comprobar-004` sigue en verde.
 - 2026-10-15, **fuera del pipeline, por decisión del desarrollador**: los últimos movimientos del inicio dejan `TarjetaMovimiento` (tarjetas menta, dos) y usan `FilaMovimiento`, como `/movimientos`: cinco, agrupados por día, en una tarjeta junto a Cuentas, solo en escritorio como antes. `TarjetaMovimiento` quedó sin uso y se quitó.
 - 2026-10-15, **fuera del pipeline, por decisión del desarrollador**: las cuentas dejan las iniciales y usan `CirculoCuenta`, un círculo de color con icono como el de las categorías, según su tipo y su moneda (`src/lib/cuentas.ts`, con prueba). Binance en amarillo con ₿, Segunda billetera turquesa, Efectivo verde con $, Cuenta prima azul con un banco y Bolívares rojo con un billete. El amarillo es un token nuevo, `cuenta-cripto`, con el icono en pino porque en blanco no se lee (`paleta-cuentas.test.ts`). En `/cuentas` y en la tarjeta Cuentas del inicio.
+- Verificación (2026-10-15): los 12 ★ tienen su prueba, escrita desde el texto del criterio.
+  - ★ 1 a 5: `src/lib/reparto.criterios.test.ts`.
+  - ★ 6 a 10: `src/lib/ingresos.criterios.test.ts`.
+  - ★ 11: `src/lib/reglas.criterios.test.ts`.
+  - Lo que solo se ve en la base (★ 7 en una sola sentencia, ★ 9 "Cuadra", ★ 10 con el candado, ★ 11 en una transacción y sin tocar movimientos, ★ 12 el check) lo comprueba `scripts/comprobar-004.ts`. Su salida: 20 ✓ y `✓ comprobar-004: todo en verde`, con la base en sus 118 movimientos demo antes y después.
+  - Gates de `pnpm verify`:
+    - `✓ tipos (2.9 s)`
+    - `✓ lint (8.2 s)`
+    - `✓ formato (4.1 s)`
+    - `✓ estructura (0.1 s)`
+    - `✓ unitarias (3.0 s)`: 27 archivos y 493 pruebas.
+    - `✓ build (9.4 s)`
+    - `✓ humo (3.5 s)`
+    - `✓ verify:full en verde en 31.4 s. Árbol sellado.`
