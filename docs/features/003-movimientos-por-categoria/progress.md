@@ -10,8 +10,8 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - `rangoDePeriodo`, `moverPeriodo`, `esPeriodoActual`, `etiquetaPeriodo` y `leerFiltros`;
   - semanas que cruzan mes y año, febrero bisiesto, 31 de enero más un mes, y parámetros inválidos que caen en Gastos del mes actual (criterios 5, 6 y 9).
 - [x] T2 · (2026-10-14) `src/lib/distribucion.ts` con sus pruebas, viéndolas fallar primero: `distribuirPorCategoria`, con orden de mayor a menor, total exacto en centavos, mayor residuo que suma 100, "<1 %" y total cero (criterios 1 y 2).
-- [ ] T3 · `src/db/movimientos-del-periodo.ts`:
-  - `totalesPorCategoria`, `movimientosDelPeriodo` y `contarMovimientosDelPeriodo`;
+- [x] T3 · (2026-10-14) `src/db/movimientos-del-periodo.ts`:
+  - `totalesPorCategoria`, `movimientosDelPeriodo` y `resumenPorDia` (en lugar del conteo: da también el total exacto de cada día);
   - el icono y el color de la categoría en `baseMovimientos`;
   - revisión de `guardian-datos`;
   - comprobado contra la base local con `pnpm db:demo`: la suma por categoría de octubre coincide con un `select` a mano.
@@ -59,3 +59,11 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - T17;
   - `/f-verify` y `/f-review`.
 - T2: con los montos de la referencia (125, 91,12 y 85,30), la otra app muestra 41 %, 30 % y 28 %, que suman 99. Aquí da 42, 30 y 28: el punto que falta va al residuo mayor (criterio 2).
+- T3: comprobado contra la base local con los datos demo. En octubre, septiembre y agosto de 2026, el total del anillo, la suma por día y la cantidad coinciden con SQL a mano en gastos e ingresos; Mover trae solo transferencias y reasignaciones; el filtro por categoría suma igual que el total de esa categoría.
+- T3: `guardian-datos` dio **APTO**.
+  - Midió sobre una copia con filas de borde y 450 de lista larga: totales centavo por centavo, sin transferencias ni reasignaciones, Bs en su USD, bordes inclusivos, 200 de N con la suma de los días igual al anillo, todo con parámetros y sobre `movimientos_fecha_idx`. Inicio y `/sobres/[id]` reciben las mismas filas.
+  - Notas informativas:
+    - los empates entre categorías no tenían orden fijo, y se agregó el `orderBy` por monto e id;
+    - una suma de más de 2^53 centavos daría error en vez de perderse;
+    - el total por día de Mover mezcla tipos, y la pantalla no lo muestra;
+    - las tres consultas no comparten una lectura común, algo aceptado con un solo usuario.

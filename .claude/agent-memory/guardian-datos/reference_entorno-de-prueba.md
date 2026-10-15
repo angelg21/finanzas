@@ -71,4 +71,13 @@ metadata:
   - Se corren con `en-copia.mjs finanzas_t14_v2`. Copia: `createdb` + `pg_dump | psql`, y `dropdb` al final.
 - `pnpm verify --forzar` tarda unos 45 s. El humo entra y sale con la sesión, pero no escribe en la base: la huella de la real sale igual.
 
+- **Métodos de T3 de 003 (2026-10-14)**, scripts en `t3-003/`:
+  - **SQL real con sus parámetros:** `alter database <copia> set log_statement='all'`. Después, `docker logs --since <UTC> finanzas-db | grep -A1 execute`, que muestra la consulta y "DETAIL: Parameters".
+  - **Comparar una función de HEAD con la del árbol en el mismo proceso:**
+    1. `git archive HEAD src/db/consultas.ts | tar -x`.
+    2. Con `sed`, cambiar `./index`, `./schema` y `@/lib/...` por rutas absolutas `C:/...`. Las URL `file://` no sirven en CJS.
+    3. Correr un `.cts` con `NODE_PATH=<repo>/node_modules` (ver `comparar.cts`).
+  - **Volumen:** 300 000 filas con `generate_series` sobre fechas del 2000 al 2025 y luego `analyze`. Los casos aislados van en fechas anteriores al 2000; si no, se mezclan con el volumen.
+- postgres-js 3.4.9 manda los parámetros de texto sin tipo (oid 0), así que Postgres los resuelve como `date` contra la columna. El int8 llega como texto y lo convierte `mapWith(Number)`. Un año de 3 cifras ("100-03-01") se lee bien con cualquier DateStyle; uno de 2 cifras da 22008.
+
 Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].

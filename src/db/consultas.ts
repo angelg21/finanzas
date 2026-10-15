@@ -131,7 +131,7 @@ export async function reglaDeSobre(sobreId: number) {
 }
 
 /** Selección base de movimientos con los nombres de cuenta, sobre y categoría ya resueltos. */
-function baseMovimientos() {
+export function baseMovimientos() {
   return db
     .select({
       id: movimientos.id,
@@ -140,9 +140,13 @@ function baseMovimientos() {
       montoCentavos: movimientos.montoCentavos,
       moneda: movimientos.moneda,
       montoUsdCentavos: movimientos.montoUsdCentavos,
+      montoDestinoCentavos: movimientos.montoDestinoCentavos,
+      monedaDestino: movimientos.monedaDestino,
       tasa: movimientos.tasa,
       nota: movimientos.nota,
       categoria: categorias.nombre,
+      categoriaIcono: categorias.icono,
+      categoriaColor: categorias.color,
       cuentaOrigen: cuentaOrigen.nombre,
       cuentaDestino: cuentaDestino.nombre,
       sobreOrigen: sobreOrigen.nombre,
