@@ -1,20 +1,11 @@
 import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, CalendarDays, TrendingDown } from "lucide-react";
 import Link from "next/link";
+import { CirculoCuenta } from "@/components/circulo-cuenta";
 import { GraficaDona, type SegmentoDona } from "@/components/grafica-dona";
 import { GraficaMensual } from "@/components/grafica-mensual";
 import { IconoSobre } from "@/components/icono-sobre";
 import { FilaMovimiento } from "@/components/movimiento";
-import {
-  Avatar,
-  Cifra,
-  EncabezadoTarjeta,
-  FilaLista,
-  Mosaico,
-  Pildora,
-  Tarjeta,
-  TarjetaPalida,
-  iniciales,
-} from "@/components/ui";
+import { Cifra, EncabezadoTarjeta, FilaLista, Mosaico, Pildora, Tarjeta, TarjetaPalida } from "@/components/ui";
 import { gastadoEsteMes, movimientosRecientes, resumenMensual, saldosPorCuenta } from "@/db/consultas";
 import { sobresConNivel } from "@/db/sobres";
 import { formatearCentavos, formatearEnteros } from "@/lib/dinero";
@@ -162,7 +153,7 @@ export default async function Inicio() {
             <FilaLista
               key={c.id}
               href="/cuentas"
-              avatar={<Avatar texto={iniciales(c.nombre)} />}
+              avatar={<CirculoCuenta tipo={c.tipo} moneda={c.moneda} />}
               titulo={c.nombre}
               subtitulo={`${nombreTipoCuenta[c.tipo] ?? c.tipo} · ${c.moneda}`}
               derecha={

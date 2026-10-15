@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CheckCircle2, CircleAlert, Landmark } from "lucide-react";
+import { CirculoCuenta } from "@/components/circulo-cuenta";
 import {
-  Avatar,
   Cifra,
   Dato,
   EncabezadoTarjeta,
@@ -10,7 +10,6 @@ import {
   Tarjeta,
   TarjetaPalida,
   TituloPagina,
-  iniciales,
 } from "@/components/ui";
 import { saldosPorCuenta, saldosPorSobre } from "@/db/consultas";
 import { formatearCentavos } from "@/lib/dinero";
@@ -79,7 +78,7 @@ export default async function Cuentas() {
           {cuentas.map((c) => (
             <FilaLista
               key={c.id}
-              avatar={<Avatar texto={iniciales(c.nombre)} />}
+              avatar={<CirculoCuenta tipo={c.tipo} moneda={c.moneda} />}
               titulo={c.nombre}
               subtitulo={`${nombreTipo[c.tipo] ?? c.tipo} · ${c.moneda}${!c.esPropia ? " · a nombre de mi prima" : ""}`}
               derecha={
