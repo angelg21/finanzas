@@ -69,6 +69,8 @@ function Campos({
 }) {
   // Lo elegido, para la suma de los porcentajes mientras se escribe. Los campos siguen siendo no controlados.
   const [reglas, setReglas] = useState(valores.reglas);
+  // "Reglas guardadas" deja de ser verdad en cuanto se toca algo; cada respuesta vuelve a montar los campos.
+  const [editado, setEditado] = useState(false);
   const cambiar = (sobreId: number, cambio: Partial<{ tipo: string; valor: string }>) =>
     setReglas((r) => ({ ...r, [sobreId]: { ...(r[sobreId] ?? { tipo: "ninguna", valor: "" }), ...cambio } }));
 
@@ -78,7 +80,11 @@ function Campos({
   const legibles = lecturas.every((l) => l.ok);
 
   return (
-    <form action={enviar} className="flex flex-col gap-4 lg:col-span-8 lg:col-start-3">
+    <form
+      action={enviar}
+      onChange={() => setEditado(true)}
+      className="flex flex-col gap-4 lg:col-span-8 lg:col-start-3"
+    >
       <Tarjeta>
         <p className="mb-2 text-[13px] text-texto-2">
           Al repartir un ingreso, primero van los fijos, una vez al mes; lo que queda se reparte por porcentaje.
@@ -92,6 +98,7 @@ function Campos({
                 <div className="flex flex-wrap items-end gap-3">
                   <SelectorPildoras
                     etiqueta="Regla"
+                    detalleEtiqueta={`de ${s.nombre}`}
                     name={campoTipo(s.sobreId)}
                     opciones={tipos}
                     valorInicial={regla.tipo}
@@ -166,7 +173,7 @@ function Campos({
         </div>
       </Tarjeta>
 
-      {guardado ? (
+      {guardado && !editado ? (
         <p role="status" className="flex items-start gap-2 text-[13px] font-semibold text-positivo">
           <CheckCircle2 size={16} className="mt-0.5 shrink-0" aria-hidden />
           {guardado.sinPorcentajes
