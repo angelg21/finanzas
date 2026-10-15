@@ -1,6 +1,6 @@
 # 004 · Ingresos y reparto a los sobres
 
-Fecha: 2026-10-14. Estado: borrador.
+Fecha: 2026-10-14. Estado: aprobada.
 
 ## Para qué
 
