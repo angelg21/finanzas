@@ -48,7 +48,7 @@ export default async function NuevoGasto({ searchParams }: PageProps<"/nuevo/gas
             <Pildora tono="palida">Gasto</Pildora>
           </span>
           <Link
-            href="/nuevo?tipo=ingreso"
+            href="/nuevo/ingreso"
             className="rounded-full px-2.5 py-1 text-[12px] font-bold text-texto-2 hover:text-texto"
           >
             Ingreso

@@ -19,7 +19,7 @@ export function ResumenIngreso({
 }) {
   const { montoCentavos, moneda, cuenta, categoria, repartido, sinAsignarCentavos } = resumen;
   return (
-    <Tarjeta>
+    <Tarjeta className="lg:col-span-7">
       <div role="status" className="flex flex-col gap-4">
         <p className="flex items-center gap-2 text-[13px] font-semibold text-positivo">
           <CheckCircle2 size={18} aria-hidden />

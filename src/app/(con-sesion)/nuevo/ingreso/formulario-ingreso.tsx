@@ -144,10 +144,15 @@ function Campos({
   const confirmando = sinAsignarPorConfirmar !== null;
 
   return (
-    <form action={enviar} className="flex flex-col gap-4">
+    // En escritorio, el formulario en 7 columnas y el reparto en 5 a su lado, como el "Antes y después" del gasto; el
+    // botón va bajo el formulario. En el celular, uno debajo del otro y el botón al final.
+    <form
+      action={enviar}
+      className="flex flex-col gap-4 lg:col-span-12 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5"
+    >
       <input type="hidden" name="idCaptura" value={valores.idCaptura} />
       <input type="hidden" name="propuestaDe" value={propuestaDe} />
-      <Tarjeta>
+      <Tarjeta className="lg:col-span-7 lg:row-start-1">
         <div className="flex flex-col gap-5">
           <Campo etiqueta="Monto" error={errores.monto}>
             <CampoMonto
@@ -226,9 +231,10 @@ function Campos({
         error={errores.reparto}
         enlace={{ href: "/sobres/reglas", texto: "Reglas" }}
         vacio="Sin reglas de reparto: el ingreso quedará entero en Por asignar."
+        className="lg:sticky lg:top-24 lg:col-span-5 lg:col-start-8 lg:row-span-2 lg:row-start-1"
       />
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 lg:col-span-7 lg:col-start-1 lg:row-start-2">
         {propuesto ? (
           <p role="status" className="text-[13px] font-semibold text-texto-2">
             Revisa el reparto y vuelve a tocar el botón para guardarlo.

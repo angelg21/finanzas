@@ -29,7 +29,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 - [x] T6 (2026-10-14) · `/nuevo/ingreso` en móvil (criterios 6 a 8 y 13):
   - página, `formulario-ingreso.tsx` con `useActionState`, `acciones.ts` con zod y sesión, y `registrar-con-fallas.ts`;
   - `TarjetaReparto`, con la propuesta recalculada en el cliente y los dos envíos sin JavaScript.
-- [ ] T7 · Escritorio de `/nuevo/ingreso` (7 + 5) y los accesos: el mosaico del inicio, el de `/nuevo` y la píldora de la captura de gasto (criterios 15 y 16).
+- [x] T7 (2026-10-14) · Escritorio de `/nuevo/ingreso` (7 + 5) y los accesos: el mosaico del inicio, el de `/nuevo` y la píldora de la captura de gasto (criterios 15 y 16).
 - [ ] T8 · `/sobres/repartir` con su acción, y los enlaces "Repartir" en el hero de `/sobres` y en el aviso del inicio (criterio 10).
 - [ ] T9 · `/sobres/reglas` con su acción, y el enlace "Reglas de reparto" en `/sobres` (criterio 11).
 - [ ] T10 · `scripts/comprobar-004.ts` contra la base local, con referencia `demo-comprobar-004-*` y dejando la base como estaba:
