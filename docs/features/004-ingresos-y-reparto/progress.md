@@ -39,7 +39,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 
   Capturas de las tres pantallas en los dos anchos y temas.
 
-- [ ] T11 · Actualizar plan, diseño y observaciones:
+- [x] T11 (2026-10-14) · Actualizar plan, diseño y observaciones:
   - `docs/diseno.md` con `TarjetaReparto` y las tres pantallas;
   - el plan: "Sobres con reglas de reparto y confirmación de un clic", hecho, y los ingresos;
   - la observación 1 (el flujo de ingreso por la prima) con lo que quede pendiente para la feature de cuentas.
@@ -53,7 +53,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 ## Etapas
 
 - [x] Spec leída y aprobada por el desarrollador (2026-10-14)
-- [ ] Construida (todas las tareas con commit)
+- [x] Construida (todas las tareas con commit, 2026-10-14)
 - [ ] Validada en navegador
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
 - [ ] Revisada: veredicto APTO PARA FUSIONAR

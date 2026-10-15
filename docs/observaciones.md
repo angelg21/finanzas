@@ -13,7 +13,7 @@ Lista viva de las observaciones del usuario sobre la interfaz, lo que se cambió
 - ~~El modelo marca esa cuenta con `es_propia = false`, lo que la excluye de la suma de cuentas y del invariante con los sobres.~~ Resuelto el 2026-10-11 con el ADR 0006 (spec 001, criterio 16). La cuenta sigue con `es_propia = false` como marca legal, pero entra al cuadre con los sobres y desde ella se puede gastar.
 - Ajustar las semillas (`src/db/seed.ts`): tipo, nota y `esPropia` de "Cuenta prima".
 - Ajustar `docs/plan-financiero-y-app.md`, secciones 1, 2 y 4, donde dice que es de tránsito y que debe mantener saldo bajo. El riesgo legal sigue siendo real y conviene dejarlo escrito, pero como riesgo, no como regla de uso.
-- Revisar el flujo de ingreso: el sueldo remoto entra en esa cuenta y de ahí se mueve a Binance. Hoy las semillas de demostración lo ponen directo en Binance.
+- Revisar el flujo de ingreso: el sueldo remoto entra en esa cuenta y de ahí se mueve a Binance. Desde la feature 004 (2026-10-14), el ingreso se registra en "Cuenta prima" como en cualquier otra cuenta en dólares, cae en "Por asignar" y cuadra con los sobres (ADR 0006). **Sigue pendiente**, para la feature de cuentas y transferencias: mover de la prima a Binance con "Mover", y que las semillas de demostración pongan el sueldo en la prima en vez de directo en Binance.
 
 ## 2. "Segunda billetera USDC" no existe
 

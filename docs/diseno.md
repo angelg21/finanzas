@@ -97,26 +97,27 @@ Desviación consciente: los colores de las barras son los de la imagen, azul pá
 
 ## Piezas base
 
-| Pieza                                                                             | Uso                                                                                                                                                   |
-| --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Tarjeta`                                                                         | Oscura (blanca en claro), radio 20                                                                                                                    |
-| `TarjetaPalida`                                                                   | Azul pálido con texto azul marino, radio 22                                                                                                           |
-| `EncabezadoTarjeta`                                                               | Título con enlace "Ver todos" o contenido a la derecha; `palida` ajusta colores                                                                       |
-| `Cifra`                                                                           | Dinero en centavos. `sm`, `md`, `lg`, `xl`, `hero`                                                                                                    |
-| `Pildora`                                                                         | `oscura`, `navy`, `blanca`, `positiva`, `negativa`, `palida` (opción activa)                                                                          |
-| `Avatar` + `iniciales`                                                            | Cuadro azul pálido con iniciales; `pequeno` dentro de una píldora                                                                                     |
-| `CirculoCategoria`                                                                | Círculo del color de la categoría con su icono de línea en blanco; `sm`, `md`, `lg`                                                                   |
-| `FilaLista`                                                                       | Avatar, nombre en mayúsculas, subtítulo, columna derecha; enlazable                                                                                   |
-| `Progreso`                                                                        | Barra de 8 px; `palida` para tarjetas pálidas                                                                                                         |
-| `Mosaico`                                                                         | Botón de acción dentro del hero                                                                                                                       |
-| `Dato`                                                                            | Etiqueta y valor para pies de tarjeta pálida                                                                                                          |
-| `TituloPagina`                                                                    | Título grande, solo en móvil                                                                                                                          |
-| `TarjetaMovimiento`                                                               | Movimiento como tarjeta pálida, en Inicio                                                                                                             |
-| `FilaMovimiento`                                                                  | Movimiento como fila: `CirculoCategoria` (o un círculo neutro en Mover), título 15 px, detalle 13 px y `Cifra`; en bolívares, los Bs y la tasa debajo |
-| `Pestanas`                                                                        | Píldora `tarjeta` con opciones; la elegida en `palido` con `aria-current`; `llena` reparte el ancho. En `pestanas.tsx`                                |
-| `GraficaMensual`, `GraficaDona`                                                   | Barras apiladas y anillo                                                                                                                              |
-| `GraficaCategorias`                                                               | Anillo por categoría con el color `cat-*` de cada una, separadas por 2 px del color de la tarjeta; leyenda de enlaces que filtran, primero "Todas"    |
-| `BarraLateral`, `BotonFlotanteRegistrar`, `MenuMovil`, `TituloRuta`, `CambioTema` | Cascarón y navegación                                                                                                                                 |
+| Pieza                                                                             | Uso                                                                                                                                                             |
+| --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Tarjeta`                                                                         | Oscura (blanca en claro), radio 20                                                                                                                              |
+| `TarjetaPalida`                                                                   | Azul pálido con texto azul marino, radio 22                                                                                                                     |
+| `EncabezadoTarjeta`                                                               | Título con enlace "Ver todos" o contenido a la derecha; `palida` ajusta colores                                                                                 |
+| `Cifra`                                                                           | Dinero en centavos. `sm`, `md`, `lg`, `xl`, `hero`                                                                                                              |
+| `Pildora`                                                                         | `oscura`, `navy`, `blanca`, `positiva`, `negativa`, `palida` (opción activa)                                                                                    |
+| `Avatar` + `iniciales`                                                            | Cuadro azul pálido con iniciales; `pequeno` dentro de una píldora                                                                                               |
+| `CirculoCategoria`                                                                | Círculo del color de la categoría con su icono de línea en blanco; `sm`, `md`, `lg`                                                                             |
+| `FilaLista`                                                                       | Avatar, nombre en mayúsculas, subtítulo, columna derecha; enlazable                                                                                             |
+| `Progreso`                                                                        | Barra de 8 px; `palida` para tarjetas pálidas                                                                                                                   |
+| `Mosaico`                                                                         | Botón de acción dentro del hero                                                                                                                                 |
+| `Dato`                                                                            | Etiqueta y valor para pies de tarjeta pálida                                                                                                                    |
+| `TituloPagina`                                                                    | Título grande, solo en móvil                                                                                                                                    |
+| `TarjetaMovimiento`                                                               | Movimiento como tarjeta pálida, en Inicio                                                                                                                       |
+| `FilaMovimiento`                                                                  | Movimiento como fila: `CirculoCategoria` (o un círculo neutro en Mover), título 15 px, detalle 13 px y `Cifra`; en bolívares, los Bs y la tasa debajo           |
+| `Pestanas`                                                                        | Píldora `tarjeta` con opciones; la elegida en `palido` con `aria-current`; `llena` reparte el ancho. En `pestanas.tsx`                                          |
+| `GraficaMensual`, `GraficaDona`                                                   | Barras apiladas y anillo                                                                                                                                        |
+| `TarjetaReparto`                                                                  | Reparto de un ingreso o de "Por asignar": `TarjetaPalida` con una fila por sobre con regla (nombre, pista y campo de monto) y un pie que suma. En `reparto.tsx` |
+| `GraficaCategorias`                                                               | Anillo por categoría con el color `cat-*` de cada una, separadas por 2 px del color de la tarjeta; leyenda de enlaces que filtran, primero "Todas"              |
+| `BarraLateral`, `BotonFlotanteRegistrar`, `MenuMovil`, `TituloRuta`, `CambioTema` | Cascarón y navegación                                                                                                                                           |
 
 ## Formularios
 
@@ -134,6 +135,13 @@ Piezas en `src/components/formulario.tsx`:
 Las opciones en píldora comparten `pildoraOpcion` (la forma) con `pildoraNormal` o `pildoraElegida` (los colores), nunca dos fondos en el mismo elemento.
 
 Primer uso: el desglose del sobre Ocasiones en `/sobres/[id]`. La captura de gasto, `/nuevo/gasto`, usa todas.
+
+**El ingreso y su reparto** (feature 004):
+
+- `/nuevo/ingreso` es la captura de gasto con otras piezas: cabecera con las píldoras Gasto · Ingreso · Mover, `Tarjeta` con monto, cuenta, categoría, fecha y nota, y debajo `TarjetaReparto`. En escritorio, el formulario en 7 columnas y `TarjetaReparto` en 5, fija al desplazarse, como el "Antes y después" del gasto; el botón "Registrar y repartir" va bajo el formulario.
+- `TarjetaReparto`: cada fila con el nombre del sobre en mayúsculas, una pista de 12 px ("fijo · faltan 250 este mes", "40 % · tope 2.700 · faltan 650") y un campo de monto de 128 px alineado a la derecha, 16 px en el celular. El pie dice "Repartido 1.200,00 de 1.200,00" o "Quedan 50,00 en Por asignar", y en `negativo` si se pasa. Arriba a la derecha, el enlace "Reglas".
+- `/sobres/repartir`: el saldo de "Por asignar" en el hero y debajo `TarjetaReparto` con el botón "Repartir"; en escritorio, una columna de 6 centrada. Se entra desde el hero "Por asignar" de `/sobres` y desde el aviso del inicio.
+- `/sobres/reglas`: una `Tarjeta` con una fila por sobre (`SelectorPildoras` Fijo · % · Ninguna y el valor con "USD al mes" o "%", que se muestran con `:has()` sin JavaScript), los fondos con su aporte y el enlace "Desglose", el tope de Emergencia y el pie "Porcentajes: 100 %", en `negativo` si no suman 100. En escritorio, 8 columnas centradas. Se entra desde "Reglas de reparto", arriba a la derecha en `/sobres`.
 
 - Dentro de una tarjeta. Campos de 48 px con fondo `tarjeta-hover`, radio 14 y borde `tarjeta-borde`; al foco, anillo en `palido`.
 - El monto es el primer campo y el más grande: 36 px en negrita con el código de moneda a la derecha. Teclado numérico en el celular.

@@ -214,9 +214,9 @@ Referencia antes de diseñar: Actual Budget, open source, usa exactamente el mod
 
 **Fase 1, dos semanas: usar desde el día uno**
 
-- Cuentas, categorías, movimientos con nota. Los gastos con nota y las categorías con icono y color están hechos en la feature 001; faltan administrar cuentas (observación 3) y los ingresos y movimientos entre cuentas.
+- Cuentas, categorías, movimientos con nota. Los gastos con nota y las categorías con icono y color están hechos en la feature 001, y los ingresos en la 004; faltan administrar cuentas (observación 3) y los movimientos entre cuentas.
 - Flujo de gasto en bolívares. **Hecho** en la feature 001, fusionada el 12 de octubre de 2026.
-- Sobres con reglas de reparto y confirmación de un clic.
+- Sobres con reglas de reparto y confirmación de un clic. **Hecho** en la feature 004: `/nuevo/ingreso` registra el ingreso en una cuenta en dólares, lo deja en "Por asignar" y propone el reparto (los fijos una vez al mes, los porcentajes sobre lo que queda, con el tope de Emergencia), que se ajusta y se guarda con un clic; `/sobres/repartir` reparte lo que quede en "Por asignar"; `/sobres/reglas` edita las reglas y el tope. Las reglas sembradas reparten 40/30/30 tras los fijos y no dan la tabla de la sección 2 (187,50 y 187,50 frente a 175 y 200): se ajustan desde `/sobres/reglas`. Quedan para después las reglas según el monto del ingreso y los ingresos en bolívares.
 - Importador de Gestor de Gastos.
 - Gráficas básicas: por mes y por categoría. La de mes está en Inicio. **La de categoría, hecha** en la feature 003: el anillo de `/movimientos` para gastos e ingresos, por día, semana, mes o año.
 - Formulario de captura rápida de gasto. **Hecho** en la feature 001, fusionada el 12 de octubre de 2026.
