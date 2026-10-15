@@ -7,7 +7,7 @@ Rama: `feat/004-ingresos-y-reparto`. Spec: `spec.md`.
 Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca con la fecha al cerrarla.
 
 - [x] T1 (2026-10-14) · `src/lib/reparto.ts` con sus pruebas, viéndolas fallar primero: `proponerReparto` con suma exacta, fijos una vez al mes, porcentajes por mayor residuo, topes con redistribución y los dos cobros del ejemplo (criterios 1 a 5).
-- [ ] T2 · `src/lib/ingresos.ts` con sus pruebas, viéndolas fallar primero (criterios 6 a 9):
+- [x] T2 (2026-10-14) · `src/lib/ingresos.ts` con sus pruebas, viéndolas fallar primero (criterios 6 a 9):
   - `prepararIngreso` y `validarAsignaciones`;
   - las referencias de captura de ingreso y reasignación en `captura.ts`;
   - `saldosTras` ampliado a ingreso y reasignación, con la prueba del invariante.
@@ -68,3 +68,5 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - no existía nada del flujo de ingreso, y "Ingreso" en `/nuevo` no llevaba a ninguna parte;
   - el demo ya reparte el segundo cobro del mes solo a porcentajes;
   - las reglas sembradas (40 / 30 / 30 tras los fijos) no dan la tabla del plan.
+- T2 (2026-10-14): `aCentavos` lee "1.200" como 1,20 (sin coma, el punto es decimal; regla de la spec 001). En un ingreso, donde los montos pasan de mil, es fácil teclearlo así queriendo decir 1.200. No se cambia la regla en silencio: la propuesta de reparto se recalcula al escribir y el pie dice "Repartido 1,20 de 1,20", así que el error se ve antes de guardar. Si en la validación en navegador molesta, se decide aparte.
+- T2: los montos de cada sobre se leen con `aCentavosExactos` (nuevo en `dinero.ts`), que rechaza fracciones de centavo en vez de redondearlas (criterio 8). El monto del ingreso sigue con `aCentavos`, como dice la spec.

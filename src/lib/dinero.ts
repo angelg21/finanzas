@@ -81,6 +81,16 @@ export function aCentavos(texto: string): number {
   return centavos;
 }
 
+/**
+ * Como aCentavos, pero lanza si el texto trae fracciones de centavo: "10,555" no se redondea en silencio a 10,56.
+ * Los ceros de más sí valen ("1,500" es 1,50). Para los montos que se confirman uno por uno, como un reparto.
+ */
+export function aCentavosExactos(texto: string): number {
+  const fraccion = /\.(\d*)$/.exec(normalizar(texto))?.[1] ?? "";
+  if (/[1-9]/.test(fraccion.slice(2))) throw new Error(`Más de dos decimales: ${texto}`);
+  return aCentavos(texto);
+}
+
 /*
   Tasas: bolívares por dólar. En memoria viajan como enteros en diezmilésimas
   (241,8 → 2418000), la misma precisión que guarda la base en numeric(14,4),
