@@ -4,12 +4,14 @@ import { CircleAlert } from "lucide-react";
 import { useActionState, useState } from "react";
 import { SelectorFecha } from "@/components/calendario";
 import { Boton, Campo, CampoMonto, Entrada, SelectorPildoras } from "@/components/formulario";
+import { IconoSobre } from "@/components/icono-sobre";
 import { TarjetaReparto } from "@/components/reparto";
 import { Tarjeta } from "@/components/ui";
 import { type Moneda, aCentavos, partesCentavos, unidadDe } from "@/lib/dinero";
 import { esFecha, fechaDesdeAtajo } from "@/lib/fechas";
 import { type ReglaConSaldo, type RecibidoPorMes, camposDePropuesta, recibidoDelMes } from "@/lib/ingresos";
 import { pistaDeRegla } from "@/lib/reglas";
+import type { NivelDeSobre } from "@/lib/sobres";
 import { registrarConFallas } from "./registrar-con-fallas";
 import { ResumenIngreso } from "./resumen-ingreso";
 import { type ErroresFormularioIngreso, type EstadoIngreso, type ValoresIngreso, claveDePropuesta } from "./valores";
@@ -18,7 +20,7 @@ export type CuentaIngreso = { id: number; nombre: string; moneda: Moneda; esProp
 type Datos = {
   cuentas: CuentaIngreso[];
   categorias: { id: number; nombre: string; icono: string; color: string }[];
-  reglas: (ReglaConSaldo & { nombre: string })[];
+  reglas: (ReglaConSaldo & { nombre: string; tipoSobre: string; nivel: NivelDeSobre })[];
   recibidoPorMes: RecibidoPorMes;
   hoy: string;
 };
@@ -222,6 +224,7 @@ function Campos({
         filas={reglas.map((r) => ({
           sobreId: r.sobreId,
           nombre: r.nombre,
+          icono: <IconoSobre clave={r.sobreId} tipo={r.tipoSobre} nivel={r.nivel} tamano="sm" superficie="palida" />,
           pista: pistaDeRegla(r, delMes[r.sobreId] ?? 0, r.saldoCentavos),
           valor: asignaciones[r.sobreId] ?? "",
           error: errores.sobres?.[r.sobreId],

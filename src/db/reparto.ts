@@ -1,8 +1,9 @@
 import { and, desc, eq, gte, ne, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { ReglaParaRepartir } from "@/lib/reparto";
-import { saldosPorSobre } from "./consultas";
+import type { NivelDeSobre } from "@/lib/sobres";
 import { db } from "./index";
+import { sobresConNivel } from "./sobres";
 import { categorias, cuentas, movimientos, reglasReparto, sobres } from "./schema";
 
 /*
@@ -98,8 +99,13 @@ export async function cuentaDelUltimoIngreso(): Promise<number | null> {
   return ultima?.id ?? null;
 }
 
-/** Una regla con lo que la pantalla muestra de su sobre. */
-export type ReglaConSobre = ReglaParaRepartir & { nombre: string; saldoCentavos: number };
+/** Una regla con lo que la pantalla muestra de su sobre: nombre, saldo, tipo y nivel para su icono. */
+export type ReglaConSobre = ReglaParaRepartir & {
+  nombre: string;
+  saldoCentavos: number;
+  tipoSobre: string;
+  nivel: NivelDeSobre;
+};
 
 /**
  * Todo lo que necesita la propuesta, en paralelo: "Por asignar" con su saldo, las reglas con el saldo de su sobre
@@ -109,18 +115,23 @@ export async function datosDelReparto() {
   const [porAsignar, reglas, saldos, recibidoPorMes] = await Promise.all([
     sobrePorAsignar(),
     reglasActivas(),
-    saldosPorSobre(),
+    sobresConNivel(),
     recibidoDesdePorAsignarPorMes(),
   ]);
   const saldoDe = new Map(saldos.map((s) => [s.id, s.saldoCentavos]));
-  const nombreDe = new Map(saldos.map((s) => [s.id, s.nombre]));
+  const sobreDe = new Map(saldos.map((s) => [s.id, s]));
   return {
     porAsignar: porAsignar && { ...porAsignar, saldoCentavos: saldoDe.get(porAsignar.id) ?? 0 },
-    reglas: reglas.map((r): ReglaConSobre => ({
-      ...r,
-      nombre: nombreDe.get(r.sobreId) ?? "",
-      saldoCentavos: saldoDe.get(r.sobreId) ?? 0,
-    })),
+    reglas: reglas.map((r): ReglaConSobre => {
+      const sobre = sobreDe.get(r.sobreId);
+      return {
+        ...r,
+        nombre: sobre?.nombre ?? "",
+        saldoCentavos: sobre?.saldoCentavos ?? 0,
+        tipoSobre: sobre?.tipo ?? "",
+        nivel: sobre?.nivel ?? { porcentaje: null, alcanzado: false, negativo: false },
+      };
+    }),
     /** Activos y sin "Por asignar": los únicos que pueden recibir una reasignación desde él. */
     sobres: saldos.filter((s) => s.tipo !== "por_asignar" && s.id !== porAsignar?.id),
     recibidoPorMes,

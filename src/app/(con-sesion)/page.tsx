@@ -2,6 +2,7 @@ import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, CalendarDays, ChevronRight
 import Link from "next/link";
 import { GraficaDona, type SegmentoDona } from "@/components/grafica-dona";
 import { GraficaMensual } from "@/components/grafica-mensual";
+import { IconoSobre } from "@/components/icono-sobre";
 import { TarjetaMovimiento } from "@/components/movimiento";
 import {
   Avatar,
@@ -14,9 +15,11 @@ import {
   TarjetaPalida,
   iniciales,
 } from "@/components/ui";
-import { gastadoEsteMes, movimientosRecientes, resumenMensual, saldosPorCuenta, saldosPorSobre } from "@/db/consultas";
+import { gastadoEsteMes, movimientosRecientes, resumenMensual, saldosPorCuenta } from "@/db/consultas";
+import { sobresConNivel } from "@/db/sobres";
 import { formatearCentavos, formatearEnteros } from "@/lib/dinero";
 import { diasQueQuedanDelMes, hoyEnCaracas } from "@/lib/fechas";
+import { pasoDeSobre } from "@/lib/sobres";
 import { exigirSesion } from "@/app/sesion";
 
 export const dynamic = "force-dynamic";
@@ -39,16 +42,6 @@ const nombreTipoCuenta: Record<string, string> = {
   transito: "USD en EE. UU.",
 };
 
-/** El color del anillo sigue al tipo de sobre, no a su tamaño. */
-const pasoPorTipo: Record<string, SegmentoDona["paso"]> = {
-  emergencia: 1,
-  inversion: 2,
-  meta: 3,
-  gastos: 4,
-  familia: 5,
-  fondo: 6,
-};
-
 /** En hora de Caracas: el servidor (Vercel) corre en UTC. */
 function diasRestantesDelMes() {
   return diasQueQuedanDelMes(hoyEnCaracas(new Date()));
@@ -57,7 +50,7 @@ function diasRestantesDelMes() {
 export default async function Inicio() {
   await exigirSesion();
   const [sobres, cuentas, gastado, resumen, recientes] = await Promise.all([
-    saldosPorSobre(),
+    sobresConNivel(),
     saldosPorCuenta(),
     gastadoEsteMes(),
     resumenMensual(6),
@@ -74,7 +67,7 @@ export default async function Inicio() {
     clave: String(s.id),
     nombre: s.nombre,
     valorCentavos: Math.max(s.saldoCentavos, 0),
-    paso: pasoPorTipo[s.tipo] ?? 3,
+    paso: pasoDeSobre(s.tipo),
   }));
 
   return (
@@ -132,7 +125,7 @@ export default async function Inicio() {
               <FilaLista
                 key={s.id}
                 href={`/sobres/${s.id}`}
-                avatar={<Avatar texto={iniciales(s.nombre)} />}
+                avatar={<IconoSobre clave={s.id} tipo={s.tipo} nivel={s.nivel} />}
                 titulo={s.nombre}
                 subtitulo={nombreTipoSobre[s.tipo] ?? s.tipo}
                 derecha={

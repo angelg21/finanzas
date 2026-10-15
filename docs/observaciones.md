@@ -88,3 +88,9 @@ Lista viva de las observaciones del usuario sobre la interfaz, lo que se cambió
 - Así no hace falta ningún borrador fuera de React: el estado de la captura no se desmonta.
 - Reutilizar `validarCategoria` y las operaciones de `src/db/categorias.ts`; la pantalla `/categorias/nueva` sigue para crear desde la lista.
 - Probar desde el principio, en Edge y con el teclado, los caminos que rompieron los intentos: guardar y "Registrar otro", recargar, atrás del sistema, abandonar y entrar por otro acceso.
+
+## 10. Los sobres con letras se ven muertos
+
+**Observación** (15 de octubre de 2026): el avatar de iniciales de los sobres no le gusta; pidió darles vida con algo distinto de los iconos de las categorías, porque los sobres son lo más importante de la app.
+
+**Hecho** el mismo día, como corrección fuera del pipeline por decisión del desarrollador: `IconoSobre`, una funda con muesca del tono de su porción en el anillo, con un icono de línea por tipo, que se llena desde abajo según su saldo. Detalle en `docs/diseno.md`. Queda fuera por ahora: elegir el icono de cada sobre (útil cuando Planes se divida en metas) y llevarlo a las píldoras de sobre de la captura de gasto.

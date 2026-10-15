@@ -5,7 +5,15 @@ import { Entrada, ErrorCampo } from "./formulario";
 import { EncabezadoTarjeta, TarjetaPalida } from "./ui";
 
 /** Una fila del reparto: el sobre, su pista ("fijo · faltan 250 este mes", "40 %") y lo que se le asigna. */
-export type FilaReparto = { sobreId: number; nombre: string; pista: string; valor: string; error?: string };
+export type FilaReparto = {
+  sobreId: number;
+  nombre: string;
+  pista: string;
+  valor: string;
+  error?: string;
+  /** El icono del sobre, a la izquierda del nombre. */
+  icono?: ReactNode;
+};
 
 const numero = (centavos: number) => partesCentavos(centavos).numero;
 
@@ -74,6 +82,7 @@ export function TarjetaReparto({
           {filas.map((f) => (
             <div key={f.sobreId} className="flex flex-col gap-1 border-t border-palida-pista py-2.5 first:border-t-0">
               <div className="flex items-center gap-3">
+                {f.icono}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13px] font-extrabold uppercase tracking-wide text-palida-texto">
                     {f.nombre}

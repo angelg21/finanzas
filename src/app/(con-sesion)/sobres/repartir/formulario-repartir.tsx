@@ -3,17 +3,19 @@
 import { CheckCircle2, CircleAlert } from "lucide-react";
 import { useActionState, useState } from "react";
 import { Boton, EnlaceBoton } from "@/components/formulario";
+import { IconoSobre } from "@/components/icono-sobre";
 import { TarjetaReparto } from "@/components/reparto";
 import { Cifra, Tarjeta } from "@/components/ui";
 import { formatearCentavos, partesCentavos } from "@/lib/dinero";
 import { type RecibidoPorMes, type ReglaConSaldo, recibidoDelMes } from "@/lib/ingresos";
 import { pistaDeRegla } from "@/lib/reglas";
+import type { NivelDeSobre } from "@/lib/sobres";
 import { repartirConFallas } from "./repartir-con-fallas";
 import type { ErroresRepartir, EstadoRepartir, ValoresRepartir } from "./valores";
 
 type Datos = {
   saldoCentavos: number;
-  reglas: (ReglaConSaldo & { nombre: string })[];
+  reglas: (ReglaConSaldo & { nombre: string; tipoSobre: string; nivel: NivelDeSobre })[];
   recibidoPorMes: RecibidoPorMes;
   hoy: string;
 };
@@ -115,6 +117,7 @@ function Campos({
         filas={reglas.map((r) => ({
           sobreId: r.sobreId,
           nombre: r.nombre,
+          icono: <IconoSobre clave={r.sobreId} tipo={r.tipoSobre} nivel={r.nivel} tamano="sm" superficie="palida" />,
           pista: pistaDeRegla(r, delMes[r.sobreId] ?? 0, r.saldoCentavos),
           valor: asignaciones[r.sobreId] ?? "",
           error: errores.sobres?.[r.sobreId],
