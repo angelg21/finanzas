@@ -3,11 +3,59 @@
  * su cuenta y en "Por asignar" (ADR 0002); el reparto son reasignaciones en USD desde "Por asignar", con los montos
  * que el usuario confirmó, sin volver a calcularlos. Es pura: recibe la cuenta y los sobres ya leídos de la base.
  */
-import { type Moneda, aCentavos, formatearCentavos, leerExacto } from "./dinero";
+import { type Moneda, aCentavos, centavosATexto, formatearCentavos, leerExacto } from "./dinero";
 import { fechaValida } from "./fechas";
-import type { Asignacion } from "./reparto";
+import { type Asignacion, type ReglaParaRepartir, proponerReparto } from "./reparto";
 
 export type CuentaIngreso = { id: number; moneda: Moneda };
+
+/** El nombre del campo del reparto de un sobre en el formulario. */
+export function campoDeAsignacion(sobreId: number): string {
+  return `asignacion-${sobreId}`;
+}
+
+const campoReparto = /^asignacion-(\d{1,9})$/;
+
+/** Lo escrito en cada campo del reparto, por id de sobre, tal como llegó. Los demás campos se ignoran. */
+export function asignacionesDelFormulario(datos: FormData): Record<string, string> {
+  const asignaciones: Record<string, string> = {};
+  for (const [clave, valor] of datos.entries()) {
+    const sobre = campoReparto.exec(clave)?.[1];
+    if (sobre !== undefined && typeof valor === "string") asignaciones[sobre] = valor;
+  }
+  return asignaciones;
+}
+
+/** Una regla con el saldo de su sobre, para el tope. */
+export type ReglaConSaldo = ReglaParaRepartir & { saldoCentavos: number };
+
+/** Por mes ("AAAA-MM") y sobre, lo recibido desde "Por asignar". */
+export type RecibidoPorMes = Record<string, Record<number, number>>;
+
+/** Lo recibido en el mes de una fecha "AAAA-MM-DD". */
+export function recibidoDelMes(recibidoPorMes: RecibidoPorMes, fecha: string): Record<number, number> {
+  return recibidoPorMes[fecha.slice(0, 7)] ?? {};
+}
+
+/**
+ * La propuesta de reparto como se escribe en el campo de cada sobre: "450", "187,50", "0". La misma en el servidor
+ * (el primer envío sin JavaScript) y en el cliente (al escribir el monto o cambiar la fecha), y validarAsignaciones la
+ * lee igual: lo que se ve es lo que se guarda.
+ */
+export function camposDePropuesta(
+  montoCentavos: number,
+  fecha: string,
+  reglas: ReglaConSaldo[],
+  recibidoPorMes: RecibidoPorMes,
+): Record<number, string> {
+  const { asignaciones } = proponerReparto({
+    monto: montoCentavos,
+    reglas,
+    recibidoEnElMes: recibidoDelMes(recibidoPorMes, fecha),
+    saldos: Object.fromEntries(reglas.map((r) => [r.sobreId, r.saldoCentavos])),
+  });
+  return Object.fromEntries(asignaciones.map((a) => [a.sobreId, centavosATexto(a.centavos)]));
+}
 
 /** El monto de un sobre tal como se tecleó en su campo. */
 export type AsignacionTecleada = { sobreId: number; monto: string };

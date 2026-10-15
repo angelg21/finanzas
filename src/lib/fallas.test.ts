@@ -90,10 +90,26 @@ describe("conFallas: la acción envuelta nunca pierde la pantalla", () => {
     });
     const envuelta = conFallas(accion, alFallar) as typeof accion;
     expect(envuelta.$$FORM_ACTION).toBe(formAction);
-    expect(envuelta.$$IS_SIGNATURE_EQUAL).toBe(firmaIgual);
+    // Atada a la acción del servidor, no copiada tal cual: ver la prueba siguiente (spec 004, T6).
+    expect(envuelta.$$IS_SIGNATURE_EQUAL()).toBe(firmaIgual());
     // React liga el estado inicial a la acción del servidor, no a la envoltura.
     expect(envuelta.bind(null, { ronda: 0 })).toBe(ligada);
     expect(accion.bind).toHaveBeenCalledWith(null, { ronda: 0 });
+  });
+
+  it("al responder sin JavaScript, la firma se compara con la acción del servidor como `this`, no con la envoltura", () => {
+    // React llama envuelta.$$IS_SIGNATURE_EQUAL(...) con la envoltura de `this`, y la de React busca `this` entre las
+    // acciones que conoce: con la envoltura lanza "Tried to encode a Server Action from a different instance".
+    const accion = Object.assign(async (previo: Estado) => previo, {
+      $$FORM_ACTION: () => ({ name: "$ACTION_ID_x" }),
+      $$IS_SIGNATURE_EQUAL: vi.fn<(...argumentos: unknown[]) => boolean>(() => true),
+      bind: () => undefined,
+    });
+    const envuelta = conFallas(accion, alFallar) as typeof accion;
+    expect(envuelta.$$IS_SIGNATURE_EQUAL.call(envuelta, "1:0", 1)).toBe(true);
+    // vitest guarda el `this` de cada llamada en mock.contexts.
+    expect(accion.$$IS_SIGNATURE_EQUAL.mock.contexts[0]).toBe(accion);
+    expect(accion.$$IS_SIGNATURE_EQUAL).toHaveBeenCalledWith("1:0", 1);
   });
 
   it("sin marcas, no inventa ninguna", () => {

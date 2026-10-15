@@ -9,6 +9,9 @@ import {
   type AsignacionTecleada,
   type CuentaIngreso,
   type EntradaIngreso,
+  asignacionesDelFormulario,
+  campoDeAsignacion,
+  camposDePropuesta,
   filasDeReparto,
   prepararIngreso,
   validarAsignaciones,
@@ -324,5 +327,71 @@ describe("★ criterio 9 · el invariante se mantiene", () => {
     expect(despues.cuentas).toEqual(cuentas);
     expect(despues.sobres[porAsignar]).toBe(0);
     expect(suma(despues.sobres)).toBe(suma(conSaldo));
+  });
+});
+
+describe("camposDePropuesta: la propuesta como se escribe en cada campo (criterios 2, 5 y 13)", () => {
+  const conSaldo = (saldoEmergencia: number) => [
+    { sobreId: gastosDelMes, orden: 1, tipo: "fijo" as const, valor: 450_00, topeCentavos: null, saldoCentavos: 0 },
+    { sobreId: familia, orden: 2, tipo: "fijo" as const, valor: 100_00, topeCentavos: null, saldoCentavos: 0 },
+    { sobreId: ocasiones, orden: 3, tipo: "fijo" as const, valor: 25_00, topeCentavos: null, saldoCentavos: 0 },
+    {
+      sobreId: emergencia,
+      orden: 4,
+      tipo: "porcentaje" as const,
+      valor: 4_000,
+      topeCentavos: 2_700_00,
+      saldoCentavos: saldoEmergencia,
+    },
+    { sobreId: planes, orden: 5, tipo: "porcentaje" as const, valor: 3_000, topeCentavos: null, saldoCentavos: 0 },
+    { sobreId: inversion, orden: 6, tipo: "porcentaje" as const, valor: 3_000, topeCentavos: null, saldoCentavos: 0 },
+  ];
+  const octubre = { "2026-10": { [gastosDelMes]: 450_00, [familia]: 100_00, [ocasiones]: 25_00 } };
+
+  it("el primer cobro del mes, como textos que validarAsignaciones lee igual", () => {
+    const campos = camposDePropuesta(1_200_00, "2026-10-01", conSaldo(0), {});
+    expect(campos).toEqual({
+      [gastosDelMes]: "450",
+      [familia]: "100",
+      [ocasiones]: "25",
+      [emergencia]: "250",
+      [planes]: "187,50",
+      [inversion]: "187,50",
+    });
+    const tecleadas = Object.entries(campos).map(([sobreId, monto]) => ({ sobreId: Number(sobreId), monto }));
+    expect(validarAsignaciones(1_200_00, tecleadas, activos)).toMatchObject({ ok: true, sinAsignar: 0 });
+  });
+
+  it("lo recibido es el del mes de la fecha: en octubre los fijos ya están, en septiembre no", () => {
+    expect(camposDePropuesta(800_00, "2026-10-20", conSaldo(0), octubre)).toMatchObject({
+      [gastosDelMes]: "0",
+      [emergencia]: "320",
+      [planes]: "240",
+    });
+    expect(camposDePropuesta(800_00, "2026-09-30", conSaldo(0), octubre)).toMatchObject({
+      [gastosDelMes]: "450",
+      [emergencia]: "90",
+      [planes]: "67,50",
+    });
+  });
+
+  it("usa el saldo de cada sobre para su tope", () => {
+    expect(camposDePropuesta(1_200_00, "2026-10-01", conSaldo(2_700_00), {})).toMatchObject({
+      [emergencia]: "0",
+      [planes]: "312,50",
+    });
+  });
+});
+
+describe("campos del reparto en el formulario", () => {
+  it("cada sobre tiene su campo, y se leen todos los que llegan, por id de sobre", () => {
+    const datos = new FormData();
+    datos.set(campoDeAsignacion(planes), "187,50");
+    datos.set(campoDeAsignacion(inversion), "");
+    datos.set("monto", "1200");
+    datos.set("asignacion-", "1");
+    datos.set("asignacion-abc", "1");
+    datos.set("asignacion-1234567890", "1");
+    expect(asignacionesDelFormulario(datos)).toEqual({ [planes]: "187,50", [inversion]: "" });
   });
 });
