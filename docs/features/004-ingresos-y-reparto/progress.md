@@ -56,7 +56,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 - [x] Construida (todas las tareas con commit, 2026-10-14)
 - [x] Validada en navegador (2026-10-15)
 - [x] Verificada: `pnpm verify` en verde, cada ★ con su prueba (2026-10-15)
-- [ ] Revisada: veredicto APTO PARA FUSIONAR
+- [x] Revisada: veredicto APTO PARA FUSIONAR (2026-10-15)
 - [ ] Fusionada en `main` el AAAA-MM-DD
 
 ## Notas
@@ -105,3 +105,11 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
     - `✓ build (9.4 s)`
     - `✓ humo (3.5 s)`
     - `✓ verify:full en verde en 31.4 s. Árbol sellado.`
+- Revisión (2026-10-15): `revisor`, **APTO PARA FUSIONAR** al primer intento; `guardian-datos`, **APTO** sobre `97437d7`, el único commit que tocó `src/db` sin pasar por él. Ninguno de los hallazgos bloquea:
+  - **Sin decidir:** "1.200" se guarda como 1,20 (la nota de T2). La validación en navegador no lo decidió; lo decide el desarrollador.
+  - `/sobres/reglas`: el aviso "Reglas guardadas" sigue en pantalla mientras se vuelve a editar, aunque lo de la pantalla ya no sea lo guardado.
+  - `/sobres/reglas`: los cinco grupos de radios tienen la misma leyenda "Regla"; el nombre del sobre queda fuera del `fieldset`, y un lector de pantalla no sabe de qué sobre es cada uno.
+  - `sobresConNivel` lanza un error si un tope pasa de 2^53 o las partidas desbordan un bigint, y ese error tumba el ingreso y el reparto con el monto en el mensaje. Desde la app no se llega (`guardarReglas` y las partidas lo impiden); conviene que deje `porcentaje: null` en vez de lanzar, y vigilarlo en el importador.
+  - El nivel se calcula dos veces, en SQL en `sobresConNivel` y en JS en `/sobres/[id]`; hoy coinciden en 8 escenarios. `datosDelReparto` pasa de 4 a 6 conexiones a la vez, con los mismos tiempos; hay que volver a medirlo con el pooler de Supabase.
+  - `scripts/humo.mjs` no cubre las tres rutas nuevas; a mano, sin sesión, dan 307 a `/entrar`.
+  - La base local quedó como estaba: 118 movimientos `demo-*`, 0 `captura-*`, las seis reglas activas con 40/30/30.
