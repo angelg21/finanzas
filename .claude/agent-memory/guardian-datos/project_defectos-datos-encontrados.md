@@ -1,6 +1,6 @@
 ---
 name: defectos-datos-encontrados
-description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 (2026-10-14)
+description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en T3 de 003 (2026-10-14)
 metadata:
   type: project
 ---
@@ -20,6 +20,12 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
 - **Baja.** `movimiento.tsx` ahora llama a `aTasa(m.tasa)`, que lanza si la tasa es ≤ 0. La base no tiene un check `tasa > 0`: una fila así, metida por SQL o por el futuro importador, tumbaría la lista de movimientos y el inicio. Las 4 tasas que hay hoy pasan la ida y vuelta.
 - **Info.** `fijarAporteManual` no comprueba que el sobre no tenga desglose; solo lo oculta la página. El campo `mes` de zod responde en inglés ("Invalid input", "Too big…"). Solo se ve con peticiones fabricadas.
 - **Info.** Un error de `fs` al leer la cadena de producción imprimiría la ruta completa con el usuario de Windows, solo en la terminal propia. Los mensajes normales muestran `~/.finanzas/produccion.env`.
+
+**Abiertos, nuevos en T3 de 003 (2026-10-14). Informativos, ninguno bloquea** (ver [[revision-003-movimientos]])
+
+- `totalesPorCategoria` no tiene `orderBy`. Con montos empatados, el punto del mayor residuo va a la categoría que la consulta devuelve primero. Medido con tres de 1000: Servicios 34, sin variación entre planes. Para que sea determinista: `orderBy(desc(suma), categorias.id)`.
+- Una suma por encima de 2^53 centavos (90 billones de USD): `mapWith(Number)` redondea (9007199254740993 → …992) y `distribuirPorCategoria` lanza, lo que da un 500 en ese periodo. Por encima de 9,2e18, la consulta da 22003. Solo es posible con datos absurdos; vigilarlo en el importador.
+- Las tres consultas de `/movimientos` van sin una instantánea común. Un gasto que entre entre una y otra descuadra "Todas · X" con los días hasta recargar.
 
 **Abiertos de antes**
 
