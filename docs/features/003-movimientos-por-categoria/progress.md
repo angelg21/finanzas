@@ -31,6 +31,9 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - `docs/diseno.md` con `Pestanas`, `FilaMovimiento`, `GraficaCategorias` y la nueva disposición de Movimientos en móvil y escritorio, y la referencia nueva en su tabla;
   - la observación 8: los iconos en movimientos y gráficas, hechos;
   - el plan: la gráfica por categoría, hecha.
+- [x] T8 · (2026-10-14) Calendario para elegir un día, pedido por el desarrollador al validar (criterio 17):
+  - `BotonCalendario` reutiliza el calendario de la captura de gasto, y sin JavaScript queda un campo de fecha con "Ver";
+  - probado en Edge con CDP. Desde Gastos de septiembre, elegir el 12 lleva a `?periodo=dia&fecha=2026-09-12`, con "Día" marcado y el título "Sábado 12 de septiembre". Desde Ingresos, en la semana del 28 de septiembre, abre en octubre con 17 días futuros apagados, y elegir el 3 lleva a `?tipo=ingresos&periodo=dia&fecha=2026-10-03`.
 
 ## Validación en navegador
 

@@ -77,7 +77,12 @@ No cambia el plan. Al cerrar, la línea de gráficas se marca como hecha en lo q
     - La página sigue empezando con `await exigirSesion()`.
     - Las consultas nuevas viven en `src/db/` y la aritmética en `src/lib/`.
     - La página no habla con Drizzle.
-16. **Sin coste para la captura.** La página hace a lo sumo tres consultas (totales por categoría, lista y conteo) y no toca `/nuevo/gasto`.
+16. **Sin coste para la captura.** La página hace a lo sumo tres consultas (totales por categoría, lista y resumen por día) y no toca `/nuevo/gasto`.
+17. **Calendario** (pedido del desarrollador al validar, 2026-10-14). Tocar el nombre del periodo abre el calendario propio de la captura de gasto:
+    - se abre en el mes del periodo y los días futuros están apagados;
+    - elegir un día lleva a ese día (Día) sin cambiar la pestaña ni la categoría;
+    - desde ahí, Semana, Mes o Año muestran el periodo de ese día, porque se conserva la fecha;
+    - sin JavaScript, un campo de fecha nativo con "Ver" hace lo mismo.
 
 ## Pantallas
 
@@ -87,7 +92,8 @@ No cambia el plan. Al cerrar, la línea de gráficas se marca como hecha en lo q
 2. **Pestanas** (pieza nueva, en `src/components/pestanas.tsx` porque `ui.tsx` ya tenía 300 líneas): el patrón que ya usa `/categorias`, extraído para usarlo en las dos pantallas. Es una píldora `tarjeta` con las opciones; la elegida va en `palido` con `aria-current` y las demás son enlaces. Aquí: Gastos · Ingresos · Mover.
 3. **Periodo**:
    - una fila de píldoras Día · Semana · Mes · Año, con la misma pieza `Pestanas`;
-   - debajo, "‹ Octubre de 2026 ›" centrado, con las flechas como botones redondos de 40 px.
+   - debajo, "‹ Octubre de 2026 ›" centrado, con las flechas como botones redondos de 40 px;
+   - el nombre del periodo es un botón con el icono de calendario: **BotonCalendario**, en `calendario.tsx`, abre la misma ventana que `SelectorFecha` (criterio 17).
 4. `Tarjeta` con el anillo **GraficaCategorias** (pieza nueva, en `src/components/grafica-categorias.tsx`):
    - la misma geometría que `GraficaDona` (comparten `sector`) y el mismo resaltado al pasar;
    - el color de cada porción es el de su categoría (`cat-*`), separado por 2 px del color de la tarjeta;

@@ -1,7 +1,8 @@
 "use client";
 
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { type ReactNode, useRef, useState } from "react";
 import {
   type Mes,
   celdasDelMes,
@@ -128,6 +129,72 @@ export function SelectorFecha({
         </span>
       ) : null}
     </fieldset>
+  );
+}
+
+/**
+ * Saltar a un día con el mismo calendario (spec 003, criterio 17): el botón muestra `children` (el periodo) con el
+ * icono de calendario y abre la ventana; al elegir un día navega a `destino` con `fecha` puesta. Quien lo usa decide
+ * el resto de la dirección. Sin JavaScript el botón no hace nada: la página pone un campo de fecha en <noscript>.
+ */
+export function BotonCalendario({
+  destino,
+  elegida,
+  inicio,
+  hoy,
+  children,
+}: {
+  destino: string;
+  /** El día marcado en menta, o "" si el periodo no es un día. */
+  elegida: string;
+  /** El día cuyo mes se muestra al abrir. */
+  inicio: string;
+  hoy: string;
+  children: ReactNode;
+}) {
+  const ventana = useRef<HTMLDialogElement>(null);
+  const [vista, setVista] = useState<Mes>(() => mesDe(inicio));
+  const router = useRouter();
+
+  const elegir = (fecha: string) => {
+    ventana.current?.close();
+    const url = new URL(destino, window.location.origin);
+    url.searchParams.set("fecha", fecha);
+    router.push(`${url.pathname}${url.search}`);
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        aria-label="Elegir un día en el calendario"
+        onClick={() => {
+          setVista(mesDe(inicio));
+          ventana.current?.showModal();
+        }}
+        className="flex items-center gap-2 rounded-full px-3 py-2 text-[15px] font-bold hover:bg-tarjeta-hover"
+      >
+        <CalendarDays size={18} className="text-texto-3" aria-hidden />
+        {children}
+      </button>
+      <dialog
+        ref={ventana}
+        aria-label="Elegir un día"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) ventana.current?.close();
+        }}
+        className="m-auto w-[300px] max-w-[calc(100vw-32px)] rounded-[20px] border border-tarjeta-borde bg-tarjeta p-0 text-texto shadow-panel backdrop:bg-velo"
+      >
+        <Calendario
+          vista={vista}
+          alMover={(delta) => setVista((v) => moverMes(v, delta))}
+          valor={elegida}
+          hoy={hoy}
+          alElegir={elegir}
+        />
+      </dialog>
+    </>
   );
 }
 

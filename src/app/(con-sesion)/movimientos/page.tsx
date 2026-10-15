@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { BotonCalendario } from "@/components/calendario";
+import { Boton, Entrada } from "@/components/formulario";
 import { GraficaCategorias } from "@/components/grafica-categorias";
 import { FilaMovimiento } from "@/components/movimiento";
 import { Pestanas } from "@/components/pestanas";
@@ -170,7 +172,15 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
             >
               <ChevronLeft size={22} aria-hidden />
             </Link>
-            <span className="text-[15px] font-bold">{etiquetaPeriodo(filtros.periodo, filtros.fecha, hoy)}</span>
+            {/* Elegir un día lleva a ese día; desde ahí, Semana, Mes o Año muestran el suyo (se conserva la fecha). */}
+            <BotonCalendario
+              destino={enlace({ periodo: "dia", fecha: hoy })}
+              elegida={filtros.periodo === "dia" ? filtros.fecha : ""}
+              inicio={filtros.fecha}
+              hoy={hoy}
+            >
+              {etiquetaPeriodo(filtros.periodo, filtros.fecha, hoy)}
+            </BotonCalendario>
             {actual ? (
               <span aria-hidden className={`${flecha} text-texto-3 opacity-40`}>
                 <ChevronRight size={22} />
@@ -185,6 +195,25 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
               </Link>
             )}
           </nav>
+          <noscript>
+            {/* Sin JavaScript el calendario no abre: un campo de fecha nativo hace lo mismo. */}
+            <form method="get" action="/movimientos" className="flex items-center gap-2">
+              {filtros.pestana !== "gastos" ? <input type="hidden" name="tipo" value={filtros.pestana} /> : null}
+              {filtros.categoria !== null ? <input type="hidden" name="categoria" value={filtros.categoria} /> : null}
+              <input type="hidden" name="periodo" value="dia" />
+              <Entrada
+                type="date"
+                name="fecha"
+                defaultValue={filtros.fecha}
+                max={hoy}
+                aria-label="Ir a un día"
+                className="flex-1"
+              />
+              <Boton type="submit" variante="secundario">
+                Ver
+              </Boton>
+            </form>
+          </noscript>
         </div>
       </div>
 
