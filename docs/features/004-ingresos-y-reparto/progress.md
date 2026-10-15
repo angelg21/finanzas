@@ -6,7 +6,7 @@ Rama: `feat/004-ingresos-y-reparto`. Spec: `spec.md`.
 
 Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca con la fecha al cerrarla.
 
-- [ ] T1 · `src/lib/reparto.ts` con sus pruebas, viéndolas fallar primero: `proponerReparto` con suma exacta, fijos una vez al mes, porcentajes por mayor residuo, topes con redistribución y los dos cobros del ejemplo (criterios 1 a 5).
+- [x] T1 (2026-10-14) · `src/lib/reparto.ts` con sus pruebas, viéndolas fallar primero: `proponerReparto` con suma exacta, fijos una vez al mes, porcentajes por mayor residuo, topes con redistribución y los dos cobros del ejemplo (criterios 1 a 5).
 - [ ] T2 · `src/lib/ingresos.ts` con sus pruebas, viéndolas fallar primero (criterios 6 a 9):
   - `prepararIngreso` y `validarAsignaciones`;
   - las referencias de captura de ingreso y reasignación en `captura.ts`;
