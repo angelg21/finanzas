@@ -84,7 +84,7 @@ No cambia el plan. Al cerrar, la línea de gráficas se marca como hecha en lo q
 **Móvil**, de arriba abajo, en una columna con 16 px de relleno:
 
 1. `TituloPagina` "Movimientos".
-2. **Pestanas** (pieza nueva en `ui.tsx`): el patrón que ya usa `/categorias`, extraído para usarlo en las dos pantallas. Es una píldora `tarjeta` con las opciones; la elegida va en `Pildora palida` con `aria-current` y las demás son enlaces. Aquí: Gastos · Ingresos · Mover.
+2. **Pestanas** (pieza nueva, en `src/components/pestanas.tsx` porque `ui.tsx` ya tenía 300 líneas): el patrón que ya usa `/categorias`, extraído para usarlo en las dos pantallas. Es una píldora `tarjeta` con las opciones; la elegida va en `palido` con `aria-current` y las demás son enlaces. Aquí: Gastos · Ingresos · Mover.
 3. **Periodo**:
    - una fila de píldoras Día · Semana · Mes · Año, con la misma pieza `Pestanas`;
    - debajo, "‹ Octubre de 2026 ›" centrado, con las flechas como botones redondos de 40 px.
@@ -116,7 +116,7 @@ Se compara contra `docs/referencias/movimientos-referencia.jpg` en estructura, y
 - **Consultas nuevas** en `src/db/movimientos-del-periodo.ts`, para no pasar `consultas.ts` de las 320 líneas:
   - `totalesPorCategoria(tipo, desde, hasta)`: `sum(monto_usd_centavos)::bigint` agrupado por categoría, con nombre, icono y color, usando `movimientos_fecha_idx`;
   - `movimientosDelPeriodo(tipo | "mover", desde, hasta, categoriaId?, limite = 200)`: lo de `baseMovimientos`, más el icono y el color de la categoría y el monto recibido por el destino;
-  - `contarMovimientosDelPeriodo(...)`: el total para el "200 de N".
+  - `resumenPorDia(...)`: cantidad y suma en USD de cada día, con el mismo filtro que la lista. Da el "200 de N" y el total exacto de cada día aunque la lista esté cortada. Reemplazó al conteo simple al construir (T3).
 - `baseMovimientos` suma `categoriaIcono` y `categoriaColor`. Inicio la sigue usando sin cambios visibles.
 - Semillas y demo: sin cambios. `pnpm db:demo` ya trae cinco meses con gastos e ingresos de varias categorías y sirve para mirar.
 - Los datos existentes no se tocan: es solo lectura.

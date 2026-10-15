@@ -218,7 +218,7 @@ Referencia antes de diseñar: Actual Budget, open source, usa exactamente el mod
 - Flujo de gasto en bolívares. **Hecho** en la feature 001, fusionada el 12 de octubre de 2026.
 - Sobres con reglas de reparto y confirmación de un clic.
 - Importador de Gestor de Gastos.
-- Gráficas básicas: por mes y por categoría.
+- Gráficas básicas: por mes y por categoría. La de mes está en Inicio. **La de categoría, hecha** en la feature 003: el anillo de `/movimientos` para gastos e ingresos, por día, semana, mes o año.
 - Formulario de captura rápida de gasto. **Hecho** en la feature 001, fusionada el 12 de octubre de 2026.
 - PWA instalable y despliegue para usar la app a diario (feature 002): base en Supabase, Supabase Auth para un solo usuario, Vercel, y `/f-audit` antes de publicar.
   - **Auditoría completa (`/f-audit completo`), 2026-10-14, sobre la rama de la 002, en dos vueltas.**

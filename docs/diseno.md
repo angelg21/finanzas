@@ -15,7 +15,17 @@ Fecha: 7 de octubre de 2026. Dos referencias elegidas por el usuario: `docs/refe
 | Gráfica de barras en dos tonos, eje de valores a la derecha                                                                           | **GraficaMensual**: gastado en azul pálido, ahorrado en azul, eje a la derecha                                          |
 | Barra inferior con cinco accesos                                                                                                      | Quitada el 2026-10-14: basta el menú. Queda **BotonFlotanteRegistrar**, el "+" abajo a la derecha                       |
 | Tarjeta azul pálido con anillo segmentado y total en el centro                                                                        | **TarjetaPalida** + **GraficaDona**: distribución de los sobres                                                         |
-| Tarjetas azul pálido "Invested" y "Withdraw" con píldoras azul marino, título y datos                                                 | **TarjetaMovimiento**: cada movimiento como tarjeta pálida                                                              |
+| Tarjetas azul pálido "Invested" y "Withdraw" con píldoras azul marino, título y datos                                                 | **TarjetaMovimiento**: cada movimiento como tarjeta pálida, en Inicio                                                   |
+
+Tercera referencia, `docs/referencias/movimientos-referencia.jpg` (14 de octubre de 2026, la app que el desarrollador usa en el iPhone), solo para la estructura de Movimientos (spec 003):
+
+| En la referencia                                         | En la app                                                                                        |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Pestañas GASTOS e INGRESOS                               | **Pestanas** Gastos · Ingresos · Mover                                                           |
+| Día / Semana / Mes / Año / Período y "‹ Octubre de 2026" | **Pestanas** Día · Semana · Mes · Año, sin el rango libre, y las flechas del periodo             |
+| Anillo de colores con el total en el centro              | **GraficaCategorias**: cada porción del color de su categoría, con leyenda que filtra la lista   |
+| Filas por categoría con icono, porcentaje y monto        | La leyenda del anillo; debajo, cada movimiento como **FilaMovimiento** con su `CirculoCategoria` |
+| Botón "+" amarillo flotante                              | **BotonFlotanteRegistrar** con el degradado de `boton-pino`                                      |
 
 ## Dos disposiciones
 
@@ -26,15 +36,15 @@ Es una aplicación web progresiva: en el celular se ve como las pantallas de la 
 - Panel a pantalla completa, sin radio.
 - Barra superior de una línea. Títulos de página grandes debajo.
 - Todo en una columna de ancho completo con 16 px de relleno lateral y 16 px entre tarjetas.
-- Barra inferior fija con cinco accesos; 112 px de espacio al final para que no tape nada.
-- El anillo de distribución vive en Sobres; las tarjetas de movimiento en Movimientos.
+- Sin barra inferior: el "+" flotante y 96 px de espacio al final para que no tape nada.
+- El anillo de distribución vive en Sobres. Movimientos, de arriba abajo: pestañas de tipo a todo el ancho, pestañas de periodo, "‹ periodo ›", el anillo por categoría en una tarjeta y la lista por día, con una tarjeta por día y las filas separadas por una línea.
 
 **Escritorio (1024 px o más)**
 
 - Lienzo visible con 20 px de margen; panel flotante de hasta 1480 px con radio 28.
 - Barra lateral de 248 px dentro del panel: marca, navegación con la activa en azul pálido, botón "Registrar movimiento" con el degradado del hero, tema y lema abajo. Fija al desplazarse.
 - Barra superior con el título de la página y la fecha a la izquierda; tema y avatar a la derecha.
-- Contenido en rejilla de 12 columnas con 20 px de separación. Inicio: hero 7 + anillo 5; Sobres 5 + gráfica 7; Cuentas 5 + últimos movimientos 7. Sobres: anillo fijo 5 + lista 7. Cuentas: hero 7 + verificación 5, listas 7 + 5. Movimientos: tres resúmenes y tarjetas en dos o tres columnas por fecha.
+- Contenido en rejilla de 12 columnas con 20 px de separación. Inicio: hero 7 + anillo 5; Sobres 5 + gráfica 7; Cuentas 5 + últimos movimientos 7. Sobres: anillo fijo 5 + lista 7. Cuentas: hero 7 + verificación 5, listas 7 + 5. Movimientos: pestañas de tipo a la izquierda y periodo con flechas a la derecha; debajo, anillo fijo 5 + lista 7, y en Mover solo la lista, centrada.
 
 ## Tipografía
 
@@ -87,23 +97,26 @@ Desviación consciente: los colores de las barras son los de la imagen, azul pá
 
 ## Piezas base
 
-| Pieza                                                                             | Uso                                                                                 |
-| --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `Tarjeta`                                                                         | Oscura (blanca en claro), radio 20                                                  |
-| `TarjetaPalida`                                                                   | Azul pálido con texto azul marino, radio 22                                         |
-| `EncabezadoTarjeta`                                                               | Título con enlace "Ver todos" o contenido a la derecha; `palida` ajusta colores     |
-| `Cifra`                                                                           | Dinero en centavos. `sm`, `md`, `lg`, `xl`, `hero`                                  |
-| `Pildora`                                                                         | `oscura`, `navy`, `blanca`, `positiva`, `negativa`, `palida` (opción activa)        |
-| `Avatar` + `iniciales`                                                            | Cuadro azul pálido con iniciales; `pequeno` dentro de una píldora                   |
-| `CirculoCategoria`                                                                | Círculo del color de la categoría con su icono de línea en blanco; `sm`, `md`, `lg` |
-| `FilaLista`                                                                       | Avatar, nombre en mayúsculas, subtítulo, columna derecha; enlazable                 |
-| `Progreso`                                                                        | Barra de 8 px; `palida` para tarjetas pálidas                                       |
-| `Mosaico`                                                                         | Botón de acción dentro del hero                                                     |
-| `Dato`                                                                            | Etiqueta y valor para pies de tarjeta pálida                                        |
-| `TituloPagina`                                                                    | Título grande, solo en móvil                                                        |
-| `TarjetaMovimiento`                                                               | Movimiento como tarjeta pálida                                                      |
-| `GraficaMensual`, `GraficaDona`                                                   | Barras apiladas y anillo                                                            |
-| `BarraLateral`, `BotonFlotanteRegistrar`, `MenuMovil`, `TituloRuta`, `CambioTema` | Cascarón y navegación                                                               |
+| Pieza                                                                             | Uso                                                                                                                                                   |
+| --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Tarjeta`                                                                         | Oscura (blanca en claro), radio 20                                                                                                                    |
+| `TarjetaPalida`                                                                   | Azul pálido con texto azul marino, radio 22                                                                                                           |
+| `EncabezadoTarjeta`                                                               | Título con enlace "Ver todos" o contenido a la derecha; `palida` ajusta colores                                                                       |
+| `Cifra`                                                                           | Dinero en centavos. `sm`, `md`, `lg`, `xl`, `hero`                                                                                                    |
+| `Pildora`                                                                         | `oscura`, `navy`, `blanca`, `positiva`, `negativa`, `palida` (opción activa)                                                                          |
+| `Avatar` + `iniciales`                                                            | Cuadro azul pálido con iniciales; `pequeno` dentro de una píldora                                                                                     |
+| `CirculoCategoria`                                                                | Círculo del color de la categoría con su icono de línea en blanco; `sm`, `md`, `lg`                                                                   |
+| `FilaLista`                                                                       | Avatar, nombre en mayúsculas, subtítulo, columna derecha; enlazable                                                                                   |
+| `Progreso`                                                                        | Barra de 8 px; `palida` para tarjetas pálidas                                                                                                         |
+| `Mosaico`                                                                         | Botón de acción dentro del hero                                                                                                                       |
+| `Dato`                                                                            | Etiqueta y valor para pies de tarjeta pálida                                                                                                          |
+| `TituloPagina`                                                                    | Título grande, solo en móvil                                                                                                                          |
+| `TarjetaMovimiento`                                                               | Movimiento como tarjeta pálida, en Inicio                                                                                                             |
+| `FilaMovimiento`                                                                  | Movimiento como fila: `CirculoCategoria` (o un círculo neutro en Mover), título 15 px, detalle 13 px y `Cifra`; en bolívares, los Bs y la tasa debajo |
+| `Pestanas`                                                                        | Píldora `tarjeta` con opciones; la elegida en `palido` con `aria-current`; `llena` reparte el ancho. En `pestanas.tsx`                                |
+| `GraficaMensual`, `GraficaDona`                                                   | Barras apiladas y anillo                                                                                                                              |
+| `GraficaCategorias`                                                               | Anillo por categoría con el color `cat-*` de cada una, separadas por 2 px del color de la tarjeta; leyenda de enlaces que filtran, primero "Todas"    |
+| `BarraLateral`, `BotonFlotanteRegistrar`, `MenuMovil`, `TituloRuta`, `CambioTema` | Cascarón y navegación                                                                                                                                 |
 
 ## Formularios
 

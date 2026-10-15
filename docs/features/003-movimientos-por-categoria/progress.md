@@ -27,7 +27,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - rejilla 5 + 7 con el anillo fijo;
   - Mover sin anillo, con origen → destino y el monto recibido si cambia de moneda;
   - capturas en los dos anchos y temas, comparadas con `docs/referencias/movimientos-referencia.jpg` (criterios 11 y 16).
-- [ ] T7 · Actualizar plan, diseño y observaciones:
+- [x] T7 · (2026-10-14) Actualizar plan, diseño y observaciones:
   - `docs/diseno.md` con `Pestanas`, `FilaMovimiento`, `GraficaCategorias` y la nueva disposición de Movimientos en móvil y escritorio, y la referencia nueva en su tabla;
   - la observación 8: los iconos en movimientos y gráficas, hechos;
   - el plan: la gráfica por categoría, hecha.
@@ -41,7 +41,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 ## Etapas
 
 - [x] Spec leída y aprobada por el desarrollador, sin cambios (2026-10-14)
-- [ ] Construida (todas las tareas con commit)
+- [x] Construida (todas las tareas con commit, 2026-10-14)
 - [ ] Validada en navegador
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
