@@ -6,7 +6,7 @@ Rama: `feat/003-movimientos-por-categoria`. Spec: `spec.md`.
 
 Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca con la fecha al cerrarla.
 
-- [ ] T1 · `src/lib/periodos.ts` con sus pruebas, viéndolas fallar primero:
+- [x] T1 · (2026-10-14) `src/lib/periodos.ts` con sus pruebas, viéndolas fallar primero:
   - `rangoDePeriodo`, `moverPeriodo`, `esPeriodoActual`, `etiquetaPeriodo` y `leerFiltros`;
   - semanas que cruzan mes y año, febrero bisiesto, 31 de enero más un mes, y parámetros inválidos que caen en Gastos del mes actual (criterios 5, 6 y 9).
 - [ ] T2 · `src/lib/distribucion.ts` con sus pruebas, viéndolas fallar primero: `distribuirPorCategoria`, con orden de mayor a menor, total exacto en centavos, mayor residuo que suma 100, "<1 %" y total cero (criterios 1 y 2).
