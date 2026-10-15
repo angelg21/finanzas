@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { EnlaceBoton } from "@/components/formulario";
 import { GraficaDona, type SegmentoDona } from "@/components/grafica-dona";
 import {
   Avatar,
@@ -69,9 +70,16 @@ export default async function Sobres() {
               <Cifra centavos={porAsignar.saldoCentavos} tamano="hero" />
             </div>
           </div>
-          <p className="mt-3 max-w-sm text-[13px] text-white/75 lg:mt-0 lg:text-right">
-            Este dinero todavía no tiene un sobre. Repártelo según tus reglas.
-          </p>
+          <div className="mt-3 flex flex-col gap-3 lg:mt-0 lg:items-end">
+            <p className="max-w-sm text-[13px] text-white/75 lg:text-right">
+              Este dinero todavía no tiene un sobre. Repártelo según tus reglas.
+            </p>
+            {porAsignar.saldoCentavos > 0 ? (
+              <EnlaceBoton href="/sobres/repartir" variante="secundario" className="w-full lg:w-auto">
+                Repartir
+              </EnlaceBoton>
+            ) : null}
+          </div>
         </section>
       ) : null}
 

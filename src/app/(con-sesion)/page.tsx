@@ -103,7 +103,12 @@ export default async function Inicio() {
         {porAsignar && porAsignar.saldoCentavos !== 0 ? (
           <p className="mt-4 text-[13px] text-white/75">
             Tienes <span className="font-bold text-white">{formatearCentavos(porAsignar.saldoCentavos)}</span> sin
-            asignar a ningún sobre.
+            asignar a ningún sobre.{" "}
+            {porAsignar.saldoCentavos > 0 ? (
+              <Link href="/sobres/repartir" className="font-bold text-white underline underline-offset-2">
+                Repartir
+              </Link>
+            ) : null}
           </p>
         ) : null}
       </section>

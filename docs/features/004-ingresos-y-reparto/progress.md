@@ -30,7 +30,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - página, `formulario-ingreso.tsx` con `useActionState`, `acciones.ts` con zod y sesión, y `registrar-con-fallas.ts`;
   - `TarjetaReparto`, con la propuesta recalculada en el cliente y los dos envíos sin JavaScript.
 - [x] T7 (2026-10-14) · Escritorio de `/nuevo/ingreso` (7 + 5) y los accesos: el mosaico del inicio, el de `/nuevo` y la píldora de la captura de gasto (criterios 15 y 16).
-- [ ] T8 · `/sobres/repartir` con su acción, y los enlaces "Repartir" en el hero de `/sobres` y en el aviso del inicio (criterio 10).
+- [x] T8 (2026-10-14) · `/sobres/repartir` con su acción, y los enlaces "Repartir" en el hero de `/sobres` y en el aviso del inicio (criterio 10).
 - [ ] T9 · `/sobres/reglas` con su acción, y el enlace "Reglas de reparto" en `/sobres` (criterio 11).
 - [ ] T10 · `scripts/comprobar-004.ts` contra la base local, con referencia `demo-comprobar-004-*` y dejando la base como estaba:
   - ingreso y reparto con "Cuadra" antes y después;
@@ -84,3 +84,4 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - `guardarReglas` lee los sobres editables y el de emergencia dentro de la transacción en vez de aceptarlos de fuera: así nunca desactiva la regla de un fondo (que el desglose no reactiva) ni pone el tope en otro sobre.
   - Informativo: `guardarReglas` y el desglose calculan `max(orden) + 1` con candados distintos y pueden repetir un orden; no cambia ningún monto (el empate lo decide `sobreId`).
   - Informativo: la relectura tras un choque ahora es un LIKE sin índice (24 ms con 500 mil filas); solo corre tras un choque o al repartir, nunca en la captura normal de un gasto.
+- T8 (2026-10-14): sin JavaScript, repartir todo dejaba "Por asignar" en 0 y la página dejaba de montar el formulario, así que la respuesta no decía "Reparto guardado". El formulario se monta siempre y el estado vacío vive dentro de él. Comprobado en el navegador con los scripts apagados.
