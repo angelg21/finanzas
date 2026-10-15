@@ -31,7 +31,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - `TarjetaReparto`, con la propuesta recalculada en el cliente y los dos envíos sin JavaScript.
 - [x] T7 (2026-10-14) · Escritorio de `/nuevo/ingreso` (7 + 5) y los accesos: el mosaico del inicio, el de `/nuevo` y la píldora de la captura de gasto (criterios 15 y 16).
 - [x] T8 (2026-10-14) · `/sobres/repartir` con su acción, y los enlaces "Repartir" en el hero de `/sobres` y en el aviso del inicio (criterio 10).
-- [ ] T9 · `/sobres/reglas` con su acción, y el enlace "Reglas de reparto" en `/sobres` (criterio 11).
+- [x] T9 (2026-10-14) · `/sobres/reglas` con su acción, y el enlace "Reglas de reparto" en `/sobres` (criterio 11).
 - [ ] T10 · `scripts/comprobar-004.ts` contra la base local, con referencia `demo-comprobar-004-*` y dejando la base como estaba:
   - ingreso y reparto con "Cuadra" antes y después;
   - reintento sin duplicados;
@@ -85,3 +85,5 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - Informativo: `guardarReglas` y el desglose calculan `max(orden) + 1` con candados distintos y pueden repetir un orden; no cambia ningún monto (el empate lo decide `sobreId`).
   - Informativo: la relectura tras un choque ahora es un LIKE sin índice (24 ms con 500 mil filas); solo corre tras un choque o al repartir, nunca en la captura normal de un gasto.
 - T8 (2026-10-14): sin JavaScript, repartir todo dejaba "Por asignar" en 0 y la página dejaba de montar el formulario, así que la respuesta no decía "Reparto guardado". El formulario se monta siempre y el estado vacío vive dentro de él. Comprobado en el navegador con los scripts apagados.
+- T5 y T8 (2026-10-14), segunda medición de `guardian-datos`: APTO. Reintento igual, en vuelo o tras repartirlo todo da "ya estaba"; hacia otros sobres o con otro monto, "otra" sin filas nuevas; cinco repartos a la vez nunca pasan del saldo; `guardarReglas` deshace todo ante cualquier error y no toca fondos ni otros topes. Queda informativo: si un sobre se reactiva entre abrir `/sobres/reglas` y guardar, el envío no trae su campo y el guardado se rechaza con un error en un campo que la pantalla no muestra. Hoy ninguna pantalla reactiva sobres.
+- T9 (2026-10-14): probado en el navegador con y sin JavaScript (95 % rechazado, guardar, recargar, volver a 40/30/30). Las reglas de la base local quedaron como las sembradas. `/sobres/reglas` y `/sobres/repartir` tienen su título en la barra de escritorio.

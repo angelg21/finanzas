@@ -1,6 +1,6 @@
 ---
 name: revision-004-reparto
-description: Feature 004 (ingresos y reparto): T4 SEGURO DE APLICAR y T5 APTO CON CAMBIOS el 2026-10-14 (candado del reparto medido; reintento sinSaldo y reparto disjunto; editables confiados); qué vigilar en T8 y T9; producción ya tiene datos
+description: Feature 004 (ingresos y reparto): T4 SEGURO DE APLICAR; T5 APTO CON CAMBIOS y luego APTO el 2026-10-14 (7dd832a: reintento antes del saldo, editables leídos en la base, acción T8 medida); qué vigilar en T9; producción ya tiene datos
 metadata:
   type: project
 ---
@@ -43,6 +43,12 @@ metadata:
 - **La acción de T8 (borrador) los tapa.** Corta antes con `saldo <= 0` y con `validarAsignaciones(saldo)`.
 - **`guardarReglas` confía en `editables` y `tope.sobreId`.** Un fondo dentro de `editables` queda desactivado, y `fijarReglaFija` NO lo reactiva, porque no toca `activa`.
 
-**How to apply (T8/T9):** volver a medir Mal 1 y Mal 2 en la acción de `/sobres/repartir`. Comprobar que T9 calcule `editables` (sin fondos ni Por asignar) y el id de Emergencia en el servidor.
+**Segunda vuelta de T5, 2026-10-14 22:45: APTO**, medido sobre el commit 7dd832a. El autor commiteó antes de que volviera a medir y el mensaje ya decía "aplicados".
+
+- **`repartirPorAsignar`:** dentro del candado, `guardadasDeCaptura(id, tx)` va antes del saldo. Comprueba la forma y la referencia con el prefijo, y que los destinos estén activos y no sean `por_asignar`. Resultados: R4 da otra con +0 filas, R7 y el reintento en vuelo dan ya-estaba, R10, R13 y R16 lanzan, y la concurrencia queda en 2 de 5 en 10 de 10 rondas.
+- **`guardarReglas(reglas, tope)`:** lee los editables dentro de la transacción (`reglaEditable`) y escribe el tope con `where tipo='emergencia' and activo`, exigiendo 1 fila. Resultados: G4, G4b y G4c lanzan; G5b no toca Ocasiones ni un sobre inactivo; G6 y G6b, con 0 o 2 Emergencias, deshacen todo; G7 rechaza −5, 0, 1,5, 2^53 y NaN. La carrera dio 20 de 20 rondas con un estado entero.
+- **Acción de T8, con el arnés `t5/accion-repartir.cts`:** el reintento da "guardado" con +0 filas. Un id con otros datos da "otra" con id nuevo. Con el primer intento en vuelo, "guardado". Dos pestañas: 5 de 5 rondas bien. A los 16 minutos, "otra".
+
+**How to apply (T9):** comprobar que la página mande una fila por cada editable visible. Un sobre que se reactiva entre la carga y el guardado queda con la regla desactivada (raro).
 
 Ver también [[defectos-datos-encontrados]] y [[entorno-de-prueba]].

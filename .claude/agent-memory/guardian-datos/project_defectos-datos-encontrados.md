@@ -35,9 +35,15 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
 
 **Abiertos, nuevos en T5 de 004 (2026-10-14)** (ver [[revision-004-reparto]])
 
-- **Media.** `repartirPorAsignar` revisa el saldo antes de detectar un reintento. Con todo repartido, el reintento responde `sinSaldo` en vez de "ya estaba". Con el mismo id hacia otros sobres, inserta otro reparto. Corrección medida: releer las filas del id dentro del candado.
-- **Baja.** `guardarReglas` confía en `editables` y `tope.sobreId`. Un fondo desactivado no lo reactiva `fijarReglaFija`. No hay check `tope > 0`.
-- **Info.** `guardarReglas` y `fijarReglaFija` a la vez repiten el `orden` (20 de 20). `repartirPorAsignar` acepta un destino inactivo (lo frena la acción), referencias nulas y una lista vacía. La relectura con LIKE tarda 24 ms con 500 mil filas (antes 0,1 ms), solo tras un 23505.
+- **Cerrados en 7dd832a (segunda vuelta, medidos):**
+  - el reintento que daba `sinSaldo` y el reparto a otros sobres que se guardaba otra vez;
+  - `editables` y el tope que venían de fuera;
+  - el destino inactivo, la referencia nula y la lista vacía.
+- **Siguen abiertos (info):**
+  - `fijarReglaFija` no reactiva una regla y no comparte el candado 4. A la vez que `guardarReglas`, repite el `orden` (20 de 20), sin efecto en los montos.
+  - El LIKE tarda 24 ms con 500 mil filas, en cada reparto (dos veces: en la acción y bajo el candado).
+  - Dos filas al mismo sobre dan `guardadas=0`; desde la acción no se puede llegar ahí.
+  - No hay check `tope > 0` en la base; ahora lo frena `guardarReglas`.
 
 **Abiertos de antes**
 

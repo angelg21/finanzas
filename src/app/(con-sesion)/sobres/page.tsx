@@ -1,3 +1,4 @@
+import { ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EnlaceBoton } from "@/components/formulario";
@@ -61,6 +62,15 @@ export default async function Sobres() {
   return (
     <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">
       <TituloPagina titulo="Sobres" detalle={<Cifra centavos={total} tamano="sm" tono="texto-2" />} />
+      <div className="-mt-2 flex justify-end px-1 lg:col-span-12 lg:mt-0 lg:px-0">
+        <Link
+          href="/sobres/reglas"
+          className="flex items-center gap-0.5 text-[13px] font-semibold text-enlace hover:text-texto"
+        >
+          Reglas de reparto
+          <ChevronRight size={16} aria-hidden />
+        </Link>
+      </div>
 
       {porAsignar && porAsignar.saldoCentavos !== 0 ? (
         <section className="hero rounded-tarjeta p-5 lg:col-span-12 lg:flex lg:items-center lg:justify-between lg:p-6">

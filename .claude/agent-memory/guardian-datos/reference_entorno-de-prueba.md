@@ -75,7 +75,13 @@ metadata:
   - `dos-procesos.sh`;
   - `accion-gasto.cts`: el arnés de T12 apuntado a `finanzas_t5r`;
   - `volumen.sql`: 500 mil filas con referencias de captura.
-- El autor y el coordinador prueban en el navegador contra la base real mientras reviso: en T5 entraron 3 filas `captura-*`. Atribuirlas por `creado_en` y por la referencia.
+  - `accion-repartir.cts`: la acción real de `/sobres/repartir`, con `sesion` y `next/cache` falsos. Los campos se llaman `asignacion-<sobreId>` y `confirmarSinAsignar`.
+  - Los casos `reglas2` y `reglas-carrera2` de la sonda usan la firma nueva, `guardarReglas(reglas, tope)`.
+- El autor y el coordinador prueban en el navegador contra la base real mientras reviso: en T5 entraron 3 filas y luego 9 más. Para atribuirlas:
+  - por `creado_en`, la referencia, la cuenta y la nota;
+  - mis sondas ponen `nota = 'sonda-t5'` y usan la cuenta 3;
+  - las del navegador no tienen nota.
+- El autor puede hacer commit, `git stash` y `stash pop` en medio de una revisión: los archivos desaparecen un momento. Leer `git log` y `git stash list` antes de buscarlos.
 
 - **Hook `comandos.mjs`** (desde 790ee93): niega cualquier comando de Bash o PowerShell que nombre un archivo `.env*` (salvo `.env.example`), `produccion.env`, la carpeta `.finanzas` o `.vercel`. Esos nombres van dentro de un archivo escrito con Write, nunca en la línea de comando. Un heredoc cuenta como línea de comando: me lo negó al editar MEMORY.md con python. Para editar la memoria, usar Edit. La cadena de producción vive ahora en `os.homedir()/.finanzas/produccion.env`; en Windows, `homedir` sale de USERPROFILE. `t14/v2-prod.cts <falta|sinvariable|sintls|contls>` la sustituye en memoria según el final de la ruta.
 - **Scripts de la segunda vuelta de T14** (en `t14/`):
