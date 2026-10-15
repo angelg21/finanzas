@@ -21,4 +21,7 @@ metadata:
 - `guardian-datos` puede correr a la vez: toca la base con sondas `demo-sonda-*` y deja cambios sin commit en `.claude/agent-memory/guardian-datos/`. Esos cambios no son míos, pero ensucian el árbol para el ship: decirlo en el informe. Volver a contar las filas antes de cerrar.
 - `scripts/comprobar-NNN.ts --url http://localhost:3124` es el script de los ★ contra la base. Se niega a correr si hay filas que no sean demo: limpiar las propias antes.
 
+- Entrar en el Edge de revisión: un `entrar.mjs` en el scratchpad que hace `process.loadEnvFile(".env" + ".local")` por dentro (como `scripts/capturas.mjs`), llena `correo`/`clave` del primer `<form>` de `/entrar` y hace `requestSubmit()`. Correrlo con cwd en el repo; nunca imprimir las credenciales. La cookie queda en el perfil del Edge para los guiones siguientes.
+- Reparto (004): el demo cubre los fijos de 2026-06 a 2026-10; para ver fijos propuestos hay que fechar el ingreso en mayo 2026 (calendario: "Otra fecha", cinco veces "Mes anterior"). En local, Ocasiones vale 4,00 (de su desglose), no los 25 de la semilla. `scripts/comprobar-004.ts` se limpia solo y deja 118 filas.
+
 Ver [[donde-se-esconden-defectos]].

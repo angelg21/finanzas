@@ -1,6 +1,6 @@
 ---
 name: defectos-datos-encontrados
-description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en T3 de 003 y T4 de 004 (2026-10-14)
+description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en T3 de 003, T4/T5 de 004 (2026-10-14) y 97437d7 (2026-10-15)
 metadata:
   type: project
 ---
@@ -44,6 +44,16 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
   - El LIKE tarda 24 ms con 500 mil filas, en cada reparto (dos veces: en la acción y bajo el candado).
   - Dos filas al mismo sobre dan `guardadas=0`; desde la acción no se puede llegar ahí.
   - No hay check `tope > 0` en la base; ahora lo frena `guardarReglas`.
+
+**Abiertos, nuevos en la auditoría de 97437d7 (2026-10-15). Info, ninguno bloquea** (ver [[revision-004-reparto]])
+
+- `sobresConNivel` lanza si un tope, un saldo o la suma anual no es un entero seguro (`exigirEntero` en `lib/sobres.ts`), o si `sum(monto*veces)` desborda (22003). Como `datosDelReparto` lo usa, eso tumba `registrarIngreso`, `repartir`, el inicio, `/sobres` y `/nuevo/ingreso`.
+  - Medido con un tope de 2^53+1 y con una partida de 2^62×4 metidos por SQL.
+  - Desde la app no se llega: `guardarReglas` y `AporteFueraDeRango` lo acotan.
+  - El RangeError lleva el monto en el mensaje y no pasa por `registrarFalla`. Es la misma familia que "tasa ≤ 0".
+  - La captura de gasto no lo usa.
+- Las conexiones simultáneas pasan de 4 a 6 en `datosDelReparto` y de 5 a 7 en el inicio. La acción del ingreso usa 8 de las 10 que postgres-js abre por defecto. Medirlo junto con el pooler (T15).
+- El nivel se calcula en dos sitios: `sobresConNivel` (SQL) y `/sobres/[id]` (JS). Hoy dan lo mismo.
 
 **Abiertos de antes**
 

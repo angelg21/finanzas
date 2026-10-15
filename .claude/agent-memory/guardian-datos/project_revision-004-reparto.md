@@ -1,6 +1,6 @@
 ---
 name: revision-004-reparto
-description: Feature 004 (ingresos y reparto): T4 SEGURO DE APLICAR; T5 APTO CON CAMBIOS y luego APTO el 2026-10-14 (7dd832a: reintento antes del saldo, editables leídos en la base, acción T8 medida); qué vigilar en T9; producción ya tiene datos
+description: Feature 004 (ingresos y reparto): T4 SEGURO DE APLICAR; T5 APTO CON CAMBIOS y luego APTO el 2026-10-14 (7dd832a); 97437d7 (sobresConNivel, fuera del pipeline) APTO el 2026-10-15; qué vigilar en T9; producción ya tiene datos
 metadata:
   type: project
 ---
@@ -50,5 +50,18 @@ metadata:
 - **Acción de T8, con el arnés `t5/accion-repartir.cts`:** el reintento da "guardado" con +0 filas. Un id con otros datos da "otra" con id nuevo. Con el primer intento en vuelo, "guardado". Dos pestañas: 5 de 5 rondas bien. A los 16 minutos, "otra".
 
 **How to apply (T9):** comprobar que la página mande una fila por cada editable visible. Un sobre que se reactiva entre la carga y el guardado queda con la regla desactivada (raro).
+
+**Auditoría de 97437d7 (2026-10-15): APTO.** Es un commit fuera del pipeline: `src/db/sobres.ts` (`sobresConNivel`) y `datosDelReparto` traen `tipoSobre` y `nivel`. Solo lee, no escribe nada y no trae migración.
+
+- Medido en copias: `saldosPorSobre` sale igual a `sobresConNivel` sin `nivel`, y `datosDelReparto` viejo es igual al nuevo sin los campos nuevos.
+- El nivel de la lista coincide con el de `/sobres/[id]` y con un cálculo en SQL: 7 sobres en 8 escenarios.
+- `comprobar-004` en verde; 539300 = 539300.
+- Dejé tres cosas informativas, ninguna bloquea:
+  - `exigirEntero` y el `sum(monto*veces)` dejan el ingreso y el reparto a merced de datos absurdos (solo por SQL);
+  - las conexiones pasan de 4 a 6 en `datosDelReparto` y de 5 a 7 en el inicio, con los mismos tiempos con 500 mil filas;
+  - el nivel se calcula en dos sitios.
+- Para entonces, el diff `main...HEAD` en `src/db` y `drizzle` tenía 3 commits: b8ef818, 7dd832a y 97437d7. Los blobs de reparto.ts son iguales desde b8ef818 hasta 97437d7^, y el hash de 0004 coincide con el aplicado.
+
+**How to apply:** el autor hace commits "fuera del pipeline" que tocan `src/db`. En cada revisión, correr `git log main..HEAD -- src/db drizzle` y comparar los blobs con lo que ya medí.
 
 Ver también [[defectos-datos-encontrados]] y [[entorno-de-prueba]].

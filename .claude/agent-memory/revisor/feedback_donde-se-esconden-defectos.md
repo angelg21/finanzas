@@ -23,6 +23,8 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 
 - 001, vuelta 9 (2026-10-12): APTO. El autor revirtió el borrador (`13f1354`) por decisión del desarrollador tras tres vueltas de defectos de datos; el revert salió limpio. Lo que sobrevivió del commit revertido, `onFocus={select()}` en el monto, se pensó para un monto precargado y ahora corre en cada foco: tocar el monto para añadir una cifra lo selecciona todo ("21" + "0" → "0"). Se reportó como baja, no bloquea.
 
+- 004, vuelta 1 (2026-10-15): APTO al primer intento. Ejercité con JS, sin JS, Enter, "Registrar otro", confirmación de "Quedan X", fijos en un mes sin reparto y topes: todo cuadró. Lo que quedó fue de pantalla: un mensaje de éxito (`guardado`) que sigue visible mientras se edita algo distinto sin guardar (el formulario no se vuelve a montar hasta la siguiente respuesta), y cinco `SelectorPildoras` con la misma leyenda "Regla" sin el nombre del sobre. El autor también mete en la rama de la feature commits "fuera del pipeline, por decisión del desarrollador" (iconos, inicio, cuentas) sin spec: revisarlos solo contra reglas duras y decirlo. Y deja decisiones de dinero "para decidir aparte" en el progress (aquí "1.200" se lee 1,20) que la nota de validación luego no resuelve.
+
 **Why:** la demo es toda `origen = importado`, así que la lógica que depende de historial `manual` no se ve. La validación en navegador sigue el camino feliz, en un solo momento, y no pasa por un error de validación ni por el paso del tiempo antes de guardar.
 
 **How to apply:**
@@ -39,6 +41,8 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 - Si un arreglo mete estado en la dirección (`searchParams`), sigue esa URL después del éxito: guarda, "Registrar otro", `location.reload()` y "Ir al inicio" + `history.back()`. Un formulario que reaparece lleno es un duplicado a un toque. Y prueba el atrás del sistema (`history.back()`), no solo la flecha de la app: el autor valida con la flecha.
 - Si un arreglo guarda estado fuera de React (`sessionStorage`, almacén externo): abandona el flujo a mitad y abre la pantalla por otro acceso (inicio, "+"); deja que caduque entre abrir y guardar (escribe la marca de tiempo en el pasado). Un `key` que se calcula de un almacén externo cambia en la re-renderización que trae `revalidatePath` tras guardar. Compara lo que el progress dice del diseño ("un solo uso") con dónde se borra de verdad.
 - Una regla que busca por nombre (`sobreSugerido`, "Binance", "Gastos del mes") se rompe si la misma feature deja renombrar: cruza cada criterio de "editar" con las reglas por nombre.
+- En formularios que muestran "guardado" sin desmontarse (reglas, ajustes): guarda, cambia algo y mira si el éxito sigue diciendo algo que ya no es verdad.
+- Busca en el progress cada "se decide aparte" o "si molesta" y comprueba si la nota de validación lo decidió; si no, dilo en el informe.
 - Tras un `revert` con "se conservan los demás arreglos": cada pieza conservada se diseñó para el contexto que se fue. Mira si su condición sigue teniendo sentido (un handler que antes servía al dato precargado ahora corre siempre) y ejercítala con un toque real, no con `autoFocus`.
 
 Ver [[entorno-revision-finanzas]].
