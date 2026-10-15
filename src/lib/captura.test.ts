@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { esIdCaptura, referenciaDeCaptura, referenciaDeReasignacion, resolverReintento } from "./captura";
+import {
+  esIdCaptura,
+  prefijoDeCaptura,
+  referenciaDeCaptura,
+  referenciaDeReasignacion,
+  resolverReintento,
+} from "./captura";
 
 const id = "3f2b8c1e-9a4d-4e6f-8b7a-1c2d3e4f5a6b";
 
@@ -176,5 +182,30 @@ describe("referencias de un ingreso y su reparto (spec 004, criterio 7)", () => 
       "otra",
     );
     expect(resolverReintento(guardadas, [ingreso, reasignacion(2, 45_000)], ahora)).toBe("otra");
+  });
+});
+
+describe("prefijoDeCaptura: para releer todas las filas de una captura tras un choque (spec 004, criterio 7)", () => {
+  it("es el comienzo de cada referencia de la captura, de gasto o de ingreso", () => {
+    const prefijo = prefijoDeCaptura(id);
+    expect(prefijo).toBe(`captura-${id}-`);
+    for (const referencia of [
+      referenciaDeCaptura(id, "gasto"),
+      referenciaDeCaptura(id, "transferencia"),
+      referenciaDeCaptura(id, "ingreso"),
+      referenciaDeReasignacion(id, 7),
+    ]) {
+      expect(referencia.startsWith(prefijo), referencia).toBe(true);
+    }
+  });
+
+  it("en minúsculas, y no abarca otra captura cuyo id empiece igual", () => {
+    expect(prefijoDeCaptura(id.toUpperCase())).toBe(prefijoDeCaptura(id));
+    expect(referenciaDeCaptura(`${id.slice(0, -1)}c`, "gasto").startsWith(prefijoDeCaptura(id))).toBe(false);
+  });
+
+  it("solo con un id de captura válido: nada de comodines de LIKE ni textos sueltos", () => {
+    for (const texto of ["", "%", "_", `${id}%`, "demo-ing-001"])
+      expect(() => prefijoDeCaptura(texto), texto).toThrow();
   });
 });

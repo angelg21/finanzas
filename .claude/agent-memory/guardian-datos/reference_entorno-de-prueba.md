@@ -49,7 +49,14 @@ metadata:
 - **Llamar una server action con sesión fuera de Next** (T12 de 002, 2026-10-13). Desde 002, las acciones llaman a `leerSesion` (cookies de Supabase), y el método de 2026-10-12 ya no basta. Se usa un `.cts` (CJS) en el scratchpad que, con `Module.createRequire(repo/package.json)`, registra módulos falsos en `req.cache`: `path.resolve(repo,"src/app/sesion.ts")` → `{leerSesion, exigirSesion}`, y `req.resolve("next/cache")` → `{revalidatePath(){}}`. Luego hace `req(path.resolve(repo, ".../acciones.ts"))`. Así la acción devuelve su estado completo, también "guardado", sin el error de "static generation store". Se corre con `node en-copia.mjs finanzas_t12 -- pnpm exec tsx "\"<scratch>/t12/accion.cts\"" <caso>`. El script se niega si la base no es `finanzas_t12*`.
 - **Apuntar el ensayo de un script a una copia**: `DATABASE_URL=postgresql://finanzas:finanzas@localhost:5433/finanzas_t4 pnpm exec tsx src/db/x.ts`. dotenv no la pisa ("injected env (0)"). La clave local "finanzas" es pública (docker-compose); al mostrar salidas, igual la tapo con sed.
 
-- **El scratchpad persiste entre sesiones** (2026-10-14): la misma ruta conserva `en-copia.mjs`, `invariante.sql`, `huella.sql`, `t12/`, `t4/` y `t14/`. Revisarlo antes de reescribir herramientas.
+- **El scratchpad persiste entre sesiones** (2026-10-14), pero cada sesión tiene su propia carpeta UUID bajo `AppData/Local/Temp/claude/c--Users-Angel-Menu-Gestion-de-Recursos-finanzas/`. Para encontrar las herramientas viejas: `ls -d */scratchpad/en-copia.mjs`. La carpeta `7b250b8a…` tiene `en-copia.mjs <copia> -- cmd`, `huella.sql`, `invariante.sql`, `t14/` y `migrar-copia.mts`; `eef206d5…` tiene la huella del autor. Revisarlas antes de reescribir nada.
+- **Herramientas de T4 de 004** (carpeta `80f2e2d3…`):
+  - `migrar-ensayo.mts`: el `migrar-produccion` real (`conectar`, `migrate`, `revisarEstadoBase`, `terminarConError`), solo contra `finanzas_g004*`;
+  - `consultas-reparto.mts [todo|pa|propuesta <monto> <AAAA-MM>]`: las consultas reales de `src/db/reparto.ts`, más `proponerReparto`;
+  - `snap/diff-snapshot.cts <NNNN_snapshot.json>`: compara `schema.ts` con cualquier snapshot.
+
+  Para ver el efecto de la zona horaria de la sesión: `alter database <copia> set timezone='Pacific/Kiritimati'` (y luego `reset`).
+
 - **Esquema contra snapshot sin `generate`** (T14): un `.cts` que con `createRequire` carga `drizzle-kit/api` y `src/db/schema.ts`, y llama a `generateDrizzleJson(schema, prev.id, undefined, "snake_case")` y luego a `generateMigration(prev, actual)`. Todo en memoria, nada en `drizzle/`. Resultado: 0 sentencias pendientes. El script está en `t14/diff-snapshot.cts`.
 - **Ensayo del primer despliegue** (T14):
   - Base vacía: `create role t14_dueno login password ... nosuperuser nobypassrls` y `create database finanzas_t14_prod owner t14_dueno`.
@@ -61,6 +68,14 @@ metadata:
 - **Reloj y zona en una sonda**: sustituir `globalThis.Date` por una subclase con el instante fijo antes de cargar el módulo, y correr con `TZ=UTC`. En Git Bash, `TZ=America/Caracas` llega como undefined a node, que entonces usa la zona de Windows (Caracas).
 - `pnpm db:seed` con `DATABASE_URL` en el entorno muestra "injected env (5)": son las demás variables de `.env.local`, y DATABASE_URL no se pisa. Lo confirma la huella de la copia.
 - `respaldo.ts` en ensayo deja `data/respaldos/AAAA-MM-DD-ensayo-local.sql`, en el árbol aunque git lo ignora: borrarlo con un `rm` de ruta exacta.
+
+- **Herramientas de T5 de 004** (carpeta `80f2e2d3…/scratchpad/t5/`):
+  - `sonda.cts <repartir|paralelo N|uno monto sobre|recargar monto|en-vuelo|reglas|reglas-carrera|gasto-comparar|id-compartido>`: solo corre contra `finanzas_t5r*`;
+  - `SONDA_MUT=sin-candado|corregido` carga los mutantes de `mut/`, que necesitan `NODE_PATH=<repo>/node_modules`;
+  - `dos-procesos.sh`;
+  - `accion-gasto.cts`: el arnés de T12 apuntado a `finanzas_t5r`;
+  - `volumen.sql`: 500 mil filas con referencias de captura.
+- El autor y el coordinador prueban en el navegador contra la base real mientras reviso: en T5 entraron 3 filas `captura-*`. Atribuirlas por `creado_en` y por la referencia.
 
 - **Hook `comandos.mjs`** (desde 790ee93): niega cualquier comando de Bash o PowerShell que nombre un archivo `.env*` (salvo `.env.example`), `produccion.env`, la carpeta `.finanzas` o `.vercel`. Esos nombres van dentro de un archivo escrito con Write, nunca en la línea de comando. Un heredoc cuenta como línea de comando: me lo negó al editar MEMORY.md con python. Para editar la memoria, usar Edit. La cadena de producción vive ahora en `os.homedir()/.finanzas/produccion.env`; en Windows, `homedir` sale de USERPROFILE. `t14/v2-prod.cts <falta|sinvariable|sintls|contls>` la sustituye en memoria según el final de la ruta.
 - **Scripts de la segunda vuelta de T14** (en `t14/`):

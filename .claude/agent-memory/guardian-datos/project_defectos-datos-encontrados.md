@@ -1,6 +1,6 @@
 ---
 name: defectos-datos-encontrados
-description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en T3 de 003 (2026-10-14)
+description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en T3 de 003 y T4 de 004 (2026-10-14)
 metadata:
   type: project
 ---
@@ -26,6 +26,18 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
 - `totalesPorCategoria` no tiene `orderBy`. Con montos empatados, el punto del mayor residuo va a la categoría que la consulta devuelve primero. Medido con tres de 1000: Servicios 34, sin variación entre planes. Para que sea determinista: `orderBy(desc(suma), categorias.id)`.
 - Una suma por encima de 2^53 centavos (90 billones de USD): `mapWith(Number)` redondea (9007199254740993 → …992) y `distribuirPorCategoria` lanza, lo que da un 500 en ese periodo. Por encima de 9,2e18, la consulta da 22003. Solo es posible con datos absurdos; vigilarlo en el importador.
 - Las tres consultas de `/movimientos` van sin una instantánea común. Un gasto que entre entre una y otra descuadra "Todas · X" con los días hasta recargar.
+
+**Abiertos, nuevos en T4 de 004 (2026-10-14). Ninguno bloquea** (ver [[revision-004-reparto]])
+
+- **Baja / decisión.** `recibidoDesdePorAsignarPorMes` suma lo bruto: una devolución a "Por asignar" no descuenta lo que el fijo ya recibió. Hoy nada escribe esas devoluciones; llegarán con "Mover".
+- **Baja.** `sobrePorAsignar` elige el de menor orden aunque esté inactivo, y entonces `datosDelReparto` le pone saldo 0, porque `saldosPorSobre` filtra `activo`.
+- **Info.** `datosDelReparto` abre 4 conexiones a la vez (medido: 4 pids) y no comparte instantánea. Su saldo de "Por asignar" no sirve como guarda para escribir.
+
+**Abiertos, nuevos en T5 de 004 (2026-10-14)** (ver [[revision-004-reparto]])
+
+- **Media.** `repartirPorAsignar` revisa el saldo antes de detectar un reintento. Con todo repartido, el reintento responde `sinSaldo` en vez de "ya estaba". Con el mismo id hacia otros sobres, inserta otro reparto. Corrección medida: releer las filas del id dentro del candado.
+- **Baja.** `guardarReglas` confía en `editables` y `tope.sobreId`. Un fondo desactivado no lo reactiva `fijarReglaFija`. No hay check `tope > 0`.
+- **Info.** `guardarReglas` y `fijarReglaFija` a la vez repiten el `orden` (20 de 20). `repartirPorAsignar` acepta un destino inactivo (lo frena la acción), referencias nulas y una lista vacía. La relectura con LIKE tarda 24 ms con 500 mil filas (antes 0,1 ms), solo tras un 23505.
 
 **Abiertos de antes**
 

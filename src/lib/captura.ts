@@ -16,6 +16,15 @@ export function referenciaDeCaptura(id: string, tipo: "gasto" | "transferencia" 
   return `captura-${id.toLowerCase()}-${tipo}`;
 }
 
+/**
+ * "captura-<id>-": el comienzo de todas las referencias de una captura, para releerlas con LIKE tras un choque. Solo
+ * con un UUID, que no trae comodines de LIKE; el guion final impide abarcar otra captura.
+ */
+export function prefijoDeCaptura(id: string): string {
+  if (!esIdCaptura(id)) throw new RangeError("Id de captura inválido");
+  return `captura-${id.toLowerCase()}-`;
+}
+
 /** "captura-<id>-reasignacion-<sobre>": un ingreso se reparte en varias, una por sobre (spec 004, criterio 7). */
 export function referenciaDeReasignacion(id: string, sobreId: number): string {
   if (!Number.isSafeInteger(sobreId) || sobreId <= 0) throw new RangeError(`Sobre inválido: ${sobreId}`);

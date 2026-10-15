@@ -4,9 +4,9 @@
  * base (40 % → 4000), con la misma lectura que los montos; tienen que sumar exactamente 100 %. Es pura: la acción
  * le pasa solo los sobres editables, sin "Por asignar" ni los fondos, cuyo aporte sale de su desglose.
  */
-import { centavosATexto, leerExacto } from "./dinero";
+import { centavosATexto, leerExacto, partesCentavos } from "./dinero";
 import { cabeEnRegla } from "./fondos";
-import { PUNTOS_BASE_TOTAL, type TipoRegla } from "./reparto";
+import { PUNTOS_BASE_TOTAL, type ReglaParaRepartir, type TipoRegla } from "./reparto";
 
 export type EntradaRegla = { sobreId: number; tipo: TipoRegla | "ninguna"; valor: string };
 
@@ -19,9 +19,39 @@ export type ErroresReglas = { sobres?: Record<number, string>; total?: string };
 export type ReglasValidadas =
   { ok: true; reglas: ReglaValidada[]; sinPorcentajes: boolean } | { ok: false; errores: ErroresReglas };
 
+/** Si la regla de un sobre se edita en /sobres/reglas: no la de "Por asignar", ni la de un fondo, que sale de su desglose. */
+export function reglaEditable(tipoSobre: string): boolean {
+  return tipoSobre !== "por_asignar" && tipoSobre !== "fondo";
+}
+
 /** 4000 → "40 %"; 3333 → "33,33 %". */
 export function formatearPorcentaje(puntosBase: number): string {
   return `${centavosATexto(puntosBase)} %`;
+}
+
+/** 270000 → "2.700"; 18750 → "187,50": sin la unidad ni los centavos en cero, para una pista corta. */
+function cifraCorta(centavos: number) {
+  return partesCentavos(centavos).numero.replace(/,00$/, "");
+}
+
+/**
+ * Lo que dice la fila de un sobre en el reparto: "fijo · faltan 250 este mes", "40 %" o "40 % · tope 2.700 · faltan
+ * 650". Con lo recibido en el mes de la fecha del ingreso y el saldo del sobre, como la propuesta.
+ */
+export function pistaDeRegla(regla: ReglaParaRepartir, recibidoEnElMes: number, saldo: number): string {
+  const faltaFijo = Math.max(0, regla.valor - recibidoEnElMes);
+  const partes = [
+    regla.tipo === "porcentaje"
+      ? formatearPorcentaje(regla.valor)
+      : faltaFijo > 0
+        ? `fijo · faltan ${cifraCorta(faltaFijo)} este mes`
+        : "fijo · cubierto este mes",
+  ];
+  if (regla.topeCentavos !== null) {
+    const faltaTope = Math.max(0, regla.topeCentavos - saldo);
+    partes.push(`tope ${cifraCorta(regla.topeCentavos)}`, faltaTope > 0 ? `faltan ${cifraCorta(faltaTope)}` : "lleno");
+  }
+  return partes.join(" · ");
 }
 
 const mensajes = {

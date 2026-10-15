@@ -2,7 +2,14 @@
  * Criterio 11 de la spec 004: lo que se teclea en /sobres/reglas, leído y validado antes de guardar.
  */
 import { describe, expect, it } from "vitest";
-import { type EntradaRegla, formatearPorcentaje, validarReglas, validarTope } from "./reglas";
+import {
+  type EntradaRegla,
+  formatearPorcentaje,
+  pistaDeRegla,
+  reglaEditable,
+  validarReglas,
+  validarTope,
+} from "./reglas";
 
 const gastosDelMes = 2;
 const familia = 3;
@@ -123,5 +130,33 @@ describe("formatearPorcentaje", () => {
     expect(formatearPorcentaje(1_250)).toBe("12,50 %");
     expect(formatearPorcentaje(10_000)).toBe("100 %");
     expect(formatearPorcentaje(1)).toBe("0,01 %");
+  });
+});
+
+describe("pistaDeRegla: lo que dice cada fila del reparto (spec 004, pantallas)", () => {
+  const fijo = { sobreId: gastosDelMes, orden: 1, tipo: "fijo" as const, valor: 450_00, topeCentavos: null };
+  const cuarenta = { sobreId: emergencia, orden: 4, tipo: "porcentaje" as const, valor: 4_000, topeCentavos: 2_700_00 };
+
+  it("un fijo dice cuánto le falta este mes, o que ya está cubierto", () => {
+    expect(pistaDeRegla(fijo, 200_00, 0)).toBe("fijo · faltan 250 este mes");
+    expect(pistaDeRegla(fijo, 262_50, 0)).toBe("fijo · faltan 187,50 este mes");
+    expect(pistaDeRegla(fijo, 450_00, 0)).toBe("fijo · cubierto este mes");
+    expect(pistaDeRegla({ ...fijo, valor: 2_000_00 }, 0, 0)).toBe("fijo · faltan 2.000 este mes");
+  });
+
+  it("un porcentaje dice su valor, y con tope cuánto le falta o que está lleno", () => {
+    expect(pistaDeRegla({ ...cuarenta, topeCentavos: null }, 0, 0)).toBe("40 %");
+    expect(pistaDeRegla(cuarenta, 0, 2_050_00)).toBe("40 % · tope 2.700 · faltan 650");
+    expect(pistaDeRegla(cuarenta, 0, 2_700_00)).toBe("40 % · tope 2.700 · lleno");
+    expect(pistaDeRegla(cuarenta, 0, 3_000_00)).toBe("40 % · tope 2.700 · lleno");
+  });
+});
+
+describe("reglaEditable: qué sobres se editan en /sobres/reglas", () => {
+  it("todos menos Por asignar y los fondos, cuya regla sale de su desglose", () => {
+    for (const tipo of ["gastos", "familia", "emergencia", "meta", "inversion"])
+      expect(reglaEditable(tipo), tipo).toBe(true);
+    expect(reglaEditable("por_asignar")).toBe(false);
+    expect(reglaEditable("fondo")).toBe(false);
   });
 });
