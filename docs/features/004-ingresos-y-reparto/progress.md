@@ -11,7 +11,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - `prepararIngreso` y `validarAsignaciones`;
   - las referencias de captura de ingreso y reasignación en `captura.ts`;
   - `saldosTras` ampliado a ingreso y reasignación, con la prueba del invariante.
-- [ ] T3 · `src/lib/reglas.ts` con sus pruebas, viéndolas fallar primero: `validarReglas`, con porcentajes con decimales a puntos base, suma de 100 % y rangos (criterio 11).
+- [x] T3 (2026-10-14) · `src/lib/reglas.ts` con sus pruebas, viéndolas fallar primero: `validarReglas`, con porcentajes con decimales a puntos base, suma de 100 % y rangos (criterio 11).
 - [ ] T4 · Migración con el check `reglas_reparto_porcentaje_maximo` (`pnpm db:generate` y `pnpm db:migrate`) y consultas de `src/db/reparto.ts`:
   - reglas con su sobre, tope y saldo;
   - lo recibido en el mes desde "Por asignar";

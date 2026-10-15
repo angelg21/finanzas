@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   aCentavos,
   aCentavosExactos,
+  leerExacto,
   aTasa,
   bolivaresDesdeUsd,
   centavosATexto,
@@ -230,5 +231,19 @@ describe("aCentavosExactos: como aCentavos, pero sin redondear fracciones de cen
   it("lanza como aCentavos con lo vacío o lo que no es número", () => {
     expect(() => aCentavosExactos("")).toThrow();
     expect(() => aCentavosExactos("abc")).toThrow();
+  });
+});
+
+describe("leerExacto: un monto que se confirma campo por campo, o por qué no se pudo leer", () => {
+  it("las centésimas cuando se puede", () => {
+    expect(leerExacto("187,50")).toEqual({ ok: true, valor: 18_750 });
+    expect(leerExacto("-5")).toEqual({ ok: true, valor: -500 });
+  });
+
+  it("vacío, con fracciones de centavo o ilegible, cada uno con su motivo", () => {
+    expect(leerExacto("  ")).toEqual({ ok: false, motivo: "vacio" });
+    expect(leerExacto("10,555")).toEqual({ ok: false, motivo: "decimales" });
+    expect(leerExacto("abc")).toEqual({ ok: false, motivo: "invalido" });
+    expect(leerExacto("1e3")).toEqual({ ok: false, motivo: "invalido" });
   });
 });

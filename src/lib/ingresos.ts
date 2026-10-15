@@ -3,7 +3,7 @@
  * su cuenta y en "Por asignar" (ADR 0002); el reparto son reasignaciones en USD desde "Por asignar", con los montos
  * que el usuario confirmó, sin volver a calcularlos. Es pura: recibe la cuenta y los sobres ya leídos de la base.
  */
-import { type Moneda, aCentavos, aCentavosExactos, formatearCentavos } from "./dinero";
+import { type Moneda, aCentavos, formatearCentavos, leerExacto } from "./dinero";
 import { fechaValida } from "./fechas";
 import type { Asignacion } from "./reparto";
 
@@ -64,19 +64,10 @@ const mensajes = {
 
 /** El monto de un sobre: vacío vale 0. Si no se puede leer, el mensaje de su campo. */
 function leerAsignacion(texto: string): number | string {
-  if (texto.trim() === "") return 0;
-  try {
-    const centavos = aCentavosExactos(texto);
-    return centavos < 0 ? mensajes.negativo : centavos;
-  } catch {
-    // Si aCentavos sí lo lee, lo que sobra son fracciones de centavo.
-    try {
-      aCentavos(texto);
-      return mensajes.decimales;
-    } catch {
-      return mensajes.invalido;
-    }
-  }
+  const leido = leerExacto(texto);
+  if (leido.ok) return leido.valor < 0 ? mensajes.negativo : leido.valor;
+  if (leido.motivo === "vacio") return 0;
+  return leido.motivo === "decimales" ? mensajes.decimales : mensajes.invalido;
 }
 
 /**

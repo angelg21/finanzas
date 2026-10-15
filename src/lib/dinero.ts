@@ -91,6 +91,25 @@ export function aCentavosExactos(texto: string): number {
   return aCentavos(texto);
 }
 
+/** Un monto que se confirma campo por campo: sus centésimas, o por qué no se pudo leer, para el mensaje del campo. */
+export type LecturaExacta = { ok: true; valor: number } | { ok: false; motivo: "vacio" | "decimales" | "invalido" };
+
+/** Lee con aCentavosExactos sin lanzar. Sirve igual para centavos y para puntos base, que también son centésimas. */
+export function leerExacto(texto: string): LecturaExacta {
+  if (normalizar(texto) === "") return { ok: false, motivo: "vacio" };
+  try {
+    return { ok: true, valor: aCentavosExactos(texto) };
+  } catch {
+    // Si aCentavos sí lo lee, lo que sobra son fracciones de centavo; si no, no es un número.
+    try {
+      aCentavos(texto);
+      return { ok: false, motivo: "decimales" };
+    } catch {
+      return { ok: false, motivo: "invalido" };
+    }
+  }
+}
+
 /*
   Tasas: bolívares por dólar. En memoria viajan como enteros en diezmilésimas
   (241,8 → 2418000), la misma precisión que guarda la base en numeric(14,4),
