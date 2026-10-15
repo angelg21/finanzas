@@ -12,7 +12,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - las referencias de captura de ingreso y reasignación en `captura.ts`;
   - `saldosTras` ampliado a ingreso y reasignación, con la prueba del invariante.
 - [x] T3 (2026-10-14) · `src/lib/reglas.ts` con sus pruebas, viéndolas fallar primero: `validarReglas`, con porcentajes con decimales a puntos base, suma de 100 % y rangos (criterio 11).
-- [ ] T4 · Migración con el check `reglas_reparto_porcentaje_maximo` (`pnpm db:generate` y `pnpm db:migrate`) y consultas de `src/db/reparto.ts`:
+- [x] T4 (2026-10-14) · Migración con el check `reglas_reparto_porcentaje_maximo` (`pnpm db:generate` y `pnpm db:migrate`) y consultas de `src/db/reparto.ts`:
   - reglas con su sobre, tope y saldo;
   - lo recibido en el mes desde "Por asignar";
   - categorías de ingreso por uso, la última cuenta de ingreso y "Por asignar".
@@ -70,3 +70,10 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - las reglas sembradas (40 / 30 / 30 tras los fijos) no dan la tabla del plan.
 - T2 (2026-10-14): `aCentavos` lee "1.200" como 1,20 (sin coma, el punto es decimal; regla de la spec 001). En un ingreso, donde los montos pasan de mil, es fácil teclearlo así queriendo decir 1.200. No se cambia la regla en silencio: la propuesta de reparto se recalcula al escribir y el pie dice "Repartido 1,20 de 1,20", así que el error se ve antes de guardar. Si en la validación en navegador molesta, se decide aparte.
 - T2: los montos de cada sobre se leen con `aCentavosExactos` (nuevo en `dinero.ts`), que rechaza fracciones de centavo en vez de redondearlas (criterio 8). El monto del ingreso sigue con `aCentavos`, como dice la spec.
+- T4 (2026-10-14), `guardian-datos`: APTO. Migración `0004_fluffy_the_hood` aplicada en local (5 migraciones, el check existe, ninguna regla lo incumplía).
+  - **Antes de `pnpm db:migrate:produccion`**, el desarrollador puede comprobar en el SQL Editor que no hay porcentajes mayores de 100 % (espera 0 filas) y que van 4 migraciones:
+    `select r.id, s.nombre, r.tipo, r.valor from reglas_reparto r join sobres s on s.id = r.sobre_id where r.tipo = 'porcentaje' and r.valor > 10000;` y `select count(*) from drizzle.__drizzle_migrations;`.
+    Si hubiera una, la migración falla entera con el código 23514 y no deja nada a medias.
+  - El check no se difiere: pasar una regla de fijo a porcentaje exige cambiar `tipo` y `valor` en la misma sentencia (`guardarReglas` lo hace así).
+  - "Recibido en el mes" suma lo bruto: si un día "Mover" devuelve dinero de un sobre a "Por asignar", lo devuelto seguirá contando como fijo cubierto. Se decide en la feature de Mover.
+  - Con "Por asignar" inactivo, `datosDelReparto` le da saldo 0 (porque `saldosPorSobre` solo trae activos). La página no lo muestra: con "Por asignar" inactivo no deja registrar.
