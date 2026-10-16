@@ -6,7 +6,7 @@ Rama: `feat/005-deudas-y-prestamos`. Spec: `spec.md`.
 
 Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca con la fecha al cerrarla. De la T1 a la T12 es "lo que debo"; la T13 y la T14, "lo que me deben". Si la feature se parte en dos, se corta ahí.
 
-- [ ] T1 · `src/lib/saldos.ts` con sus pruebas, viéndolas fallar primero (criterio 9):
+- [x] T1 (2026-10-15) · `src/lib/saldos.ts` con sus pruebas, viéndolas fallar primero (criterio 9):
   - `efectoDe(tipo)` exhaustivo para los siete tipos;
   - `saldosTras` sale de `gastos.ts` y usa `efectoDe`;
   - la prueba del invariante con los siete tipos.
@@ -73,7 +73,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 
 ## Etapas
 
-- [ ] Spec leída y corregida por el desarrollador
+- [x] Spec leída y aprobada por el desarrollador (2026-10-15), en una sola feature
 - [ ] Construida (todas las tareas con commit)
 - [ ] Validada en navegador
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
@@ -88,3 +88,4 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - Postgres no deja usar en la misma transacción un valor de enum recién añadido (55P04), y en producción la 0004 sigue pendiente;
   - "Mover" no existe: no hay pantalla de transferencias ni de reasignaciones libres;
   - nada calcula hoy una cuota por fecha: `fechaObjetivo` solo se muestra.
+- 2026-10-15 · T1: `efectoDe` da a cada tipo cuatro lados (sale o entra de cuenta, sale o entra de sobre). La cuenta de destino recibe `montoDestinoCentavos` si lo hay, o el monto, para todos los tipos que entran a una cuenta. En SQL hoy solo la transferencia usa `coalesce`; el ingreso suma `monto_centavos`. Ningún ingreso trae monto de destino, así que el resultado es el mismo, y la T6 escribe las sumas de SQL con la regla única.

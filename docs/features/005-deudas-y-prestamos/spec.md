@@ -1,6 +1,6 @@
 # 005 · Deudas y préstamos
 
-Fecha: 2026-10-15. Estado: borrador.
+Fecha: 2026-10-15. Estado: aprobada.
 
 ## Para qué
 

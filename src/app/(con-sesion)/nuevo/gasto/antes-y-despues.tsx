@@ -1,7 +1,8 @@
 import { CircleAlert } from "lucide-react";
 import { Cifra, EncabezadoTarjeta, Progreso, TarjetaPalida } from "@/components/ui";
 import type { Moneda } from "@/lib/dinero";
-import { type FormaPago, prepararGasto, saldosTras } from "@/lib/gastos";
+import { type FormaPago, prepararGasto } from "@/lib/gastos";
+import { saldosTras } from "@/lib/saldos";
 
 export type SaldoAfectado = {
   nombre: string;

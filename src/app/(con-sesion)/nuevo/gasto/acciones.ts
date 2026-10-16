@@ -8,7 +8,8 @@ import type { Moneda } from "@/lib/dinero";
 import { fechaDesdeAtajo, hoyEnCaracas } from "@/lib/fechas";
 import { esIdCaptura, referenciaDeCaptura, resolverReintento } from "@/lib/captura";
 import { mensajeDeFalla } from "@/lib/fallas";
-import { type ErroresGasto, type FormaPago, prepararGasto, saldosTras } from "@/lib/gastos";
+import { type ErroresGasto, type FormaPago, prepararGasto } from "@/lib/gastos";
+import { saldosTras } from "@/lib/saldos";
 import { registrarFalla } from "@/app/registro-de-fallas";
 import { leerSesion } from "@/app/sesion";
 

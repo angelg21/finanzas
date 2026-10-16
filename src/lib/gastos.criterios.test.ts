@@ -4,7 +4,8 @@
  * Lo que solo se ve en la base (una transacción, el cuadre de /cuentas) lo comprueba scripts/comprobar-001.ts.
  */
 import { describe, expect, it } from "vitest";
-import { type CuentaGasto, type EntradaGasto, type FilaMovimiento, prepararGasto, saldosTras } from "./gastos";
+import { type CuentaGasto, type EntradaGasto, type FilaMovimiento, prepararGasto } from "./gastos";
+import { saldosTras } from "./saldos";
 
 const hoy = "2026-10-12";
 const binance: CuentaGasto = { id: 1, moneda: "USDT" };

@@ -160,49 +160,6 @@ export function prepararGasto(e: EntradaGasto, hoy: string): GastoPreparado {
   return { ok: true, filas: [transferencia, gasto] };
 }
 
-type SaldosPorId = Record<number, number>;
-
-/** Lo que mueve saldos en una fila de cualquier tipo. Las del gasto no traen sobre destino. */
-export type FilaQueMueve = Pick<
-  FilaMovimiento,
-  "montoCentavos" | "montoUsdCentavos" | "montoDestinoCentavos" | "cuentaDestinoId" | "sobreOrigenId"
-> & {
-  tipo: "ingreso" | "gasto" | "transferencia" | "reasignacion";
-  cuentaOrigenId: number | null;
-  sobreDestinoId?: number | null;
-};
-
-function sumar(saldos: SaldosPorId, id: number | null | undefined, centavos: number) {
-  if (id !== null && id !== undefined) saldos[id] = (saldos[id] ?? 0) + centavos;
-}
-
-/**
- * Saldos de cuentas (en su moneda) y de sobres (en USD) después de aplicar las filas, con las mismas
- * reglas que saldosPorCuenta y saldosPorSobre en src/db/consultas.ts. Sirve para el resumen tras guardar,
- * para el "Antes y después" mientras se escribe y para comprobar el invariante con un ingreso y su reparto.
- * No modifica los saldos que recibe.
- */
-export function saldosTras(filas: FilaQueMueve[], cuentas: SaldosPorId, sobres: SaldosPorId) {
-  const c: SaldosPorId = { ...cuentas };
-  const s: SaldosPorId = { ...sobres };
-  for (const f of filas) {
-    if (f.tipo === "ingreso") {
-      sumar(c, f.cuentaDestinoId, f.montoCentavos);
-      sumar(s, f.sobreDestinoId, f.montoUsdCentavos);
-    } else if (f.tipo === "gasto") {
-      sumar(c, f.cuentaOrigenId, -f.montoCentavos);
-      sumar(s, f.sobreOrigenId, -f.montoUsdCentavos);
-    } else if (f.tipo === "transferencia") {
-      sumar(c, f.cuentaOrigenId, -f.montoCentavos);
-      sumar(c, f.cuentaDestinoId, f.montoDestinoCentavos ?? f.montoCentavos);
-    } else {
-      sumar(s, f.sobreOrigenId, -f.montoUsdCentavos);
-      sumar(s, f.sobreDestinoId, f.montoUsdCentavos);
-    }
-  }
-  return { cuentas: c, sobres: s };
-}
-
 /**
  * Familia va a Familia; Regalos, a Ocasiones; cualquier otra, a Gastos del mes. Por la clave del nombre, como
  * los nombres repetidos: "familia" también. Un renombre de verdad pierde la sugerencia (limitación aceptada).

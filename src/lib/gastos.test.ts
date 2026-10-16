@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { type EntradaGasto, prepararGasto, saldosTras, sobreSugerido } from "./gastos";
+import { type EntradaGasto, prepararGasto, sobreSugerido } from "./gastos";
+import { saldosTras } from "./saldos";
 
 const hoy = "2026-10-11";
 const binance = { id: 1, moneda: "USDT" as const };

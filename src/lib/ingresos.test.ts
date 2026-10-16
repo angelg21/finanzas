@@ -4,7 +4,7 @@
  * scripts/comprobar-004.ts.
  */
 import { describe, expect, it } from "vitest";
-import { saldosTras } from "./gastos";
+import { saldosTras } from "./saldos";
 import {
   type AsignacionTecleada,
   type CuentaIngreso,
