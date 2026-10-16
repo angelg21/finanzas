@@ -3,7 +3,7 @@
  * nunca se guarda: sale del monto inicial y de los movimientos de la deuda. Es pura: recibe las cuentas y los totales
  * ya leídos de la base, y la base vuelve a comprobar el pendiente con candado antes de escribir.
  */
-import { type Moneda, aCentavos, partesCentavos } from "./dinero";
+import { type Moneda, aCentavos, formatearCifra as cifra } from "./dinero";
 import { esFecha, fechaValida } from "./fechas";
 import { TOPE_REGLA_CENTAVOS } from "./fondos";
 
@@ -14,12 +14,6 @@ export type CuentaDeuda = { id: number; moneda: Moneda };
 
 /** Lo que movió una deuda: préstamos, y pagos o cobros según su sentido. */
 export type MovidoDeuda = { prestadoCentavos: number; saldadoCentavos: number };
-
-/** "135,00" o "−115,00": la cifra sin la unidad, como en los avisos de la spec. */
-function cifra(centavos: number) {
-  const { numero, negativo } = partesCentavos(centavos);
-  return `${negativo ? "−" : ""}${numero}`;
-}
 
 function esCentavos(n: number) {
   return Number.isSafeInteger(n) && n >= 0;

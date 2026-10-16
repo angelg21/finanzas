@@ -7,6 +7,7 @@ import {
   bolivaresDesdeUsd,
   centavosATexto,
   formatearCentavos,
+  formatearCifra,
   formatearTasaGuardada,
   formatearEnteros,
   formatearTasa,
@@ -70,6 +71,12 @@ describe("formatearCentavos y partesCentavos", () => {
   });
   it("formatearEnteros redondea al dólar", () => {
     expect(formatearEnteros(123_456)).toBe("1.235");
+  });
+  it("formatearCifra: la cifra con su signo y sin unidad, para los avisos", () => {
+    expect(formatearCifra(13_500)).toBe("135,00");
+    expect(formatearCifra(-11_500)).toBe("−115,00");
+    expect(formatearCifra(143_000)).toBe("1.430,00");
+    expect(formatearCifra(0)).toBe("0,00");
   });
 });
 
