@@ -45,7 +45,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 - [x] T9 (2026-10-16) · `/deudas` en móvil y escritorio, con hero, regla de uso, Debo y avisos (criterios 10, 14, 17 y 21):
   - "Deudas" en el menú y en `tituloDe`;
   - el tono nuevo y el icono de `IconoSobre` para `deudas`, con su prueba de paleta.
-- [ ] T10 · `/deudas/nueva` y `/deudas/[id]/editar`, con un formulario compartido, `SelectorFecha` en su variante `futura` y "Borrar" sin movimientos (criterios 1 y 16).
+- [x] T10 (2026-10-16) · `/deudas/nueva` y `/deudas/[id]/editar`, con un formulario compartido, `SelectorFecha` en su variante `futura` y "Borrar" sin movimientos (criterios 1 y 16).
 - [ ] T11 · `/deudas/[id]` con el pago, el aviso "Deudas quedará en …", el historial y el aviso de liquidez (criterios 3 y 14). Además, los tipos nuevos en `FilaMovimiento`, en la pestaña Mover y en `/sobres/[id]` (criterio 18).
 - [ ] T12 · `/deudas/apartar` con su acción (criterio 13).
 - [ ] T13 · "Lo que me deben" (criterios 4, 5, 7 y 15):
@@ -155,3 +155,16 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - La píldora `negativa` sobre la tarjeta blanca se lee como una línea roja con su icono: su fondo es el del hero. Queda así, porque es la pieza que pide la spec.
   - La demo de deudas (criterio 22) se adelantó de la T15 para poder mirar las pantallas con datos.
   - Docker Desktop estaba apagado al retomar la sesión; se volvió a levantar y la base estaba intacta.
+- 2026-10-16 · T10:
+  - `FormularioDeuda` sirve para crear y para editar. La cuenta prevista se oculta con `:has()` cuando se elige "Me deben", así que funciona sin JavaScript, y el servidor la ignora en "me deben" aunque llegue.
+  - Al editar, el sentido no se envía como campo, y el monto se llama "Monto inicial", con la ayuda de que pagos, préstamos y cobros se suman aparte.
+  - `guardarDeuda`:
+    - lee las cuentas en dólares de la base, y valida el id de captura y los campos con zod;
+    - al registrar, compara un reintento con `resolverReintentoDeDeuda` y, si es otra deuda, entrega un id nuevo;
+    - al editar, toma el sentido y lo ya movido de la base, y la escritura vuelve a comprobar el mínimo con el candado;
+    - registrar vuelve a `/deudas` y editar a `/deudas/[id]`.
+  - "Borrar" va en un formulario aparte, solo sin movimientos; `borrarDeudaAccion` vuelve a la lista.
+  - `SelectorFecha`, variante `futura`: "Sin fecha" y "Elegir fecha". El calendario avanza a meses futuros y apaga los días pasados sin prohibirlos. Sin JavaScript, el campo nativo sin tope. Si la fecha es de otro año, la etiqueta lleva el año.
+  - Capturas de `/deudas/nueva` y de la edición de Papás (sin movimientos, con "Borrar") en los dos anchos y temas.
+  - Sin `required` en los campos: los mensajes son los de la app, como en la captura de gasto.
+  - El envío del formulario en el navegador queda para la validación del desarrollador. La escritura ya está probada contra la base en `comprobar-005`.
