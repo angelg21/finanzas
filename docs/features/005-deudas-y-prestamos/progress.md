@@ -10,7 +10,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - `efectoDe(tipo)` exhaustivo para los siete tipos;
   - `saldosTras` sale de `gastos.ts` y usa `efectoDe`;
   - la prueba del invariante con los siete tipos.
-- [ ] T2 · `src/lib/deudas.ts` con sus pruebas, viéndolas fallar primero (criterios 1 a 3, 6, 7 y 16):
+- [x] T2 (2026-10-15) · `src/lib/deudas.ts` con sus pruebas, viéndolas fallar primero (criterios 1 a 3, 6, 7 y 16):
   - `validarDeuda`, `pendienteDe` y `estadoDe`;
   - `prepararPago` y `montoInicialMinimo`;
   - las referencias `-deuda` y `-pago` en `captura.ts`.
@@ -89,3 +89,4 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - "Mover" no existe: no hay pantalla de transferencias ni de reasignaciones libres;
   - nada calcula hoy una cuota por fecha: `fechaObjetivo` solo se muestra.
 - 2026-10-15 · T1: `efectoDe` da a cada tipo cuatro lados (sale o entra de cuenta, sale o entra de sobre). La cuenta de destino recibe `montoDestinoCentavos` si lo hay, o el monto, para todos los tipos que entran a una cuenta. En SQL hoy solo la transferencia usa `coalesce`; el ingreso suma `monto_centavos`. Ningún ingreso trae monto de destino, así que el resultado es el mismo, y la T6 escribe las sumas de SQL con la regla única.
+- 2026-10-15 · T2: además de lo previsto, `cuentaParaPagar` (la cuenta que viene elegida), `avisoDelSobreDeudas` (la línea "Deudas tiene X; quedará en Y"), `resolverReintentoDeDeuda` para la fila de `deudas` y `deudaId` entre los campos que comparan un reintento de movimientos. En "me deben", `validarDeuda` ignora la cuenta prevista en vez de rechazarla: sin JavaScript, el formulario la envía igual.
