@@ -100,3 +100,10 @@ Lista viva de las observaciones del usuario sobre la interfaz, lo que se cambió
 **Observación** (15 de octubre de 2026, chat de asesoría): el usuario tiene una deuda con sus padres que pagará en diciembre y otra con un amigo que paga esta semana, y quiere registrar también lo que le deben.
 
 **Decisión de producto**: módulo "Deudas y préstamos", descrito en el plan, sección 6, "Deudas y préstamos". Entra como feature propia con `/f-spec deudas y préstamos` después de cerrar la 004. Puntos clave: sobre "Deudas" de tipo fondo con cuota por fecha; pagos y préstamos como movimientos propios que no cuentan como gasto; cobros a "Por asignar"; patrimonio neto en Cuentas. Caso real al 15 de octubre de 2026: debe 520 USD a sus padres para diciembre y 250 USD a un amigo que solo puede cobrar en USDT por Binance; el dinero existe pero está en la cuenta de EE. UU., así que el amigo se paga cuando llegue el pago del proyecto (atrasado una semana). Le deben 140 USD sin fecha. La lista "me deben" es solo préstamos a personas; el cobro al cliente no entra. Cada deuda guarda la forma de pago prevista y la app avisa cuando el dinero está en la cuenta equivocada.
+
+**Hecho** el 16 de octubre de 2026, en la feature 005: `/deudas` con lo que debo y lo que me deben, el sobre Deudas con su cuota en el reparto, pagos, préstamos y cobros como movimientos propios, el aviso de liquidez y el patrimonio neto en Cuentas. Queda:
+
+- Mover entre cuentas para resolver un aviso de liquidez (por ejemplo, de la prima a Binance): es de la observación 1, administrar cuentas y transferencias.
+- Por decidir: un préstamo desde un sobre que no sea "Por asignar" se guarda aunque lo deje en negativo, como un gasto. ¿Se avisa antes, como en el pago?
+- Por decidir: la captura de gasto ofrece Deudas entre los sobres, porque ofrece todos menos "Por asignar".
+- Pedir prestado con dinero que entra, perdonar un préstamo, intereses y cuotas pactadas: fuera de la 005.

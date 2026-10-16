@@ -60,7 +60,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - `scripts/humo.mjs` con las rutas nuevas y un 404;
   - `scripts/comprobar-005.ts` contra la base local, dejándola como estaba;
   - capturas de `/deudas`, `/deudas/[id]`, `/deudas/nueva`, `/deudas/prestar`, `/deudas/apartar`, `/cuentas` y `/nuevo/ingreso` en los dos anchos y temas.
-- [ ] T16 · Actualizar plan, diseño y observaciones:
+- [x] T16 (2026-10-16) · Actualizar plan, diseño y observaciones:
   - el plan: Deudas como tipo propio, el pendiente calculado y el módulo hecho;
   - `docs/diseno.md`: las pantallas, `SelectorFecha` `futura`, el tono de Deudas y los iconos de los tipos nuevos;
   - la observación 11, con lo que quede pendiente.
@@ -74,7 +74,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 ## Etapas
 
 - [x] Spec leída y aprobada por el desarrollador (2026-10-15), en una sola feature
-- [ ] Construida (todas las tareas con commit)
+- [x] Construida (todas las tareas con commit), 2026-10-16
 - [ ] Validada en navegador
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
@@ -222,3 +222,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
     - `/deudas`, `/deudas/[id]` (Andrés, Papás y Luis), `/deudas/nueva`, la edición de Papás, `/deudas/prestar` y `/deudas/apartar`;
     - `/cuentas`, `/nuevo/ingreso`, `/sobres/repartir`, `/sobres/reglas`, el sobre Deudas, Mover y el inicio.
   - En el reparto, Deudas va primero con "cuota · faltan 310 este mes · vence 22 oct", y `/sobres/repartir` propone para Deudas los 30,00 cobrados a Luis.
+- 2026-10-16 · T16:
+  - En el plan (sección 6): Deudas como tipo propio, el pendiente y el estado calculados, la cuota tal como quedó y el módulo hecho. También el cobro, que el plan describía "como cualquier ingreso", ahora dice que no lo es.
+  - En `docs/diseno.md`: las pantallas de deudas, la variante `futura` de `SelectorFecha`, la rejilla y el icono de Deudas, y los iconos y títulos de los movimientos de deudas.
+  - En la observación 11: lo hecho y lo que queda (mover entre cuentas, y dos puntos por decidir: prestar desde otro sobre en negativo, y Deudas entre los sobres de la captura de gasto).
