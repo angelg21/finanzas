@@ -1,8 +1,10 @@
 /**
- * Criterios ★ 1 a 5 de la spec 004 (ingresos y reparto), escritos desde el texto de cada criterio. Las pruebas de
- * construcción viven en reparto.test.ts; estas fijan lo que la spec promete de la propuesta de reparto.
+ * Criterios ★ 1 a 5 de la spec 004 (ingresos y reparto), escritos desde el texto de cada criterio, y el ★ 12 de la
+ * spec 005 (Deudas en el reparto). Las pruebas de construcción viven en reparto.test.ts; estas fijan lo que las specs
+ * prometen de la propuesta de reparto.
  */
 import { describe, expect, it } from "vitest";
+import { cuotaDeDeudas, reglaDeDeudas } from "./cuota-deudas";
 import { recibidoDelMes } from "./ingresos";
 import { type EntradaReparto, type Propuesta, type ReglaParaRepartir, proponerReparto } from "./reparto";
 
@@ -225,5 +227,54 @@ describe("★ 5 · ejemplo del plan con las reglas sembradas", () => {
     expect(s[planes]).toBe(24_000);
     expect(s[inversion]).toBe(24_000);
     expect(p.sinAsignar).toBe(0);
+  });
+});
+
+describe("spec 005, ★ 12 · Deudas en el reparto, antes que todas las fijas", () => {
+  const deudas = 12;
+  const cuota = cuotaDeDeudas({
+    deudas: [
+      { sentido: "debo", pendienteCentavos: 25_000, fechaPrevista: "2026-10-22" },
+      { sentido: "debo", pendienteCentavos: 52_000, fechaPrevista: "2026-12-15" },
+    ],
+    apartado: 0,
+    hoy: "2026-10-15",
+  });
+  const regla = reglaDeDeudas(deudas, cuota, sembradas);
+  if (!regla) throw new Error("Se esperaba la regla de Deudas");
+  const conDeudas = [regla, ...sembradas];
+
+  it("con Deudas en 385,00, un primer cobro de octubre de 1.200,00 propone 385 / 450 / 100 / 25 y 96 / 72 / 72", () => {
+    expect(cuota).toBe(38_500);
+    const p = proponerReparto({ monto: 120_000, reglas: conDeudas, recibidoEnElMes: {}, saldos: {} });
+    expect(porSobre(p)).toEqual({
+      [deudas]: 38_500,
+      [gastosDelMes]: 45_000,
+      [familia]: 10_000,
+      [ocasiones]: 2_500,
+      [emergencia]: 9_600,
+      [planes]: 7_200,
+      [inversion]: 7_200,
+    });
+    expect(p.sinAsignar).toBe(0);
+  });
+
+  it("va primero: si el monto no alcanza, Deudas toma su cuota entera y Gastos del mes recibe menos", () => {
+    const s = porSobre(proponerReparto({ monto: 50_000, reglas: conDeudas, recibidoEnElMes: {}, saldos: {} }));
+    expect(s[deudas]).toBe(38_500);
+    expect(s[gastosDelMes]).toBe(11_500);
+    expect(s[familia] ?? 0).toBe(0);
+  });
+
+  it("pide la cuota menos lo recibido desde Por asignar en el mes, como los demás fijos", () => {
+    const recibidoEnElMes = { [deudas]: 10_000 };
+    const s = porSobre(proponerReparto({ monto: 120_000, reglas: conDeudas, recibidoEnElMes, saldos: {} }));
+    expect(s[deudas]).toBe(28_500);
+  });
+
+  it("con la cuota ya recibida en el mes, un segundo cobro no le propone nada", () => {
+    const recibidoEnElMes = { [deudas]: 38_500, [gastosDelMes]: 45_000, [familia]: 10_000, [ocasiones]: 2_500 };
+    const s = porSobre(proponerReparto({ monto: 80_000, reglas: conDeudas, recibidoEnElMes, saldos: {} }));
+    expect(s[deudas] ?? 0).toBe(0);
   });
 });

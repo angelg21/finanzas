@@ -14,7 +14,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - `validarDeuda`, `pendienteDe` y `estadoDe`;
   - `prepararPago` y `montoInicialMinimo`;
   - las referencias `-deuda` y `-pago` en `captura.ts`.
-- [ ] T3 · `src/lib/cuota-deudas.ts` con sus pruebas, viéndolas fallar primero: `cuotaDeDeudas` con el caso real, su seguimiento, lo apartado, vencidas, sin fecha y el cambio de año (criterio 11). En `reparto.criterios.test.ts`, la regla calculada de Deudas antes de los fijos y el ejemplo de 1.200,00 (criterio 12).
+- [x] T3 (2026-10-15) · `src/lib/cuota-deudas.ts` con sus pruebas, viéndolas fallar primero: `cuotaDeDeudas` con el caso real, su seguimiento, lo apartado, vencidas, sin fecha y el cambio de año (criterio 11). En `reparto.criterios.test.ts`, la regla calculada de Deudas antes de los fijos y el ejemplo de 1.200,00 (criterio 12).
 - [ ] T4 · `src/lib/liquidez.ts` con sus pruebas, viéndolas fallar primero: `avisosDeLiquidez` con los tres estados, el acumulado por cuenta, el orden por fecha y los textos (criterio 14).
 - [ ] T5 · Esquema y migración (criterio 8):
   - los enums, la tabla `deudas`, `movimientos.deuda_id` y el check reescrito, comparando como texto;
@@ -90,3 +90,4 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - nada calcula hoy una cuota por fecha: `fechaObjetivo` solo se muestra.
 - 2026-10-15 · T1: `efectoDe` da a cada tipo cuatro lados (sale o entra de cuenta, sale o entra de sobre). La cuenta de destino recibe `montoDestinoCentavos` si lo hay, o el monto, para todos los tipos que entran a una cuenta. En SQL hoy solo la transferencia usa `coalesce`; el ingreso suma `monto_centavos`. Ningún ingreso trae monto de destino, así que el resultado es el mismo, y la T6 escribe las sumas de SQL con la regla única.
 - 2026-10-15 · T2: además de lo previsto, `cuentaParaPagar` (la cuenta que viene elegida), `avisoDelSobreDeudas` (la línea "Deudas tiene X; quedará en Y"), `resolverReintentoDeDeuda` para la fila de `deudas` y `deudaId` entre los campos que comparan un reintento de movimientos. En "me deben", `validarDeuda` ignora la cuenta prevista en vez de rechazarla: sin JavaScript, el formulario la envía igual.
+- 2026-10-15 · T3: `reglaDeDeudas` convierte la cuota en una regla fija con orden menor que el de todas las demás (0 con las sembradas), así `proponerReparto` no cambia. Si Deudas empezó el mes en negativo, `apartado` es negativo y la cuota también lo repone, siempre que haya deudas con fecha.
