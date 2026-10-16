@@ -8,12 +8,11 @@ import { Cifra, EncabezadoTarjeta, Pildora, Progreso, Tarjeta } from "@/componen
 import { saldosPorCuenta } from "@/db/consultas";
 import { deudaConMovimientos, deudasConPendiente, sobreDeudas } from "@/db/deudas";
 import { sobrePorAsignar } from "@/db/reparto";
-import { cuentaParaPagar } from "@/lib/deudas";
-import { centavosATexto, formatearCifra } from "@/lib/dinero";
+import { formatearCifra } from "@/lib/dinero";
 import { hoyEnCaracas } from "@/lib/fechas";
 import { avisosDeLiquidez } from "@/lib/liquidez";
 import { plazoDeDeuda } from "@/lib/plazos";
-import { FormularioPago } from "./formulario-pago";
+import { Saldar } from "./saldar";
 import { exigirSesion } from "@/app/sesion";
 
 export const metadata: Metadata = { title: "Deuda" };
@@ -43,9 +42,6 @@ export default async function DetalleDeuda({ params, searchParams }: PageProps<"
   const debo = deuda.sentido === "debo";
   const total = deuda.montoInicialCentavos + deuda.prestadoCentavos;
   const aviso = avisosDeLiquidez({ deudas: todas, cuentas }).get(deuda.id);
-  const enDolares = cuentas.filter((c) => c.moneda !== "VES");
-  const cuentaInicial = cuentaParaPagar(deuda.cuentaPrevistaId, enDolares);
-  const pagada = deuda.estado === "pagada";
 
   return (
     // La última fila absorbe el alto del formulario, que abarca dos: sin ella quedaría un hueco bajo el hero.
@@ -121,33 +117,7 @@ export default async function DetalleDeuda({ params, searchParams }: PageProps<"
             </EnlaceBoton>
           </div>
         ) : null}
-        {pagada ? (
-          <Pildora tono="positiva">
-            <CheckCircle2 size={13} aria-hidden />
-            {debo ? "Pagada" : "Cobrada"}
-          </Pildora>
-        ) : debo && !sobre?.activo ? (
-          <p className="text-[13px] text-negativo">No hay un sobre Deudas activo: no se puede pagar.</p>
-        ) : !debo && !porAsignar?.activo ? (
-          <p className="text-[13px] text-negativo">No hay un sobre Por asignar activo: no se puede cobrar.</p>
-        ) : enDolares.length === 0 ? (
-          <p className="text-[13px] text-negativo">No hay ninguna cuenta en dólares activa.</p>
-        ) : (
-          <FormularioPago
-            cual={debo ? "pago" : "cobro"}
-            inicial={{
-              deudaId: String(deuda.id),
-              idCaptura: crypto.randomUUID(),
-              monto: centavosATexto(deuda.pendienteCentavos),
-              cuentaId: cuentaInicial === null ? "" : String(cuentaInicial),
-              fecha: "hoy",
-              nota: "",
-            }}
-            cuentas={enDolares.map(({ id: cuentaId, nombre, moneda }) => ({ id: cuentaId, nombre, moneda }))}
-            hoy={hoy}
-            saldoDeudasCentavos={debo && sobre ? sobre.saldoCentavos : null}
-          />
-        )}
+        <Saldar deuda={deuda} sobreDeudas={sobre} porAsignar={porAsignar} cuentas={cuentas} hoy={hoy} />
       </Tarjeta>
 
       <Tarjeta className="lg:col-span-7 lg:col-start-1 lg:row-start-3">

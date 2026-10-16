@@ -105,5 +105,5 @@ Lista viva de las observaciones del usuario sobre la interfaz, lo que se cambió
 
 - Mover entre cuentas para resolver un aviso de liquidez (por ejemplo, de la prima a Binance): es de la observación 1, administrar cuentas y transferencias.
 - Por decidir: un préstamo desde un sobre que no sea "Por asignar" se guarda aunque lo deje en negativo, como un gasto. ¿Se avisa antes, como en el pago?
-- Por decidir: la captura de gasto ofrece Deudas entre los sobres, porque ofrece todos menos "Por asignar".
+- Decidido el 16 de octubre de 2026, al validar en el navegador: la captura de gasto ya no ofrece Deudas, y pagar o cobrar se registra también desde Registrar, en `/nuevo/deuda`, eligiendo la deuda (spec 005, criterio 23).
 - Pedir prestado con dinero que entra, perdonar un préstamo, intereses y cuotas pactadas: fuera de la 005.

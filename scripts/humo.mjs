@@ -36,6 +36,8 @@ const conDatos = [
   "/nuevo",
   "/nuevo/gasto",
   "/nuevo/ingreso",
+  "/nuevo/deuda",
+  "/nuevo/deuda?deuda=1",
   "/sobres/repartir",
   "/sobres/reglas",
   "/categorias",
@@ -70,6 +72,9 @@ const conSesion = [
   ["/nuevo", 200],
   ["/nuevo/gasto", 200],
   ["/nuevo/ingreso", 200],
+  ["/nuevo/deuda", 200],
+  // Una deuda que no existe no se elige: la página responde con las listas.
+  ["/nuevo/deuda?deuda=999999", 200],
   ["/sobres/repartir", 200],
   ["/sobres/reglas", 200],
   ["/categorias", 200],

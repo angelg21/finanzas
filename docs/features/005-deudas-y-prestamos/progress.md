@@ -64,6 +64,11 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - el plan: Deudas como tipo propio, el pendiente calculado y el módulo hecho;
   - `docs/diseno.md`: las pantallas, `SelectorFecha` `futura`, el tono de Deudas y los iconos de los tipos nuevos;
   - la observación 11, con lo que quede pendiente.
+- [x] T17 (2026-10-16) · Pagar o cobrar desde Registrar (criterio 23, enmienda del 2026-10-16 tras mirar en el navegador):
+  - `sobreAceptaGasto` en `src/lib/gastos.ts` con su prueba, viéndola fallar primero, y `sobresParaGasto` la usa;
+  - "Deuda" en `/nuevo` y en el selector de tipo de `/nuevo/gasto` y `/nuevo/ingreso`;
+  - `/nuevo/deuda` con las listas y el formulario de `/deudas/[id]`, compartido sin copiarlo;
+  - humo, capturas en los dos anchos y temas, y `docs/diseno.md` y la observación 11 al día.
 
 ## Validación en navegador
 
@@ -74,7 +79,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 ## Etapas
 
 - [x] Spec leída y aprobada por el desarrollador (2026-10-15), en una sola feature
-- [x] Construida (todas las tareas con commit), 2026-10-16
+- [x] Construida (todas las tareas con commit), 2026-10-16. La T17 se abrió y se cerró al validar.
 - [ ] Validada en navegador
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
@@ -226,3 +231,11 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - En el plan (sección 6): Deudas como tipo propio, el pendiente y el estado calculados, la cuota tal como quedó y el módulo hecho. También el cobro, que el plan describía "como cualquier ingreso", ahora dice que no lo es.
   - En `docs/diseno.md`: las pantallas de deudas, la variante `futura` de `SelectorFecha`, la rejilla y el icono de Deudas, y los iconos y títulos de los movimientos de deudas.
   - En la observación 11: lo hecho y lo que queda (mover entre cuentas, y dos puntos por decidir: prestar desde otro sobre en negativo, y Deudas entre los sobres de la captura de gasto).
+- 2026-10-16 · T17, enmienda tras mirar en el navegador:
+  - El desarrollador probó las pantallas y buscó el pago en Registrar: no había cómo decir qué deuda pagaba, y la captura de gasto ofrecía el sobre Deudas. Eligió "Deuda" en Registrar y quitar Deudas de la captura. La spec gana el criterio 23 ★ y cambia el 21.
+  - `sobreAceptaGasto` (`src/lib/gastos.ts`), con su prueba vista fallar primero: ni "Por asignar" ni Deudas. `sobresParaGasto` la usa, así que la captura no ofrece Deudas y su acción responde "Elige un sobre" si llega. En la base local no hay ningún gasto cargado a Deudas.
+  - `/nuevo` ofrece "Deuda", y `SelectorTipo` (`nuevo/selector-tipo.tsx`) es el selector Gasto · Ingreso · Deuda · Mover de las tres pantallas.
+  - `/nuevo/deuda`, "Pagar o cobrar": las abiertas, Debo y Me deben, con su aviso de liquidez. Cada una enlaza a `?deuda=<id>#registrar`, y la elegida lleva el anillo menta (`FilaLista` `elegida`). El formulario es `Saldar` (`deudas/[id]/saldar.tsx`), que también usa el detalle, con la misma acción: al guardar lleva al detalle con "Pago guardado" o "Cobro guardado". `FormularioPago` lleva la deuda como clave, para que elegir otra empiece con su pendiente.
+  - `NadaPorAqui` pasa a su archivo, compartido por `/deudas` y `/nuevo/deuda`.
+  - `pnpm verify:fast` en verde (641 pruebas). `pnpm build` y `pnpm humo`: `/nuevo/deuda` y `?deuda=1` redirigen sin sesión; con sesión, `/nuevo/deuda` y `?deuda=999999` dan 200, y "todo responde como debe".
+  - Capturas en los dos anchos y temas de `/nuevo`, `/nuevo/deuda` (sin elegir, con Andrés y con Luis), `/nuevo/gasto`, `/nuevo/ingreso`, `/deudas` y el detalle de Andrés, que no cambió.

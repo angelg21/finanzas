@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Pildora, Tarjeta } from "@/components/ui";
+import { Tarjeta } from "@/components/ui";
 import { saldosPorCuenta } from "@/db/consultas";
 import { categoriasDeIngresoPorUso, cuentaDelUltimoIngreso, datosDelReparto } from "@/db/reparto";
 import { hoyEnCaracas } from "@/lib/fechas";
+import { SelectorTipo } from "../selector-tipo";
 import { FormularioIngreso } from "./formulario-ingreso";
 import { exigirSesion } from "@/app/sesion";
 
 export const metadata: Metadata = { title: "Nuevo ingreso" };
 export const dynamic = "force-dynamic";
-
-const enlacePildora = "rounded-full px-2.5 py-1 text-[12px] font-bold text-texto-2 hover:text-texto";
 
 /** Registro de un ingreso con su reparto (spec 004). `?cuenta=` viene de "Registrar otro" sin JavaScript. */
 export default async function NuevoIngreso({ searchParams }: PageProps<"/nuevo/ingreso">) {
@@ -33,17 +31,7 @@ export default async function NuevoIngreso({ searchParams }: PageProps<"/nuevo/i
     <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">
       <header className="flex flex-col gap-3 px-1 lg:col-span-12 lg:px-0">
         <h1 className="text-[24px] font-extrabold tracking-tight lg:hidden">Nuevo ingreso</h1>
-        <nav aria-label="Tipo de movimiento" className="tarjeta flex w-fit items-center gap-1 rounded-full p-1">
-          <Link href="/nuevo/gasto" className={enlacePildora}>
-            Gasto
-          </Link>
-          <span aria-current="page">
-            <Pildora tono="palida">Ingreso</Pildora>
-          </span>
-          <Link href="/nuevo?tipo=mover" className={enlacePildora}>
-            Mover
-          </Link>
-        </nav>
+        <SelectorTipo actual="ingreso" />
       </header>
 
       {porAsignar?.activo ? (

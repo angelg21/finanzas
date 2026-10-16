@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { CheckCircle2, CircleAlert, HandHelping, PiggyBank, Plus } from "lucide-react";
-import Link from "next/link";
 import { Cifra, EncabezadoTarjeta, Mosaico, Pildora, Tarjeta, TarjetaPalida, TituloPagina } from "@/components/ui";
 import { saldosPorCuenta } from "@/db/consultas";
 import { deudasConPendiente, sobreDeudas } from "@/db/deudas";
@@ -10,6 +9,7 @@ import { formatearCifra } from "@/lib/dinero";
 import { hoyEnCaracas, mesDe, nombreMes } from "@/lib/fechas";
 import { avisosDeLiquidez } from "@/lib/liquidez";
 import { FilaDeuda } from "./fila-deuda";
+import { NadaPorAqui } from "./nada-por-aqui";
 import { exigirSesion } from "@/app/sesion";
 
 export const metadata: Metadata = { title: "Deudas" };
@@ -18,17 +18,6 @@ export const dynamic = "force-dynamic";
 /** La regla de uso del plan (sección 6), escrita donde se decide (criterio 17). */
 const reglaDeUso =
   "Una deuda corta con un amigo se paga antes de repartir el siguiente ingreso. Presta solo lo que podrías regalar sin resentimiento.";
-
-function NadaPorAqui({ href }: { href: string }) {
-  return (
-    <p className="py-2 text-[13px] text-texto-3">
-      Nada por aquí.{" "}
-      <Link href={href} className="font-semibold text-enlace hover:text-texto">
-        Registrar
-      </Link>
-    </p>
-  );
-}
 
 /**
  * Lo que debo y lo que me deben (spec 005): el total que debo, lo apartado en Deudas y la cuota del mes, la regla de

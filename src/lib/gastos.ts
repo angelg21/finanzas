@@ -174,3 +174,11 @@ export function sobreSugerido(nombreCategoria: string, sobres: { id: number; nom
   const nombre = sobrePorCategoria.get(claveDeNombre(nombreCategoria)) ?? "Gastos del mes";
   return sobres.find((s) => s.nombre === nombre)?.id ?? null;
 }
+
+/**
+ * Sobres que la captura de gasto ofrece y acepta (spec 005, criterio 23). "Por asignar" no: el dinero sin trabajo no
+ * se gasta. Deudas tampoco: un gasto desde ahí restaría el sobre sin bajar ninguna deuda; sus pagos son `pago_deuda`.
+ */
+export function sobreAceptaGasto(tipoSobre: string): boolean {
+  return tipoSobre !== "por_asignar" && tipoSobre !== "deudas";
+}

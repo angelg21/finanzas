@@ -46,6 +46,7 @@ function esActiva(href: string, ruta: string) {
 function tituloDe(ruta: string) {
   if (ruta.startsWith(registrar.href)) return "Nuevo gasto";
   if (ruta.startsWith("/nuevo/ingreso")) return "Nuevo ingreso";
+  if (ruta.startsWith("/nuevo/deuda")) return "Pagar o cobrar";
   if (ruta.startsWith("/sobres/reglas")) return "Reglas de reparto";
   if (ruta.startsWith("/sobres/repartir")) return "Repartir";
   if (ruta.startsWith("/deudas/nueva")) return "Nueva deuda";

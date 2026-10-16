@@ -48,7 +48,17 @@ type Cual = keyof typeof textos;
 
 /** Lo que cambia con un pago o un cobro: la deuda, los sobres, la cuenta, la cuota y el patrimonio. */
 function revalidar() {
-  for (const ruta of ["/deudas", "/", "/cuentas", "/sobres", "/movimientos", "/nuevo/ingreso", "/sobres/repartir"]) {
+  const rutas = [
+    "/deudas",
+    "/",
+    "/cuentas",
+    "/sobres",
+    "/movimientos",
+    "/nuevo/ingreso",
+    "/nuevo/deuda",
+    "/sobres/repartir",
+  ];
+  for (const ruta of rutas) {
     revalidatePath(ruta);
   }
   revalidatePath("/deudas/[id]", "page");

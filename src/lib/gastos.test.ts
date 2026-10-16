@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type EntradaGasto, prepararGasto, sobreSugerido } from "./gastos";
+import { type EntradaGasto, prepararGasto, sobreAceptaGasto, sobreSugerido } from "./gastos";
 import { saldosTras } from "./saldos";
 
 const hoy = "2026-10-11";
@@ -321,5 +321,19 @@ describe("sobreSugerido (criterio 8)", () => {
   });
   it("una categoría renombrada de verdad pierde la sugerencia y va a Gastos del mes (limitación aceptada)", () => {
     expect(sobreSugerido("Familia y casa", sobres)).toBe(2);
+  });
+});
+
+describe("sobreAceptaGasto (spec 005, criterio 23)", () => {
+  it("Deudas no recibe gastos: un gasto desde ahí resta el sobre y no baja ninguna deuda", () => {
+    expect(sobreAceptaGasto("deudas")).toBe(false);
+  });
+  it("Por asignar tampoco: el dinero sin trabajo no se gasta", () => {
+    expect(sobreAceptaGasto("por_asignar")).toBe(false);
+  });
+  it("los demás sobres sí, también Inversión, que pide su segundo clic aparte", () => {
+    for (const tipo of ["gastos", "familia", "emergencia", "meta", "inversion", "fondo"]) {
+      expect(sobreAceptaGasto(tipo)).toBe(true);
+    }
   });
 });

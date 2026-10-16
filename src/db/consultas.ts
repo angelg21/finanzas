@@ -2,6 +2,7 @@ import { and, desc, eq, gte, ne, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "./index";
 import { clavesDeMeses, hoyEnCaracas, inicioDeMes } from "@/lib/fechas";
+import { sobreAceptaGasto } from "@/lib/gastos";
 import { categorias, cuentas, deudas, movimientos, partidasSobre, reglasReparto, sobres } from "./schema";
 import { efectoEnCuenta, efectoEnCuentaUsd, efectoEnSobre } from "./sumas-de-saldo";
 
@@ -186,9 +187,9 @@ export async function categoriasDeGastoPorUso() {
     .orderBy(desc(usos), categorias.orden, categorias.id);
 }
 
-/** Sobres a los que se les puede cargar un gasto, con su saldo: todos los activos menos "Por asignar". */
+/** Sobres a los que se les puede cargar un gasto, con su saldo: los activos menos "Por asignar" y Deudas. */
 export async function sobresParaGasto() {
-  return (await saldosPorSobre()).filter((s) => s.tipo !== "por_asignar");
+  return (await saldosPorSobre()).filter((s) => sobreAceptaGasto(s.tipo));
 }
 
 /** Cuentas que se pueden preseleccionar: propias, activas y en dólares. Nunca la de la prima. */

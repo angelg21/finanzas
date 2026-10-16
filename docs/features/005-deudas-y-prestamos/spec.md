@@ -172,7 +172,7 @@ Montos de ejemplo en USD. "Cuentas en dólares" son las de USD, USDT y USDC, que
 21. **Accesos.**
     - "Deudas" entra en el menú, después de Cuentas, con su título en la barra de escritorio.
     - `/cuentas` enlaza a `/deudas` desde el patrimonio neto.
-    - La captura de gasto y `/nuevo` no se tocan.
+    - La captura de gasto solo cambia en lo que dice el criterio 23.
 22. **Demostración.**
     - `pnpm db:demo` agrega deudas con referencia `demo-deuda-*` y sus movimientos `demo-*`:
       - una que debo, con fecha y cuenta prevista;
@@ -182,6 +182,16 @@ Montos de ejemplo en USD. "Cuentas en dólares" son las de USD, USDT y USDC, que
       - un apartado a Deudas.
     - Las filas nuevas van al final, por la numeración posicional.
     - `pnpm db:demo:limpiar` borra primero los movimientos y luego las deudas `demo-*`.
+
+### Desde Registrar (enmienda del 2026-10-16)
+
+Al validar en el navegador, el desarrollador buscó el pago en Registrar y no supo cómo decir qué deuda pagaba. La captura de gasto le ofrecía el sobre Deudas, y un gasto desde ahí resta el sobre pero no baja ningún pendiente.
+
+23. ★ **Pagar o cobrar desde Registrar, sin gastos desde Deudas.**
+    - `/nuevo` ofrece "Deuda", junto a Gasto, Ingreso y Mover, y el selector de tipo de `/nuevo/gasto` y `/nuevo/ingreso` también la incluye.
+    - `/nuevo/deuda` lista las deudas abiertas, Debo y Me deben. Al elegir una, muestra el mismo formulario y usa la misma acción que `/deudas/[id]`: pago si la debo, cobro si me la deben. Al guardar, lleva al detalle con "Pago guardado" o "Cobro guardado".
+    - La captura de gasto no ofrece el sobre Deudas, y su acción rechaza un gasto que llegue con él: "Elige un sobre". Los pagos salen de Deudas solo como `pago_deuda`, y así bajan su deuda.
+    - El resto de la captura de gasto no cambia, y no se vuelve más lenta.
 
 ## Pantallas
 
@@ -260,6 +270,17 @@ En escritorio, 6 columnas centradas.
 - el enlace "Ver deudas".
 
 En móvil va tras la verificación; en escritorio, en la columna de 5, bajo la verificación.
+
+**`/nuevo`** (criterio 23): una cuarta tarjeta, "Deuda", con `HandCoins` y "Paga lo que debes o cobra lo que te deben.". En `/nuevo/gasto` y `/nuevo/ingreso`, el selector queda en "Gasto · Ingreso · Deuda · Mover".
+
+**`/nuevo/deuda`**:
+
+- arriba, el mismo selector de tipo, con "Deuda" elegida;
+- `Tarjeta` "Debo" y `Tarjeta` "Me deben", con una `FilaDeuda` por cada deuda abierta, cada una enlazada a `/nuevo/deuda?deuda=<id>`, y la elegida marcada;
+- con una elegida, una `Tarjeta` "Pago a Andrés" o "Cobro de Luis" con el formulario de `/deudas/[id]`; el enlace lleva el ancla del formulario, para que en el celular quede a la vista;
+- sin deudas abiertas, cada tarjeta dice "Nada por aquí" con el enlace "Registrar".
+
+En escritorio, las listas en 7 columnas y el formulario en 5, fijo al desplazarse, como en `/deudas/[id]`.
 
 **Piezas nuevas o ampliadas:**
 
@@ -370,6 +391,7 @@ Funciones puras, con su `.test.ts`, viéndolas fallar primero:
   - `efectoDe(tipo)`, exhaustivo;
   - `saldosTras` sale de `gastos.ts` a este archivo y usa `efectoDe`;
   - la prueba del invariante con los siete tipos.
+- `src/lib/gastos.ts`, `sobreAceptaGasto(tipo)`, criterio 23: ni "Por asignar" ni Deudas.
 
 Contra la base local, en `scripts/comprobar-005.ts`, con referencias `demo-comprobar-005-*` o ids de captura propios, y dejando la base como estaba:
 

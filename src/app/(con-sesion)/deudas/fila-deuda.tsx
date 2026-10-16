@@ -7,9 +7,22 @@ import { plazoDeDeuda } from "@/lib/plazos";
 /**
  * Una deuda en /deudas (spec 005, pantallas): las iniciales de la persona, su nombre, cuándo vence y con qué cuenta se
  * piensa pagar; a la derecha lo pendiente y, debajo, de cuánto. Si el dinero no está donde se piensa pagar, el aviso
- * de liquidez debajo de la fila. Pagada, solo el total.
+ * de liquidez debajo de la fila. Pagada, solo el total. Lleva a su detalle, o adonde diga `href`: en /nuevo/deuda,
+ * a elegirla (criterio 23).
  */
-export function FilaDeuda({ deuda, hoy, aviso }: { deuda: DeudaConPendiente; hoy: string; aviso?: string | null }) {
+export function FilaDeuda({
+  deuda,
+  hoy,
+  aviso,
+  href = `/deudas/${deuda.id}`,
+  elegida = false,
+}: {
+  deuda: DeudaConPendiente;
+  hoy: string;
+  aviso?: string | null;
+  href?: string;
+  elegida?: boolean;
+}) {
   const total = deuda.montoInicialCentavos + deuda.prestadoCentavos;
   const pagada = deuda.estado === "pagada";
   const cuenta =
@@ -22,7 +35,8 @@ export function FilaDeuda({ deuda, hoy, aviso }: { deuda: DeudaConPendiente; hoy
   return (
     <div className="border-t border-tarjeta-borde first:border-t-0">
       <FilaLista
-        href={`/deudas/${deuda.id}`}
+        href={href}
+        elegida={elegida}
         avatar={<Avatar texto={iniciales(deuda.persona)} />}
         titulo={deuda.persona}
         subtitulo={subtitulo}
