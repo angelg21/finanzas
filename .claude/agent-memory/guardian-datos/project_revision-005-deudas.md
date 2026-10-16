@@ -1,6 +1,6 @@
 ---
 name: revision-005-deudas
-description: Spec 005 (deudas y préstamos): T5, migración 0005 APTA antes de aplicarse (2026-10-15), sha y mediciones; qué vigilar en T6, T7 y T13 (sentido de la deuda, sobre Deudas, mapas de tipo_sobre, enum en lib)
+description: Spec 005 (deudas y préstamos): T5 migración 0005 APTA (sha, mediciones); T6 APTA CON CAMBIOS (deuda rota tumba inicio y reparto); qué vigilar en T7, T8, T9, T11, T13 y T14
 metadata:
   type: project
 ---
@@ -24,5 +24,15 @@ Medido:
 - Los mapas de `tipo_sobre` son `Record<string, …>` con un respaldo: `nombreTipoSobre` en el inicio, `descripcion` en `/sobres`, `nombreTipo` en `/sobres/[id]` e `iconoPorTipo` en `icono-sobre.tsx`. Cuando la semilla de T6 cree Deudas, saldrá "deudas" en crudo y el icono Target. tsc no lo detecta: el ADR 0012 dice "no compila", pero eso solo vale para los mapas de `tipo_movimiento`.
 - El enum `tipo_movimiento` sale ahora de `tiposDeMovimiento` en `src/lib/saldos.ts`. Reordenarlo o renombrarlo ahí cambia la base. Un RENAME VALUE rompería en silencio el check por texto, porque caería en `else false`.
 - Las sumas de SQL (`saldosPorSobre`, `saldosPorCuenta`, `saldoDeSobre`) todavía no cuentan los tres tipos; están planeadas para T6. Entre T5 y T6 nada escribe esos tipos.
+
+**T6 (consultas y semilla), sin commit: APTA CON CAMBIOS (2026-10-15).** Medido en copias `finanzas_g005_t6*`, ya borradas:
+
+- Sin filas nuevas, las sumas de la T6 son idénticas a las de HEAD (el SQL viejo, copiado del diff) en las 118 filas: 539300.
+- Con un ingreso de 1000, reasignaciones a Deudas, 2 pagos, 1 préstamo y 1 cobro: SQL = `saldosTras` y 585300 = 585300. Pendientes 0 / 32000 / 9000. `sobreDeudas` da 7500 y lo recibido en el mes, 38500, igual que `recibidoDesdePorAsignarPorMes`. `repartirPorAsignar` ve el cobro en "Por asignar" (con saldo+1 da sinSaldo; con el exacto, guarda).
+- Base vacía con migrate, seed dos veces y demo: Deudas id 7 entre Ocasiones (6) e Inversión (8), sin regla; 539300.
+- **Hallazgo principal:** `medidasPorSobre` llama a `deudasConPendiente`, y `pendienteDe` lanza. Una deuda rota tumba `sobresConNivel` y `datosDelReparto`, es decir, el inicio, `/sobres`, `/nuevo/ingreso` y `/sobres/repartir`, con sus acciones. Es la misma clase de fallo que cerró 789fbc6. Casos medidos: préstamo en una deuda "debo", pago por encima del pendiente y monto mayor que 2^53. Con el último, el mensaje lleva `JSON.stringify` de la fila completa, con persona y nota.
+- Conexiones: 7 en `datosDelReparto`, 8 en el inicio y 9 de 10 en la acción del ingreso. En cada caso, una más que antes.
+
+**How to apply (T7, T8, T9, T11, T13 y T14):** comprobar que se corrigió lo de arriba. En T8, la cuota tampoco puede tumbar el reparto. En T14, el patrimonio de `/cuentas` usará `deudasConPendiente`: el mismo riesgo. `pasos` de `lib/sobres.ts` sigue siendo `Record<string>` sin `deudas` (T9). `/sobres/[id]` no pasa `debidoCentavos` (T11). Hasta la T8, Deudas sale como editable en `/sobres/reglas`, y también se ofrece en la captura de gasto.
 
 Ver también [[defectos-datos-encontrados]] y [[rls-supabase]].

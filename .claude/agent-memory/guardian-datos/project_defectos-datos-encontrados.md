@@ -65,6 +65,15 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
 - Los mapas de `tipo_sobre` son `Record<string>` con un respaldo: tsc no avisa de que falta `deudas`.
 - `deudas` no tiene en la base un tope (`TOPE_REGLA_CENTAVOS`) ni el largo de `persona`; solo los valida `lib`.
 
+**Abiertos, nuevos en T6 de 005 (2026-10-15)** (ver [[revision-005-deudas]])
+
+- **Media.** Una deuda rota (préstamo en una "debo", pago por encima del pendiente, monto mayor que 2^53) hace lanzar a `sobresConNivel` y a `datosDelReparto`, porque `pendienteDe` lanza dentro de `medidasPorSobre`. Se caen el inicio, `/sobres`, `/nuevo/ingreso` y `/sobres/repartir`. La base no lo impide.
+- **Baja.** `consultarDeudas` pasa la fila entera a `pendienteDe`. Con un monto inválido, el error lleva persona y nota a los registros.
+- **Info.**
+  - El nivel de Deudas difiere entre `/sobres` y `/sobres/[id]`.
+  - Conexiones: 9 de 10 en la acción del ingreso.
+  - Con 300 mil filas, `saldosPorCuenta` pasa de 29 a 41 ms.
+
 **Abiertos de antes**
 
 - **Baja.** `reglas_reparto.valor` sigue siendo `integer`. Desde 790ee93 lo vigila `cabeEnRegla`: el tope de 21.474.836,47 USD se rechaza con un mensaje y sin escribir.

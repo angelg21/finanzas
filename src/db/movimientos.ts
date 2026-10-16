@@ -2,6 +2,7 @@ import { and, eq, inArray, like, ne, sql } from "drizzle-orm";
 import { prefijoDeCaptura } from "../lib/captura";
 import { db } from "./index";
 import { type Movimiento, type NuevoMovimiento, movimientos, sobres } from "./schema";
+import { efectoEnSobre } from "./sumas-de-saldo";
 
 /*
   Escritura de movimientos. Los saldos nunca se guardan: se calculan desde estas filas
@@ -67,12 +68,7 @@ const claveReparto = 3;
 async function saldoDeSobre(ejecutor: Ejecutor, sobreId: number) {
   const [fila] = await ejecutor
     .select({
-      saldo: sql<number>`coalesce(sum(case
-        when ${movimientos.tipo} in ('ingreso', 'reasignacion') and ${movimientos.sobreDestinoId} = ${sobreId}
-          then ${movimientos.montoUsdCentavos}
-        when ${movimientos.tipo} in ('gasto', 'reasignacion') and ${movimientos.sobreOrigenId} = ${sobreId}
-          then -${movimientos.montoUsdCentavos}
-        else 0 end), 0)::bigint`.mapWith(Number),
+      saldo: sql<number>`coalesce(sum(${efectoEnSobre(sobreId)}), 0)::bigint`.mapWith(Number),
     })
     .from(movimientos)
     .where(sql`${movimientos.sobreOrigenId} = ${sobreId} or ${movimientos.sobreDestinoId} = ${sobreId}`);

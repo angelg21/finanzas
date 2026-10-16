@@ -21,7 +21,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - `pnpm db:generate`, aplicada primero en una base local vacía y después en la de siempre;
   - revisión de `guardian-datos` antes de aplicarla;
   - ADR 0012 con `/f-adr`: movimientos propios para deudas y valores de enum que no se pueden quitar.
-- [ ] T6 · Consultas y semilla (criterios 9, 10 y 18):
+- [x] T6 (2026-10-15) · Consultas y semilla (criterios 9, 10 y 18):
   - `saldosPorSobre`, `saldosPorCuenta` y `saldoDeSobre` cuentan los tipos nuevos;
   - `medidasPorSobre` mide Deudas;
   - `movimientos-del-periodo` los pone en Mover;
@@ -96,6 +96,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - el "solo X" del texto es lo que queda en la cuenta prevista después de las deudas anteriores (en el ejemplo, 350,00 para Papás). El saldo entero diría "solo 600,00" para una deuda de 520,00.
 
   Además, lo que falta nunca pasa del pendiente de la deuda, y una cuenta prevista inactiva se trata como si no hubiera cuenta prevista: sin aviso. `formatearCifra` pasa a `dinero.ts`, compartida con `deudas.ts`.
+
 - 2026-10-15 · T5, migración `0005_polite_sir_ram.sql`:
   - `guardian-datos`: APTA. Comparó la SQL con `generateMigration` (sin ediciones a mano) y la aplicó en una base vacía y en una copia con forma de producción (la 0004 revertida). Las 6 formas malas las rechaza el check; las de `deudas`, sus dos checks y el índice único. Hash revisado: `99dc3f23…df476e`.
   - Corrida propia: base desechable vacía, las 6 en una transacción; otra con 0000-0003 y luego 0004+0005 juntas, como producción. Sin 55P04. Enums con los valores nuevos al final, RLS en `deudas` y los 3 checks validados. Las dos borradas.
@@ -105,3 +106,18 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - Pendiente para la T6, del guardián: los mapas por tipo de sobre (`page.tsx` del inicio, `/sobres`, `/sobres/[id]`, `icono-sobre.tsx`) son `Record<string, …>` y no tienen `deudas`; pasan a `Record<Sobre["tipo"], …>`.
   - Pendiente para la T7 y la T13: el check solo valida la forma. Que un pago apunte a una deuda "debo", salga de Deudas y desde una cuenta en dólares lo frena el escritor dentro del candado.
   - Sin probar: la imagen de Supabase 17.6. Al guardián se le negó `docker run` y no se intentó por otro camino. La base local es PG 17.11, y en la 002 un `ADD VALUE` ya corrió dentro de una transacción en esa imagen.
+- 2026-10-15 · T6:
+  - Las sumas de saldos (`saldosPorSobre`, `saldosPorCuenta`, `saldoDeSobre`) salen de `src/db/sumas-de-saldo.ts`, que arma cada CASE con `tiposCon(lado)` de `src/lib/saldos.ts`. Un tipo nuevo entra en todas a la vez.
+  - Toda cuenta de destino recibe `coalesce(monto_destino, monto)`; ningún ingreso de la base local trae monto de destino.
+  - `baseMovimientos` trae `deudaId` y `persona`. Las lecturas de deudas están en `src/db/deudas.ts`, y `pendientePorSentido` en `src/lib/deudas.ts`.
+  - Deudas se mide contra lo que debo (`debidoCentavos` en `nivelDeSobre`). La semilla lo crea con orden 5, entre Ocasiones e Inversión, sin regla, y es idempotente.
+  - Los mapas por tipo de sobre son `Record<Sobre["tipo"], …>`.
+  - `guardian-datos`: APTA CON CAMBIOS. Con pago, préstamo, cobro y apartados, las sumas de SQL dan lo mismo que `saldosTras` y el cuadre se mantiene (585300 = 585300); con las filas de siempre, nada cambia de valor.
+  - Arreglado del guardián:
+    - H1: una deuda con datos rotos tumbaba el inicio, `/sobres` y el reparto. La medida ahora cae a "sin medida". Probado en una base desechable: el inicio y el reparto responden, y `deudasConPendiente` lanza.
+    - H2: el error de `pendienteDe` llevaba la persona y la nota a los registros. Ahora no las vuelca, con su prueba.
+  - Queda para la T8 y la T14 el mismo resguardo del H1 en la cuota y en el patrimonio. Para la T11, el H3: `/sobres/[id]` no pasa `debidoCentavos`, así que el nivel de Deudas difiere del de `/sobres`.
+  - Para la T9: el tono de Deudas; hoy usa el de las metas.
+  - Para la T7 y la T13: el escritor frena un pago a una deuda "me deben" (hoy se contaría como cobro).
+  - Conexiones: el inicio abre 8 de las 10 de postgres-js, una más que antes.
+  - **Pregunta abierta:** la captura de gasto ofrece todos los sobres activos menos "Por asignar", así que desde la T6 también ofrece Deudas. La spec dice que la captura no se toca. Hay que decidir si se quiere.

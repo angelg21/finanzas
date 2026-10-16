@@ -4,7 +4,7 @@
  * base en scripts/comprobar-005.ts.
  */
 import { describe, expect, it } from "vitest";
-import { type FilaQueMueve, type TipoMovimiento, efectoDe, saldosTras, tiposDeMovimiento } from "./saldos";
+import { type FilaQueMueve, type TipoMovimiento, efectoDe, saldosTras, tiposCon, tiposDeMovimiento } from "./saldos";
 
 const binance = 1;
 const prima = 2;
@@ -55,6 +55,21 @@ describe("efectoDe: qué lado mueve cada tipo", () => {
 
   it("un tipo desconocido lanza en vez de tratarse como reasignación", () => {
     expect(() => efectoDe("regalo" as TipoMovimiento)).toThrow(/regalo/);
+  });
+});
+
+describe("tiposCon: los tipos que tocan cada lado, para las sumas de SQL", () => {
+  it("cada lado lista los tipos que lo mueven, en el orden del enum", () => {
+    expect(tiposCon("saleDeCuenta")).toEqual(["gasto", "transferencia", "pago_deuda", "prestamo"]);
+    expect(tiposCon("entraACuenta")).toEqual(["ingreso", "transferencia", "cobro_prestamo"]);
+    expect(tiposCon("saleDeSobre")).toEqual(["gasto", "reasignacion", "pago_deuda", "prestamo"]);
+    expect(tiposCon("entraASobre")).toEqual(["ingreso", "reasignacion", "cobro_prestamo"]);
+  });
+
+  it("todo tipo aparece en al menos un lado", () => {
+    const lados = ["saleDeCuenta", "entraACuenta", "saleDeSobre", "entraASobre"] as const;
+    const cubiertos = new Set(lados.flatMap((l) => tiposCon(l)));
+    expect([...cubiertos].sort()).toEqual([...tiposDeMovimiento].sort());
   });
 });
 

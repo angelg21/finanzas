@@ -59,6 +59,11 @@ export function efectoDe(tipo: TipoMovimiento): Efecto {
   }
 }
 
+/** Los tipos que mueven un lado, en el orden del enum: las sumas de SQL de src/db se escriben con esto. */
+export function tiposCon(lado: keyof Efecto): TipoMovimiento[] {
+  return tiposDeMovimiento.filter((tipo) => efectoDe(tipo)[lado]);
+}
+
 type SaldosPorId = Record<number, number>;
 
 /** Lo que mueve saldos en una fila de cualquier tipo. Las del gasto no traen sobre destino. */

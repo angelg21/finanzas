@@ -121,5 +121,11 @@ metadata:
 
 - En psql con `-f`, un `\i` busca relativo al directorio de trabajo; para buscar relativo al script, usar `\ir`. Los archivos se copian al contenedor con `MSYS_NO_PATHCONV=1 docker cp`.
 - `invariante-005.sql`, en la misma carpeta, cuenta los siete tipos como dice `efectoDe` y compara como texto.
+- **Herramientas de T6 de 005**, en `e7c92f93…/scratchpad/`:
+  - `sonda-t6.mts <base|nuevos|rota-*|conexiones-*|tiempos>`: se niega fuera de `finanzas_g005_*`. Trae el SQL de HEAD copiado para comparar, y `q()` usa `db.$client.unsafe`, sin importar drizzle-orm aparte. Se corre con `DATABASE_URL=...5433/finanzas_g005_t6 pnpm exec tsx <ruta>`, porque `src/db/index.ts` lee la variable sin dotenv.
+  - `huella-t6.sql`: añade `deudas` y su secuencia.
+  - `volumen-t6.sql`.
+
+  Para una base vacía: `createdb`, y luego `DATABASE_URL=... pnpm exec drizzle-kit migrate`, que sí corre, y `pnpm db:seed`.
 
 Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].

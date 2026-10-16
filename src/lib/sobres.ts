@@ -1,7 +1,7 @@
 /**
  * Cuánto de lleno está un sobre, para su icono: el sobre se llena desde abajo según su saldo. Se mide contra su tope
  * (Emergencia, una meta con monto), contra lo que pide su desglose del año (un fondo como Ocasiones) o contra su fijo
- * del mes (Gastos del mes, Familia), que se vacía a medida que se gasta. Sin nada contra qué medirlo, no hay
+ * del mes (Gastos del mes, Familia), que se vacía a medida que se gasta. Deudas se mide contra lo que se debe. Sin nada contra qué medirlo, no hay
  * porcentaje y el icono se pinta lleno de su color. Todo con enteros.
  */
 
@@ -12,6 +12,8 @@ export type MedidaDeSobre = {
   anualCentavos: number | null;
   /** El valor de su regla fija activa, si tiene. */
   fijoMensualCentavos: number | null;
+  /** Deudas: el pendiente de las deudas abiertas que debo, con fecha o sin ella (spec 005). */
+  debidoCentavos?: number | null;
 };
 
 /**
@@ -35,15 +37,17 @@ export function nivelDeSobre({
   topeCentavos,
   anualCentavos,
   fijoMensualCentavos,
+  debidoCentavos = null,
 }: MedidaDeSobre): NivelDeSobre {
   exigirEntero(saldoCentavos, "El saldo");
   exigirEntero(topeCentavos, "El tope");
   exigirEntero(anualCentavos, "Lo del año");
   exigirEntero(fijoMensualCentavos, "El fijo mensual");
+  exigirEntero(debidoCentavos, "Lo que se debe");
   if (saldoCentavos < 0) return { porcentaje: 0, alcanzado: false, negativo: true };
 
   const positiva = (m: number | null) => (m !== null && m > 0 ? m : null);
-  const meta = positiva(topeCentavos) ?? positiva(anualCentavos);
+  const meta = positiva(topeCentavos) ?? positiva(anualCentavos) ?? positiva(debidoCentavos);
   if (meta !== null) {
     return { porcentaje: porcentajeDe(saldoCentavos, meta), alcanzado: saldoCentavos >= meta, negativo: false };
   }
@@ -58,7 +62,7 @@ export function nivelDeSobre({
  * un error de los registros.
  */
 export function nivelParaIcono(medida: MedidaDeSobre): NivelDeSobre {
-  const enteros = Object.values(medida).every((v) => v === null || Number.isSafeInteger(v));
+  const enteros = Object.values(medida).every((v) => v === null || v === undefined || Number.isSafeInteger(v));
   return enteros ? nivelDeSobre(medida) : { porcentaje: null, alcanzado: false, negativo: false };
 }
 

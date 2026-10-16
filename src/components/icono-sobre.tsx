@@ -1,5 +1,6 @@
 import {
   Gift,
+  HandCoins,
   HeartHandshake,
   Inbox,
   type LucideIcon,
@@ -9,6 +10,7 @@ import {
   Target,
 } from "lucide-react";
 import { createElement } from "react";
+import type { Sobre } from "@/db/schema";
 import { type NivelDeSobre, type PasoDeSobre, pasoDeSobre } from "@/lib/sobres";
 
 /*
@@ -19,7 +21,7 @@ import { type NivelDeSobre, type PasoDeSobre, pasoDeSobre } from "@/lib/sobres";
   para leerse sobre los dos fondos. Sin hooks: sirve igual en páginas de servidor y en formularios de cliente.
 */
 
-const iconoPorTipo: Record<string, LucideIcon> = {
+const iconoPorTipo: Record<Sobre["tipo"], LucideIcon> = {
   por_asignar: Inbox,
   gastos: ShoppingBasket,
   familia: HeartHandshake,
@@ -27,6 +29,7 @@ const iconoPorTipo: Record<string, LucideIcon> = {
   meta: Target,
   fondo: Gift,
   inversion: Sprout,
+  deudas: HandCoins,
 };
 
 /** El relleno de cada tono del anillo y el color del icono sobre él; rayas y puntos llevan un halo blanco. */
@@ -102,7 +105,7 @@ export function IconoSobre({
   const id = `sobre-${clave}-${tamano}`;
   const tono = tonos[pasoDeSobre(tipo)];
   const fondo = superficies[superficie];
-  const Icono = iconoPorTipo[tipo] ?? Target;
+  const Icono = (iconoPorTipo as Partial<Record<string, LucideIcon>>)[tipo] ?? Target;
   // Sin medida, lleno de su color; con ella, hasta su porcentaje. Lleno del todo, la onda queda fuera del cuerpo;
   // vacío, no hay relleno que asome por debajo.
   const porcentaje = nivel.porcentaje ?? 100;

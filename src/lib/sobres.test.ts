@@ -4,6 +4,28 @@ import { nivelDeSobre, nivelParaIcono, pasoDeSobre } from "./sobres";
 const vacio = { topeCentavos: null, anualCentavos: null, fijoMensualCentavos: null };
 
 describe("nivelDeSobre: cuánto de lleno está un sobre, para su icono", () => {
+  it("Deudas se llena hacia lo que se debe: el pendiente de las deudas abiertas que debo (spec 005)", () => {
+    expect(nivelDeSobre({ ...vacio, saldoCentavos: 135_00, debidoCentavos: 520_00 })).toEqual({
+      porcentaje: 25,
+      alcanzado: false,
+      negativo: false,
+    });
+    expect(nivelDeSobre({ ...vacio, saldoCentavos: 770_00, debidoCentavos: 770_00 })).toMatchObject({
+      porcentaje: 100,
+      alcanzado: true,
+    });
+  });
+
+  it("nivelParaIcono: un sobre que no es Deudas, con lo debido sin definir, conserva su medida", () => {
+    expect(
+      nivelParaIcono({ ...vacio, saldoCentavos: 112_50, fijoMensualCentavos: 450_00, debidoCentavos: undefined }),
+    ).toMatchObject({ porcentaje: 25 });
+  });
+
+  it("sin deudas, Deudas no tiene contra qué medirse", () => {
+    expect(nivelDeSobre({ ...vacio, saldoCentavos: 50_00, debidoCentavos: 0 }).porcentaje).toBeNull();
+  });
+
   it("con tope (Emergencia, una meta), lo que lleva hacia el tope", () => {
     expect(nivelDeSobre({ ...vacio, saldoCentavos: 2_050_00, topeCentavos: 2_700_00 })).toEqual({
       porcentaje: 75,

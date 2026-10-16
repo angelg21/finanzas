@@ -16,6 +16,7 @@ import {
   iniciales,
 } from "@/components/ui";
 import { movimientosDeSobre, partidasDeSobre, reglaDeSobre, sobrePorId, type MovimientoReciente } from "@/db/consultas";
+import type { Sobre } from "@/db/schema";
 import { aporteMensualCentavos, totalAnualCentavos } from "@/lib/fondos";
 import { formatearCentavos } from "@/lib/dinero";
 import { nivelParaIcono } from "@/lib/sobres";
@@ -24,7 +25,7 @@ import { exigirSesion } from "@/app/sesion";
 
 export const dynamic = "force-dynamic";
 
-const nombreTipo: Record<string, string> = {
+const nombreTipo: Record<Sobre["tipo"], string> = {
   por_asignar: "Por asignar",
   gastos: "Gastos del mes",
   familia: "Apoyo familiar",
@@ -32,6 +33,7 @@ const nombreTipo: Record<string, string> = {
   meta: "Meta",
   inversion: "Inversión",
   fondo: "Fondo de reserva",
+  deudas: "Para pagar deudas",
 };
 
 export async function generateMetadata({ params }: PageProps<"/sobres/[id]">): Promise<Metadata> {

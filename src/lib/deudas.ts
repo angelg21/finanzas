@@ -25,7 +25,8 @@ function esCentavos(n: number) {
  */
 export function pendienteDe(d: MovidoDeuda & { sentido: SentidoDeuda; montoInicialCentavos: number }): number {
   if (![d.montoInicialCentavos, d.prestadoCentavos, d.saldadoCentavos].every(esCentavos))
-    throw new RangeError(`Montos de deuda inválidos: ${JSON.stringify(d)}`);
+    // Sin volcar la fila: puede traer la persona y la nota, y el error acaba en los registros.
+    throw new RangeError("Montos de deuda inválidos");
   if (d.sentido === "debo" && d.prestadoCentavos !== 0) throw new RangeError("Una deuda que debo no tiene préstamos");
   const pendiente = d.montoInicialCentavos + d.prestadoCentavos - d.saldadoCentavos;
   if (pendiente < 0) throw new RangeError(`Pendiente negativo: ${pendiente}`);
@@ -35,6 +36,13 @@ export function pendienteDe(d: MovidoDeuda & { sentido: SentidoDeuda; montoInici
 export function estadoDe(pendienteCentavos: number): EstadoDeuda {
   if (!esCentavos(pendienteCentavos)) throw new RangeError(`Pendiente inválido: ${pendienteCentavos}`);
   return pendienteCentavos > 0 ? "abierta" : "pagada";
+}
+
+/** Lo pendiente por sentido, para el patrimonio neto y la medida del sobre Deudas. Las pagadas suman cero. */
+export function pendientePorSentido(lista: { sentido: SentidoDeuda; pendienteCentavos: number }[]) {
+  const total = (sentido: SentidoDeuda) =>
+    lista.filter((d) => d.sentido === sentido).reduce((a, d) => a + d.pendienteCentavos, 0);
+  return { deboCentavos: total("debo"), meDebenCentavos: total("me_deben") };
 }
 
 /**

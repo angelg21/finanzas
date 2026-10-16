@@ -13,6 +13,7 @@ import {
   estadoDe,
   montoInicialMinimo,
   pendienteDe,
+  pendientePorSentido,
   prepararPago,
   validarDeuda,
 } from "./deudas";
@@ -145,6 +146,16 @@ describe("pendienteDe y estadoDe: el pendiente se calcula (criterio 2)", () => {
     expect(estadoDe(32_000)).toBe("abierta");
     expect(estadoDe(1)).toBe("abierta");
     expect(estadoDe(0)).toBe("pagada");
+  });
+
+  it("el error de unos datos rotos no lleva la persona ni la nota a los registros", () => {
+    const fila = { ...papas, saldadoCentavos: 0.5, persona: "PERSONA-PRIVADA", nota: "NOTA-PRIVADA" };
+    expect(() => pendienteDe(fila)).toThrow(RangeError);
+    try {
+      pendienteDe(fila);
+    } catch (error) {
+      expect(String(error)).not.toMatch(/PRIVADA/);
+    }
   });
 
   it("un pendiente negativo o un préstamo en lo que debo son datos rotos y lanzan", () => {
@@ -337,5 +348,22 @@ describe("montoInicialMinimo y editar sin romper el pendiente (criterio 16)", ()
     expect(errores(entrada({ sentido: "me_deben", monto: "49" }), cobrado).monto).toBe(
       "Ya te devolvieron 50,00: no puede ser menos",
     );
+  });
+});
+
+describe("pendientePorSentido: lo que debo y lo que me deben, abierto", () => {
+  it("suma los pendientes por sentido; las pagadas suman cero", () => {
+    expect(
+      pendientePorSentido([
+        { sentido: "debo", pendienteCentavos: 25_000 },
+        { sentido: "debo", pendienteCentavos: 52_000 },
+        { sentido: "debo", pendienteCentavos: 0 },
+        { sentido: "me_deben", pendienteCentavos: 14_000 },
+      ]),
+    ).toEqual({ deboCentavos: 77_000, meDebenCentavos: 14_000 });
+  });
+
+  it("sin deudas, cero y cero", () => {
+    expect(pendientePorSentido([])).toEqual({ deboCentavos: 0, meDebenCentavos: 0 });
   });
 });
