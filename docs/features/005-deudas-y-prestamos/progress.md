@@ -74,13 +74,15 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 
 El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. Sin esta nota no se pasa a `/f-verify`.
 
--
+- 2026-10-16 · El desarrollador probó en el navegador, en `http://localhost:3000`, las pantallas de deudas y dijo que estaban bien, salvo que en Registrar no había cómo elegir la deuda que pagaba (de ahí la T17). Tras la T17 probó `/nuevo/deuda` y dijo que está bien. No indicó el ancho.
+  - En la base local quedaron de sus pruebas una deuda nueva que debe y un pago.
+  - Prestar, cobrar y apartar no dejaron filas suyas: esos envíos están probados por `comprobar-005` contra la base y por las capturas, no desde el navegador.
 
 ## Etapas
 
 - [x] Spec leída y aprobada por el desarrollador (2026-10-15), en una sola feature
 - [x] Construida (todas las tareas con commit), 2026-10-16. La T17 se abrió y se cerró al validar.
-- [ ] Validada en navegador
+- [x] Validada en navegador, 2026-10-16
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
 - [ ] Fusionada en `main` el AAAA-MM-DD
