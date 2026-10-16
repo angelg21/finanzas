@@ -55,7 +55,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   Revisión de `guardian-datos`.
 
 - [x] T14 (2026-10-16) · `/deudas/prestar`, el cobro en `/deudas/[id]` con el enlace "Repartir", la lista "Me deben" en `/deudas` y el patrimonio neto en `/cuentas` (criterios 4, 5, 15 y 21).
-- [ ] T15 · Demo, humo y comprobación (criterios 9 y 22):
+- [x] T15 (2026-10-16) · Demo, humo y comprobación (criterios 9 y 22):
   - `semilla-demo.ts` con las deudas `demo-deuda-*` al final y la limpieza en orden de FK;
   - `scripts/humo.mjs` con las rutas nuevas y un 404;
   - `scripts/comprobar-005.ts` contra la base local, dejándola como estaba;
@@ -214,3 +214,11 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - `/deudas` gana la tarjeta "Me deben", junto a Debo en escritorio (7 + 5), con "Cobradas (n)" y, si está vacía, el enlace a registrar con "Me deben" elegido.
   - `/cuentas` muestra el patrimonio neto bajo la verificación: el neto, Cuentas, Me deben (+), Debo (−) y "Ver deudas". Con datos de deudas rotos lo dice y la página no se cae (resguardo H1).
   - Capturas en los dos anchos y temas: patrimonio neto 5.243 + 190 − 670 = 4.763,00.
+- 2026-10-16 · T15:
+  - La demo se hizo en la T9 (`7be2f91`): `pnpm db:demo` dos veces da 4 movimientos nuevos y luego 0.
+  - `scripts/humo.mjs` gana las rutas de deudas. Sin sesión, las seis redirigen a `/entrar`; con sesión, `/deudas`, `/deudas/nueva`, `/deudas/prestar` y `/deudas/apartar` dan 200, y `/deudas/999999`, `/deudas/999999/editar` y `/deudas/abc` dan 404. `pnpm build` y `pnpm humo`: "todo responde como debe".
+  - `scripts/comprobar-005.ts` con la demo cargada: todo en verde, y la base queda como estaba (122 movimientos, 4 deudas).
+  - Capturas en los dos anchos y temas de:
+    - `/deudas`, `/deudas/[id]` (Andrés, Papás y Luis), `/deudas/nueva`, la edición de Papás, `/deudas/prestar` y `/deudas/apartar`;
+    - `/cuentas`, `/nuevo/ingreso`, `/sobres/repartir`, `/sobres/reglas`, el sobre Deudas, Mover y el inicio.
+  - En el reparto, Deudas va primero con "cuota · faltan 310 este mes · vence 22 oct", y `/sobres/repartir` propone para Deudas los 30,00 cobrados a Luis.

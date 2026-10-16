@@ -41,6 +41,12 @@ const conDatos = [
   "/categorias",
   "/categorias/nueva",
   "/categorias/1",
+  "/deudas",
+  "/deudas/nueva",
+  "/deudas/prestar",
+  "/deudas/apartar",
+  "/deudas/1",
+  "/deudas/1/editar",
   "/ruta-que-no-existe",
 ];
 /** Lo único que responde sin sesión. */
@@ -68,8 +74,15 @@ const conSesion = [
   ["/sobres/reglas", 200],
   ["/categorias", 200],
   ["/categorias/nueva", 200],
+  ["/deudas", 200],
+  ["/deudas/nueva", 200],
+  ["/deudas/prestar", 200],
+  ["/deudas/apartar", 200],
   ["/sobres/999999", 404],
   ["/categorias/999999", 404],
+  ["/deudas/999999", 404],
+  ["/deudas/999999/editar", 404],
+  ["/deudas/abc", 404],
 ];
 /** Criterio 14. */
 const cabecerasEsperadas = {
