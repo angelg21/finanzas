@@ -50,6 +50,9 @@ const etiquetaTipo: Record<MovimientoReciente["tipo"], string> = {
   gasto: "Gasto",
   transferencia: "Transferencia",
   reasignacion: "Reasignación",
+  pago_deuda: "Pago de deuda",
+  prestamo: "Préstamo",
+  cobro_prestamo: "Cobro de préstamo",
 };
 
 /** Cuánto cambió el saldo de este sobre con el movimiento: positivo si entró, negativo si salió. */

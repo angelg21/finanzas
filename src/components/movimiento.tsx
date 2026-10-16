@@ -1,4 +1,12 @@
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Shuffle } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowLeftRight,
+  ArrowUpRight,
+  BanknoteArrowDown,
+  BanknoteArrowUp,
+  HandHelping,
+  Shuffle,
+} from "lucide-react";
 import type { MovimientoReciente } from "@/db/consultas";
 import { formatearCentavos, formatearTasaGuardada } from "@/lib/dinero";
 import { Cifra, CirculoCategoria } from "./ui";
@@ -8,6 +16,9 @@ const etiquetaTipo: Record<MovimientoReciente["tipo"], string> = {
   gasto: "Gasto",
   transferencia: "Transferencia",
   reasignacion: "Reasignación",
+  pago_deuda: "Pago de deuda",
+  prestamo: "Préstamo",
+  cobro_prestamo: "Cobro de préstamo",
 };
 
 const iconoTipo = {
@@ -15,6 +26,9 @@ const iconoTipo = {
   gasto: ArrowUpRight,
   transferencia: ArrowLeftRight,
   reasignacion: Shuffle,
+  pago_deuda: BanknoteArrowUp,
+  prestamo: HandHelping,
+  cobro_prestamo: BanknoteArrowDown,
 } as const;
 
 /**

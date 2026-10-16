@@ -111,4 +111,15 @@ metadata:
 - **El log no dice de qué base viene cada línea** (el prefijo es solo `%m [%p]`). Los errores de mis copias y los de la base real salen mezclados en `docker logs`. Hay que atribuirlos por la hora y por lo que yo corrí.
 - **Ordenar escrituras ajenas:** comparar el `xmin` de las filas con `txid_current()`. Los xid son de todo el clúster, así que lo que hago en las copias también los consume.
 
+- **`docker run` de un contenedor nuevo, negado** (2026-10-15, T5 de 005). El clasificador de modo automático lo niega como "Modify Shared Resources", también la sonda de Supabase. No rodearlo: dejarlo como residual o pedírselo al que llama. Dentro de `finanzas-db` sí se puede: `createdb`, `dropdb` y psql.
+- **Copia con forma de producción** (con migraciones pendientes):
+  1. `pg_dump finanzas | psql <copia>`;
+  2. deshacer a mano el DDL de la última migración aplicada, por ejemplo `drop constraint`;
+  3. `delete from drizzle.__drizzle_migrations where created_at = <when>`.
+
+  El migrador real la vuelve a aplicar junto con la nueva en una sola transacción. Script: `e7c92f93…/scratchpad/migrar-g005.mts`, solo contra `finanzas_g005_*`. Se corre con `DATABASE_URL=postgresql://finanzas:finanzas@localhost:5433/<copia>` en la línea, sin el envoltorio.
+
+- En psql con `-f`, un `\i` busca relativo al directorio de trabajo; para buscar relativo al script, usar `\ir`. Los archivos se copian al contenedor con `MSYS_NO_PATHCONV=1 docker cp`.
+- `invariante-005.sql`, en la misma carpeta, cuenta los siete tipos como dice `efectoDe` y compara como texto.
+
 Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].

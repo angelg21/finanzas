@@ -59,6 +59,12 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
 - Las conexiones simultáneas pasan de 4 a 6 en `datosDelReparto` y de 5 a 7 en el inicio. La acción del ingreso usa 8 de las 10 que postgres-js abre por defecto. Medirlo junto con el pooler (T15).
 - El nivel se calcula en dos sitios: `sobresConNivel` (SQL) y `/sobres/[id]` (JS). Hoy dan lo mismo.
 
+**Abiertos, nuevos en T5 de 005 (2026-10-15). Info, ninguno bloquea la migración** (ver [[revision-005-deudas]])
+
+- La base no ata el `sentido` de la deuda al tipo del movimiento, ni el sobre (Deudas o "Por asignar"), ni la moneda. Lo tiene que frenar el escritor de T7/T13.
+- Los mapas de `tipo_sobre` son `Record<string>` con un respaldo: tsc no avisa de que falta `deudas`.
+- `deudas` no tiene en la base un tope (`TOPE_REGLA_CENTAVOS`) ni el largo de `persona`; solo los valida `lib`.
+
 **Abiertos de antes**
 
 - **Baja.** `reglas_reparto.valor` sigue siendo `integer`. Desde 790ee93 lo vigila `cabeEnRegla`: el tope de 21.474.836,47 USD se rechaza con un mensaje y sin escribir.

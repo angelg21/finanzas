@@ -5,6 +5,10 @@
  * la base en scripts/comprobar-005.ts.
  */
 
+/**
+ * Es el enum tipo_movimiento de la base (src/db/schema.ts): solo se añade al final. Reordenar o renombrar cambia la
+ * base, y un valor renombrado lo rechazaría el check de forma, que compara por texto y termina en "else false".
+ */
 export const tiposDeMovimiento = [
   "ingreso",
   "gasto",

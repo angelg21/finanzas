@@ -16,7 +16,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - las referencias `-deuda` y `-pago` en `captura.ts`.
 - [x] T3 (2026-10-15) · `src/lib/cuota-deudas.ts` con sus pruebas, viéndolas fallar primero: `cuotaDeDeudas` con el caso real, su seguimiento, lo apartado, vencidas, sin fecha y el cambio de año (criterio 11). En `reparto.criterios.test.ts`, la regla calculada de Deudas antes de los fijos y el ejemplo de 1.200,00 (criterio 12).
 - [x] T4 (2026-10-15) · `src/lib/liquidez.ts` con sus pruebas, viéndolas fallar primero: `avisosDeLiquidez` con los tres estados, el acumulado por cuenta, el orden por fecha y los textos (criterio 14).
-- [ ] T5 · Esquema y migración (criterio 8):
+- [x] T5 (2026-10-15) · Esquema y migración (criterio 8):
   - los enums, la tabla `deudas`, `movimientos.deuda_id` y el check reescrito, comparando como texto;
   - `pnpm db:generate`, aplicada primero en una base local vacía y después en la de siempre;
   - revisión de `guardian-datos` antes de aplicarla;
@@ -96,3 +96,12 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - el "solo X" del texto es lo que queda en la cuenta prevista después de las deudas anteriores (en el ejemplo, 350,00 para Papás). El saldo entero diría "solo 600,00" para una deuda de 520,00.
 
   Además, lo que falta nunca pasa del pendiente de la deuda, y una cuenta prevista inactiva se trata como si no hubiera cuenta prevista: sin aviso. `formatearCifra` pasa a `dinero.ts`, compartida con `deudas.ts`.
+- 2026-10-15 · T5, migración `0005_polite_sir_ram.sql`:
+  - `guardian-datos`: APTA. Comparó la SQL con `generateMigration` (sin ediciones a mano) y la aplicó en una base vacía y en una copia con forma de producción (la 0004 revertida). Las 6 formas malas las rechaza el check; las de `deudas`, sus dos checks y el índice único. Hash revisado: `99dc3f23…df476e`.
+  - Corrida propia: base desechable vacía, las 6 en una transacción; otra con 0000-0003 y luego 0004+0005 juntas, como producción. Sin 55P04. Enums con los valores nuevos al final, RLS en `deudas` y los 3 checks validados. Las dos borradas.
+  - Base local: `pnpm db:migrate` aplicó la 0005 con el mismo hash. Las 118 filas quedan con `deuda_id` nulo.
+  - El enum `tipo_movimiento` sale de `tiposDeMovimiento` (`src/lib/saldos.ts`), con el aviso de que solo se añade al final.
+  - Las etiquetas y los iconos de los tipos nuevos ya están en `FilaMovimiento`, porque el mapa los exige para compilar: `BanknoteArrowUp` para el pago, `HandHelping` para el préstamo y `BanknoteArrowDown` para el cobro. Títulos, signo y círculo neutro son de la T11.
+  - Pendiente para la T6, del guardián: los mapas por tipo de sobre (`page.tsx` del inicio, `/sobres`, `/sobres/[id]`, `icono-sobre.tsx`) son `Record<string, …>` y no tienen `deudas`; pasan a `Record<Sobre["tipo"], …>`.
+  - Pendiente para la T7 y la T13: el check solo valida la forma. Que un pago apunte a una deuda "debo", salga de Deudas y desde una cuenta en dólares lo frena el escritor dentro del candado.
+  - Sin probar: la imagen de Supabase 17.6. Al guardián se le negó `docker run` y no se intentó por otro camino. La base local es PG 17.11, y en la 002 un `ADD VALUE` ya corrió dentro de una transacción en esa imagen.
