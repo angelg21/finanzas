@@ -4,7 +4,7 @@
  * base (40 % → 4000), con la misma lectura que los montos; tienen que sumar exactamente 100 %. Es pura: la acción
  * le pasa solo los sobres editables, sin "Por asignar" ni los fondos, cuyo aporte sale de su desglose.
  */
-import { centavosATexto, leerExacto, partesCentavos } from "./dinero";
+import { centavosATexto, formatearCifraCorta as cifraCorta, leerExacto } from "./dinero";
 import { cabeEnRegla } from "./fondos";
 import { PUNTOS_BASE_TOTAL, type ReglaParaRepartir, type TipoRegla } from "./reparto";
 
@@ -19,19 +19,17 @@ export type ErroresReglas = { sobres?: Record<number, string>; total?: string };
 export type ReglasValidadas =
   { ok: true; reglas: ReglaValidada[]; sinPorcentajes: boolean } | { ok: false; errores: ErroresReglas };
 
-/** Si la regla de un sobre se edita en /sobres/reglas: no la de "Por asignar", ni la de un fondo, que sale de su desglose. */
+/**
+ * Si la regla de un sobre se edita en /sobres/reglas: no la de "Por asignar", ni la de un fondo, que sale de su
+ * desglose, ni la de Deudas, cuya cuota se calcula en cada reparto (spec 005, criterio 12).
+ */
 export function reglaEditable(tipoSobre: string): boolean {
-  return tipoSobre !== "por_asignar" && tipoSobre !== "fondo";
+  return tipoSobre !== "por_asignar" && tipoSobre !== "fondo" && tipoSobre !== "deudas";
 }
 
 /** 4000 → "40 %"; 3333 → "33,33 %". */
 export function formatearPorcentaje(puntosBase: number): string {
   return `${centavosATexto(puntosBase)} %`;
-}
-
-/** 270000 → "2.700"; 18750 → "187,50": sin la unidad ni los centavos en cero, para una pista corta. */
-function cifraCorta(centavos: number) {
-  return partesCentavos(centavos).numero.replace(/,00$/, "");
 }
 
 /**

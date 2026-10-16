@@ -212,19 +212,24 @@ export function iniciales(nombre: string) {
     .join("");
 }
 
-/** Fila de lista como "Top Holdings": avatar, nombre en mayúsculas, subtítulo y columna derecha. */
+/**
+ * Fila de lista como "Top Holdings": avatar, nombre en mayúsculas, subtítulo y columna derecha. Con `elegida`, el
+ * enlace lleva un anillo menta, como la opción elegida en SelectorPildoras.
+ */
 export function FilaLista({
   avatar,
   titulo,
   subtitulo,
   derecha,
   href,
+  elegida = false,
 }: {
   avatar: ReactNode;
   titulo: ReactNode;
   subtitulo?: ReactNode;
   derecha?: ReactNode;
   href?: string;
+  elegida?: boolean;
 }) {
   const contenido = (
     <>
@@ -238,7 +243,11 @@ export function FilaLista({
   );
   const clases = "flex items-center gap-3 py-2.5";
   return href ? (
-    <Link href={href} className={`${clases} -mx-2 rounded-[14px] px-2 hover:bg-tarjeta-hover`}>
+    <Link
+      href={href}
+      aria-current={elegida ? "true" : undefined}
+      className={`${clases} -mx-2 rounded-[14px] px-2 hover:bg-tarjeta-hover ${elegida ? "bg-tarjeta-hover ring-2 ring-palido" : ""}`}
+    >
       {contenido}
     </Link>
   ) : (

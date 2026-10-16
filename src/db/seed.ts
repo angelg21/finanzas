@@ -74,6 +74,13 @@ async function main() {
         orden: 5,
         nota: "Regalos, cumpleaños, aniversarios, Navidad. Se alimenta cada mes con un aporte fijo calculado del desglose anual; lo que sobra se acumula.",
       },
+      // Spec 005: después de Ocasiones (mismo orden, id mayor). Sin regla: su cuota se calcula en cada reparto.
+      {
+        nombre: "Deudas",
+        tipo: "deudas",
+        orden: 5,
+        nota: "Lo apartado para pagar lo que debo. Recibe su cuota en cada reparto, antes que los demás.",
+      },
       { nombre: "Inversión", tipo: "inversion", orden: 6, nota: "Intocable. Nunca se retira." },
     ])
     .onConflictDoNothing();

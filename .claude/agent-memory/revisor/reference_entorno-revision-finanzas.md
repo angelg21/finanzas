@@ -27,4 +27,10 @@ metadata:
 - Nombre accesible sin lector de pantalla: `Accessibility.enable` y `Accessibility.getFullAXTree`, filtrando `role.value === "group"`; da el nombre que calcula el navegador (con `sr-only`). Para "lo visible no cambia", regenerar la captura y comparar posiciones con la anterior.
 - Guiones del Edge: escribirlos con Write, no con heredoc. Dentro de un heredoc las barras de `\\n` o `\\s` en una expresión regular dentro de un template se pierden y `Runtime.evaluate` da SyntaxError.
 
+- Trampa (2026-10-16): el primer `form [type=submit]` del DOM es "Salir" de la barra lateral; pulsarlo cierra la sesión del Edge de revisión. Elige siempre el formulario con `form:has([name=idCaptura])`.
+- Envío nativo sin JS que sí funciona con las acciones: `Emulation.setScriptExecutionDisabled` antes de navegar, valores por setter y clic real con `Input.dispatchMouseEvent` en el botón (los campos `$ACTION_*` ya van en el formulario). Guion genérico `flujo.mjs` (ruta, js|sinjs, json de campos, radios nombre=valor): reescribirlo en cada sesión.
+- En este Next 16, tras una acción con `redirect` a la misma ruta con otro `?guardado=`, el formulario se vuelve a montar (id de captura y pendiente nuevos), y `history.back()` tras `revalidatePath` trae datos frescos. Ya verificado: no gastar tiempo en esa hipótesis salvo que cambie la versión.
+- `drizzle-kit generate` lo niega el clasificador. Para "no editada a mano": un solo commit en `git log -- drizzle/` y el `sha256sum` del .sql igual al `hash` de `drizzle.__drizzle_migrations`.
+- `guardian-datos` puede recrear la demo mientras reviso (2026-10-16: ids de deudas pasaron de 21-24 a 66-69 y las secuencias saltaron). Leer los ids justo antes de usarlos, no al empezar.
+
 Ver [[donde-se-esconden-defectos]].

@@ -6,23 +6,26 @@ import { formatearCentavos, formatearEnteros } from "@/lib/dinero";
 /*
   Anillo de distribución sobre la tarjeta menta: segmentos gruesos separados por un contorno
   blanco, total en el centro y leyenda con valores. Cinco tonos de la paleta que se distinguen
-  entre sí: pino profundo, verde medio, blanco, salvia gris y rayado de pino sobre blanco.
+  entre sí: pino profundo, verde medio, blanco, salvia gris, y tres tramas de pino sobre blanco: rayado, puntos y
+  rejilla (Deudas).
   El color sigue a la entidad (tipo de sobre), no a su tamaño.
 */
 
-export type SegmentoDona = { clave: string; nombre: string; valorCentavos: number; paso: 1 | 2 | 3 | 4 | 5 | 6 };
+export type SegmentoDona = { clave: string; nombre: string; valorCentavos: number; paso: 1 | 2 | 3 | 4 | 5 | 6 | 7 };
 
-const clasePaso: Record<Exclude<SegmentoDona["paso"], 5 | 6>, { relleno: string; fondo: string }> = {
+const clasePaso: Record<Exclude<SegmentoDona["paso"], 5 | 6 | 7>, { relleno: string; fondo: string }> = {
   1: { relleno: "fill-dona-1", fondo: "bg-dona-1" },
   2: { relleno: "fill-dona-2", fondo: "bg-dona-2" },
   3: { relleno: "fill-dona-3", fondo: "bg-dona-3" },
   4: { relleno: "fill-dona-4", fondo: "bg-dona-4" },
 };
 
-/** El paso 5 es blanco con rayas diagonales y el 6 blanco con puntos, ambos del color dona-5. */
+/** El paso 5 es blanco con rayas diagonales, el 6 blanco con puntos y el 7 blanco con rejilla, todos del color dona-5. */
 const rayasCss = "repeating-linear-gradient(45deg, var(--dona-5) 0 1.5px, #ffffff 1.5px 5px)";
 const puntosCss = "radial-gradient(var(--dona-5) 0.9px, #ffffff 1.1px)";
-const esPatron = (paso: SegmentoDona["paso"]): paso is 5 | 6 => paso === 5 || paso === 6;
+const rejillaCss =
+  "linear-gradient(var(--dona-5) 1px, transparent 1px), linear-gradient(90deg, var(--dona-5) 1px, var(--dona-3) 1px)";
+const esPatron = (paso: SegmentoDona["paso"]): paso is 5 | 6 | 7 => paso === 5 || paso === 6 || paso === 7;
 
 /** El trazo de un sector del anillo, de `a0` a `a1` en radianes. También lo usa `GraficaCategorias`. */
 export function sector(cx: number, cy: number, rExt: number, rInt: number, a0: number, a1: number) {
@@ -45,6 +48,7 @@ export function GraficaDona({ segmentos, titulo }: { segmentos: SegmentoDona[]; 
   const idTabla = useId();
   const idRayas = useId();
   const idPuntos = useId();
+  const idRejilla = useId();
 
   const visibles = segmentos.filter((s) => s.valorCentavos > 0);
   const total = visibles.reduce((a, s) => a + s.valorCentavos, 0);
@@ -85,6 +89,10 @@ export function GraficaDona({ segmentos, titulo }: { segmentos: SegmentoDona[]; 
               <rect width="6" height="6" fill="#ffffff" />
               <circle cx="3" cy="3" r="1.3" className="fill-dona-5" />
             </pattern>
+            <pattern id={idRejilla} patternUnits="userSpaceOnUse" width="6" height="6">
+              <rect width="6" height="6" className="fill-dona-3" />
+              <path d="M0,0.6 H6 M0.6,0 V6" className="stroke-dona-5" strokeWidth={1.2} fill="none" />
+            </pattern>
           </defs>
 
           {total === 0 ? (
@@ -100,7 +108,14 @@ export function GraficaDona({ segmentos, titulo }: { segmentos: SegmentoDona[]; 
             arcos.map((s) => {
               const activa = activo === s.clave;
               const relleno = esPatron(s.paso) ? undefined : clasePaso[s.paso].relleno;
-              const patron = s.paso === 5 ? `url(#${idRayas})` : s.paso === 6 ? `url(#${idPuntos})` : undefined;
+              const patron =
+                s.paso === 5
+                  ? `url(#${idRayas})`
+                  : s.paso === 6
+                    ? `url(#${idPuntos})`
+                    : s.paso === 7
+                      ? `url(#${idRejilla})`
+                      : undefined;
               return (
                 <path
                   key={s.clave}
@@ -156,7 +171,9 @@ export function GraficaDona({ segmentos, titulo }: { segmentos: SegmentoDona[]; 
                     ? { backgroundImage: rayasCss }
                     : s.paso === 6
                       ? { backgroundImage: puntosCss, backgroundSize: "4px 4px" }
-                      : undefined
+                      : s.paso === 7
+                        ? { backgroundImage: rejillaCss, backgroundSize: "4px 4px" }
+                        : undefined
                 }
               />
               <span className="min-w-0 flex-1">

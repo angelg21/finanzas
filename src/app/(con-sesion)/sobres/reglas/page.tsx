@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { TituloPagina } from "@/components/ui";
 import { reglasPorSobre } from "@/db/reglas";
+import { cuotaDelMes } from "@/db/reparto";
 import { centavosATexto } from "@/lib/dinero";
 import { reglaEditable } from "@/lib/reglas";
 import { FormularioReglas } from "./formulario-reglas";
@@ -12,11 +13,12 @@ export const dynamic = "force-dynamic";
 
 /**
  * Las reglas de reparto (spec 004, criterio 11): monto fijo mensual, porcentaje o ninguna por sobre, y el tope de
- * Emergencia. Los fondos muestran su aporte, que se cambia en su desglose.
+ * Emergencia. Los fondos muestran su aporte, que se cambia en su desglose, y Deudas su cuota calculada (spec 005).
  */
 export default async function Reglas() {
   await exigirSesion();
-  const sobres = await reglasPorSobre();
+  const [sobres, cuota] = await Promise.all([reglasPorSobre(), cuotaDelMes()]);
+  const deudas = sobres.find((s) => s.tipoSobre === "deudas");
   const editables = sobres.filter((s) => reglaEditable(s.tipoSobre));
   const emergencia = sobres.find((s) => s.tipoSobre === "emergencia");
 
@@ -46,6 +48,7 @@ export default async function Reglas() {
             nombre: s.nombre,
             aporteCentavos: s.regla?.activa && s.regla.tipo === "fijo" ? s.regla.valor : null,
           }))}
+        deudas={deudas ? { nombre: deudas.nombre, cuotaCentavos: cuota?.cuotaCentavos ?? 0 } : null}
         emergencia={emergencia ? { nombre: emergencia.nombre } : null}
         inicial={inicial}
       />

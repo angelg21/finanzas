@@ -83,6 +83,21 @@ export function nombreMes(mes: number): string {
   return mayuscula(meses[mes - 1] ?? "");
 }
 
+/** Días de calendario de `desde` a `hasta`, ambos "AAAA-MM-DD": negativo si `hasta` es anterior. */
+export function diasEntre(desde: string, hasta: string): number {
+  const dia = (f: string) => {
+    const { anio, mes, dia: d } = partes(f);
+    return Date.UTC(anio, mes - 1, d) / 86_400_000;
+  };
+  return dia(hasta) - dia(desde);
+}
+
+/** "2026-10-22" → "22 oct", para una fecha prevista. */
+export function diaYMes(fecha: string): string {
+  const { mes, dia } = partes(fecha);
+  return `${dia} ${meses[mes - 1].slice(0, 3)}`;
+}
+
 /** "2026-10-09" → "Vie 9 oct", para la píldora de la fecha elegida. */
 export function etiquetaFecha(fecha: string): string {
   const { mes, dia, semana } = partes(fecha);

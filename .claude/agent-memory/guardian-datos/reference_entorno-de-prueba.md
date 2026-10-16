@@ -111,4 +111,42 @@ metadata:
 - **El log no dice de qué base viene cada línea** (el prefijo es solo `%m [%p]`). Los errores de mis copias y los de la base real salen mezclados en `docker logs`. Hay que atribuirlos por la hora y por lo que yo corrí.
 - **Ordenar escrituras ajenas:** comparar el `xmin` de las filas con `txid_current()`. Los xid son de todo el clúster, así que lo que hago en las copias también los consume.
 
+- **`docker run` de un contenedor nuevo, negado** (2026-10-15, T5 de 005). El clasificador de modo automático lo niega como "Modify Shared Resources", también la sonda de Supabase. No rodearlo: dejarlo como residual o pedírselo al que llama. Dentro de `finanzas-db` sí se puede: `createdb`, `dropdb` y psql.
+- **Copia con forma de producción** (con migraciones pendientes):
+  1. `pg_dump finanzas | psql <copia>`;
+  2. deshacer a mano el DDL de la última migración aplicada, por ejemplo `drop constraint`;
+  3. `delete from drizzle.__drizzle_migrations where created_at = <when>`.
+
+  El migrador real la vuelve a aplicar junto con la nueva en una sola transacción. Script: `e7c92f93…/scratchpad/migrar-g005.mts`, solo contra `finanzas_g005_*`. Se corre con `DATABASE_URL=postgresql://finanzas:finanzas@localhost:5433/<copia>` en la línea, sin el envoltorio.
+
+- En psql con `-f`, un `\i` busca relativo al directorio de trabajo; para buscar relativo al script, usar `\ir`. Los archivos se copian al contenedor con `MSYS_NO_PATHCONV=1 docker cp`.
+- `invariante-005.sql`, en la misma carpeta, cuenta los siete tipos como dice `efectoDe` y compara como texto.
+- **Herramientas de T6 de 005**, en `e7c92f93…/scratchpad/`:
+  - `sonda-t6.mts <base|nuevos|rota-*|conexiones-*|tiempos>`: se niega fuera de `finanzas_g005_*`. Trae el SQL de HEAD copiado para comparar, y `q()` usa `db.$client.unsafe`, sin importar drizzle-orm aparte. Se corre con `DATABASE_URL=...5433/finanzas_g005_t6 pnpm exec tsx <ruta>`, porque `src/db/index.ts` lee la variable sin dotenv.
+  - `huella-t6.sql`: añade `deudas` y su secuencia.
+  - `volumen-t6.sql`.
+
+  Para una base vacía: `createdb`, y luego `DATABASE_URL=... pnpm exec drizzle-kit migrate`, que sí corre, y `pnpm db:seed`.
+
+- **Herramientas de T7 de 005**: `e7c92f93…/scratchpad/t7/sonda-t7.mts <sentido|editar-pago|borrar-pago|apartar-reparto|apartar-gasto|reintentos|forma|rota|id-invalido>`. Se niega fuera de `finanzas_g005_*` y limpia por `nota='sonda-t7'` y `persona like 'sonda-t7%'`.
+  - La segunda conexión se abre con `createRequire(repo/package.json)("postgres")`.
+  - Las carreras se corren con `Promise.all`, alternando el orden en cada ronda.
+  - `comprobar-005` corre sobre una copia con `DATABASE_URL=...5433/<copia>` en la línea. dotenv no la pisa ("injected env (8)").
+
+- **Herramientas de T13 de 005**: `e7c92f93…/scratchpad/t13/sonda-t13.mts`, con las fases `prestar-reintentos|prestar-carrera|todo-o-nada|cobro-carreras|cobro-forma|pa-negativo|errores`.
+  - Solo corre en `finanzas_g005_*`. Limpia por `nota='sonda-t13'` y `persona like 'sonda-t13%'`, y borra su trigger.
+  - Una falla genérica en el insert se inyecta con un trigger `before insert` que lanza según la nota.
+  - `sonda-t7.mts` sigue sirviendo para el pago.
+  - La salida trae NOTICE de los `drop ... if exists`; se filtran con grep.
+- Mientras reviso, el autor avanza con la tarea siguiente en el mismo árbol: en T13 aparecieron archivos de T14. Revisar `git status` y la hora de modificación al empezar y al terminar.
+
+- **Herramientas de /f-review de 005** (carpeta `085899b3…/scratchpad/`; solo corren en `finanzas_g005_rev*`):
+  - `sonda-rev.mts <base|fecha-rara F|rota|estable|regla-vieja|conexiones>`: cuota, reglas y propuesta de 1.200,00 con `camposDePropuesta`, nivel, `sobresParaGasto` y cuadre;
+  - `orden-prestar.mts`: retiene `(3, PA)` desde otra conexión para que prestar llegue antes que repartir. Sin eso, repartir gana siempre, porque prestar lee el tipo del sobre antes del candado;
+  - `accion-gasto-rev.cts`: `registrarGasto` real;
+  - `conexiones-rev.mts <reparto|accion>`;
+  - `huella-demo.sql`: huella de la demo sin ids, con la deuda por su referencia. Es estable entre la base real y una vacía.
+- **Tras `db:demo:limpiar` + `db:demo` en la base real, cambian los ids**, y con ellos el md5 de `huella-t6.sql`. Para comparar contenido, usar `huella-demo.sql`. Tomar la huella de referencia de nuevo después de recargar.
+- **Mientras reviso, otros corren cosas en la base real** (2026-10-16): hubo dos firmas de `comprobar-005` en el log con 44 s de diferencia, y yo corrí una sola contra la copia. Las secuencias de la real subieron +24/+16 con las tablas idénticas. Además, había 10 conexiones postgres.js abiertas (un servidor de la app). Es esperable: decirlo en el informe y no atribuírmelo sin pruebas.
+
 Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].

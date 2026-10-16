@@ -9,6 +9,13 @@
  *     gasto          → sale de una cuenta y de un sobre
  *     transferencia  → mueve dinero real entre dos cuentas, no toca sobres
  *     reasignacion   → mueve propósito entre dos sobres, no toca cuentas
+ *     pago_deuda     → sale de una cuenta y del sobre Deudas hacia una deuda que debo; no es gasto (spec 005)
+ *     prestamo       → sale de una cuenta y de un sobre hacia algo que me deben; no es gasto
+ *     cobro_prestamo → entra a una cuenta y a "Por asignar" desde algo que me deben; no es ingreso
+ *   Los cuatro primeros nunca llevan deuda; los tres de deudas, siempre. Un tipo que no esté listado no pasa.
+ *   El efecto de cada tipo en los saldos se decide en src/lib/saldos.ts.
+ * - Los checks comparan los enums como texto: una migración que añade un valor y lo usa en la misma transacción
+ *   falla con 55P04 (spec 005, criterio 8).
  * - Las columnas se nombran en snake_case en la base (casing: "snake_case" en drizzle.config.ts).
  * - Toda tabla lleva .enableRLS() y ninguna política (spec 002, criterio 9): con la clave publicable de
  *   Supabase no se lee ni se escribe ninguna fila. La app entra como dueña de las tablas y no la afecta.
@@ -32,6 +39,7 @@ import {
 } from "drizzle-orm/pg-core";
 // Import relativo: drizzle-kit carga este archivo sin los alias de tsconfig.
 import { colorPorDefecto, iconoPorDefecto } from "../lib/categorias";
+import { tiposDeMovimiento } from "../lib/saldos";
 
 // ---------- Enumeraciones ----------
 
@@ -46,9 +54,12 @@ export const tipoSobreEnum = pgEnum("tipo_sobre", [
   "inversion",
   /** Fondo de reserva: gastos previsibles pero irregulares (regalos, ocasiones). Aporte fijo mensual, sin tope ni fecha. */
   "fondo",
+  /** Lo apartado para pagar deudas. Recibe una cuota calculada en cada reparto, sin fila en reglas_reparto (spec 005). */
+  "deudas",
 ]);
 export const tipoCategoriaEnum = pgEnum("tipo_categoria", ["ingreso", "gasto"]);
-export const tipoMovimientoEnum = pgEnum("tipo_movimiento", ["ingreso", "gasto", "transferencia", "reasignacion"]);
+export const tipoMovimientoEnum = pgEnum("tipo_movimiento", tiposDeMovimiento);
+export const sentidoDeudaEnum = pgEnum("sentido_deuda", ["debo", "me_deben"]);
 export const origenMovimientoEnum = pgEnum("origen_movimiento", ["manual", "telegram", "importado", "binance"]);
 export const tipoReglaEnum = pgEnum("tipo_regla", ["fijo", "porcentaje"]);
 
@@ -118,6 +129,39 @@ export const categorias = pgTable(
   (t) => [uniqueIndex("categorias_tipo_nombre_unico").on(t.tipo, t.nombre)],
 ).enableRLS();
 
+/**
+ * Lo que debo y lo que me deben (spec 005). El pendiente y el estado nunca se guardan: salen del monto inicial y de los
+ * movimientos que apuntan a la deuda (src/lib/deudas.ts). Una deuda no es dinero: no entra en el cuadre de sobres y
+ * cuentas, solo en el patrimonio neto (ADR 0006).
+ */
+export const deudas = pgTable(
+  "deudas",
+  {
+    id: id(),
+    sentido: sentidoDeudaEnum().notNull(),
+    persona: text().notNull(),
+    /** Lo que se debía al registrarla. 0 en un préstamo: lo prestado son sus movimientos. */
+    montoInicialCentavos: centavos().notNull().default(0),
+    fechaPrevista: date({ mode: "string" }),
+    /** Solo en "debo": la cuenta con la que se piensa pagar, para el aviso de liquidez. */
+    cuentaPrevistaId: integer().references(() => cuentas.id),
+    nota: text(),
+    /** "captura-<uuid>-deuda" o "demo-deuda-*": evita registrar dos veces la misma. */
+    referencia: text(),
+    creadoEn: creadoEn(),
+  },
+  (t) => [
+    uniqueIndex("deudas_referencia_unica")
+      .on(t.referencia)
+      .where(sql`${t.referencia} is not null`),
+    check(
+      "deudas_monto_valido",
+      sql`${t.montoInicialCentavos} > 0 or (${t.montoInicialCentavos} = 0 and ${t.sentido}::text = 'me_deben')`,
+    ),
+    check("deudas_cuenta_prevista_solo_debo", sql`${t.cuentaPrevistaId} is null or ${t.sentido}::text = 'debo'`),
+  ],
+).enableRLS();
+
 export const movimientos = pgTable(
   "movimientos",
   {
@@ -139,6 +183,8 @@ export const movimientos = pgTable(
     sobreOrigenId: integer().references(() => sobres.id),
     sobreDestinoId: integer().references(() => sobres.id),
     categoriaId: integer().references(() => categorias.id),
+    /** Solo pagos, préstamos y cobros: la deuda que mueven. */
+    deudaId: integer().references(() => deudas.id),
     nota: text(),
     origen: origenMovimientoEnum().notNull().default("manual"),
     /**
@@ -155,27 +201,38 @@ export const movimientos = pgTable(
     index("movimientos_sobre_origen_idx").on(t.sobreOrigenId),
     index("movimientos_sobre_destino_idx").on(t.sobreDestinoId),
     index("movimientos_categoria_idx").on(t.categoriaId),
+    index("movimientos_deuda_idx").on(t.deudaId),
     uniqueIndex("movimientos_origen_referencia_unico")
       .on(t.origen, t.referenciaExterna)
       .where(sql`${t.referenciaExterna} is not null`),
     check("movimientos_monto_positivo", sql`${t.montoCentavos} > 0 and ${t.montoUsdCentavos} > 0`),
     check(
       "movimientos_forma_por_tipo",
-      sql`case ${t.tipo}
+      sql`case ${t.tipo}::text
         when 'ingreso' then
           ${t.cuentaDestinoId} is not null and ${t.sobreDestinoId} is not null and ${t.categoriaId} is not null
-          and ${t.cuentaOrigenId} is null and ${t.sobreOrigenId} is null
+          and ${t.cuentaOrigenId} is null and ${t.sobreOrigenId} is null and ${t.deudaId} is null
         when 'gasto' then
           ${t.cuentaOrigenId} is not null and ${t.sobreOrigenId} is not null and ${t.categoriaId} is not null
-          and ${t.cuentaDestinoId} is null and ${t.sobreDestinoId} is null
+          and ${t.cuentaDestinoId} is null and ${t.sobreDestinoId} is null and ${t.deudaId} is null
         when 'transferencia' then
           ${t.cuentaOrigenId} is not null and ${t.cuentaDestinoId} is not null
           and ${t.cuentaOrigenId} <> ${t.cuentaDestinoId}
-          and ${t.sobreOrigenId} is null and ${t.sobreDestinoId} is null
+          and ${t.sobreOrigenId} is null and ${t.sobreDestinoId} is null and ${t.deudaId} is null
         when 'reasignacion' then
           ${t.sobreOrigenId} is not null and ${t.sobreDestinoId} is not null
           and ${t.sobreOrigenId} <> ${t.sobreDestinoId}
-          and ${t.cuentaOrigenId} is null and ${t.cuentaDestinoId} is null
+          and ${t.cuentaOrigenId} is null and ${t.cuentaDestinoId} is null and ${t.deudaId} is null
+        when 'pago_deuda' then
+          ${t.cuentaOrigenId} is not null and ${t.sobreOrigenId} is not null and ${t.deudaId} is not null
+          and ${t.cuentaDestinoId} is null and ${t.sobreDestinoId} is null and ${t.categoriaId} is null
+        when 'prestamo' then
+          ${t.cuentaOrigenId} is not null and ${t.sobreOrigenId} is not null and ${t.deudaId} is not null
+          and ${t.cuentaDestinoId} is null and ${t.sobreDestinoId} is null and ${t.categoriaId} is null
+        when 'cobro_prestamo' then
+          ${t.cuentaDestinoId} is not null and ${t.sobreDestinoId} is not null and ${t.deudaId} is not null
+          and ${t.cuentaOrigenId} is null and ${t.sobreOrigenId} is null and ${t.categoriaId} is null
+        else false
       end`,
     ),
   ],
@@ -273,6 +330,12 @@ export const movimientosRelations = relations(movimientos, ({ one }) => ({
     fields: [movimientos.categoriaId],
     references: [categorias.id],
   }),
+  deuda: one(deudas, { fields: [movimientos.deudaId], references: [deudas.id] }),
+}));
+
+export const deudasRelations = relations(deudas, ({ one, many }) => ({
+  cuentaPrevista: one(cuentas, { fields: [deudas.cuentaPrevistaId], references: [cuentas.id] }),
+  movimientos: many(movimientos),
 }));
 
 export const reglasRepartoRelations = relations(reglasReparto, ({ one }) => ({
@@ -297,3 +360,5 @@ export type ReglaReparto = typeof reglasReparto.$inferSelect;
 export type NuevaReglaReparto = typeof reglasReparto.$inferInsert;
 export type PartidaSobre = typeof partidasSobre.$inferSelect;
 export type NuevaPartidaSobre = typeof partidasSobre.$inferInsert;
+export type Deuda = typeof deudas.$inferSelect;
+export type NuevaDeuda = typeof deudas.$inferInsert;

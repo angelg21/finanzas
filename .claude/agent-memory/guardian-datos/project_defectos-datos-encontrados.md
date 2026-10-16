@@ -1,6 +1,6 @@
 ---
 name: defectos-datos-encontrados
-description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en T3 de 003, T4/T5 de 004 (2026-10-14) y 97437d7 (2026-10-15)
+description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en 003, 004, 97437d7 y 005 (cerrados de T6/T7/T13 y la fecha rara, 2026-10-16)
 metadata:
   type: project
 ---
@@ -58,6 +58,47 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
 - Info, en 789fbc6: un sobre en negativo con un tope fuera de rango pierde la marca de negativo.
 - Las conexiones simultáneas pasan de 4 a 6 en `datosDelReparto` y de 5 a 7 en el inicio. La acción del ingreso usa 8 de las 10 que postgres-js abre por defecto. Medirlo junto con el pooler (T15).
 - El nivel se calcula en dos sitios: `sobresConNivel` (SQL) y `/sobres/[id]` (JS). Hoy dan lo mismo.
+
+**Abiertos, nuevos en T5 de 005 (2026-10-15). Info, ninguno bloquea la migración** (ver [[revision-005-deudas]])
+
+- La base no ata el `sentido` de la deuda al tipo del movimiento, ni el sobre (Deudas o "Por asignar"), ni la moneda. Lo tiene que frenar el escritor de T7/T13.
+- Los mapas de `tipo_sobre` son `Record<string>` con un respaldo: tsc no avisa de que falta `deudas`.
+- `deudas` no tiene en la base un tope (`TOPE_REGLA_CENTAVOS`) ni el largo de `persona`; solo los valida `lib`.
+
+**Abiertos, nuevos en T6 de 005 (2026-10-15)** (ver [[revision-005-deudas]])
+
+- **Media.** Una deuda rota (préstamo en una "debo", pago por encima del pendiente, monto mayor que 2^53) hace lanzar a `sobresConNivel` y a `datosDelReparto`, porque `pendienteDe` lanza dentro de `medidasPorSobre`. Se caen el inicio, `/sobres`, `/nuevo/ingreso` y `/sobres/repartir`. La base no lo impide.
+- **Baja.** `consultarDeudas` pasa la fila entera a `pendienteDe`. Con un monto inválido, el error lleva persona y nota a los registros.
+- **Info.**
+  - El nivel de Deudas difiere entre `/sobres` y `/sobres/[id]`.
+  - Conexiones: 9 de 10 en la acción del ingreso.
+  - Con 300 mil filas, `saldosPorCuenta` pasa de 29 a 41 ms.
+
+**Abiertos, nuevos en T7 de 005 (2026-10-15)** (ver [[revision-005-deudas]])
+
+- **Media.** `editarDeuda` hace `.set({ ...cambios })`: un `sentido`, una `referencia` o un `id` que vengan de más se escriben (el tipo `Omit` no lo impide en tiempo de ejecución). Medido: una deuda "debo" con un pago pasó a "me_deben" y su referencia quedó pisada.
+- **Baja.** `pagarDeuda` acepta monto ≠ monto_usd: la cuenta USDT pierde 100 y la deuda baja 50.
+- **Info.** El escritor no valida la cuenta prevista, el id de `registrarDeuda` ni la fecha. Una deuda rota no se arregla editando, porque `deudaPorId` lanza "Pendiente negativo: N", con el monto pero sin persona.
+
+**Abiertos, nuevos en T13 de 005 (2026-10-16)** (ver [[revision-005-deudas]])
+
+- **Media.** `prestar` puede dejar "Por asignar" en negativo. Pasa con un solo préstamo mayor que su saldo (3000 → −10000), y en carrera con `repartirPorAsignar`: 20 de 20 rondas en −200. Repartir y apartar lo protegen con `(3, PA)` y el saldo; prestar no hace ninguna de las dos cosas. El cuadre se mantiene, y `datosDelReparto` y `sobresConNivel` responden.
+- **Info.** `prestar` (igual que `registrarDeuda`) esparce la fila de la deuda en el insert, y un `creadoEn` de más se escribe. Los escritores de deudas no validan la fecha, la tasa ni el monto de destino: un pago con fecha 2099, tasa y 999 VES de destino entra.
+
+**Cerrados en la rama de 005, medidos en /f-review (2026-10-16)**
+
+- T6 media: una deuda rota ya no tumba `sobresConNivel` ni `datosDelReparto`; `cuotaDelMes` da null.
+- T6 baja: `pendienteDe` ya no vuelca la fila en el mensaje (leído).
+- T7 media: `editarDeuda` escribe campo por campo. Medido: el sentido y la referencia de más no se escriben.
+- T7 baja: pagar exige 1 a 1.
+- T13 media: prestar desde "Por asignar" toma `(3, PA)` y vuelve a mirar el saldo. Medido en los dos órdenes: nunca queda en negativo.
+- T13 info: los inserts de deudas van campo por campo.
+
+**Abiertos, nuevos en /f-review de 005 (2026-10-16)** (ver [[revision-005-deudas]])
+
+- **Baja, solo por SQL.** Con una `fecha_prevista` que `esFecha` rechaza (0050-01-01, 10000-01-01, 0044-03-15 BC), `cuotaDeDeudas` lanza fuera del `.catch` de `cuotaDelMes` (`reparto.ts`). Se caen el ingreso con su acción, `/sobres/repartir` con la suya, `/sobres/reglas`, `/deudas` y `/deudas/apartar`. La app lo frena al validar; el escritor de `src/db` no.
+- **Info.** `cuotaDelMes` se traga cualquier error sin registrarlo. `datosDelReparto` abre 9 conexiones y la acción del ingreso llena las 10.
+- **Sigue abierto, decidido en la spec:** desde otro sobre, prestar puede dejarlo en negativo, como un gasto.
 
 **Abiertos de antes**
 

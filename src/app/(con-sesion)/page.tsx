@@ -7,6 +7,7 @@ import { IconoSobre } from "@/components/icono-sobre";
 import { FilaMovimiento } from "@/components/movimiento";
 import { Cifra, EncabezadoTarjeta, FilaLista, Mosaico, Pildora, Tarjeta, TarjetaPalida } from "@/components/ui";
 import { gastadoEsteMes, movimientosRecientes, resumenMensual, saldosPorCuenta } from "@/db/consultas";
+import type { Sobre } from "@/db/schema";
 import { sobresConNivel } from "@/db/sobres";
 import { formatearCentavos, formatearEnteros } from "@/lib/dinero";
 import { diasQueQuedanDelMes, hoyEnCaracas } from "@/lib/fechas";
@@ -16,7 +17,7 @@ import { exigirSesion } from "@/app/sesion";
 
 export const dynamic = "force-dynamic";
 
-const nombreTipoSobre: Record<string, string> = {
+const nombreTipoSobre: Record<Sobre["tipo"], string> = {
   por_asignar: "Por asignar",
   gastos: "Gastos del mes",
   familia: "Apoyo familiar",
@@ -24,6 +25,7 @@ const nombreTipoSobre: Record<string, string> = {
   meta: "Meta",
   inversion: "Inversión",
   fondo: "Fondo de reserva",
+  deudas: "Para pagar deudas",
 };
 
 const nombreTipoCuenta: Record<string, string> = {

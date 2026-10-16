@@ -5,6 +5,7 @@ import {
   referenciaDeCaptura,
   referenciaDeReasignacion,
   resolverReintento,
+  resolverReintentoDeDeuda,
 } from "./captura";
 
 const id = "3f2b8c1e-9a4d-4e6f-8b7a-1c2d3e4f5a6b";
@@ -207,5 +208,78 @@ describe("prefijoDeCaptura: para releer todas las filas de una captura tras un c
   it("solo con un id de captura válido: nada de comodines de LIKE ni textos sueltos", () => {
     for (const texto of ["", "%", "_", `${id}%`, "demo-ing-001"])
       expect(() => prefijoDeCaptura(texto), texto).toThrow();
+  });
+});
+
+describe("referencias de una deuda y su pago (spec 005, criterio 7)", () => {
+  it("el préstamo y el cobro, con el prefijo de la captura (spec 005, criterio 7)", () => {
+    expect(referenciaDeCaptura(id, "prestamo")).toBe(`captura-${id}-prestamo`);
+    expect(referenciaDeCaptura(id, "cobro")).toBe(`captura-${id}-cobro`);
+    expect(referenciaDeCaptura(id, "prestamo").startsWith(prefijoDeCaptura(id))).toBe(true);
+  });
+
+  it("la fila de deudas y el movimiento del pago, distintas y con el prefijo de la captura", () => {
+    expect(referenciaDeCaptura(id, "deuda")).toBe(`captura-${id}-deuda`);
+    expect(referenciaDeCaptura(id, "pago")).toBe(`captura-${id}-pago`);
+    expect(referenciaDeCaptura(id.toUpperCase(), "pago")).toBe(referenciaDeCaptura(id, "pago"));
+    for (const referencia of [referenciaDeCaptura(id, "deuda"), referenciaDeCaptura(id, "pago")]) {
+      expect(referencia.startsWith(prefijoDeCaptura(id)), referencia).toBe(true);
+    }
+  });
+
+  const ahora = new Date("2026-10-15T20:00:00Z");
+  const pago = {
+    tipo: "pago_deuda",
+    fecha: "2026-10-15",
+    montoCentavos: 25_000,
+    moneda: "USDT",
+    montoUsdCentavos: 25_000,
+    montoDestinoCentavos: null,
+    monedaDestino: null,
+    tasa: null,
+    cuentaOrigenId: 1,
+    cuentaDestinoId: null,
+    sobreOrigenId: 8,
+    sobreDestinoId: null,
+    categoriaId: null,
+    deudaId: 3,
+    nota: null,
+  };
+
+  it("un pago a otra deuda con el mismo id y lo demás igual es otra captura", () => {
+    const guardado = { ...pago, creadoEn: new Date(ahora.getTime() - 60_000) };
+    expect(resolverReintento([guardado], [pago], ahora)).toBe("ya-estaba");
+    expect(resolverReintento([guardado], [{ ...pago, deudaId: 4 }], ahora)).toBe("otra");
+  });
+
+  const deuda = {
+    sentido: "debo",
+    persona: "Papás",
+    montoInicialCentavos: 52_000,
+    fechaPrevista: "2026-12-15",
+    cuentaPrevistaId: 1,
+    nota: null,
+  };
+
+  it("la misma deuda, reciente: ya estaba; una nota vacía y una nula son la misma", () => {
+    const guardada = { ...deuda, creadoEn: new Date(ahora.getTime() - 60_000) };
+    expect(resolverReintentoDeDeuda(guardada, deuda, ahora)).toBe("ya-estaba");
+    expect(resolverReintentoDeDeuda(guardada, { ...deuda, nota: "" }, ahora)).toBe("ya-estaba");
+  });
+
+  it("si cambió cualquier campo de la deuda, o es de hace más de 15 minutos, es otra", () => {
+    const guardada = { ...deuda, creadoEn: new Date(ahora.getTime() - 60_000) };
+    for (const cambio of [
+      { sentido: "me_deben" },
+      { persona: "Papá" },
+      { montoInicialCentavos: 52_001 },
+      { fechaPrevista: null },
+      { cuentaPrevistaId: null },
+      { nota: "Diciembre" },
+    ]) {
+      expect(resolverReintentoDeDeuda(guardada, { ...deuda, ...cambio }, ahora), JSON.stringify(cambio)).toBe("otra");
+    }
+    const vieja = { ...deuda, creadoEn: new Date(ahora.getTime() - 16 * 60_000) };
+    expect(resolverReintentoDeDeuda(vieja, deuda, ahora)).toBe("otra");
   });
 });

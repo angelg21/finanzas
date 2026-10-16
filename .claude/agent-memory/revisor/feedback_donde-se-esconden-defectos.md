@@ -27,6 +27,8 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 
 - 004, vuelta 2 (2026-10-15): APTO. Los arreglos (aviso con `onChange` en el `<form>` y `sr-only` en la leyenda) salieron limpios y sin efectos fuera de su pantalla; el autor añadió por su cuenta `nivelParaIcono` (no lanza con medidas fuera de rango) y las rutas nuevas al humo. El desarrollador decidió que "1.200" es 1,20: no reabrirlo.
 
+- 005, vuelta 1 (2026-10-16): APTO. Prestar, cobrar, pagar, apartar, registrar y editar, con JS, sin JS, con Enter, tras error y con el atrás del sistema: todas las filas correctas y Cuadra. Lo que quedó fue de pantalla, otra vez: "Cobro guardado" + "Repartir" siguen a la vista junto al error de un segundo cobro (`?guardado=` en la URL); el aviso de liquidez metido dentro del hero (spec lo ponía después) con rojo sobre `pildora-hero`, contraste ~1,5-2:1; el hero de una deuda pagada dice "vencida hace 15 días"; y un valor por defecto que la spec no pide (apartar preselecciona el primer sobre con saldo si Por asignar está en 0). Punto "por decidir" en la observación 11 sin decidir (prestar deja un sobre en negativo sin aviso).
+
 **Why:** la demo es toda `origen = importado`, así que la lógica que depende de historial `manual` no se ve. La validación en navegador sigue el camino feliz, en un solo momento, y no pasa por un error de validación ni por el paso del tiempo antes de guardar.
 
 **How to apply:**
@@ -45,6 +47,9 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 - Una regla que busca por nombre (`sobreSugerido`, "Binance", "Gastos del mes") se rompe si la misma feature deja renombrar: cruza cada criterio de "editar" con las reglas por nombre.
 - En formularios que muestran "guardado" sin desmontarse (reglas, ajustes): guarda, cambia algo y mira si el éxito sigue diciendo algo que ya no es verdad.
 - Busca en el progress cada "se decide aparte" o "si molesta" y comprueba si la nota de validación lo decidió; si no, dilo en el informe.
+- Si el éxito viaja en `?guardado=`, envía después algo inválido desde la misma pantalla: el éxito y el error conviven.
+- Toda `Pildora tono="negativa"` sobre el hero: mide el contraste (rojo `--negativo` sobre `pildora-hero`); es la primera vez que se usa ahí.
+- Las piezas de estado (plazo, "vence", "vencida") se pintan también cuando la cosa ya está saldada: abre el detalle de una pagada con fecha pasada.
 - Tras un `revert` con "se conservan los demás arreglos": cada pieza conservada se diseñó para el contexto que se fue. Mira si su condición sigue teniendo sentido (un handler que antes servía al dato precargado ahora corre siempre) y ejercítala con un toque real, no con `autoFocus`.
 
 Ver [[entorno-revision-finanzas]].

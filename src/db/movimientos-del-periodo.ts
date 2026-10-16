@@ -7,13 +7,14 @@ import { categorias, movimientos } from "./schema";
 /*
   Lecturas de /movimientos (spec 003): tres consultas por página, todas sobre `movimientos_fecha_idx`. Los rangos y
   la categoría llegan ya validados por `leerFiltros`. Gastos e Ingresos cuentan solo su tipo; las transferencias y
-  las reasignaciones van solo a Mover, porque contarlas sería contar dos veces el mismo dinero (criterio 3).
+  las reasignaciones van solo a Mover, porque contarlas sería contar dos veces el mismo dinero (criterio 3). Pagos,
+  préstamos y cobros de deudas también van a Mover: no son gasto ni ingreso (spec 005, criterio 18).
 */
 
 const tiposDe = {
   gastos: ["gasto"],
   ingresos: ["ingreso"],
-  mover: ["transferencia", "reasignacion"],
+  mover: ["transferencia", "reasignacion", "pago_deuda", "prestamo", "cobro_prestamo"],
 } as const satisfies Record<PestanaMovimientos, readonly (typeof movimientos.$inferSelect.tipo)[]>;
 
 function delPeriodo(pestana: PestanaMovimientos, rango: Rango, categoriaId: number | null) {

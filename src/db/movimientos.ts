@@ -2,6 +2,7 @@ import { and, eq, inArray, like, ne, sql } from "drizzle-orm";
 import { prefijoDeCaptura } from "../lib/captura";
 import { db } from "./index";
 import { type Movimiento, type NuevoMovimiento, movimientos, sobres } from "./schema";
+import { efectoEnSobre } from "./sumas-de-saldo";
 
 /*
   Escritura de movimientos. Los saldos nunca se guardan: se calculan desde estas filas
@@ -9,7 +10,7 @@ import { type Movimiento, type NuevoMovimiento, movimientos, sobres } from "./sc
 */
 
 /** La base o la transacción en curso. */
-type Ejecutor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
+export type Ejecutor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /**
  * Inserta varias filas en una sola sentencia: en Postgres un INSERT es atómico, así que entran todas
@@ -25,7 +26,7 @@ export async function registrarMovimientos(filas: NuevoMovimiento[], ejecutor: E
 }
 
 /** El choque con el índice único de (origen, referencia_externa); drizzle envuelve el error de Postgres en `cause`. */
-function esReferenciaRepetida(error: unknown) {
+export function esReferenciaRepetida(error: unknown) {
   const deLaBase = (error as { cause?: { code?: string; constraint_name?: string } } | null)?.cause;
   return deLaBase?.code === "23505" && deLaBase.constraint_name === "movimientos_origen_referencia_unico";
 }
@@ -61,18 +62,13 @@ export async function registrarCaptura(idCaptura: string, filas: NuevoMovimiento
 }
 
 /** Espacio de los candados del reparto, para no chocar con los del desglose (src/db/fondos.ts). */
-const claveReparto = 3;
+export const claveReparto = 3;
 
 /** Saldo en USD de un sobre, leído dentro de la transacción: las mismas reglas que saldosPorSobre. */
-async function saldoDeSobre(ejecutor: Ejecutor, sobreId: number) {
+export async function saldoDeSobre(ejecutor: Ejecutor, sobreId: number) {
   const [fila] = await ejecutor
     .select({
-      saldo: sql<number>`coalesce(sum(case
-        when ${movimientos.tipo} in ('ingreso', 'reasignacion') and ${movimientos.sobreDestinoId} = ${sobreId}
-          then ${movimientos.montoUsdCentavos}
-        when ${movimientos.tipo} in ('gasto', 'reasignacion') and ${movimientos.sobreOrigenId} = ${sobreId}
-          then -${movimientos.montoUsdCentavos}
-        else 0 end), 0)::bigint`.mapWith(Number),
+      saldo: sql<number>`coalesce(sum(${efectoEnSobre(sobreId)}), 0)::bigint`.mapWith(Number),
     })
     .from(movimientos)
     .where(sql`${movimientos.sobreOrigenId} = ${sobreId} or ${movimientos.sobreDestinoId} = ${sobreId}`);

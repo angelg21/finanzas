@@ -1,0 +1,37 @@
+import { type SQL, type SQLWrapper, inArray, sql } from "drizzle-orm";
+// Import relativo, como movimientos.ts: lo cargan también los scripts de la base.
+import { type Efecto, tiposCon } from "../lib/saldos";
+import { movimientos } from "./schema";
+
+/*
+  Cuánto suma o resta cada movimiento al saldo de un sobre o de una cuenta, para sum(...) en las consultas de saldos
+  (spec 005, criterio 9). Qué tipos mueven cada lado no se repite aquí: sale de efectoDe en src/lib/saldos.ts, la
+  misma regla que saldosTras. Un tipo nuevo entra en todas las sumas a la vez.
+*/
+
+const tipoQue = (lado: keyof Efecto) => inArray(movimientos.tipo, tiposCon(lado));
+
+/** En USD, para el saldo del sobre `sobreId` (una columna o un id). */
+export function efectoEnSobre(sobreId: SQLWrapper | number): SQL {
+  return sql`case
+    when ${tipoQue("entraASobre")} and ${movimientos.sobreDestinoId} = ${sobreId} then ${movimientos.montoUsdCentavos}
+    when ${tipoQue("saleDeSobre")} and ${movimientos.sobreOrigenId} = ${sobreId} then -${movimientos.montoUsdCentavos}
+    else 0 end`;
+}
+
+/** En la moneda de la cuenta: entra lo recibido en su moneda, o el monto si no se indica. */
+export function efectoEnCuenta(cuentaId: SQLWrapper | number): SQL {
+  return sql`case
+    when ${tipoQue("entraACuenta")} and ${movimientos.cuentaDestinoId} = ${cuentaId}
+      then coalesce(${movimientos.montoDestinoCentavos}, ${movimientos.montoCentavos})
+    when ${tipoQue("saleDeCuenta")} and ${movimientos.cuentaOrigenId} = ${cuentaId} then -${movimientos.montoCentavos}
+    else 0 end`;
+}
+
+/** En USD, para el total y la verificación de /cuentas. */
+export function efectoEnCuentaUsd(cuentaId: SQLWrapper | number): SQL {
+  return sql`case
+    when ${tipoQue("entraACuenta")} and ${movimientos.cuentaDestinoId} = ${cuentaId} then ${movimientos.montoUsdCentavos}
+    when ${tipoQue("saleDeCuenta")} and ${movimientos.cuentaOrigenId} = ${cuentaId} then -${movimientos.montoUsdCentavos}
+    else 0 end`;
+}

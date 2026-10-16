@@ -1,5 +1,6 @@
 import {
   Gift,
+  HandCoins,
   HeartHandshake,
   Inbox,
   type LucideIcon,
@@ -9,6 +10,7 @@ import {
   Target,
 } from "lucide-react";
 import { createElement } from "react";
+import type { Sobre } from "@/db/schema";
 import { type NivelDeSobre, type PasoDeSobre, pasoDeSobre } from "@/lib/sobres";
 
 /*
@@ -19,7 +21,7 @@ import { type NivelDeSobre, type PasoDeSobre, pasoDeSobre } from "@/lib/sobres";
   para leerse sobre los dos fondos. Sin hooks: sirve igual en páginas de servidor y en formularios de cliente.
 */
 
-const iconoPorTipo: Record<string, LucideIcon> = {
+const iconoPorTipo: Record<Sobre["tipo"], LucideIcon> = {
   por_asignar: Inbox,
   gastos: ShoppingBasket,
   familia: HeartHandshake,
@@ -27,16 +29,18 @@ const iconoPorTipo: Record<string, LucideIcon> = {
   meta: Target,
   fondo: Gift,
   inversion: Sprout,
+  deudas: HandCoins,
 };
 
-/** El relleno de cada tono del anillo y el color del icono sobre él; rayas y puntos llevan un halo blanco. */
-const tonos: Record<PasoDeSobre, { relleno: string; icono: string; patron?: "rayas" | "puntos" }> = {
+/** El relleno de cada tono del anillo y el color del icono sobre él; las tramas llevan un halo blanco. */
+const tonos: Record<PasoDeSobre, { relleno: string; icono: string; patron?: "rayas" | "puntos" | "rejilla" }> = {
   1: { relleno: "fill-dona-1", icono: "text-white" },
   2: { relleno: "fill-dona-2", icono: "text-dona-1" },
   3: { relleno: "fill-dona-3", icono: "text-dona-5" },
   4: { relleno: "fill-dona-4", icono: "text-white" },
   5: { relleno: "", icono: "text-dona-5", patron: "rayas" },
   6: { relleno: "", icono: "text-dona-5", patron: "puntos" },
+  7: { relleno: "", icono: "text-dona-5", patron: "rejilla" },
 };
 
 const lados = { sm: "size-8", md: "size-11", lg: "size-14" } as const;
@@ -102,7 +106,7 @@ export function IconoSobre({
   const id = `sobre-${clave}-${tamano}`;
   const tono = tonos[pasoDeSobre(tipo)];
   const fondo = superficies[superficie];
-  const Icono = iconoPorTipo[tipo] ?? Target;
+  const Icono = (iconoPorTipo as Partial<Record<string, LucideIcon>>)[tipo] ?? Target;
   // Sin medida, lleno de su color; con ella, hasta su porcentaje. Lleno del todo, la onda queda fuera del cuerpo;
   // vacío, no hay relleno que asome por debajo.
   const porcentaje = nivel.porcentaje ?? 100;
@@ -139,6 +143,11 @@ export function IconoSobre({
           <pattern id={`${id}-puntos`} patternUnits="userSpaceOnUse" width="5" height="5">
             <rect width="5" height="5" className="fill-dona-3" />
             <circle cx="2.5" cy="2.5" r="1.1" className="fill-dona-5" />
+          </pattern>
+        ) : tono.patron === "rejilla" ? (
+          <pattern id={`${id}-rejilla`} patternUnits="userSpaceOnUse" width="5" height="5">
+            <rect width="5" height="5" className="fill-dona-3" />
+            <path d="M0,0.5 H5 M0.5,0 V5" className="stroke-dona-5" strokeWidth={1} fill="none" />
           </pattern>
         ) : null}
       </defs>

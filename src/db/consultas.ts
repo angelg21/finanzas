@@ -2,7 +2,9 @@ import { and, desc, eq, gte, ne, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "./index";
 import { clavesDeMeses, hoyEnCaracas, inicioDeMes } from "@/lib/fechas";
-import { categorias, cuentas, movimientos, partidasSobre, reglasReparto, sobres } from "./schema";
+import { sobreAceptaGasto } from "@/lib/gastos";
+import { categorias, cuentas, deudas, movimientos, partidasSobre, reglasReparto, sobres } from "./schema";
+import { efectoEnCuenta, efectoEnCuentaUsd, efectoEnSobre } from "./sumas-de-saldo";
 
 /** Saldo de cada sobre activo, en centavos de dólar. */
 export async function saldosPorSobre() {
@@ -14,12 +16,7 @@ export async function saldosPorSobre() {
       topeCentavos: sobres.topeCentavos,
       fechaObjetivo: sobres.fechaObjetivo,
       nota: sobres.nota,
-      saldoCentavos: sql<number>`coalesce(sum(case
-        when ${movimientos.tipo} = 'ingreso' and ${movimientos.sobreDestinoId} = ${sobres.id} then ${movimientos.montoUsdCentavos}
-        when ${movimientos.tipo} = 'gasto' and ${movimientos.sobreOrigenId} = ${sobres.id} then -${movimientos.montoUsdCentavos}
-        when ${movimientos.tipo} = 'reasignacion' and ${movimientos.sobreDestinoId} = ${sobres.id} then ${movimientos.montoUsdCentavos}
-        when ${movimientos.tipo} = 'reasignacion' and ${movimientos.sobreOrigenId} = ${sobres.id} then -${movimientos.montoUsdCentavos}
-        else 0 end), 0)::bigint`.mapWith(Number),
+      saldoCentavos: sql<number>`coalesce(sum(${efectoEnSobre(sobres.id)}), 0)::bigint`.mapWith(Number),
     })
     .from(sobres)
     .leftJoin(movimientos, or(eq(movimientos.sobreOrigenId, sobres.id), eq(movimientos.sobreDestinoId, sobres.id)))
@@ -37,19 +34,8 @@ export async function saldosPorCuenta() {
       moneda: cuentas.moneda,
       tipo: cuentas.tipo,
       esPropia: cuentas.esPropia,
-      saldoCentavos: sql<number>`coalesce(sum(case
-        when ${movimientos.tipo} = 'ingreso' and ${movimientos.cuentaDestinoId} = ${cuentas.id} then ${movimientos.montoCentavos}
-        when ${movimientos.tipo} = 'gasto' and ${movimientos.cuentaOrigenId} = ${cuentas.id} then -${movimientos.montoCentavos}
-        when ${movimientos.tipo} = 'transferencia' and ${movimientos.cuentaOrigenId} = ${cuentas.id} then -${movimientos.montoCentavos}
-        when ${movimientos.tipo} = 'transferencia' and ${movimientos.cuentaDestinoId} = ${cuentas.id}
-          then coalesce(${movimientos.montoDestinoCentavos}, ${movimientos.montoCentavos})
-        else 0 end), 0)::bigint`.mapWith(Number),
-      saldoUsdCentavos: sql<number>`coalesce(sum(case
-        when ${movimientos.tipo} = 'ingreso' and ${movimientos.cuentaDestinoId} = ${cuentas.id} then ${movimientos.montoUsdCentavos}
-        when ${movimientos.tipo} = 'gasto' and ${movimientos.cuentaOrigenId} = ${cuentas.id} then -${movimientos.montoUsdCentavos}
-        when ${movimientos.tipo} = 'transferencia' and ${movimientos.cuentaOrigenId} = ${cuentas.id} then -${movimientos.montoUsdCentavos}
-        when ${movimientos.tipo} = 'transferencia' and ${movimientos.cuentaDestinoId} = ${cuentas.id} then ${movimientos.montoUsdCentavos}
-        else 0 end), 0)::bigint`.mapWith(Number),
+      saldoCentavos: sql<number>`coalesce(sum(${efectoEnCuenta(cuentas.id)}), 0)::bigint`.mapWith(Number),
+      saldoUsdCentavos: sql<number>`coalesce(sum(${efectoEnCuentaUsd(cuentas.id)}), 0)::bigint`.mapWith(Number),
     })
     .from(cuentas)
     .leftJoin(movimientos, or(eq(movimientos.cuentaOrigenId, cuentas.id), eq(movimientos.cuentaDestinoId, cuentas.id)))
@@ -130,7 +116,7 @@ export async function reglaDeSobre(sobreId: number) {
   return regla ?? null;
 }
 
-/** Selección base de movimientos con los nombres de cuenta, sobre y categoría ya resueltos. */
+/** Selección base de movimientos con los nombres de cuenta, sobre, categoría y persona de la deuda ya resueltos. */
 export function baseMovimientos() {
   return db
     .select({
@@ -151,13 +137,18 @@ export function baseMovimientos() {
       cuentaDestino: cuentaDestino.nombre,
       sobreOrigen: sobreOrigen.nombre,
       sobreDestino: sobreDestino.nombre,
+      sobreOrigenId: movimientos.sobreOrigenId,
+      sobreDestinoId: movimientos.sobreDestinoId,
+      deudaId: movimientos.deudaId,
+      persona: deudas.persona,
     })
     .from(movimientos)
     .leftJoin(categorias, eq(movimientos.categoriaId, categorias.id))
     .leftJoin(cuentaOrigen, eq(movimientos.cuentaOrigenId, cuentaOrigen.id))
     .leftJoin(cuentaDestino, eq(movimientos.cuentaDestinoId, cuentaDestino.id))
     .leftJoin(sobreOrigen, eq(movimientos.sobreOrigenId, sobreOrigen.id))
-    .leftJoin(sobreDestino, eq(movimientos.sobreDestinoId, sobreDestino.id));
+    .leftJoin(sobreDestino, eq(movimientos.sobreDestinoId, sobreDestino.id))
+    .leftJoin(deudas, eq(movimientos.deudaId, deudas.id));
 }
 
 /** Últimos movimientos de toda la app. */
@@ -196,9 +187,9 @@ export async function categoriasDeGastoPorUso() {
     .orderBy(desc(usos), categorias.orden, categorias.id);
 }
 
-/** Sobres a los que se les puede cargar un gasto, con su saldo: todos los activos menos "Por asignar". */
+/** Sobres a los que se les puede cargar un gasto, con su saldo: los activos menos "Por asignar" y Deudas. */
 export async function sobresParaGasto() {
-  return (await saldosPorSobre()).filter((s) => s.tipo !== "por_asignar");
+  return (await saldosPorSobre()).filter((s) => sobreAceptaGasto(s.tipo));
 }
 
 /** Cuentas que se pueden preseleccionar: propias, activas y en dólares. Nunca la de la prima. */

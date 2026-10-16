@@ -11,8 +11,14 @@ export function esIdCaptura(texto: string): boolean {
   return uuid.test(texto);
 }
 
-/** "captura-<id>-gasto": una por fila, igual en cada reintento. Nunca empieza por "demo-". */
-export function referenciaDeCaptura(id: string, tipo: "gasto" | "transferencia" | "ingreso"): string {
+/**
+ * "captura-<id>-gasto": una por fila, igual en cada reintento. Nunca empieza por "demo-". "deuda" es la fila de la
+ * tabla deudas; las demás, movimientos (spec 005, criterio 7).
+ */
+export function referenciaDeCaptura(
+  id: string,
+  tipo: "gasto" | "transferencia" | "ingreso" | "deuda" | "pago" | "prestamo" | "cobro",
+): string {
   return `captura-${id.toLowerCase()}-${tipo}`;
 }
 
@@ -46,16 +52,33 @@ const camposQueCuentan = [
   "sobreOrigenId",
   "sobreDestinoId",
   "categoriaId",
+  "deudaId",
   "nota",
 ] as const;
 
 type FilaComparable = { [C in (typeof camposQueCuentan)[number]]?: string | number | null };
 
+/** Lo que define una deuda registrada (spec 005, criterio 7). */
+const camposDeDeuda = [
+  "sentido",
+  "persona",
+  "montoInicialCentavos",
+  "fechaPrevista",
+  "cuentaPrevistaId",
+  "nota",
+] as const;
+
+type DeudaComparable = { [C in (typeof camposDeDeuda)[number]]?: string | number | null };
+
 /** Un reintento llega a los segundos; una página vieja con un id ya usado, mucho después. */
 const ventanaDeReintento = 15 * 60_000;
 
-function huella(fila: FilaComparable) {
-  return camposQueCuentan.map((campo) => String(fila[campo] === "" ? null : (fila[campo] ?? null))).join("|");
+function huella<F extends Partial<Record<C, string | number | null>>, C extends string>(campos: readonly C[], fila: F) {
+  return campos.map((campo) => String(fila[campo] === "" ? null : (fila[campo] ?? null))).join("|");
+}
+
+function esReciente(guardada: { creadoEn: Date }, ahora: Date) {
+  return ahora.getTime() - guardada.creadoEn.getTime() <= ventanaDeReintento;
 }
 
 /**
@@ -70,8 +93,18 @@ export function resolverReintento(
   ahora: Date,
 ): "ya-estaba" | "otra" {
   if (guardadas.length === 0 || guardadas.length !== preparadas.length) return "otra";
-  if (guardadas.some((g) => ahora.getTime() - g.creadoEn.getTime() > ventanaDeReintento)) return "otra";
-  const antes = guardadas.map(huella).sort();
-  const ahoraHuellas = preparadas.map(huella).sort();
+  if (!guardadas.every((g) => esReciente(g, ahora))) return "otra";
+  const antes = guardadas.map((g) => huella(camposQueCuentan, g)).sort();
+  const ahoraHuellas = preparadas.map((p) => huella(camposQueCuentan, p)).sort();
   return antes.every((h, i) => h === ahoraHuellas[i]) ? "ya-estaba" : "otra";
+}
+
+/** Como resolverReintento, para la fila de deudas que se registra sola: la misma y reciente es "ya-estaba". */
+export function resolverReintentoDeDeuda(
+  guardada: DeudaComparable & { creadoEn: Date },
+  preparada: DeudaComparable,
+  ahora: Date,
+): "ya-estaba" | "otra" {
+  if (!esReciente(guardada, ahora)) return "otra";
+  return huella(camposDeDeuda, guardada) === huella(camposDeDeuda, preparada) ? "ya-estaba" : "otra";
 }

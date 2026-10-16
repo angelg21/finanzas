@@ -10,6 +10,7 @@ import { Tarjeta } from "@/components/ui";
 import { type Moneda, aCentavos, partesCentavos, unidadDe } from "@/lib/dinero";
 import { esFecha, fechaDesdeAtajo } from "@/lib/fechas";
 import { type ReglaConSaldo, type RecibidoPorMes, camposDePropuesta, recibidoDelMes } from "@/lib/ingresos";
+import { pistaDeCuota } from "@/lib/cuota-deudas";
 import { pistaDeRegla } from "@/lib/reglas";
 import type { NivelDeSobre } from "@/lib/sobres";
 import { registrarConFallas } from "./registrar-con-fallas";
@@ -20,7 +21,13 @@ export type CuentaIngreso = { id: number; nombre: string; moneda: Moneda; esProp
 type Datos = {
   cuentas: CuentaIngreso[];
   categorias: { id: number; nombre: string; icono: string; color: string }[];
-  reglas: (ReglaConSaldo & { nombre: string; tipoSobre: string; nivel: NivelDeSobre })[];
+  reglas: (ReglaConSaldo & {
+    nombre: string;
+    tipoSobre: string;
+    nivel: NivelDeSobre;
+    /** Solo la de Deudas, cuya cuota se calcula (spec 005). */
+    cuota?: { vencimiento: string | null; hoy: string };
+  })[];
   recibidoPorMes: RecibidoPorMes;
   hoy: string;
 };
@@ -225,7 +232,9 @@ function Campos({
           sobreId: r.sobreId,
           nombre: r.nombre,
           icono: <IconoSobre clave={r.sobreId} tipo={r.tipoSobre} nivel={r.nivel} tamano="sm" superficie="palida" />,
-          pista: pistaDeRegla(r, delMes[r.sobreId] ?? 0, r.saldoCentavos),
+          pista: r.cuota
+            ? pistaDeCuota(r.valor, delMes[r.sobreId] ?? 0, r.cuota.vencimiento, r.cuota.hoy)
+            : pistaDeRegla(r, delMes[r.sobreId] ?? 0, r.saldoCentavos),
           valor: asignaciones[r.sobreId] ?? "",
           error: errores.sobres?.[r.sobreId],
         }))}

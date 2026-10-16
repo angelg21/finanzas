@@ -266,18 +266,18 @@ Referencia antes de diseñar: Actual Budget, open source, usa exactamente el mod
 **Bajo demanda, el día que haga falta y no antes**
 
 - Activos manuales con valor y fecha de valoración, cuando compres algo grande.
-- Préstamos a terceros y cuentas por cobrar, y deudas: **la demanda llegó el 15 de octubre de 2026** (deuda con los padres a pagar en diciembre, deuda corta con un amigo, y préstamos hechos a otros). Ver "Deudas y préstamos" más abajo.
+- Préstamos a terceros y cuentas por cobrar, y deudas: **la demanda llegó el 15 de octubre de 2026** (deuda con los padres a pagar en diciembre, deuda corta con un amigo, y préstamos hechos a otros). **Hecho el 16 de octubre de 2026** (feature 005). Ver "Deudas y préstamos" más abajo.
 - Barrido automático de liquidez con API de escritura, cuando lleves seis meses confiando en el código.
 
-**Deudas y préstamos, decidido el 15 de octubre de 2026**
+**Deudas y préstamos, decidido el 15 de octubre de 2026, hecho el 16** (feature 005, ADR 0012)
 
 Un módulo con dos listas: lo que debo y lo que me deben.
 
-- Registro de deuda o préstamo: persona, monto original, saldo pendiente, fecha prevista de pago, nota, estado (abierta, pagada). Cada deuda lleva además la forma de pago prevista: con qué cuenta y moneda se va a pagar (por ejemplo, USDT desde Binance). La lista "me deben" es solo dinero prestado a personas; los cobros pendientes a clientes por trabajo no entran aquí.
-- Sobre "Deudas" de tipo fondo: aparta hoy el dinero que ya se tiene para pagar y recibe una cuota mensual calculada como saldo pendiente entre los meses que faltan hasta la fecha prevista. Lo apartado deja de verse como disponible.
+- Registro de deuda o préstamo: persona, lo que se debe hoy, fecha prevista de pago y nota. El saldo pendiente y el estado (abierta, pagada) no se guardan: salen de lo registrado y de los pagos, préstamos y cobros, como todo saldo de la app. Cada deuda que debo lleva además la cuenta con la que se piensa pagar (por ejemplo, USDT desde Binance). La lista "me deben" es solo dinero prestado a personas; los cobros pendientes a clientes por trabajo no entran aquí.
+- Sobre "Deudas", de un tipo propio (`deudas`), no un fondo: la app lo necesita para cobrarle los pagos y calcularle la cuota. Aparta hoy el dinero que ya se tiene para pagar y recibe en cada reparto una cuota que no se guarda: para cada mes con vencimientos, lo que vence hasta ese mes menos lo apartado al empezar el mes, entre los meses que faltan, al dólar hacia arriba; la cuota es la mayor de esas necesidades. Así cada deuda está lista al empezar el mes de su fecha. Va antes que todas las reglas fijas. Lo apartado deja de verse como disponible.
 - Pago de deuda: movimiento propio, no un gasto. Sale de una cuenta y del sobre Deudas, reduce el saldo de la deuda y no cuenta en el gastado del mes.
 - Préstamo a otro: movimiento propio. Sale de una cuenta y del sobre que el usuario elija, no cuenta como gasto, y crea una cuenta por cobrar con su saldo.
-- Cobro de préstamo: entra a una cuenta y a "Por asignar", como cualquier ingreso, y reduce la cuenta por cobrar.
+- Cobro de préstamo: movimiento propio. Entra a una cuenta y a "Por asignar", que se reparte después, y reduce la cuenta por cobrar. No es un ingreso: no cuenta en lo ganado del mes.
 - Patrimonio neto en la pantalla Cuentas: cuentas, más por cobrar, menos deudas.
 - Aviso de liquidez: si el saldo total alcanza para una deuda pero la cuenta prevista para pagarla no tiene el monto, la pantalla lo dice ("tienes 520 USD, pero en Binance solo 80 USDT"). Caso real: el dinero estaba en la cuenta de EE. UU. y la deuda se pagaba en USDT.
 - Regla de uso escrita en la app: una deuda corta con un amigo se paga antes de repartir el siguiente ingreso; se presta solo lo que se podría regalar sin resentimiento.

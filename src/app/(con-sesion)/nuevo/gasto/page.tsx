@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Pildora } from "@/components/ui";
 import {
   categoriasDeGastoPorUso,
   cuentaPorDefectoParaGasto,
@@ -9,6 +7,7 @@ import {
   sobresParaGasto,
 } from "@/db/consultas";
 import { hoyEnCaracas } from "@/lib/fechas";
+import { SelectorTipo } from "../selector-tipo";
 import { FormularioGasto } from "./formulario-gasto";
 import { exigirSesion } from "@/app/sesion";
 
@@ -43,23 +42,7 @@ export default async function NuevoGasto({ searchParams }: PageProps<"/nuevo/gas
     <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">
       <header className="flex flex-col gap-3 px-1 lg:col-span-12 lg:px-0">
         <h1 className="text-[24px] font-extrabold tracking-tight lg:hidden">Nuevo gasto</h1>
-        <nav aria-label="Tipo de movimiento" className="tarjeta flex w-fit items-center gap-1 rounded-full p-1">
-          <span aria-current="page">
-            <Pildora tono="palida">Gasto</Pildora>
-          </span>
-          <Link
-            href="/nuevo/ingreso"
-            className="rounded-full px-2.5 py-1 text-[12px] font-bold text-texto-2 hover:text-texto"
-          >
-            Ingreso
-          </Link>
-          <Link
-            href="/nuevo?tipo=mover"
-            className="rounded-full px-2.5 py-1 text-[12px] font-bold text-texto-2 hover:text-texto"
-          >
-            Mover
-          </Link>
-        </nav>
+        <SelectorTipo actual="gasto" />
       </header>
 
       <FormularioGasto

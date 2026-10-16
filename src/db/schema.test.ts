@@ -11,7 +11,15 @@ const tablas = Object.values(schema)
 describe("RLS en todas las tablas (spec 002, criterio 9)", () => {
   it("encuentra las tablas del esquema", () => {
     expect(tablas.map((t) => t.name)).toEqual(
-      expect.arrayContaining(["cuentas", "sobres", "categorias", "movimientos", "reglas_reparto", "partidas_sobre"]),
+      expect.arrayContaining([
+        "cuentas",
+        "sobres",
+        "categorias",
+        "movimientos",
+        "reglas_reparto",
+        "partidas_sobre",
+        "deudas",
+      ]),
     );
   });
 

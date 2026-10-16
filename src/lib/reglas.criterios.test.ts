@@ -1,7 +1,8 @@
 /**
- * Criterio ★ 11 de la spec 004 (editar las reglas) en lo que cumplen las funciones puras, escrito desde su texto. Las
- * pruebas de construcción viven en reglas.test.ts. Que guardar sea una transacción, que no toque movimientos y el
- * check de la base (★ 12) los comprueba scripts/comprobar-004.ts.
+ * Criterio ★ 11 de la spec 004 (editar las reglas) y la parte del ★ 12 de la spec 005 que toca a las reglas, en lo que
+ * cumplen las funciones puras, escritos desde su texto. Las pruebas de construcción viven en reglas.test.ts. Que guardar
+ * sea una transacción, que no toque movimientos y el check de la base (★ 12 de la 004) los comprueba
+ * scripts/comprobar-004.ts; que guardarReglas deje fuera a Deudas, scripts/comprobar-005-criterios.ts.
  */
 import { describe, expect, it } from "vitest";
 import { type EntradaRegla, reglaEditable, validarReglas, validarTope } from "./reglas";
@@ -96,5 +97,11 @@ describe("★ 11 · editar las reglas", () => {
     expect(reglaEditable("fondo")).toBe(false);
     expect(reglaEditable("gastos")).toBe(true);
     expect(reglaEditable("emergencia")).toBe(true);
+  });
+});
+
+describe("spec 005, ★ 12 · Deudas no se edita en /sobres/reglas", () => {
+  it("su cuota se calcula en cada reparto: la regla de Deudas no es editable", () => {
+    expect(reglaEditable("deudas")).toBe(false);
   });
 });

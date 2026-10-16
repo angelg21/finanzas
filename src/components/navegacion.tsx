@@ -1,6 +1,18 @@
 "use client";
 
-import { History, House, Landmark, LogOut, Menu, Plus, Tags, Wallet, X, type LucideIcon } from "lucide-react";
+import {
+  HandCoins,
+  History,
+  House,
+  Landmark,
+  LogOut,
+  Menu,
+  Plus,
+  Tags,
+  Wallet,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -15,6 +27,7 @@ const rutas: Ruta[] = [
   { href: "/movimientos", texto: "Movimientos", Icono: History },
   { href: "/sobres", texto: "Sobres", Icono: Wallet },
   { href: "/cuentas", texto: "Cuentas", Icono: Landmark },
+  { href: "/deudas", texto: "Deudas", Icono: HandCoins },
 ];
 
 // El "+" y "Registrar movimiento" abren la captura de gasto, lo más frecuente (spec 001, criterio 15).
@@ -33,8 +46,13 @@ function esActiva(href: string, ruta: string) {
 function tituloDe(ruta: string) {
   if (ruta.startsWith(registrar.href)) return "Nuevo gasto";
   if (ruta.startsWith("/nuevo/ingreso")) return "Nuevo ingreso";
+  if (ruta.startsWith("/nuevo/deuda")) return "Pagar o cobrar";
   if (ruta.startsWith("/sobres/reglas")) return "Reglas de reparto";
   if (ruta.startsWith("/sobres/repartir")) return "Repartir";
+  if (ruta.startsWith("/deudas/nueva")) return "Nueva deuda";
+  if (ruta.startsWith("/deudas/prestar")) return "Prestar";
+  if (ruta.startsWith("/deudas/apartar")) return "Apartar para deudas";
+  if (/^\/deudas\/\d+\/editar/.test(ruta)) return "Editar deuda";
   if (esActiva(registrar.href, ruta)) return registrar.texto;
   return [...rutas, ...secundarias].find((r) => esActiva(r.href, ruta))?.texto ?? nombreApp;
 }

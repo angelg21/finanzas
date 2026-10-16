@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, HandCoins } from "lucide-react";
 import Link from "next/link";
 import { Tarjeta, TituloPagina } from "@/components/ui";
 import { exigirSesion } from "@/app/sesion";
@@ -9,6 +9,7 @@ export const metadata: Metadata = { title: "Registrar" };
 const opciones = [
   { tipo: "gasto", texto: "Gasto", detalle: "Lo más frecuente. En dólares o en bolívares.", Icono: ArrowUpRight },
   { tipo: "ingreso", texto: "Ingreso", detalle: "Cae en Por asignar y propone el reparto.", Icono: ArrowDownLeft },
+  { tipo: "deuda", texto: "Deuda", detalle: "Paga lo que debes o cobra lo que te deben.", Icono: HandCoins },
   { tipo: "mover", texto: "Mover", detalle: "Entre cuentas o entre sobres.", Icono: ArrowLeftRight },
 ] as const;
 
@@ -20,7 +21,7 @@ export default async function Nuevo({ searchParams }: PageProps<"/nuevo">) {
   return (
     <main className="flex flex-col gap-4 lg:gap-5">
       <TituloPagina titulo="Registrar" />
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3 lg:gap-5">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-4 lg:gap-5">
         {opciones.map(({ tipo: t, texto, detalle, Icono }) => {
           const activa = elegido === t;
           return (
@@ -45,7 +46,7 @@ export default async function Nuevo({ searchParams }: PageProps<"/nuevo">) {
       </div>
       <Tarjeta>
         <p className="text-[13px] text-texto-2">
-          Gasto e Ingreso ya tienen su pantalla. Mover llega con la feature de cuentas y transferencias.
+          Gasto, Ingreso y Deuda ya tienen su pantalla. Mover llega con la feature de cuentas y transferencias.
         </p>
       </Tarjeta>
     </main>

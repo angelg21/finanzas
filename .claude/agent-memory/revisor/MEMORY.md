@@ -1,2 +1,2 @@
-- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — "por defecto", key={ronda}, Enter, estado fuera de React, éxito que no se borra, "se decide aparte" sin decidir
-- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, entrar por guion, sin JS, Enter y atrás por CDP, Edge por PID, mayo para fijos
+- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — "por defecto", key={ronda}, Enter, estado fuera de React, éxito que no se borra, contraste en el hero, "se decide aparte" sin decidir
+- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, guion de envío con o sin JS, trampa de "Salir", Edge por PID, hash de migración, guardián en paralelo

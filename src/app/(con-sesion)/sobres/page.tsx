@@ -5,6 +5,7 @@ import { EnlaceBoton } from "@/components/formulario";
 import { GraficaDona, type SegmentoDona } from "@/components/grafica-dona";
 import { IconoSobre } from "@/components/icono-sobre";
 import { Cifra, EncabezadoTarjeta, Pildora, Progreso, Tarjeta, TarjetaPalida, TituloPagina } from "@/components/ui";
+import type { Sobre } from "@/db/schema";
 import { sobresConNivel } from "@/db/sobres";
 import { formatearCentavos, formatearEnteros } from "@/lib/dinero";
 import { pasoDeSobre } from "@/lib/sobres";
@@ -13,7 +14,7 @@ import { exigirSesion } from "@/app/sesion";
 export const metadata: Metadata = { title: "Sobres" };
 export const dynamic = "force-dynamic";
 
-const descripcion: Record<string, string> = {
+const descripcion: Record<Sobre["tipo"], string> = {
   por_asignar: "Dinero que llegó y todavía no tiene trabajo.",
   gastos: "Todo el consumo del mes, ocio incluido.",
   familia: "Apoyo a la familia.",
@@ -21,6 +22,7 @@ const descripcion: Record<string, string> = {
   meta: "Ahorro con monto y fecha.",
   inversion: "Aportes al bróker. Nunca se retira.",
   fondo: "Gastos previsibles pero irregulares. Aporte fijo mensual; lo que sobra se acumula.",
+  deudas: "Lo apartado para pagar lo que debes. Recibe su cuota en cada reparto.",
 };
 
 function fechaCorta(iso: string) {

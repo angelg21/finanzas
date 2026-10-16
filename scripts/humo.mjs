@@ -36,11 +36,19 @@ const conDatos = [
   "/nuevo",
   "/nuevo/gasto",
   "/nuevo/ingreso",
+  "/nuevo/deuda",
+  "/nuevo/deuda?deuda=1",
   "/sobres/repartir",
   "/sobres/reglas",
   "/categorias",
   "/categorias/nueva",
   "/categorias/1",
+  "/deudas",
+  "/deudas/nueva",
+  "/deudas/prestar",
+  "/deudas/apartar",
+  "/deudas/1",
+  "/deudas/1/editar",
   "/ruta-que-no-existe",
 ];
 /** Lo único que responde sin sesión. */
@@ -64,12 +72,22 @@ const conSesion = [
   ["/nuevo", 200],
   ["/nuevo/gasto", 200],
   ["/nuevo/ingreso", 200],
+  ["/nuevo/deuda", 200],
+  // Una deuda que no existe no se elige: la página responde con las listas.
+  ["/nuevo/deuda?deuda=999999", 200],
   ["/sobres/repartir", 200],
   ["/sobres/reglas", 200],
   ["/categorias", 200],
   ["/categorias/nueva", 200],
+  ["/deudas", 200],
+  ["/deudas/nueva", 200],
+  ["/deudas/prestar", 200],
+  ["/deudas/apartar", 200],
   ["/sobres/999999", 404],
   ["/categorias/999999", 404],
+  ["/deudas/999999", 404],
+  ["/deudas/999999/editar", 404],
+  ["/deudas/abc", 404],
 ];
 /** Criterio 14. */
 const cabecerasEsperadas = {

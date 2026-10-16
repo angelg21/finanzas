@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { prefijoDeCaptura, referenciaDeCaptura, referenciaDeReasignacion, resolverReintento } from "./captura";
-import { saldosTras } from "./gastos";
+import { saldosTras } from "./saldos";
 import {
   type AsignacionTecleada,
   type CuentaIngreso,

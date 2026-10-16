@@ -8,6 +8,7 @@ import { TarjetaReparto } from "@/components/reparto";
 import { Cifra, Tarjeta } from "@/components/ui";
 import { formatearCentavos, partesCentavos } from "@/lib/dinero";
 import { type RecibidoPorMes, type ReglaConSaldo, recibidoDelMes } from "@/lib/ingresos";
+import { pistaDeCuota } from "@/lib/cuota-deudas";
 import { pistaDeRegla } from "@/lib/reglas";
 import type { NivelDeSobre } from "@/lib/sobres";
 import { repartirConFallas } from "./repartir-con-fallas";
@@ -15,7 +16,13 @@ import type { ErroresRepartir, EstadoRepartir, ValoresRepartir } from "./valores
 
 type Datos = {
   saldoCentavos: number;
-  reglas: (ReglaConSaldo & { nombre: string; tipoSobre: string; nivel: NivelDeSobre })[];
+  reglas: (ReglaConSaldo & {
+    nombre: string;
+    tipoSobre: string;
+    nivel: NivelDeSobre;
+    /** Solo la de Deudas, cuya cuota se calcula (spec 005). */
+    cuota?: { vencimiento: string | null; hoy: string };
+  })[];
   recibidoPorMes: RecibidoPorMes;
   hoy: string;
 };
@@ -118,7 +125,9 @@ function Campos({
           sobreId: r.sobreId,
           nombre: r.nombre,
           icono: <IconoSobre clave={r.sobreId} tipo={r.tipoSobre} nivel={r.nivel} tamano="sm" superficie="palida" />,
-          pista: pistaDeRegla(r, delMes[r.sobreId] ?? 0, r.saldoCentavos),
+          pista: r.cuota
+            ? pistaDeCuota(r.valor, delMes[r.sobreId] ?? 0, r.cuota.vencimiento, r.cuota.hoy)
+            : pistaDeRegla(r, delMes[r.sobreId] ?? 0, r.saldoCentavos),
           valor: asignaciones[r.sobreId] ?? "",
           error: errores.sobres?.[r.sobreId],
         }))}
