@@ -85,7 +85,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 - [x] Validada en navegador, 2026-10-16
 - [x] Verificada: `pnpm verify` en verde, cada ★ con su prueba (2026-10-16)
 - [x] Revisada: veredicto APTO PARA FUSIONAR (2026-10-16)
-- [ ] Fusionada en `main` el AAAA-MM-DD
+- [x] Fusionada en `main` el 2026-10-16
 
 ## Notas
 
