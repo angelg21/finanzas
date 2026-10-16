@@ -1,6 +1,6 @@
 ---
 name: defectos-datos-encontrados
-description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en T3 de 003, T4/T5 de 004 (2026-10-14) y 97437d7 (2026-10-15)
+description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en 003, 004, 97437d7 y 005 (cerrados de T6/T7/T13 y la fecha rara, 2026-10-16)
 metadata:
   type: project
 ---
@@ -84,6 +84,21 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
 
 - **Media.** `prestar` puede dejar "Por asignar" en negativo. Pasa con un solo préstamo mayor que su saldo (3000 → −10000), y en carrera con `repartirPorAsignar`: 20 de 20 rondas en −200. Repartir y apartar lo protegen con `(3, PA)` y el saldo; prestar no hace ninguna de las dos cosas. El cuadre se mantiene, y `datosDelReparto` y `sobresConNivel` responden.
 - **Info.** `prestar` (igual que `registrarDeuda`) esparce la fila de la deuda en el insert, y un `creadoEn` de más se escribe. Los escritores de deudas no validan la fecha, la tasa ni el monto de destino: un pago con fecha 2099, tasa y 999 VES de destino entra.
+
+**Cerrados en la rama de 005, medidos en /f-review (2026-10-16)**
+
+- T6 media: una deuda rota ya no tumba `sobresConNivel` ni `datosDelReparto`; `cuotaDelMes` da null.
+- T6 baja: `pendienteDe` ya no vuelca la fila en el mensaje (leído).
+- T7 media: `editarDeuda` escribe campo por campo. Medido: el sentido y la referencia de más no se escriben.
+- T7 baja: pagar exige 1 a 1.
+- T13 media: prestar desde "Por asignar" toma `(3, PA)` y vuelve a mirar el saldo. Medido en los dos órdenes: nunca queda en negativo.
+- T13 info: los inserts de deudas van campo por campo.
+
+**Abiertos, nuevos en /f-review de 005 (2026-10-16)** (ver [[revision-005-deudas]])
+
+- **Baja, solo por SQL.** Con una `fecha_prevista` que `esFecha` rechaza (0050-01-01, 10000-01-01, 0044-03-15 BC), `cuotaDeDeudas` lanza fuera del `.catch` de `cuotaDelMes` (`reparto.ts`). Se caen el ingreso con su acción, `/sobres/repartir` con la suya, `/sobres/reglas`, `/deudas` y `/deudas/apartar`. La app lo frena al validar; el escritor de `src/db` no.
+- **Info.** `cuotaDelMes` se traga cualquier error sin registrarlo. `datosDelReparto` abre 9 conexiones y la acción del ingreso llena las 10.
+- **Sigue abierto, decidido en la spec:** desde otro sobre, prestar puede dejarlo en negativo, como un gasto.
 
 **Abiertos de antes**
 

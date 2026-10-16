@@ -1,6 +1,6 @@
 ---
 name: revision-005-deudas
-description: Spec 005 (deudas y préstamos): T5 migración 0005 APTA (sha, mediciones); T6, T7 y T13 APTA CON CAMBIOS (deuda rota tumba inicio; editarDeuda esparcía; prestar deja Por asignar en negativo); qué vigilar en T14 y T15
+description: Spec 005 (deudas y préstamos): T5 migración 0005 APTA (sha, mediciones); T6, T7 y T13 APTA CON CAMBIOS, sus arreglos medidos en /f-review (2026-10-16, SEGURO DE APLICAR); queda la fecha prevista rara que tumba el reparto
 metadata:
   type: project
 ---
@@ -51,5 +51,16 @@ Medido:
 - **Info:** `prestar` esparce `deuda` en el insert, así que un `creadoEn` de más se escribe; el `id` lo frena la base (428C9).
 
 **How to apply (T14 y T15):** comprobar si se corrigió lo de "Por asignar" o si la spec decidió dejarlo. La acción de prestar debe comparar la deuda y el movimiento: el 2026-10-16 ya lo hacía. Herramienta: `e7c92f93…/scratchpad/t13/sonda-t13.mts`.
+
+**Revisión previa a fusionar (/f-review, 2026-10-16, HEAD 553333b): SEGURO DE APLICAR.** Foco: 661261e (T8, `cuotaDelMes`), 7be2f91 (demo), 62aef2d y 3490e63 (`consultas.ts`). Medido en `finanzas_g005_rev*`, ya borradas:
+
+- La 0005 sigue con el hash revisado, y `schema.ts` y `drizzle/` no cambian desde 6370474. `when` del journal = `created_at` aplicado.
+- **Cerrados y medidos:** T6 H1 (una deuda rota deja `cuotaDelMes` en null y el reparto sigue sin Deudas); T7 `editarDeuda` (sentido y referencia ya no se escriben; VES rechazada); T13 H1, con los dos órdenes (repartir primero: 0 de 20 negativos; prestar primero, con el candado retenido: 10 de 10, y repartir ve 2800 y da sinSaldo).
+- **Hallazgo (baja, solo por SQL):** el resguardo de `cuotaDelMes` cubre `deudasConPendiente` pero no `cuotaDeDeudas`. Una `fecha_prevista` que `esFecha` rechaza (años 0001-0099, ≥10000, BC) hace lanzar a `datosDelReparto`: ingreso, repartir, reglas y /deudas. Con 0100-01-01 no lanza.
+- Info: el `.catch(() => null)` se traga cualquier error sin registrarlo. Conexiones: 9 en `datosDelReparto` y 10 de 10 en la acción del ingreso.
+- Una fila vieja de `reglas_reparto` hacia Deudas: el reparto la ignora y `guardarReglas` ni la toca ni la acepta.
+- La captura de gasto con Deudas da "Elige un sobre" con +0 filas, en dólares y vendiendo.
+
+**How to apply:** en 006 o en el importador, si algo escribe `deudas.fecha_prevista`, exigir `esFecha` en la escritura o un check en la base. Cifra de la demo: ver [[prima-en-cuadre]].
 
 Ver también [[defectos-datos-encontrados]] y [[rls-supabase]].

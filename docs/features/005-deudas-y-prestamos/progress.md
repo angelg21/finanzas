@@ -84,7 +84,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 - [x] Construida (todas las tareas con commit), 2026-10-16. La T17 se abrió y se cerró al validar.
 - [x] Validada en navegador, 2026-10-16
 - [x] Verificada: `pnpm verify` en verde, cada ★ con su prueba (2026-10-16)
-- [ ] Revisada: veredicto APTO PARA FUSIONAR
+- [x] Revisada: veredicto APTO PARA FUSIONAR (2026-10-16)
 - [ ] Fusionada en `main` el AAAA-MM-DD
 
 ## Notas
@@ -283,3 +283,14 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
     - `✓ build (8.5 s)`
     - `✓ humo (4.3 s)`
     - `✓ verify:full en verde en 32.0 s. Árbol sellado.`
+- Revisión (2026-10-16): `revisor`, **APTO PARA FUSIONAR** al primer intento, con `pnpm verify --forzar` en verde, los dos guiones de comprobación en verde y los envíos de prestar, cobrar, pagar, apartar, registrar y editar probados en Edge con y sin JS. `guardian-datos`, **SEGURO DE APLICAR** sobre lo que no había visto (`reparto.ts` de la T8, la demo y `consultas.ts` de la T11 y la T17), con la 0005 sin cambios (`99dc3f23…df476e`) y el cuadre de la demo en 524300 = 524300. Ninguno de los hallazgos bloquea:
+  - `/deudas/[id]`: tras guardar, el aviso de `?guardado=` ("Cobro guardado" y "Repartir") sigue a la vista junto al error de un segundo envío, con y sin JS. Es el mismo defecto que el de "Reglas guardadas" en la 004.
+  - `/deudas/[id]`: el aviso de liquidez va dentro del hero, y el rojo de `negativa` sobre `pildora-hero` queda en unos 1,5 a 2,1:1 de contraste. La spec lo pone aparte, después del hero.
+  - `/deudas/[id]`: una deuda pagada con fecha pasada dice "vencida hace 15 días" en el hero; `FilaDeuda` sí dice "pagada".
+  - `/deudas/apartar`: con "Por asignar" en 0 viene elegido el primer sobre con saldo (Gastos del mes). La spec no pide un valor por defecto, `/deudas/prestar` no lo pone, y un apartado todavía no se puede deshacer.
+  - **Sin decidir:** prestar desde un sobre que no es "Por asignar" lo puede dejar en negativo sin aviso (T13 y observación 11).
+  - `borrarDeudaAccion` empieza con `exigirSesion()`; el criterio 20 dice `leerSesion` con su `return`. CLAUDE.md admite las dos.
+  - `cuotaDelMes`: el `.catch` solo cubre la lectura. Una `fecha_prevista` que no pasa `esFecha` (`0050-01-01`, `10000-01-01`, una fecha BC), escrita por SQL, hace lanzar a `cuotaDeDeudas` y tumba `/nuevo/ingreso`, el reparto, `/sobres/reglas`, `/deudas` y `/deudas/apartar`. Desde la app no se llega (`validarDeuda` exige `esFecha`), pero los escritores de `src/db` no lo comprueban; conviene antes del importador.
+  - `cuotaDelMes`: el `.catch(() => null)` se traga cualquier error, también un corte de conexión, sin `registrarFalla`; la propuesta pierde Deudas sin aviso.
+  - Conexiones: `datosDelReparto` abre 9 (eran 7 en la T6), la acción del ingreso llena las 10 de postgres-js y `deudasConPendiente` corre dos veces. Hay que medirlo con el pooler de producción.
+  - La base local quedó en 122 movimientos y 4 deudas, todos `demo-*`, con 6 reglas. `guardian-datos` recargó la demo, así que los ids de las deudas pasaron de 21-24 a 66-69.

@@ -140,4 +140,13 @@ metadata:
   - La salida trae NOTICE de los `drop ... if exists`; se filtran con grep.
 - Mientras reviso, el autor avanza con la tarea siguiente en el mismo árbol: en T13 aparecieron archivos de T14. Revisar `git status` y la hora de modificación al empezar y al terminar.
 
+- **Herramientas de /f-review de 005** (carpeta `085899b3…/scratchpad/`; solo corren en `finanzas_g005_rev*`):
+  - `sonda-rev.mts <base|fecha-rara F|rota|estable|regla-vieja|conexiones>`: cuota, reglas y propuesta de 1.200,00 con `camposDePropuesta`, nivel, `sobresParaGasto` y cuadre;
+  - `orden-prestar.mts`: retiene `(3, PA)` desde otra conexión para que prestar llegue antes que repartir. Sin eso, repartir gana siempre, porque prestar lee el tipo del sobre antes del candado;
+  - `accion-gasto-rev.cts`: `registrarGasto` real;
+  - `conexiones-rev.mts <reparto|accion>`;
+  - `huella-demo.sql`: huella de la demo sin ids, con la deuda por su referencia. Es estable entre la base real y una vacía.
+- **Tras `db:demo:limpiar` + `db:demo` en la base real, cambian los ids**, y con ellos el md5 de `huella-t6.sql`. Para comparar contenido, usar `huella-demo.sql`. Tomar la huella de referencia de nuevo después de recargar.
+- **Mientras reviso, otros corren cosas en la base real** (2026-10-16): hubo dos firmas de `comprobar-005` en el log con 44 s de diferencia, y yo corrí una sola contra la copia. Las secuencias de la real subieron +24/+16 con las tablas idénticas. Además, había 10 conexiones postgres.js abiertas (un servidor de la app). Es esperable: decirlo en el informe y no atribuírmelo sin pruebas.
+
 Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].
