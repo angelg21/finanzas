@@ -94,3 +94,9 @@ Lista viva de las observaciones del usuario sobre la interfaz, lo que se cambió
 **Observación** (15 de octubre de 2026): el avatar de iniciales de los sobres no le gusta; pidió darles vida con algo distinto de los iconos de las categorías, porque los sobres son lo más importante de la app.
 
 **Hecho** el mismo día, como corrección fuera del pipeline por decisión del desarrollador: `IconoSobre`, una funda con muesca del tono de su porción en el anillo, con un icono de línea por tipo, que se llena desde abajo según su saldo. Detalle en `docs/diseno.md`. Queda fuera por ahora: elegir el icono de cada sobre (útil cuando Planes se divida en metas) y llevarlo a las píldoras de sobre de la captura de gasto.
+
+## 11. Deudas y préstamos
+
+**Observación** (15 de octubre de 2026, chat de asesoría): el usuario tiene una deuda con sus padres que pagará en diciembre y otra con un amigo que paga esta semana, y quiere registrar también lo que le deben.
+
+**Decisión de producto**: módulo "Deudas y préstamos", descrito en el plan, sección 6, "Deudas y préstamos". Entra como feature propia con `/f-spec deudas y préstamos` después de cerrar la 004. Puntos clave: sobre "Deudas" de tipo fondo con cuota por fecha; pagos y préstamos como movimientos propios que no cuentan como gasto; cobros a "Por asignar"; patrimonio neto en Cuentas. Caso real al 15 de octubre de 2026: debe 520 USD a sus padres para diciembre y 250 USD a un amigo que solo puede cobrar en USDT por Binance; el dinero existe pero está en la cuenta de EE. UU., así que el amigo se paga cuando llegue el pago del proyecto (atrasado una semana). Le deben 140 USD sin fecha. La lista "me deben" es solo préstamos a personas; el cobro al cliente no entra. Cada deuda guarda la forma de pago prevista y la app avisa cuando el dinero está en la cuenta equivocada.

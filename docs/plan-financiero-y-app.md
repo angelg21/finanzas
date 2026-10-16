@@ -266,9 +266,21 @@ Referencia antes de diseñar: Actual Budget, open source, usa exactamente el mod
 **Bajo demanda, el día que haga falta y no antes**
 
 - Activos manuales con valor y fecha de valoración, cuando compres algo grande.
-- Préstamos a terceros y cuentas por cobrar, la primera vez que prestes.
-- Deudas, si aparece una.
+- Préstamos a terceros y cuentas por cobrar, y deudas: **la demanda llegó el 15 de octubre de 2026** (deuda con los padres a pagar en diciembre, deuda corta con un amigo, y préstamos hechos a otros). Ver "Deudas y préstamos" más abajo.
 - Barrido automático de liquidez con API de escritura, cuando lleves seis meses confiando en el código.
+
+**Deudas y préstamos, decidido el 15 de octubre de 2026**
+
+Un módulo con dos listas: lo que debo y lo que me deben.
+
+- Registro de deuda o préstamo: persona, monto original, saldo pendiente, fecha prevista de pago, nota, estado (abierta, pagada). Cada deuda lleva además la forma de pago prevista: con qué cuenta y moneda se va a pagar (por ejemplo, USDT desde Binance). La lista "me deben" es solo dinero prestado a personas; los cobros pendientes a clientes por trabajo no entran aquí.
+- Sobre "Deudas" de tipo fondo: aparta hoy el dinero que ya se tiene para pagar y recibe una cuota mensual calculada como saldo pendiente entre los meses que faltan hasta la fecha prevista. Lo apartado deja de verse como disponible.
+- Pago de deuda: movimiento propio, no un gasto. Sale de una cuenta y del sobre Deudas, reduce el saldo de la deuda y no cuenta en el gastado del mes.
+- Préstamo a otro: movimiento propio. Sale de una cuenta y del sobre que el usuario elija, no cuenta como gasto, y crea una cuenta por cobrar con su saldo.
+- Cobro de préstamo: entra a una cuenta y a "Por asignar", como cualquier ingreso, y reduce la cuenta por cobrar.
+- Patrimonio neto en la pantalla Cuentas: cuentas, más por cobrar, menos deudas.
+- Aviso de liquidez: si el saldo total alcanza para una deuda pero la cuenta prevista para pagarla no tiene el monto, la pantalla lo dice ("tienes 520 USD, pero en Binance solo 80 USDT"). Caso real: el dinero estaba en la cuenta de EE. UU. y la deuda se pagaba en USDT.
+- Regla de uso escrita en la app: una deuda corta con un amigo se paga antes de repartir el siguiente ingreso; se presta solo lo que se podría regalar sin resentimiento.
 
 ---
 
