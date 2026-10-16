@@ -80,6 +80,11 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
 - **Baja.** `pagarDeuda` acepta monto ≠ monto_usd: la cuenta USDT pierde 100 y la deuda baja 50.
 - **Info.** El escritor no valida la cuenta prevista, el id de `registrarDeuda` ni la fecha. Una deuda rota no se arregla editando, porque `deudaPorId` lanza "Pendiente negativo: N", con el monto pero sin persona.
 
+**Abiertos, nuevos en T13 de 005 (2026-10-16)** (ver [[revision-005-deudas]])
+
+- **Media.** `prestar` puede dejar "Por asignar" en negativo. Pasa con un solo préstamo mayor que su saldo (3000 → −10000), y en carrera con `repartirPorAsignar`: 20 de 20 rondas en −200. Repartir y apartar lo protegen con `(3, PA)` y el saldo; prestar no hace ninguna de las dos cosas. El cuadre se mantiene, y `datosDelReparto` y `sobresConNivel` responden.
+- **Info.** `prestar` (igual que `registrarDeuda`) esparce la fila de la deuda en el insert, y un `creadoEn` de más se escribe. Los escritores de deudas no validan la fecha, la tasa ni el monto de destino: un pago con fecha 2099, tasa y 999 VES de destino entra.
+
 **Abiertos de antes**
 
 - **Baja.** `reglas_reparto.valor` sigue siendo `integer`. Desde 790ee93 lo vigila `cabeEnRegla`: el tope de 21.474.836,47 USD se rechaza con un mensaje y sin escribir.

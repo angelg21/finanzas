@@ -212,6 +212,12 @@ describe("prefijoDeCaptura: para releer todas las filas de una captura tras un c
 });
 
 describe("referencias de una deuda y su pago (spec 005, criterio 7)", () => {
+  it("el préstamo y el cobro, con el prefijo de la captura (spec 005, criterio 7)", () => {
+    expect(referenciaDeCaptura(id, "prestamo")).toBe(`captura-${id}-prestamo`);
+    expect(referenciaDeCaptura(id, "cobro")).toBe(`captura-${id}-cobro`);
+    expect(referenciaDeCaptura(id, "prestamo").startsWith(prefijoDeCaptura(id))).toBe(true);
+  });
+
   it("la fila de deudas y el movimiento del pago, distintas y con el prefijo de la captura", () => {
     expect(referenciaDeCaptura(id, "deuda")).toBe(`captura-${id}-deuda`);
     expect(referenciaDeCaptura(id, "pago")).toBe(`captura-${id}-pago`);

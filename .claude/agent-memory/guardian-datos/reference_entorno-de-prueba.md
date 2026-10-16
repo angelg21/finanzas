@@ -133,4 +133,11 @@ metadata:
   - Las carreras se corren con `Promise.all`, alternando el orden en cada ronda.
   - `comprobar-005` corre sobre una copia con `DATABASE_URL=...5433/<copia>` en la línea. dotenv no la pisa ("injected env (8)").
 
+- **Herramientas de T13 de 005**: `e7c92f93…/scratchpad/t13/sonda-t13.mts`, con las fases `prestar-reintentos|prestar-carrera|todo-o-nada|cobro-carreras|cobro-forma|pa-negativo|errores`.
+  - Solo corre en `finanzas_g005_*`. Limpia por `nota='sonda-t13'` y `persona like 'sonda-t13%'`, y borra su trigger.
+  - Una falla genérica en el insert se inyecta con un trigger `before insert` que lanza según la nota.
+  - `sonda-t7.mts` sigue sirviendo para el pago.
+  - La salida trae NOTICE de los `drop ... if exists`; se filtran con grep.
+- Mientras reviso, el autor avanza con la tarea siguiente en el mismo árbol: en T13 aparecieron archivos de T14. Revisar `git status` y la hora de modificación al empezar y al terminar.
+
 Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].

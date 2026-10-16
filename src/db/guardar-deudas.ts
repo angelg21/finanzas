@@ -1,5 +1,6 @@
 import { and, count, eq, sql } from "drizzle-orm";
 import { puedeApartarDesde } from "../lib/apartado";
+import { puedePrestarDesde } from "../lib/prestamos";
 import { esIdCaptura, referenciaDeCaptura, referenciaDeReasignacion } from "../lib/captura";
 import { type FilaDeuda, montoInicialMinimo } from "../lib/deudas";
 import { deudaPorId } from "./deudas";
@@ -36,6 +37,12 @@ function esDeudaRepetida(error: unknown) {
   return deLaBase?.code === "23505" && deLaBase.constraint_name === "deudas_referencia_unica";
 }
 
+/** Solo los campos de una deuda, uno por uno: lo que llegue de más (un creadoEn, un id) no se escribe (guardian, T13). */
+function columnasDeDeuda(d: FilaDeuda, referencia: string) {
+  const { sentido, persona, montoInicialCentavos, fechaPrevista, cuentaPrevistaId, nota } = d;
+  return { sentido, persona, montoInicialCentavos, fechaPrevista, cuentaPrevistaId, nota, referencia };
+}
+
 /** La cuenta prevista, si la hay, es una cuenta activa en dólares (guardian-datos, T7). */
 async function exigirCuentaPrevista(ejecutor: Ejecutor, cuentaPrevistaId: number | null) {
   if (cuentaPrevistaId === null) return;
@@ -58,10 +65,7 @@ export async function registrarDeuda(
   await exigirCuentaPrevista(db, fila.sentido === "debo" ? fila.cuentaPrevistaId : null);
   const referencia = referenciaDeCaptura(idCaptura, "deuda");
   try {
-    const [nueva] = await db
-      .insert(deudas)
-      .values({ ...fila, referencia })
-      .returning({ id: deudas.id });
+    const [nueva] = await db.insert(deudas).values(columnasDeDeuda(fila, referencia)).returning({ id: deudas.id });
     return { nueva: true, id: nueva.id };
   } catch (error) {
     if (!esDeudaRepetida(error)) throw error;
@@ -109,44 +113,68 @@ export async function borrarDeuda(id: number): Promise<{ ok: true } | { noExiste
   });
 }
 
-/** Que el dinero salga de donde debe: una cuenta activa en dólares, en su moneda, y un sobre activo del tipo dado. */
-async function exigirOrigen(tx: Ejecutor, fila: NuevoMovimiento, tipoSobre: "deudas" | null) {
+/**
+ * Que el dinero salga de donde debe, o entre adonde debe: una cuenta activa en dólares, en su moneda, y un sobre activo
+ * que cumpla `sobreValido` (guardian-datos, T5).
+ */
+async function exigirLado(
+  tx: Ejecutor,
+  fila: NuevoMovimiento,
+  lado: "origen" | "destino",
+  sobreValido: (tipo: string) => boolean,
+) {
+  const cuentaId = (lado === "origen" ? fila.cuentaOrigenId : fila.cuentaDestinoId) ?? 0;
+  const sobreId = (lado === "origen" ? fila.sobreOrigenId : fila.sobreDestinoId) ?? 0;
   const [cuenta] = await tx
     .select({ moneda: cuentas.moneda, activa: cuentas.activa })
     .from(cuentas)
-    .where(eq(cuentas.id, fila.cuentaOrigenId ?? 0));
+    .where(eq(cuentas.id, cuentaId));
   if (!cuenta?.activa || cuenta.moneda === "VES" || cuenta.moneda !== fila.moneda) {
-    throw new Error("El movimiento sale de una cuenta activa en dólares, en su moneda");
+    throw new Error("El movimiento usa una cuenta activa en dólares, en su moneda");
   }
   const [sobre] = await tx
     .select({ tipo: sobres.tipo, activo: sobres.activo })
     .from(sobres)
-    .where(eq(sobres.id, fila.sobreOrigenId ?? 0));
-  if (!sobre?.activo || (tipoSobre !== null && sobre.tipo !== tipoSobre)) {
-    throw new Error("El movimiento sale de un sobre activo que le corresponde");
-  }
+    .where(eq(sobres.id, sobreId));
+  if (!sobre?.activo || !sobreValido(sobre.tipo))
+    throw new Error("El movimiento usa un sobre activo que le corresponde");
 }
 
 type ResultadoMovimiento = { nueva: true } | { nueva: false; guardadas: Movimiento[] };
+type ResultadoSaldo = ResultadoMovimiento | { noExiste: true } | { excede: true; pendienteCentavos: number };
+
+/** Lo que distingue un pago de un cobro: su tipo, su referencia, el sentido de la deuda y por dónde pasa el dinero. */
+const saldos = {
+  pago: {
+    tipo: "pago_deuda",
+    sentido: "debo",
+    lado: "origen",
+    sobreValido: (tipo: string) => tipo === "deudas",
+  },
+  cobro: {
+    tipo: "cobro_prestamo",
+    sentido: "me_deben",
+    lado: "destino",
+    sobreValido: (tipo: string) => tipo === "por_asignar",
+  },
+} as const;
 
 /**
- * Un pago de una deuda que debo (criterios 3 y 6): sale de una cuenta activa en dólares y del sobre Deudas activo, y
- * nunca pasa del pendiente, que se vuelve a calcular con el candado. Si la deuda ya no existe o lo pendiente no
- * alcanza, lo dice para que la acción ponga el error en su campo.
+ * Un pago o un cobro (criterios 3, 5 y 6): con el candado de la deuda, el reintento se reconoce primero y luego el
+ * pendiente se vuelve a calcular; nunca se pasa de él. Solo a una deuda de su sentido, 1 a 1 y por la cuenta y el
+ * sobre que le tocan. Si la deuda ya no existe o lo pendiente no alcanza, lo dice para el error del campo.
  */
-export async function pagarDeuda(
-  idCaptura: string,
-  fila: NuevoMovimiento,
-): Promise<ResultadoMovimiento | { noExiste: true } | { excede: true; pendienteCentavos: number }> {
+async function saldar(idCaptura: string, fila: NuevoMovimiento, cual: keyof typeof saldos): Promise<ResultadoSaldo> {
+  const regla = saldos[cual];
   const deudaId = fila.deudaId;
   const forma =
-    fila.tipo === "pago_deuda" &&
+    fila.tipo === regla.tipo &&
     !!deudaId &&
-    // En dólares, 1 a 1: la cuenta y la deuda bajan lo mismo (guardian-datos, T7).
+    // En dólares, 1 a 1: la cuenta y la deuda cambian lo mismo (guardian-datos, T7).
     fila.montoCentavos === fila.montoUsdCentavos &&
-    fila.referenciaExterna === referenciaDeCaptura(idCaptura, "pago");
+    fila.referenciaExterna === referenciaDeCaptura(idCaptura, cual);
   if (!forma || !deudaId) {
-    throw new Error("Pagar solo admite un pago_deuda 1 a 1 con su deuda y la referencia de la captura");
+    throw new Error(`Solo un ${regla.tipo} 1 a 1 con su deuda y la referencia de la captura`);
   }
   try {
     return await db.transaction(async (tx) => {
@@ -155,17 +183,84 @@ export async function pagarDeuda(
       if (previas.length > 0) return { nueva: false as const, guardadas: previas };
       const deuda = await deudaPorId(deudaId, tx);
       if (!deuda) return { noExiste: true as const };
-      if (deuda.sentido !== "debo") throw new Error("Un pago solo va a una deuda que debo");
+      if (deuda.sentido !== regla.sentido) throw new Error(`Un ${regla.tipo} solo va a una deuda "${regla.sentido}"`);
       if (fila.montoUsdCentavos > deuda.pendienteCentavos) {
         return { excede: true as const, pendienteCentavos: deuda.pendienteCentavos };
       }
-      await exigirOrigen(tx, fila, "deudas");
+      await exigirLado(tx, fila, regla.lado, regla.sobreValido);
       await registrarMovimientos([fila], tx);
       return { nueva: true as const };
     });
   } catch (error) {
     if (!esReferenciaRepetida(error)) throw error;
     return { nueva: false, guardadas: await guardadasDeCaptura(idCaptura) };
+  }
+}
+
+/** Un pago de una deuda que debo: sale de una cuenta en dólares y del sobre Deudas activo. */
+export async function pagarDeuda(idCaptura: string, fila: NuevoMovimiento) {
+  return saldar(idCaptura, fila, "pago");
+}
+
+/** Un cobro de algo que me deben: entra a una cuenta en dólares y a "Por asignar" activo. */
+export async function cobrarPrestamo(idCaptura: string, fila: NuevoMovimiento) {
+  return saldar(idCaptura, fila, "cobro");
+}
+
+/**
+ * Un préstamo (criterio 4): la deuda "me deben" en 0 y el movimiento que sale de la cuenta y el sobre, en una sola
+ * transacción: los dos o ninguno. Un reintento se reconoce por las referencias de la captura antes de escribir; si dos
+ * llegan a la vez, lo frena el índice único. Desde "Por asignar" toma el candado del reparto y no pasa de su saldo, como
+ * apartar: si no, el mismo dinero se repartiría y se prestaría a la vez (guardian-datos, T13). Desde otro sobre, como
+ * un gasto, lo puede dejar en negativo.
+ */
+export async function prestar(
+  idCaptura: string,
+  deuda: FilaDeuda,
+  fila: NuevoMovimiento,
+): Promise<
+  | { nueva: true; deudaId: number }
+  | { nueva: false; deuda: Deuda | null; guardadas: Movimiento[] }
+  | { sinSaldo: true; saldoCentavos: number }
+> {
+  const origen = fila.sobreOrigenId;
+  const forma =
+    esIdCaptura(idCaptura) &&
+    origen != null &&
+    deuda.sentido === "me_deben" &&
+    deuda.montoInicialCentavos === 0 &&
+    deuda.cuentaPrevistaId === null &&
+    fila.tipo === "prestamo" &&
+    fila.deudaId == null &&
+    fila.montoCentavos === fila.montoUsdCentavos &&
+    fila.referenciaExterna === referenciaDeCaptura(idCaptura, "prestamo");
+  if (!forma || origen == null) {
+    throw new Error("Prestar solo admite una deuda me_deben en 0 y un préstamo 1 a 1 de esta captura");
+  }
+  const referencia = referenciaDeCaptura(idCaptura, "deuda");
+  const loGuardado = async (ejecutor: Ejecutor) => {
+    const [guardada] = await ejecutor.select().from(deudas).where(eq(deudas.referencia, referencia));
+    return { nueva: false as const, deuda: guardada ?? null, guardadas: await guardadasDeCaptura(idCaptura, ejecutor) };
+  };
+  try {
+    return await db.transaction(async (tx) => {
+      const [deOrigen] = await tx.select({ tipo: sobres.tipo }).from(sobres).where(eq(sobres.id, origen));
+      const desdePorAsignar = deOrigen?.tipo === "por_asignar";
+      if (desdePorAsignar) await tx.execute(sql`select pg_advisory_xact_lock(${claveReparto}, ${origen})`);
+      const previo = await loGuardado(tx);
+      if (previo.deuda || previo.guardadas.length > 0) return previo;
+      await exigirLado(tx, fila, "origen", puedePrestarDesde);
+      if (desdePorAsignar) {
+        const saldo = await saldoDeSobre(tx, origen);
+        if (fila.montoUsdCentavos > saldo) return { sinSaldo: true as const, saldoCentavos: saldo };
+      }
+      const [nueva] = await tx.insert(deudas).values(columnasDeDeuda(deuda, referencia)).returning({ id: deudas.id });
+      await registrarMovimientos([{ ...fila, deudaId: nueva.id }], tx);
+      return { nueva: true as const, deudaId: nueva.id };
+    });
+  } catch (error) {
+    if (!esDeudaRepetida(error) && !esReferenciaRepetida(error)) throw error;
+    return loGuardado(db);
   }
 }
 

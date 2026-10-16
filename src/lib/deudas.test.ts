@@ -13,6 +13,7 @@ import {
   estadoDe,
   montoInicialMinimo,
   pendienteDe,
+  patrimonioNeto,
   pendientePorSentido,
   prepararPago,
   validarDeuda,
@@ -365,5 +366,15 @@ describe("pendientePorSentido: lo que debo y lo que me deben, abierto", () => {
 
   it("sin deudas, cero y cero", () => {
     expect(pendientePorSentido([])).toEqual({ deboCentavos: 0, meDebenCentavos: 0 });
+  });
+});
+
+describe("patrimonioNeto: cuentas más lo que me deben menos lo que debo (criterio 15)", () => {
+  it("el ejemplo: 1.430,00 en cuentas, 140,00 que me deben y 770,00 que debo dan 800,00", () => {
+    expect(patrimonioNeto({ cuentasCentavos: 143_000, meDebenCentavos: 14_000, deboCentavos: 77_000 })).toBe(80_000);
+  });
+
+  it("puede quedar en negativo", () => {
+    expect(patrimonioNeto({ cuentasCentavos: 10_000, meDebenCentavos: 0, deboCentavos: 25_000 })).toBe(-15_000);
   });
 });

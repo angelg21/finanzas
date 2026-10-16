@@ -48,7 +48,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 - [x] T10 (2026-10-16) · `/deudas/nueva` y `/deudas/[id]/editar`, con un formulario compartido, `SelectorFecha` en su variante `futura` y "Borrar" sin movimientos (criterios 1 y 16).
 - [x] T11 (2026-10-16) · `/deudas/[id]` con el pago, el aviso "Deudas quedará en …", el historial y el aviso de liquidez (criterios 3 y 14). Además, los tipos nuevos en `FilaMovimiento`, en la pestaña Mover y en `/sobres/[id]` (criterio 18).
 - [x] T12 (2026-10-16) · `/deudas/apartar` con su acción (criterio 13).
-- [ ] T13 · "Lo que me deben" (criterios 4, 5, 7 y 15):
+- [x] T13 (2026-10-16) · "Lo que me deben" (criterios 4, 5, 7 y 15):
   - en `src/lib/deudas.ts`, `prepararPrestamo`, `prepararCobro` y `patrimonioNeto`, con sus pruebas, viéndolas fallar primero, y las referencias `-prestamo` y `-cobro`;
   - las escrituras de prestar (deuda y movimiento en una transacción) y cobrar, con candado.
 
@@ -188,3 +188,18 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - La acción reconoce el reintento antes de `prepararApartado`, que ya no ofrecería un origen vaciado por el primer intento. Escribe con `apartarADeudas`, que toma el candado del reparto sobre el origen.
   - Al guardar vuelve a `/deudas` con "Apartado guardado" en el hero.
   - Capturas en los dos anchos y temas.
+- 2026-10-16 · T13:
+  - `prepararPrestamo` y `prepararCobro` están en `src/lib/prestamos.ts`, aparte de `deudas.ts`, que ya rondaba las 230 líneas. `patrimonioNeto` quedó junto a `pendientePorSentido`.
+  - Las referencias `-prestamo` y `-cobro` están en `captura.ts`.
+  - El pago y el cobro comparten `saldar` en `guardar-deudas.ts`: candado `(5, deudaId)`, reintento antes del pendiente, sentido de la deuda, 1 a 1, y la cuenta y el sobre que tocan.
+  - `prestar` guarda la deuda y el movimiento en una transacción. Reconoce el reintento por las dos referencias antes de escribir.
+  - `comprobar-005` cubre:
+    - prestar, también que si el movimiento falla en la base la deuda no queda;
+    - el reintento del préstamo y del cobro;
+    - prestar desde Inversión y prestar de más desde "Por asignar";
+    - cobrar, un cobro de más, dos cobros a la vez y un cobro a lo que debo.
+  - `guardian-datos`: APTA CON CAMBIOS. Probó 10 fallos del préstamo (todo o nada), los reintentos combinados, el mismo id a la vez y las carreras del cobro contra editar, borrar y otro cobro. El pago, tras pasar a `saldar`, da lo mismo que en la T7.
+  - Arreglado del guardián:
+    - H1: `prestar` podía dejar "Por asignar" en negativo, incluso en carrera con un reparto (20 de 20 rondas). Desde "Por asignar" ahora toma el candado del reparto y vuelve a comprobar su saldo después de reconocer el reintento.
+    - H2: los inserts de `prestar` y `registrarDeuda` van campo por campo (`columnasDeDeuda`).
+  - **Punto abierto:** desde otro sobre, un préstamo se guarda aunque lo deje en negativo, como un gasto. La spec no lo decide.

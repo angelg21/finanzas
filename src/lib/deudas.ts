@@ -45,6 +45,11 @@ export function pendientePorSentido(lista: { sentido: SentidoDeuda; pendienteCen
   return { deboCentavos: total("debo"), meDebenCentavos: total("me_deben") };
 }
 
+/** Cuentas + lo que me deben − lo que debo (criterio 15). No entra en el cuadre de sobres y cuentas. */
+export function patrimonioNeto(t: { cuentasCentavos: number; meDebenCentavos: number; deboCentavos: number }): number {
+  return t.cuentasCentavos + t.meDebenCentavos - t.deboCentavos;
+}
+
 /**
  * El monto inicial más bajo que no deja el pendiente en negativo (criterio 16): en "debo", lo ya pagado y nunca menos
  * de 0,01, que exige la base; en "me deben", lo cobrado menos lo prestado, y nunca menos de cero.
@@ -79,7 +84,7 @@ export type ErroresDeuda = Partial<Record<"persona" | "monto" | "fechaPrevista" 
 export type DeudaValidada = { ok: true; deuda: FilaDeuda } | { ok: false; errores: ErroresDeuda };
 
 const largoPersona = 80;
-const sinCuentaEnDolares = "Elige una cuenta en dólares";
+export const sinCuentaEnDolares = "Elige una cuenta en dólares";
 
 /** El monto que exige la base para una deuda nueva o editada, o el mensaje de su campo. */
 function leerMontoInicial(texto: string, minimo: number, sentido: SentidoDeuda, movido?: MovidoDeuda): number | string {
@@ -151,7 +156,7 @@ export function avisoDelSobreDeudas(saldoCentavos: number, montoCentavos: number
 /** Un movimiento de deudas listo para insertar, con la forma que exige el check por tipo (criterio 8). */
 export type FilaMovimientoDeuda = {
   fecha: string;
-  tipo: "pago_deuda";
+  tipo: "pago_deuda" | "cobro_prestamo";
   montoCentavos: number;
   moneda: Moneda;
   montoUsdCentavos: number;
@@ -173,8 +178,8 @@ export type DeudaParaSaldar = { id: number; sentido: SentidoDeuda; pendienteCent
 export type ErroresPago = Partial<Record<"monto" | "cuenta" | "fecha" | "deuda", string>>;
 export type PagoPreparado = { ok: true; fila: FilaMovimientoDeuda } | { ok: false; errores: ErroresPago };
 
-/** De 0,01 al pendiente, o el mensaje del campo (criterio 6). */
-function leerMontoHastaPendiente(texto: string, pendiente: number): number | string {
+/** De 0,01 al pendiente, o el mensaje del campo (criterio 6). Lo comparten el pago y el cobro. */
+export function leerMontoHastaPendiente(texto: string, pendiente: number): number | string {
   if (texto.trim() === "") return "Escribe el monto";
   try {
     const centavos = aCentavos(texto);

@@ -23,6 +23,7 @@ import { exigirBaseLocal } from "../src/lib/destino-base";
 import { type FilaDeuda, prepararPago, validarDeuda } from "../src/lib/deudas";
 import { hoyEnCaracas, inicioDeMes } from "../src/lib/fechas";
 import { proponerReparto } from "../src/lib/reparto";
+import { prepararCobro, prepararPrestamo } from "../src/lib/prestamos";
 import { saldosTras } from "../src/lib/saldos";
 
 const REFERENCIA = "demo-comprobar-005";
@@ -65,7 +66,7 @@ async function main() {
   const { saldosPorCuenta, saldosPorSobre } = await import("../src/db/consultas");
   const { deudaPorId, sobreDeudas } = await import("../src/db/deudas");
   const { cuotaDelMes, datosDelReparto } = await import("../src/db/reparto");
-  const { apartarADeudas, borrarDeuda, editarDeuda, pagarDeuda, registrarDeuda } =
+  const { apartarADeudas, borrarDeuda, cobrarPrestamo, editarDeuda, pagarDeuda, prestar, registrarDeuda } =
     await import("../src/db/guardar-deudas");
 
   const movimientosNuestros = or(
@@ -451,6 +452,158 @@ async function main() {
       !!cuota && aDeudas === Math.min(120_000, Math.max(0, cuota.cuotaCentavos - recibidoDeudas)),
       `${aDeudas}`,
     );
+
+    // ★ 4, 5 y 7 · prestar guarda la deuda y el movimiento juntos; cobrar entra a la cuenta y a Por asignar
+    const porAsignar = inicial.sobres.find((s) => s.tipo === "por_asignar");
+    if (!porAsignar) throw new Error("Falta Por asignar: corre pnpm db:seed");
+    const idPrestamo = idDePrueba();
+    const preparadoPrestamo = prepararPrestamo(
+      {
+        persona: "Luis (comprobar-005)",
+        monto: "80",
+        fecha: "hoy",
+        fechaPrevista: "",
+        nota: "",
+        cuenta: binanceDeuda,
+        sobreOrigenId: origen.id,
+      },
+      inicial.sobres,
+      hoy,
+    );
+    if (!preparadoPrestamo.ok) throw new Error(`prepararPrestamo rechazó: ${Object.keys(preparadoPrestamo.errores)}`);
+    const filaPrestamo = { ...preparadoPrestamo.fila, referenciaExterna: referenciaDeCaptura(idPrestamo, "prestamo") };
+    const antesDelPrestamo = await estado();
+    const rPrestamo = await prestar(idPrestamo, preparadoPrestamo.deuda, filaPrestamo);
+    const trasPrestamo = await estado();
+    const luis = "deudaId" in rPrestamo ? await deudaPorId(rPrestamo.deudaId) : null;
+    comprobar(
+      "4",
+      "prestar 80,00 guarda la deuda y el movimiento: la cuenta y el sobre bajan, y se deben 80,00",
+      "deudaId" in rPrestamo &&
+        trasPrestamo.filas === antesDelPrestamo.filas + 1 &&
+        trasPrestamo.cuantasDeudas === antesDelPrestamo.cuantasDeudas + 1 &&
+        cuentaDe(trasPrestamo, binance.id) === cuentaDe(antesDelPrestamo, binance.id) - 8_000 &&
+        saldoDe(trasPrestamo, origen.id) === saldoDe(antesDelPrestamo, origen.id) - 8_000 &&
+        luis?.pendienteCentavos === 8_000 &&
+        trasPrestamo.cuadra,
+      cuadra(trasPrestamo),
+    );
+    const rePrestamo = await prestar(idPrestamo, preparadoPrestamo.deuda, filaPrestamo);
+    const prestamoYaEstaba =
+      "deuda" in rePrestamo &&
+      rePrestamo.deuda !== null &&
+      resolverReintentoDeDeuda(rePrestamo.deuda, preparadoPrestamo.deuda, new Date()) === "ya-estaba" &&
+      resolverReintento(rePrestamo.guardadas, [{ ...filaPrestamo, deudaId: rePrestamo.deuda.id }], new Date()) ===
+        "ya-estaba";
+    comprobar("7", 'el reintento del préstamo no duplica y es "ya estaba"', prestamoYaEstaba);
+    // Desde Por asignar, nunca más que su saldo: el mismo dinero no se reparte y se presta a la vez (guardian, T13).
+    const idDeMas = idDePrueba();
+    const saldoPorAsignar = saldoDe(await estado(), porAsignar.id);
+    const prestamoDeMas = await prestar(idDeMas, preparadoPrestamo.deuda, {
+      ...filaPrestamo,
+      sobreOrigenId: porAsignar.id,
+      montoCentavos: Math.max(saldoPorAsignar, 0) + 1,
+      montoUsdCentavos: Math.max(saldoPorAsignar, 0) + 1,
+      referenciaExterna: referenciaDeCaptura(idDeMas, "prestamo"),
+    });
+    comprobar(
+      "4",
+      "prestar desde Por asignar un centavo más que su saldo se rechaza dentro del candado",
+      "sinSaldo" in prestamoDeMas && prestamoDeMas.saldoCentavos === saldoPorAsignar,
+      `${saldoPorAsignar}`,
+    );
+    // Todo o nada: un movimiento que la base rechaza (un préstamo con destino) se lleva la deuda con él.
+    const idMitad = idDePrueba();
+    const antesDeMitad = await estado();
+    const mitad = await codigoDe(() =>
+      prestar(idMitad, preparadoPrestamo.deuda, {
+        ...filaPrestamo,
+        sobreDestinoId: porAsignar.id,
+        referenciaExterna: referenciaDeCaptura(idMitad, "prestamo"),
+      }),
+    );
+    const trasMitad = await estado();
+    comprobar(
+      "7",
+      "si el movimiento del préstamo falla en la base, la deuda tampoco queda",
+      mitad === "23514" &&
+        trasMitad.cuantasDeudas === antesDeMitad.cuantasDeudas &&
+        trasMitad.filas === antesDeMitad.filas,
+      mitad,
+    );
+    const idInversion2 = idDePrueba();
+    const desdeInversion2 = await lanza(() =>
+      prestar(idInversion2, preparadoPrestamo.deuda, {
+        ...filaPrestamo,
+        sobreOrigenId: inversion.id,
+        referenciaExterna: referenciaDeCaptura(idInversion2, "prestamo"),
+      }),
+    );
+    comprobar("4", "prestar desde Inversión lo frena la escritura", desdeInversion2);
+
+    if (!luis) throw new Error("El préstamo no quedó");
+    const cobro = (id: string, monto: string) => {
+      const r = prepararCobro({ monto, fecha: "hoy", nota: "", cuenta: binanceDeuda }, luis, porAsignar.id, hoy);
+      if (!r.ok) throw new Error(`prepararCobro rechazó ${monto}: ${Object.keys(r.errores)}`);
+      return { ...r.fila, referenciaExterna: referenciaDeCaptura(id, "cobro") };
+    };
+    const idCobro = idDePrueba();
+    const antesDelCobro = await estado();
+    const filaCobro = cobro(idCobro, "30");
+    const rCobro = await cobrarPrestamo(idCobro, filaCobro);
+    const trasCobro = await estado();
+    comprobar(
+      "5",
+      "cobrar 30,00 suma a la cuenta y a Por asignar, y quedan 50,00",
+      "nueva" in rCobro &&
+        rCobro.nueva &&
+        cuentaDe(trasCobro, binance.id) === cuentaDe(antesDelCobro, binance.id) + 3_000 &&
+        saldoDe(trasCobro, porAsignar.id) === saldoDe(antesDelCobro, porAsignar.id) + 3_000 &&
+        (await pendienteDe(luis.id)) === 5_000 &&
+        trasCobro.cuadra,
+      cuadra(trasCobro),
+    );
+    const reCobro = await cobrarPrestamo(idCobro, filaCobro);
+    comprobar(
+      "7",
+      'el reintento del cobro no duplica y es "ya estaba"',
+      "nueva" in reCobro &&
+        !reCobro.nueva &&
+        resolverReintento(reCobro.guardadas, [filaCobro], new Date()) === "ya-estaba",
+    );
+    const idCobroDeMas = idDePrueba();
+    const cobroDeMas = await cobrarPrestamo(idCobroDeMas, {
+      ...filaCobro,
+      montoCentavos: 5_001,
+      montoUsdCentavos: 5_001,
+      referenciaExterna: referenciaDeCaptura(idCobroDeMas, "cobro"),
+    });
+    comprobar(
+      "6",
+      "un cobro de 50,01 sobre 50,00 pendientes se rechaza",
+      "excede" in cobroDeMas && cobroDeMas.pendienteCentavos === 5_000,
+    );
+    const [idC1, idC2] = [idDePrueba(), idDePrueba()];
+    const [rC1, rC2] = await Promise.all([
+      cobrarPrestamo(idC1, cobro(idC1, "40")),
+      cobrarPrestamo(idC2, cobro(idC2, "40")),
+    ]);
+    comprobar(
+      "6",
+      "dos cobros de 40,00 a la vez sobre 50,00: uno entra y el otro no",
+      [rC1, rC2].filter((r) => "nueva" in r && r.nueva).length === 1 &&
+        [rC1, rC2].filter((r) => "excede" in r).length === 1,
+      `${await pendienteDe(luis.id)} pendientes`,
+    );
+    const idCobroMal = idDePrueba();
+    const cobroADeuda = await lanza(() =>
+      cobrarPrestamo(idCobroMal, {
+        ...filaCobro,
+        deudaId: papas,
+        referenciaExterna: referenciaDeCaptura(idCobroMal, "cobro"),
+      }),
+    );
+    comprobar("5", "un cobro a una deuda que debo lo frena la escritura", cobroADeuda);
 
     // ★ 9 · las sumas de SQL son las de saldosTras, con todos los tipos en la base
     comprobar("9", "las sumas de SQL son iguales a saldosTras sobre todas las filas", await sqlIgualASaldosTras());

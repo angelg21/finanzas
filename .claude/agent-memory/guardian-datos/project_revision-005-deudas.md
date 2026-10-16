@@ -1,6 +1,6 @@
 ---
 name: revision-005-deudas
-description: Spec 005 (deudas y préstamos): T5 migración 0005 APTA (sha, mediciones); T6 APTA CON CAMBIOS (deuda rota tumba inicio y reparto); qué vigilar en T7, T8, T9, T11, T13 y T14
+description: Spec 005 (deudas y préstamos): T5 migración 0005 APTA (sha, mediciones); T6, T7 y T13 APTA CON CAMBIOS (deuda rota tumba inicio; editarDeuda esparcía; prestar deja Por asignar en negativo); qué vigilar en T14 y T15
 metadata:
   type: project
 ---
@@ -43,5 +43,13 @@ Medido:
 **How to apply (T8, T10 a T14):** comprobar que `editarDeuda` arme el `set` campo por campo. En T11/T12, la acción tiene que buscar el reintento ANTES de `prepararPago` o `prepararApartado`: los dos rechazan una deuda pagada o un origen en 0, y dirían error en vez de "ya estaba". En T13, que el cobro tome `(5, deudaId)`, y que nadie tome `(3, x)` y `(5, y)` en órdenes distintos.
 
 **How to apply (T7, T8, T9, T11, T13 y T14):** comprobar que se corrigió lo de arriba. En T8, la cuota tampoco puede tumbar el reparto. En T14, el patrimonio de `/cuentas` usará `deudasConPendiente`: el mismo riesgo. `pasos` de `lib/sobres.ts` sigue siendo `Record<string>` sin `deudas` (T9). `/sobres/[id]` no pasa `debidoCentavos` (T11). Hasta la T8, Deudas sale como editable en `/sobres/reglas`, y también se ofrece en la captura de gasto.
+
+**T13 (préstamo y cobro; `pagarDeuda` pasa a `saldar`), sin commit: APTA CON CAMBIOS (2026-10-16).** Medido en `finanzas_g005_t13`, ya borrada; la real quedó con la misma huella.
+
+- **Bien:** préstamo todo o nada: 10 fallos (23514, P0001 por trigger, validaciones) dejan +0. Reintentos: solo lo idéntico da "ya-estaba", combinando `resolverReintentoDeDeuda` y `resolverReintento` con `deudaId`; el id de un registrar o de un gasto da "otra". Mismo id a la vez: 15/15 una sola. En vuelo: espera ~1 s. Cobro contra cobro, editar y borrar: 0 negativos y 0 huérfanos. Los casos de pago de T7 dan igual; solo cambian los textos de los mensajes.
+- **Hallazgo (media):** `prestar` no mira el saldo del origen ni toma `(3, origen)`. Es el único escritor que deja "Por asignar" en negativo: con un préstamo mayor que el saldo, o en carrera con repartir (20 de 20 rondas). El cuadre se mantiene y nada se cae.
+- **Info:** `prestar` esparce `deuda` en el insert, así que un `creadoEn` de más se escribe; el `id` lo frena la base (428C9).
+
+**How to apply (T14 y T15):** comprobar si se corrigió lo de "Por asignar" o si la spec decidió dejarlo. La acción de prestar debe comparar la deuda y el movimiento: el 2026-10-16 ya lo hacía. Herramienta: `e7c92f93…/scratchpad/t13/sonda-t13.mts`.
 
 Ver también [[defectos-datos-encontrados]] y [[rls-supabase]].

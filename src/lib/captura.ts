@@ -17,7 +17,7 @@ export function esIdCaptura(texto: string): boolean {
  */
 export function referenciaDeCaptura(
   id: string,
-  tipo: "gasto" | "transferencia" | "ingreso" | "deuda" | "pago",
+  tipo: "gasto" | "transferencia" | "ingreso" | "deuda" | "pago" | "prestamo" | "cobro",
 ): string {
   return `captura-${id.toLowerCase()}-${tipo}`;
 }
