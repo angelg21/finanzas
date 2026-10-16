@@ -57,7 +57,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 - [x] Validada en navegador (2026-10-15)
 - [x] Verificada: `pnpm verify` en verde, cada ★ con su prueba (2026-10-15)
 - [x] Revisada: veredicto APTO PARA FUSIONAR (2026-10-15)
-- [ ] Fusionada en `main` el AAAA-MM-DD
+- [x] Fusionada en `main` el 2026-10-15
 
 ## Notas
 
@@ -122,3 +122,5 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - Con una partida de 2^62×4, `/sobres/18` lanza en `aporteMensualCentavos` (de antes de 97437d7).
   - `nivelParaIcono` descarta todo el nivel si una medida está fuera de rango, también la marca de negativo.
   - La suma en `numeric` cuesta unos 15 ms más con 200 mil partidas; con las de verdad, nada.
+- Fusión (2026-10-15): `pnpm verify --forzar` en verde justo antes (`✓ verify:full en verde en 28.3 s. Árbol sellado.`), y el desarrollador confirmó que leyó el diff entero. El commit de formato de la memoria del guardián se unió a la segunda vuelta; los arreglos de la revisión siguen con los hashes que se citan arriba. El plan y las observaciones quedaron al día en T11.
+  - **Pendiente en producción:** antes o justo después del despliegue, el desarrollador corre `pnpm db:migrate:produccion` con la migración `0004_fluffy_the_hood`, con las dos consultas de la nota de T4. Sin el check, la app funciona igual; solo falta esa defensa.
