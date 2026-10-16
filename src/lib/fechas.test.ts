@@ -4,6 +4,7 @@ import {
   clavesDeMeses,
   diaAnterior,
   diaYMes,
+  diasEntre,
   diasQueQuedanDelMes,
   esFecha,
   etiquetaFecha,
@@ -113,6 +114,13 @@ describe("moverMes", () => {
 describe("nombres de fechas en español", () => {
   it("nombreMes", () => {
     expect(nombreMes(10)).toBe("Octubre");
+  });
+  it("diasEntre cuenta días de calendario, cruzando meses y años, con signo", () => {
+    expect(diasEntre("2026-10-15", "2026-10-18")).toBe(3);
+    expect(diasEntre("2026-10-15", "2026-10-15")).toBe(0);
+    expect(diasEntre("2026-10-15", "2026-10-13")).toBe(-2);
+    expect(diasEntre("2026-12-30", "2027-01-02")).toBe(3);
+    expect(diasEntre("2026-02-27", "2026-03-01")).toBe(2);
   });
   it("diaYMes, para una fecha prevista: 22 oct", () => {
     expect(diaYMes("2026-10-22")).toBe("22 oct");

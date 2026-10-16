@@ -42,7 +42,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - la pista en `TarjetaReparto`;
   - `/sobres/reglas` la muestra en solo lectura;
   - `reglaEditable` y `guardarReglas` la dejan fuera.
-- [ ] T9 · `/deudas` en móvil y escritorio, con hero, regla de uso, Debo y avisos (criterios 10, 14, 17 y 21):
+- [x] T9 (2026-10-16) · `/deudas` en móvil y escritorio, con hero, regla de uso, Debo y avisos (criterios 10, 14, 17 y 21):
   - "Deudas" en el menú y en `tituloDe`;
   - el tono nuevo y el icono de `IconoSobre` para `deudas`, con su prueba de paleta.
 - [ ] T10 · `/deudas/nueva` y `/deudas/[id]/editar`, con un formulario compartido, `SelectorFecha` en su variante `futura` y "Borrar" sin movimientos (criterios 1 y 16).
@@ -146,3 +146,12 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - Se agregaron `diaYMes` ("22 oct") y `formatearCifraCorta`, que `reglas.ts` ya usaba en privado.
   - `comprobar-005` cubre el criterio 12 contra la base: la regla de Deudas va primero con la cuota (453,00 en la corrida, que cuadra con la cuenta a mano), sin fila en `reglas_reparto`, y propone la cuota menos lo recibido.
   - Límite conocido: la cuota es la del mes de hoy. Un ingreso con fecha del mes anterior le resta lo recibido en ese mes, como a los fijos. Es un caso raro y no se trata.
+- 2026-10-16 · T9:
+  - `/deudas` muestra el hero (lo que debo, lo apartado, la cuota del mes, lo que me deben y tres mosaicos), la regla de uso y la tarjeta Debo. Cada deuda lleva su plazo (`src/lib/plazos.ts`), su cuenta prevista y el aviso de liquidez debajo; las pagadas van en un `<details>`.
+  - Sin sobre Deudas activo, el hero lo dice y no ofrece Apartar.
+  - "Deudas" está en el menú, con `HandCoins`, después de Cuentas. `tituloDe` nombra las subrutas.
+  - Tono de Deudas: el paso 7, una rejilla de pino sobre blanco en el anillo, la leyenda y `IconoSobre`. La prueba `paleta-sobres.test.ts` comprueba el contraste del pino sobre el blanco en los dos temas, y `sobres.test.ts` que cada tipo tiene un paso distinto.
+  - Capturas en los dos anchos y temas, con la demo: cuota de octubre 310,00 (150 de Andrés menos 50 apartados en octubre; (670 − 50) / 2 en diciembre), me deben 190,00, y el aviso "Tienes 5.243,00 USD, pero en Efectivo solo 100,00 USD" bajo Papás.
+  - La píldora `negativa` sobre la tarjeta blanca se lee como una línea roja con su icono: su fondo es el del hero. Queda así, porque es la pieza que pide la spec.
+  - La demo de deudas (criterio 22) se adelantó de la T15 para poder mirar las pantallas con datos.
+  - Docker Desktop estaba apagado al retomar la sesión; se volvió a levantar y la base estaba intacta.

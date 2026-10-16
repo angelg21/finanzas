@@ -32,14 +32,15 @@ const iconoPorTipo: Record<Sobre["tipo"], LucideIcon> = {
   deudas: HandCoins,
 };
 
-/** El relleno de cada tono del anillo y el color del icono sobre él; rayas y puntos llevan un halo blanco. */
-const tonos: Record<PasoDeSobre, { relleno: string; icono: string; patron?: "rayas" | "puntos" }> = {
+/** El relleno de cada tono del anillo y el color del icono sobre él; las tramas llevan un halo blanco. */
+const tonos: Record<PasoDeSobre, { relleno: string; icono: string; patron?: "rayas" | "puntos" | "rejilla" }> = {
   1: { relleno: "fill-dona-1", icono: "text-white" },
   2: { relleno: "fill-dona-2", icono: "text-dona-1" },
   3: { relleno: "fill-dona-3", icono: "text-dona-5" },
   4: { relleno: "fill-dona-4", icono: "text-white" },
   5: { relleno: "", icono: "text-dona-5", patron: "rayas" },
   6: { relleno: "", icono: "text-dona-5", patron: "puntos" },
+  7: { relleno: "", icono: "text-dona-5", patron: "rejilla" },
 };
 
 const lados = { sm: "size-8", md: "size-11", lg: "size-14" } as const;
@@ -142,6 +143,11 @@ export function IconoSobre({
           <pattern id={`${id}-puntos`} patternUnits="userSpaceOnUse" width="5" height="5">
             <rect width="5" height="5" className="fill-dona-3" />
             <circle cx="2.5" cy="2.5" r="1.1" className="fill-dona-5" />
+          </pattern>
+        ) : tono.patron === "rejilla" ? (
+          <pattern id={`${id}-rejilla`} patternUnits="userSpaceOnUse" width="5" height="5">
+            <rect width="5" height="5" className="fill-dona-3" />
+            <path d="M0,0.5 H5 M0.5,0 V5" className="stroke-dona-5" strokeWidth={1} fill="none" />
           </pattern>
         ) : null}
       </defs>

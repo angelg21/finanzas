@@ -127,4 +127,10 @@ describe("pasoDeSobre: el color del anillo de Sobres sigue al tipo de sobre", ()
       1, 2, 3, 4, 5, 6, 3,
     ]);
   });
+
+  it("Deudas lleva su propio paso, la rejilla, distinto del de cada otro tipo del anillo (spec 005)", () => {
+    expect(pasoDeSobre("deudas")).toBe(7);
+    const delAnillo = ["emergencia", "inversion", "meta", "gastos", "familia", "fondo", "deudas"].map(pasoDeSobre);
+    expect(new Set(delAnillo).size).toBe(delAnillo.length);
+  });
 });
