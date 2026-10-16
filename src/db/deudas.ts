@@ -4,6 +4,7 @@ import { estadoDe, pendienteDe } from "../lib/deudas";
 import { hoyEnCaracas } from "../lib/fechas";
 import { baseMovimientos } from "./consultas";
 import { db } from "./index";
+import type { Ejecutor } from "./movimientos";
 import { cuentas, deudas, movimientos, sobres } from "./schema";
 import { efectoEnSobre } from "./sumas-de-saldo";
 
@@ -18,8 +19,8 @@ const usdDe = (tipos: ("prestamo" | "pago_deuda" | "cobro_prestamo")[]) =>
     Number,
   );
 
-async function consultarDeudas(donde?: SQL) {
-  const filas = await db
+async function consultarDeudas(donde?: SQL, ejecutor: Ejecutor = db) {
+  const filas = await ejecutor
     .select({
       id: deudas.id,
       sentido: deudas.sentido,
@@ -56,9 +57,15 @@ export async function deudasConPendiente() {
 
 export type DeudaConPendiente = Awaited<ReturnType<typeof deudasConPendiente>>[number];
 
+/** Una deuda con su pendiente; dentro de una transacción, con lo que ya está escrito. null si no existe. */
+export async function deudaPorId(id: number, ejecutor: Ejecutor = db) {
+  const [deuda] = await consultarDeudas(eq(deudas.id, id), ejecutor);
+  return deuda ?? null;
+}
+
 /** Una deuda con su pendiente y sus movimientos, del más reciente al más viejo; null si no existe. */
 export async function deudaConMovimientos(id: number) {
-  const [deuda] = await consultarDeudas(eq(deudas.id, id));
+  const deuda = await deudaPorId(id);
   if (!deuda) return null;
   const historial = await baseMovimientos()
     .where(eq(movimientos.deudaId, id))

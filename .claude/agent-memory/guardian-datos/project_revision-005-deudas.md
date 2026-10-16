@@ -33,6 +33,15 @@ Medido:
 - **Hallazgo principal:** `medidasPorSobre` llama a `deudasConPendiente`, y `pendienteDe` lanza. Una deuda rota tumba `sobresConNivel` y `datosDelReparto`, es decir, el inicio, `/sobres`, `/nuevo/ingreso` y `/sobres/repartir`, con sus acciones. Es la misma clase de fallo que cerró 789fbc6. Casos medidos: préstamo en una deuda "debo", pago por encima del pendiente y monto mayor que 2^53. Con el último, el mensaje lleva `JSON.stringify` de la fila completa, con persona y nota.
 - Conexiones: 7 en `datosDelReparto`, 8 en el inicio y 9 de 10 en la acción del ingreso. En cada caso, una más que antes.
 
+**T7 (escrituras en `src/db/guardar-deudas.ts`), sin commit: APTA CON CAMBIOS (2026-10-15).** Medido en `finanzas_g005_t7`, ya borrada; la real quedó con la misma huella.
+
+- **Bien:** candado `(5, deudaId)` en pagar, editar y borrar; `(3, origen)` en apartar. Editar contra pagar, borrar contra pagar y apartar contra repartir: 20 rondas cada uno, salen los dos órdenes, ningún pendiente negativo, ningún huérfano y "Por asignar" nunca en negativo. Reintentos: con otro monto, otra deuda u otro origen da "otra" con +0 filas; en vuelo con el mismo id espera ~1 s y da "ya-estaba"; un id de un gasto da "otra".
+- **Hallazgo (media):** `editarDeuda` esparce `cambios` en `.set()`. Un `sentido` o una `referencia` de más se escriben (medido: debo → me_deben con un pago, y la referencia pisada). El script del autor ya llama con `{ ...fila }`, que trae `sentido`.
+- **Baja:** `pagarDeuda` no exige monto = monto_usd. Medido: 100 USDT contra 50 USD, cuadre USD intacto, pero la cuenta USDT diverge.
+- **Info:** el escritor no valida la cuenta prevista (VES aceptada), el id en `registrarDeuda` ni la fecha del pago. Apartar contra un gasto del mismo origen no espera y deja el sobre en negativo, como el gasto solo.
+
+**How to apply (T8, T10 a T14):** comprobar que `editarDeuda` arme el `set` campo por campo. En T11/T12, la acción tiene que buscar el reintento ANTES de `prepararPago` o `prepararApartado`: los dos rechazan una deuda pagada o un origen en 0, y dirían error en vez de "ya estaba". En T13, que el cobro tome `(5, deudaId)`, y que nadie tome `(3, x)` y `(5, y)` en órdenes distintos.
+
 **How to apply (T7, T8, T9, T11, T13 y T14):** comprobar que se corrigió lo de arriba. En T8, la cuota tampoco puede tumbar el reparto. En T14, el patrimonio de `/cuentas` usará `deudasConPendiente`: el mismo riesgo. `pasos` de `lib/sobres.ts` sigue siendo `Record<string>` sin `deudas` (T9). `/sobres/[id]` no pasa `debidoCentavos` (T11). Hasta la T8, Deudas sale como editable en `/sobres/reglas`, y también se ofrece en la captura de gasto.
 
 Ver también [[defectos-datos-encontrados]] y [[rls-supabase]].

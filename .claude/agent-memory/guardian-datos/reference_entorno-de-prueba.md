@@ -128,4 +128,9 @@ metadata:
 
   Para una base vacía: `createdb`, y luego `DATABASE_URL=... pnpm exec drizzle-kit migrate`, que sí corre, y `pnpm db:seed`.
 
+- **Herramientas de T7 de 005**: `e7c92f93…/scratchpad/t7/sonda-t7.mts <sentido|editar-pago|borrar-pago|apartar-reparto|apartar-gasto|reintentos|forma|rota|id-invalido>`. Se niega fuera de `finanzas_g005_*` y limpia por `nota='sonda-t7'` y `persona like 'sonda-t7%'`.
+  - La segunda conexión se abre con `createRequire(repo/package.json)("postgres")`.
+  - Las carreras se corren con `Promise.all`, alternando el orden en cada ronda.
+  - `comprobar-005` corre sobre una copia con `DATABASE_URL=...5433/<copia>` en la línea. dotenv no la pisa ("injected env (8)").
+
 Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].

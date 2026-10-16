@@ -74,6 +74,12 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
   - Conexiones: 9 de 10 en la acción del ingreso.
   - Con 300 mil filas, `saldosPorCuenta` pasa de 29 a 41 ms.
 
+**Abiertos, nuevos en T7 de 005 (2026-10-15)** (ver [[revision-005-deudas]])
+
+- **Media.** `editarDeuda` hace `.set({ ...cambios })`: un `sentido`, una `referencia` o un `id` que vengan de más se escriben (el tipo `Omit` no lo impide en tiempo de ejecución). Medido: una deuda "debo" con un pago pasó a "me_deben" y su referencia quedó pisada.
+- **Baja.** `pagarDeuda` acepta monto ≠ monto_usd: la cuenta USDT pierde 100 y la deuda baja 50.
+- **Info.** El escritor no valida la cuenta prevista, el id de `registrarDeuda` ni la fecha. Una deuda rota no se arregla editando, porque `deudaPorId` lanza "Pendiente negativo: N", con el monto pero sin persona.
+
 **Abiertos de antes**
 
 - **Baja.** `reglas_reparto.valor` sigue siendo `integer`. Desde 790ee93 lo vigila `cabeEnRegla`: el tope de 21.474.836,47 USD se rechaza con un mensaje y sin escribir.

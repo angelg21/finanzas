@@ -30,7 +30,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 
   Revisión de `guardian-datos`.
 
-- [ ] T7 · Escrituras de "lo que debo" en `src/db/deudas.ts` (criterios 1, 3, 6, 7, 13 y 16):
+- [x] T7 (2026-10-15) · Escrituras de "lo que debo" en `src/db/deudas.ts` (criterios 1, 3, 6, 7, 13 y 16):
   - registrar, editar y borrar, con `pg_advisory_xact_lock(5, deudaId)`;
   - pagar, con candado, nueva comprobación del pendiente y el reintento reconocido antes;
   - apartar, con `pg_advisory_xact_lock(3, sobreOrigenId)`.
@@ -121,3 +121,19 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - Para la T7 y la T13: el escritor frena un pago a una deuda "me deben" (hoy se contaría como cobro).
   - Conexiones: el inicio abre 8 de las 10 de postgres-js, una más que antes.
   - **Pregunta abierta:** la captura de gasto ofrece todos los sobres activos menos "Por asignar", así que desde la T6 también ofrece Deudas. La spec dice que la captura no se toca. Hay que decidir si se quiere.
+- 2026-10-15 · T7:
+  - Las escrituras están en `src/db/guardar-deudas.ts` y las lecturas en `src/db/deudas.ts`, como `movimientos.ts` y `consultas.ts`; la spec decía un solo archivo.
+  - La parte pura de apartar está en `src/lib/apartado.ts`, con sus pruebas: orígenes, monto hasta el saldo y la reasignación a Deudas.
+  - `scripts/comprobar-005.ts` cubre lo que debo: registrar, apartar, pagar, dos pagos a la vez, reintentos, checks, editar y borrar. Todo en verde, y la base queda como estaba. La T13 y la T15 lo completan.
+  - `guardian-datos`: APTA CON CAMBIOS. En 20 rondas de cada carrera (editar contra pagar, borrar contra pagar, apartar contra repartir), ningún pendiente quedó en negativo ni se rompió el cuadre.
+  - Arreglado del guardián:
+    - `editarDeuda` escribía cualquier campo de más, también el sentido y la referencia. Ahora el `set` va campo por campo, con su comprobación.
+    - Pagar exige 1 a 1, y apartar, USD.
+    - Registrar valida el id de captura, y registrar y editar exigen una cuenta prevista activa en dólares.
+  - Para las acciones de la T11 y la T12:
+    - buscar el reintento (`guardadasDeCaptura`) antes de `prepararPago` o `prepararApartado`, porque estos rechazan una deuda ya pagada o un origen sin saldo;
+    - validar el id con `esIdCaptura` en zod;
+    - leer las cuentas de la base;
+    - la fecha del pago la valida solo `prepararPago`.
+  - Para la T13: el cobro toma `(5, deudaId)`. Si alguna función toma dos candados, siempre en el mismo orden.
+  - Aceptado: apartar contra un gasto del mismo sobre no comparte candado. El sobre puede quedar en negativo, como con el gasto solo.

@@ -8,5 +8,5 @@
 - [Respaldo de producción](project_respaldo-produccion.md): T4 de 002 NO APTO y luego APTO; volcado Supabase→vanilla sano; PGPASSWORD; huellas por tabla; residuales T15
 - [Revisión de 003](project_revision-003-movimientos.md): T3 APTO, mediciones; categoría validada contra totales en la página; Mover mezcla tipos por día
 - [Revisión de 004](project_revision-004-reparto.md): T4 SEGURO; T5 APTO (7dd832a); 97437d7 APTO; su corrección 789fbc6 APTO (la propuesta sigue lanzando); mirar git log -- src/db
-- [Revisión de 005](project_revision-005-deudas.md): 0005 APTA (sha 99dc3f2…); T6 APTA CON CAMBIOS (deuda rota tumba inicio/reparto); vigilar T7-T14
+- [Revisión de 005](project_revision-005-deudas.md): 0005 APTA; T6 y T7 APTA CON CAMBIOS (T7: editarDeuda esparce sentido); reintento antes de preparar en T11/T12
 - [Captura idempotente](project_captura-idempotente.md): T12 de 002 NO APTO y luego APTO; 23505 + huella + 15 min; residuales: id reutilizado idéntico, sin editar movimientos, pruebas de base en f-verify
