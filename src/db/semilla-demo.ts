@@ -1,6 +1,7 @@
 /**
  * Datos de demostración para ver la app con números reales mientras no existe el importador.
- * Todos los movimientos llevan origen "importado" y referencia "demo-..." para poder borrarlos:
+ * Todos los movimientos llevan origen "importado" y referencia "demo-..." para poder borrarlos, y las deudas la
+ * referencia "demo-deuda-..." (spec 005, criterio 22):
  *   pnpm db:demo            → inserta (idempotente)
  *   pnpm db:demo:limpiar    → borra solo lo que insertó este script
  * Requiere haber corrido antes pnpm db:seed (cuentas, sobres y categorías).
@@ -21,11 +22,20 @@ async function main() {
   const { db, conexion } = conectar(url);
 
   if (limpiar) {
-    const borrados = await db
-      .delete(schema.movimientos)
-      .where(like(schema.movimientos.referenciaExterna, "demo-%"))
-      .returning({ id: schema.movimientos.id });
-    console.log(`Demo limpiada: ${borrados.length} movimientos borrados.`);
+    // Primero los movimientos y luego las deudas, por la FK. En una transacción: si un movimiento real apunta a una
+    // deuda demo, la FK lo impide y no se borra nada.
+    const { movimientosBorrados, deudasBorradas } = await db.transaction(async (tx) => {
+      const m = await tx
+        .delete(schema.movimientos)
+        .where(like(schema.movimientos.referenciaExterna, "demo-%"))
+        .returning({ id: schema.movimientos.id });
+      const d = await tx
+        .delete(schema.deudas)
+        .where(like(schema.deudas.referencia, "demo-deuda-%"))
+        .returning({ id: schema.deudas.id });
+      return { movimientosBorrados: m.length, deudasBorradas: d.length };
+    });
+    console.log(`Demo limpiada: ${movimientosBorrados} movimientos y ${deudasBorradas} deudas borrados.`);
     await conexion.end();
     return;
   }
@@ -54,6 +64,7 @@ async function main() {
   const metas = sobre("Planes");
   const ocasiones = sobre("Ocasiones");
   const inversion = sobre("Inversión");
+  const sobreDeudas = sobres.find((s) => s.tipo === "deudas")?.id ?? falta("el sobre Deudas");
 
   const filas: Nuevo[] = [];
   let n = 0;
@@ -72,13 +83,13 @@ async function main() {
     origen: "importado",
     referenciaExterna: ref("ing"),
   });
-  const reasignar = (fecha: string, monto: number, destino: number): Nuevo => ({
+  const reasignar = (fecha: string, monto: number, destino: number, desde = porAsignar): Nuevo => ({
     fecha,
     tipo: "reasignacion",
     montoCentavos: monto,
     moneda: "USD",
     montoUsdCentavos: monto,
-    sobreOrigenId: porAsignar,
+    sobreOrigenId: desde,
     sobreDestinoId: destino,
     origen: "importado",
     referenciaExterna: ref("rea"),
@@ -218,6 +229,91 @@ async function main() {
   // Parte del fondo de emergencia fuera de Binance.
   filas.push(transferir("2026-08-01", 30_000, binance, billetera, "USDC", "Reserva fuera de Binance"));
   filas.push(transferir("2026-08-01", 10_000, binance, efectivo, "USD", "Efectivo de reserva"));
+
+  // Deudas y préstamos (spec 005, criterio 22). Van al final: las referencias de los movimientos son posicionales.
+  await db
+    .insert(schema.deudas)
+    .values([
+      {
+        sentido: "debo",
+        persona: "Papás",
+        montoInicialCentavos: 52_000,
+        fechaPrevista: "2026-12-15",
+        cuentaPrevistaId: efectivo,
+        nota: "Para diciembre",
+        referencia: "demo-deuda-001",
+      },
+      {
+        sentido: "debo",
+        persona: "Andrés",
+        montoInicialCentavos: 25_000,
+        fechaPrevista: "2026-10-22",
+        cuentaPrevistaId: binance,
+        nota: "Solo cobra en USDT",
+        referencia: "demo-deuda-002",
+      },
+      {
+        sentido: "me_deben",
+        persona: "Carlos",
+        montoInicialCentavos: 14_000,
+        nota: "De antes de la app",
+        referencia: "demo-deuda-003",
+      },
+      { sentido: "me_deben", persona: "Luis", montoInicialCentavos: 0, referencia: "demo-deuda-004" },
+    ])
+    .onConflictDoNothing();
+  const deudas = await db
+    .select({ id: schema.deudas.id, referencia: schema.deudas.referencia })
+    .from(schema.deudas)
+    .where(like(schema.deudas.referencia, "demo-deuda-%"));
+  const deuda = (r: string) => deudas.find((d) => d.referencia === r)?.id ?? falta(`la deuda ${r}`);
+  const sinDestino = { cuentaDestinoId: null, sobreDestinoId: null, categoriaId: null };
+  // Apartar desde Planes, pagar parte de lo de Andrés, prestarle a Luis y cobrarle una parte.
+  filas.push(reasignar("2026-10-02", 15_000, sobreDeudas, metas));
+  filas.push({
+    fecha: "2026-10-03",
+    tipo: "pago_deuda",
+    montoCentavos: 10_000,
+    moneda: "USDT",
+    montoUsdCentavos: 10_000,
+    cuentaOrigenId: binance,
+    sobreOrigenId: sobreDeudas,
+    ...sinDestino,
+    deudaId: deuda("demo-deuda-002"),
+    nota: "Primera parte",
+    origen: "importado",
+    referenciaExterna: ref("pag"),
+  });
+  filas.push({
+    fecha: "2026-09-12",
+    tipo: "prestamo",
+    montoCentavos: 8_000,
+    moneda: "USDT",
+    montoUsdCentavos: 8_000,
+    cuentaOrigenId: binance,
+    sobreOrigenId: metas,
+    ...sinDestino,
+    deudaId: deuda("demo-deuda-004"),
+    nota: "Para el alquiler",
+    origen: "importado",
+    referenciaExterna: ref("pre"),
+  });
+  filas.push({
+    fecha: "2026-10-02",
+    tipo: "cobro_prestamo",
+    montoCentavos: 3_000,
+    moneda: "USDT",
+    montoUsdCentavos: 3_000,
+    cuentaOrigenId: null,
+    sobreOrigenId: null,
+    cuentaDestinoId: binance,
+    sobreDestinoId: porAsignar,
+    categoriaId: null,
+    deudaId: deuda("demo-deuda-004"),
+    nota: null,
+    origen: "importado",
+    referenciaExterna: ref("cob"),
+  });
 
   const insertados = await db
     .insert(schema.movimientos)
