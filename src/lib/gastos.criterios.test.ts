@@ -1,10 +1,11 @@
 /**
- * Criterios ★ de la spec 001 (captura rápida de gasto) que cumple prepararGasto, escritos desde el texto
- * de cada criterio. Las pruebas de construcción viven en gastos.test.ts; estas fijan lo que la spec promete.
- * Lo que solo se ve en la base (una transacción, el cuadre de /cuentas) lo comprueba scripts/comprobar-001.ts.
+ * Criterios ★ de la spec 001 (captura rápida de gasto) que cumple prepararGasto, y el ★ 23 de la spec 005 (sin gastos
+ * desde Deudas), escritos desde el texto de cada criterio. Las pruebas de construcción viven en gastos.test.ts; estas
+ * fijan lo que la spec promete. Lo que solo se ve en la base (una transacción, el cuadre de /cuentas) lo comprueba
+ * scripts/comprobar-001.ts; que la captura no ofrezca Deudas, scripts/comprobar-005-criterios.ts.
  */
 import { describe, expect, it } from "vitest";
-import { type CuentaGasto, type EntradaGasto, type FilaMovimiento, prepararGasto } from "./gastos";
+import { type CuentaGasto, type EntradaGasto, type FilaMovimiento, prepararGasto, sobreAceptaGasto } from "./gastos";
 import { saldosTras } from "./saldos";
 
 const hoy = "2026-10-12";
@@ -256,5 +257,18 @@ describe("★ criterio 16: cuenta de la prima", () => {
     const despues = saldosTras(guardar({ monto: "42", cuentaOrigen: prima }), cuadrados.cuentas, cuadrados.sobres);
     expect(despues.cuentas[prima.id]).toBe(10_000 - 4_200);
     expect(suma(despues.sobres)).toBe(suma(despues.cuentas));
+  });
+});
+
+describe("spec 005, ★ 23 · sin gastos desde Deudas", () => {
+  it("la captura de gasto no acepta Deudas ni Por asignar", () => {
+    expect(sobreAceptaGasto("deudas")).toBe(false);
+    expect(sobreAceptaGasto("por_asignar")).toBe(false);
+  });
+
+  it("el resto de los sobres sigue como antes", () => {
+    for (const tipo of ["gastos", "familia", "emergencia", "meta", "inversion", "fondo"]) {
+      expect(sobreAceptaGasto(tipo), tipo).toBe(true);
+    }
   });
 });

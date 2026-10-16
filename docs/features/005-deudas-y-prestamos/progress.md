@@ -83,7 +83,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 - [x] Spec leída y aprobada por el desarrollador (2026-10-15), en una sola feature
 - [x] Construida (todas las tareas con commit), 2026-10-16. La T17 se abrió y se cerró al validar.
 - [x] Validada en navegador, 2026-10-16
-- [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
+- [x] Verificada: `pnpm verify` en verde, cada ★ con su prueba (2026-10-16)
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
 - [ ] Fusionada en `main` el AAAA-MM-DD
 
@@ -241,3 +241,45 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - `NadaPorAqui` pasa a su archivo, compartido por `/deudas` y `/nuevo/deuda`.
   - `pnpm verify:fast` en verde (641 pruebas). `pnpm build` y `pnpm humo`: `/nuevo/deuda` y `?deuda=1` redirigen sin sesión; con sesión, `/nuevo/deuda` y `?deuda=999999` dan 200, y "todo responde como debe".
   - Capturas en los dos anchos y temas de `/nuevo`, `/nuevo/deuda` (sin elegir, con Andrés y con Luis), `/nuevo/gasto`, `/nuevo/ingreso`, `/deudas` y el detalle de Andrés, que no cambió.
+- Verificación (2026-10-16): los 17 ★ (1 a 16 y 23) tienen su prueba, escrita desde el texto del criterio. Son 79 pruebas nuevas, todas en verde a la primera.
+  - ★ 1, 2, 3, 6, 15 y 16: `src/lib/deudas.criterios.test.ts`.
+  - ★ 4 y 5, con el tope del ★ 6 en el cobro: `src/lib/prestamos.criterios.test.ts`.
+  - ★ 7: `src/lib/captura.criterios.test.ts`.
+  - ★ 9: `src/lib/saldos.criterios.test.ts`.
+  - ★ 11, y del ★ 12 la regla, la cuota 0 y la pista: `src/lib/cuota-deudas.criterios.test.ts`. El ejemplo de 1.200,00 ya estaba en `reparto.criterios.test.ts` (T3); `reglaEditable("deudas")` va en `reglas.criterios.test.ts`.
+  - ★ 13: `src/lib/apartado.criterios.test.ts`.
+  - ★ 14: `src/lib/liquidez.criterios.test.ts`.
+  - ★ 23: `sobreAceptaGasto`, en `gastos.criterios.test.ts`.
+  - Contra la base, `scripts/comprobar-005-criterios.ts` (nuevo) cubre lo que `comprobar-005` no miraba:
+    - ★ 3 y 5: el gastado del mes, la gráfica, el anillo y Gastos e Ingresos;
+    - ★ 8: el check, por texto y con `else false`, y siete formas malas;
+    - ★ 10: Deudas tras Ocasiones, y Deudas inactivo;
+    - ★ 11: la cuota estable en el mes;
+    - ★ 12: `guardarReglas` sin Deudas;
+    - ★ 13: apartar contra repartir a la vez;
+    - ★ 16: borrar y editar contra un pago a la vez;
+    - ★ 23: `sobresParaGasto` sin Deudas.
+
+    Es un guion aparte para no pasar del techo de 700 líneas.
+
+  - Antes de correr los guiones se borraron de la base local, con permiso del desarrollador, las dos filas de su prueba en el navegador: la deuda 49 ("cesar", 250,00) y su pago 2233 de 200,00. Los guiones se niegan a correr con filas que no sean de demostración.
+  - `pnpm exec tsx scripts/comprobar-005.ts`: 38 ✓ y `✓ comprobar-005: todo en verde`. La base queda en 122 movimientos y 4 deudas.
+  - `pnpm exec tsx scripts/comprobar-005-criterios.ts`: 14 ✓ y `✓ comprobar-005-criterios: todo en verde`, entre ellas:
+    - `✓ 11 · Deudas recibe 1000 desde Por asignar y la cuota del mes no cambia (57000 → 57000)`;
+    - `✓ 13 · apartar y repartir los 8000 de Por asignar a la vez: uno entra, el otro no, y no queda en negativo (Por asignar en 0)`.
+
+    La base queda en 122 movimientos y 4 deudas, con las mismas reglas.
+
+  - Quedan sin prueba automática, porque son de pantalla y se miraron en el navegador y en las capturas:
+    - del ★ 3, que el aviso se vea antes de guardar;
+    - del ★ 5, el enlace "Repartir";
+    - del ★ 10, que `/deudas` lo diga.
+  - Gates de `pnpm verify`:
+    - `✓ tipos (2.5 s)`
+    - `✓ lint (9.1 s)`
+    - `✓ formato (3.9 s)`
+    - `✓ estructura (0.1 s)`
+    - `✓ unitarias (3.4 s)`: 42 archivos y 720 pruebas.
+    - `✓ build (8.5 s)`
+    - `✓ humo (4.3 s)`
+    - `✓ verify:full en verde en 32.0 s. Árbol sellado.`
