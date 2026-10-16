@@ -57,11 +57,16 @@ export function conFallas<E>(accion: Accion<E>, alFallar: (previo: E, datos: For
       return alFallar(previo, datos, causa);
     }
   };
-  const marcas = accion as unknown as { $$FORM_ACTION?: unknown; $$IS_SIGNATURE_EQUAL?: unknown };
+  const marcas = accion as unknown as {
+    $$FORM_ACTION?: unknown;
+    $$IS_SIGNATURE_EQUAL?: (...argumentos: unknown[]) => unknown;
+  };
   if (typeof marcas.$$FORM_ACTION === "function") {
     Object.assign(envuelta, {
       $$FORM_ACTION: marcas.$$FORM_ACTION,
-      $$IS_SIGNATURE_EQUAL: marcas.$$IS_SIGNATURE_EQUAL,
+      // React la llama con la envoltura de `this` al responder un envío sin JavaScript, y solo reconoce la acción del
+      // servidor: sin atarla, lanza y la respuesta sale en blanco (spec 004, T6).
+      $$IS_SIGNATURE_EQUAL: marcas.$$IS_SIGNATURE_EQUAL?.bind(accion),
       bind: (...argumentos: Parameters<Accion<E>["bind"]>) => accion.bind(...argumentos),
     });
   }

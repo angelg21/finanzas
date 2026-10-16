@@ -1,22 +1,17 @@
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, CalendarDays, ChevronRight, TrendingDown } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, CalendarDays, TrendingDown } from "lucide-react";
 import Link from "next/link";
+import { CirculoCuenta } from "@/components/circulo-cuenta";
 import { GraficaDona, type SegmentoDona } from "@/components/grafica-dona";
 import { GraficaMensual } from "@/components/grafica-mensual";
-import { TarjetaMovimiento } from "@/components/movimiento";
-import {
-  Avatar,
-  Cifra,
-  EncabezadoTarjeta,
-  FilaLista,
-  Mosaico,
-  Pildora,
-  Tarjeta,
-  TarjetaPalida,
-  iniciales,
-} from "@/components/ui";
-import { gastadoEsteMes, movimientosRecientes, resumenMensual, saldosPorCuenta, saldosPorSobre } from "@/db/consultas";
+import { IconoSobre } from "@/components/icono-sobre";
+import { FilaMovimiento } from "@/components/movimiento";
+import { Cifra, EncabezadoTarjeta, FilaLista, Mosaico, Pildora, Tarjeta, TarjetaPalida } from "@/components/ui";
+import { gastadoEsteMes, movimientosRecientes, resumenMensual, saldosPorCuenta } from "@/db/consultas";
+import { sobresConNivel } from "@/db/sobres";
 import { formatearCentavos, formatearEnteros } from "@/lib/dinero";
 import { diasQueQuedanDelMes, hoyEnCaracas } from "@/lib/fechas";
+import { etiquetaDia } from "@/lib/periodos";
+import { pasoDeSobre } from "@/lib/sobres";
 import { exigirSesion } from "@/app/sesion";
 
 export const dynamic = "force-dynamic";
@@ -39,16 +34,6 @@ const nombreTipoCuenta: Record<string, string> = {
   transito: "USD en EE. UU.",
 };
 
-/** El color del anillo sigue al tipo de sobre, no a su tamaño. */
-const pasoPorTipo: Record<string, SegmentoDona["paso"]> = {
-  emergencia: 1,
-  inversion: 2,
-  meta: 3,
-  gastos: 4,
-  familia: 5,
-  fondo: 6,
-};
-
 /** En hora de Caracas: el servidor (Vercel) corre en UTC. */
 function diasRestantesDelMes() {
   return diasQueQuedanDelMes(hoyEnCaracas(new Date()));
@@ -57,11 +42,11 @@ function diasRestantesDelMes() {
 export default async function Inicio() {
   await exigirSesion();
   const [sobres, cuentas, gastado, resumen, recientes] = await Promise.all([
-    saldosPorSobre(),
+    sobresConNivel(),
     saldosPorCuenta(),
     gastadoEsteMes(),
     resumenMensual(6),
-    movimientosRecientes(2),
+    movimientosRecientes(5),
   ]);
 
   const gastosDelMes = sobres.find((s) => s.tipo === "gastos");
@@ -69,12 +54,15 @@ export default async function Inicio() {
   const sobresReales = sobres.filter((s) => s.tipo !== "por_asignar");
   const totalSobres = sobres.reduce((acc, s) => acc + s.saldoCentavos, 0);
   const dias = diasRestantesDelMes();
+  const hoy = hoyEnCaracas(new Date());
+  const recientesPorDia = new Map<string, typeof recientes>();
+  for (const m of recientes) recientesPorDia.set(m.fecha, [...(recientesPorDia.get(m.fecha) ?? []), m]);
 
   const segmentos: SegmentoDona[] = sobresReales.map((s) => ({
     clave: String(s.id),
     nombre: s.nombre,
     valorCentavos: Math.max(s.saldoCentavos, 0),
-    paso: pasoPorTipo[s.tipo] ?? 3,
+    paso: pasoDeSobre(s.tipo),
   }));
 
   return (
@@ -97,13 +85,18 @@ export default async function Inicio() {
         </div>
         <div className="mt-5 grid grid-cols-3 gap-3">
           <Mosaico href="/nuevo/gasto" icono={<ArrowUpRight size={18} aria-hidden />} texto="Gasto" />
-          <Mosaico href="/nuevo?tipo=ingreso" icono={<ArrowDownLeft size={18} aria-hidden />} texto="Ingreso" />
+          <Mosaico href="/nuevo/ingreso" icono={<ArrowDownLeft size={18} aria-hidden />} texto="Ingreso" />
           <Mosaico href="/nuevo?tipo=mover" icono={<ArrowLeftRight size={18} aria-hidden />} texto="Mover" />
         </div>
         {porAsignar && porAsignar.saldoCentavos !== 0 ? (
           <p className="mt-4 text-[13px] text-white/75">
             Tienes <span className="font-bold text-white">{formatearCentavos(porAsignar.saldoCentavos)}</span> sin
-            asignar a ningún sobre.
+            asignar a ningún sobre.{" "}
+            {porAsignar.saldoCentavos > 0 ? (
+              <Link href="/sobres/repartir" className="font-bold text-white underline underline-offset-2">
+                Repartir
+              </Link>
+            ) : null}
           </p>
         ) : null}
       </section>
@@ -127,7 +120,7 @@ export default async function Inicio() {
               <FilaLista
                 key={s.id}
                 href={`/sobres/${s.id}`}
-                avatar={<Avatar texto={iniciales(s.nombre)} />}
+                avatar={<IconoSobre clave={s.id} tipo={s.tipo} nivel={s.nivel} />}
                 titulo={s.nombre}
                 subtitulo={nombreTipoSobre[s.tipo] ?? s.tipo}
                 derecha={
@@ -160,7 +153,7 @@ export default async function Inicio() {
             <FilaLista
               key={c.id}
               href="/cuentas"
-              avatar={<Avatar texto={iniciales(c.nombre)} />}
+              avatar={<CirculoCuenta tipo={c.tipo} moneda={c.moneda} />}
               titulo={c.nombre}
               subtitulo={`${nombreTipoCuenta[c.tipo] ?? c.tipo} · ${c.moneda}`}
               derecha={
@@ -178,24 +171,26 @@ export default async function Inicio() {
         </div>
       </Tarjeta>
 
-      {/* Últimos movimientos como tarjetas pálidas: solo en escritorio. */}
-      <section className="hidden lg:col-span-7 lg:flex lg:flex-col lg:gap-3">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="text-[16px] font-bold">Últimos movimientos</h2>
-          <Link
-            href="/movimientos"
-            className="flex items-center gap-0.5 text-[13px] font-semibold text-enlace hover:text-texto"
-          >
-            Ver todos
-            <ChevronRight size={16} aria-hidden />
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          {recientes.map((m) => (
-            <TarjetaMovimiento key={m.id} m={m} />
-          ))}
-        </div>
-      </section>
+      {/* Últimos movimientos como en /movimientos, agrupados por día: solo en escritorio, junto a Cuentas. */}
+      <Tarjeta className="hidden lg:col-span-7 lg:block">
+        <EncabezadoTarjeta titulo="Últimos movimientos" enlace={{ href: "/movimientos", texto: "Ver todos" }} />
+        {recientes.length === 0 ? (
+          <p className="text-[13px] text-texto-2">Todavía no hay movimientos.</p>
+        ) : (
+          [...recientesPorDia.entries()].map(([fecha, movimientos]) => (
+            <section key={fecha} aria-label={etiquetaDia(fecha, hoy)} className="pt-2 first-of-type:pt-0">
+              <h3 className="text-[12px] font-bold text-texto-3">{etiquetaDia(fecha, hoy)}</h3>
+              <ul className="divide-y divide-tarjeta-borde">
+                {movimientos.map((m) => (
+                  <li key={m.id}>
+                    <FilaMovimiento m={m} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))
+        )}
+      </Tarjeta>
     </main>
   );
 }

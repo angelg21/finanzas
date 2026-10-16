@@ -233,6 +233,67 @@ describe("saldosTras: antes y después del gasto", () => {
   });
 });
 
+describe("saldosTras: ingresos y reasignaciones (spec 004, criterio 9)", () => {
+  const porAsignar = 1;
+  const sinDatos = {
+    montoDestinoCentavos: null,
+    monedaDestino: null,
+    tasa: null,
+    cuentaOrigenId: null,
+    sobreOrigenId: null,
+    categoriaId: null,
+    nota: null,
+    origen: "manual" as const,
+  };
+  const ingreso = {
+    ...sinDatos,
+    fecha: hoy,
+    tipo: "ingreso" as const,
+    montoCentavos: 120_000,
+    moneda: "USDT" as const,
+    montoUsdCentavos: 120_000,
+    cuentaDestinoId: 1,
+    sobreDestinoId: porAsignar,
+    categoriaId: 20,
+  };
+  const reasignacion = {
+    ...sinDatos,
+    fecha: hoy,
+    tipo: "reasignacion" as const,
+    montoCentavos: 45_000,
+    moneda: "USD" as const,
+    montoUsdCentavos: 45_000,
+    cuentaDestinoId: null,
+    sobreOrigenId: porAsignar,
+    sobreDestinoId: gastosDelMes,
+  };
+
+  it("un ingreso sube la cuenta destino en su moneda y el sobre destino en USD", () => {
+    expect(saldosTras([ingreso], { 1: 50_000 }, { [porAsignar]: 0 })).toEqual({
+      cuentas: { 1: 170_000 },
+      sobres: { [porAsignar]: 120_000 },
+    });
+  });
+
+  it("una reasignación mueve entre sobres y no toca ninguna cuenta", () => {
+    expect(saldosTras([reasignacion], { 1: 50_000 }, { [porAsignar]: 120_000, [gastosDelMes]: 5_000 })).toEqual({
+      cuentas: { 1: 50_000 },
+      sobres: { [porAsignar]: 75_000, [gastosDelMes]: 50_000 },
+    });
+  });
+
+  it("ingreso, reparto y gasto juntos: las cuentas y los sobres siguen sumando lo mismo", () => {
+    const despues = saldosTras(
+      [ingreso, reasignacion, ...filas(entrada({}))],
+      { 1: 30_000 },
+      { [gastosDelMes]: 30_000 },
+    );
+    const suma = (s: Record<number, number>) => Object.values(s).reduce((a, b) => a + b, 0);
+    expect(suma(despues.cuentas)).toBe(30_000 + 120_000 - 4_200);
+    expect(suma(despues.sobres)).toBe(suma(despues.cuentas));
+  });
+});
+
 describe("sobreSugerido (criterio 8)", () => {
   const sobres = [
     { id: 1, nombre: "Por asignar" },

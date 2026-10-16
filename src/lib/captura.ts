@@ -1,5 +1,5 @@
 /**
- * Una captura, una sola vez (spec 002, criterio 19). Cada captura de gasto lleva un UUID que la página genera al
+ * Una captura, una sola vez (spec 002, criterio 19). Cada captura de gasto o de ingreso lleva un UUID que la página genera al
  * abrirla y que viaja con lo tecleado. Cada fila se guarda con una referencia sacada de él, y el índice único de
  * (origen, referencia_externa) hace que un reintento tras un corte a medias (el gasto llegó, la respuesta no) no
  * lo duplique.
@@ -12,8 +12,23 @@ export function esIdCaptura(texto: string): boolean {
 }
 
 /** "captura-<id>-gasto": una por fila, igual en cada reintento. Nunca empieza por "demo-". */
-export function referenciaDeCaptura(id: string, tipo: "gasto" | "transferencia"): string {
+export function referenciaDeCaptura(id: string, tipo: "gasto" | "transferencia" | "ingreso"): string {
   return `captura-${id.toLowerCase()}-${tipo}`;
+}
+
+/**
+ * "captura-<id>-": el comienzo de todas las referencias de una captura, para releerlas con LIKE tras un choque. Solo
+ * con un UUID, que no trae comodines de LIKE; el guion final impide abarcar otra captura.
+ */
+export function prefijoDeCaptura(id: string): string {
+  if (!esIdCaptura(id)) throw new RangeError("Id de captura inválido");
+  return `captura-${id.toLowerCase()}-`;
+}
+
+/** "captura-<id>-reasignacion-<sobre>": un ingreso se reparte en varias, una por sobre (spec 004, criterio 7). */
+export function referenciaDeReasignacion(id: string, sobreId: number): string {
+  if (!Number.isSafeInteger(sobreId) || sobreId <= 0) throw new RangeError(`Sobre inválido: ${sobreId}`);
+  return `captura-${id.toLowerCase()}-reasignacion-${sobreId}`;
 }
 
 /** Lo que define una fila del gasto: si algo de esto cambió entre intentos, ya no es la misma captura. */

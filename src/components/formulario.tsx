@@ -113,6 +113,7 @@ export const pildoraElegida = "border-transparent bg-palido text-palido-texto";
  */
 export function SelectorPildoras({
   etiqueta,
+  detalleEtiqueta,
   name,
   opciones,
   valorInicial,
@@ -124,6 +125,8 @@ export function SelectorPildoras({
   error,
 }: {
   etiqueta: string;
+  /** Solo para el lector de pantalla, tras la etiqueta: distingue grupos que se ven con la misma ("Regla de Familia"). */
+  detalleEtiqueta?: string;
   name: string;
   opciones: OpcionPildora[];
   valorInicial?: string;
@@ -141,7 +144,10 @@ export function SelectorPildoras({
     : "-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0";
   return (
     <fieldset className="flex min-w-0 flex-col gap-1.5">
-      <legend className="mb-1.5 text-[12px] font-semibold text-texto-3">{etiqueta}</legend>
+      <legend className="mb-1.5 text-[12px] font-semibold text-texto-3">
+        {etiqueta}
+        {detalleEtiqueta ? <span className="sr-only"> {detalleEtiqueta}</span> : null}
+      </legend>
       <div className={fila}>
         {opciones.map((o) => (
           <label key={o.valor} className="group shrink-0 cursor-pointer">

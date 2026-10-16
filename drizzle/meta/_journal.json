@@ -29,6 +29,13 @@
       "when": 1791928745974,
       "tag": "0003_famous_blur",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792030473073,
+      "tag": "0004_fluffy_the_hood",
+      "breakpoints": true
     }
   ]
 }

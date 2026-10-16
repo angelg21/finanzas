@@ -13,7 +13,7 @@ Lista viva de las observaciones del usuario sobre la interfaz, lo que se cambió
 - ~~El modelo marca esa cuenta con `es_propia = false`, lo que la excluye de la suma de cuentas y del invariante con los sobres.~~ Resuelto el 2026-10-11 con el ADR 0006 (spec 001, criterio 16). La cuenta sigue con `es_propia = false` como marca legal, pero entra al cuadre con los sobres y desde ella se puede gastar.
 - Ajustar las semillas (`src/db/seed.ts`): tipo, nota y `esPropia` de "Cuenta prima".
 - Ajustar `docs/plan-financiero-y-app.md`, secciones 1, 2 y 4, donde dice que es de tránsito y que debe mantener saldo bajo. El riesgo legal sigue siendo real y conviene dejarlo escrito, pero como riesgo, no como regla de uso.
-- Revisar el flujo de ingreso: el sueldo remoto entra en esa cuenta y de ahí se mueve a Binance. Hoy las semillas de demostración lo ponen directo en Binance.
+- Revisar el flujo de ingreso: el sueldo remoto entra en esa cuenta y de ahí se mueve a Binance. Desde la feature 004 (2026-10-14), el ingreso se registra en "Cuenta prima" como en cualquier otra cuenta en dólares, cae en "Por asignar" y cuadra con los sobres (ADR 0006). **Sigue pendiente**, para la feature de cuentas y transferencias: mover de la prima a Binance con "Mover", y que las semillas de demostración pongan el sueldo en la prima en vez de directo en Binance.
 
 ## 2. "Segunda billetera USDC" no existe
 
@@ -88,3 +88,9 @@ Lista viva de las observaciones del usuario sobre la interfaz, lo que se cambió
 - Así no hace falta ningún borrador fuera de React: el estado de la captura no se desmonta.
 - Reutilizar `validarCategoria` y las operaciones de `src/db/categorias.ts`; la pantalla `/categorias/nueva` sigue para crear desde la lista.
 - Probar desde el principio, en Edge y con el teclado, los caminos que rompieron los intentos: guardar y "Registrar otro", recargar, atrás del sistema, abandonar y entrar por otro acceso.
+
+## 10. Los sobres con letras se ven muertos
+
+**Observación** (15 de octubre de 2026): el avatar de iniciales de los sobres no le gusta; pidió darles vida con algo distinto de los iconos de las categorías, porque los sobres son lo más importante de la app.
+
+**Hecho** el mismo día, como corrección fuera del pipeline por decisión del desarrollador: `IconoSobre`, una funda con muesca del tono de su porción en el anillo, con un icono de línea por tipo, que se llena desde abajo según su saldo. Detalle en `docs/diseno.md`. Queda fuera por ahora: elegir el icono de cada sobre (útil cuando Planes se divida en metas) y llevarlo a las píldoras de sobre de la captura de gasto.

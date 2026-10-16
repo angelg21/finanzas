@@ -1,6 +1,6 @@
 ---
 name: defectos-datos-encontrados
-description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en T3 de 003 (2026-10-14)
+description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en T3 de 003, T4/T5 de 004 (2026-10-14) y 97437d7 (2026-10-15)
 metadata:
   type: project
 ---
@@ -26,6 +26,38 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
 - `totalesPorCategoria` no tiene `orderBy`. Con montos empatados, el punto del mayor residuo va a la categoría que la consulta devuelve primero. Medido con tres de 1000: Servicios 34, sin variación entre planes. Para que sea determinista: `orderBy(desc(suma), categorias.id)`.
 - Una suma por encima de 2^53 centavos (90 billones de USD): `mapWith(Number)` redondea (9007199254740993 → …992) y `distribuirPorCategoria` lanza, lo que da un 500 en ese periodo. Por encima de 9,2e18, la consulta da 22003. Solo es posible con datos absurdos; vigilarlo en el importador.
 - Las tres consultas de `/movimientos` van sin una instantánea común. Un gasto que entre entre una y otra descuadra "Todas · X" con los días hasta recargar.
+
+**Abiertos, nuevos en T4 de 004 (2026-10-14). Ninguno bloquea** (ver [[revision-004-reparto]])
+
+- **Baja / decisión.** `recibidoDesdePorAsignarPorMes` suma lo bruto: una devolución a "Por asignar" no descuenta lo que el fijo ya recibió. Hoy nada escribe esas devoluciones; llegarán con "Mover".
+- **Baja.** `sobrePorAsignar` elige el de menor orden aunque esté inactivo, y entonces `datosDelReparto` le pone saldo 0, porque `saldosPorSobre` filtra `activo`.
+- **Info.** `datosDelReparto` abre 4 conexiones a la vez (medido: 4 pids) y no comparte instantánea. Su saldo de "Por asignar" no sirve como guarda para escribir.
+
+**Abiertos, nuevos en T5 de 004 (2026-10-14)** (ver [[revision-004-reparto]])
+
+- **Cerrados en 7dd832a (segunda vuelta, medidos):**
+  - el reintento que daba `sinSaldo` y el reparto a otros sobres que se guardaba otra vez;
+  - `editables` y el tope que venían de fuera;
+  - el destino inactivo, la referencia nula y la lista vacía.
+- **Siguen abiertos (info):**
+  - `fijarReglaFija` no reactiva una regla y no comparte el candado 4. A la vez que `guardarReglas`, repite el `orden` (20 de 20), sin efecto en los montos.
+  - El LIKE tarda 24 ms con 500 mil filas, en cada reparto (dos veces: en la acción y bajo el candado).
+  - Dos filas al mismo sobre dan `guardadas=0`; desde la acción no se puede llegar ahí.
+  - No hay check `tope > 0` en la base; ahora lo frena `guardarReglas`.
+
+**Abiertos, nuevos en la auditoría de 97437d7 (2026-10-15). Info, ninguno bloquea** (ver [[revision-004-reparto]])
+
+- **Cerrado en 789fbc6 (medido el 2026-10-15):** `sobresConNivel` lanzaba con medidas fuera de los enteros seguros, o con `sum(monto*veces)` desbordado (22003). Ahora usa `nivelParaIcono` y la suma va en numeric, así que `datosDelReparto`, el inicio, `/sobres` y el guardado del ingreso ya responden.
+- **Siguen abiertos (info, de antes de 97437d7, solo por SQL):** con un tope que no es un entero seguro en un sobre con regla, `validar` de `lib/reparto.ts` (desde T1) lanza con el monto en el mensaje. Lo hace en:
+  - `registrarIngreso` al proponer;
+  - `/sobres/repartir` cuando "Por asignar" tiene saldo;
+  - el formulario del cliente.
+
+  Con un desglose así, `/sobres/[id]` lanza en `aporteMensualCentavos`. La acción `repartir` y el guardado del ingreso responden. Desde la app no se llega: `guardarReglas` y `AporteFueraDeRango` lo acotan.
+
+- Info, en 789fbc6: un sobre en negativo con un tope fuera de rango pierde la marca de negativo.
+- Las conexiones simultáneas pasan de 4 a 6 en `datosDelReparto` y de 5 a 7 en el inicio. La acción del ingreso usa 8 de las 10 que postgres-js abre por defecto. Medirlo junto con el pooler (T15).
+- El nivel se calcula en dos sitios: `sobresConNivel` (SQL) y `/sobres/[id]` (JS). Hoy dan lo mismo.
 
 **Abiertos de antes**
 

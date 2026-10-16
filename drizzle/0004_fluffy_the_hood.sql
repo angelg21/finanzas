@@ -1,0 +1,1 @@
+ALTER TABLE "reglas_reparto" ADD CONSTRAINT "reglas_reparto_porcentaje_maximo" CHECK ("reglas_reparto"."tipo" <> 'porcentaje' or "reglas_reparto"."valor" <= 10000);

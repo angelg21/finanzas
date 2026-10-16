@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ArrowLeft, CalendarDays, Repeat } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { IconoSobre } from "@/components/icono-sobre";
 import {
   Avatar,
   Cifra,
@@ -17,6 +18,7 @@ import {
 import { movimientosDeSobre, partidasDeSobre, reglaDeSobre, sobrePorId, type MovimientoReciente } from "@/db/consultas";
 import { aporteMensualCentavos, totalAnualCentavos } from "@/lib/fondos";
 import { formatearCentavos } from "@/lib/dinero";
+import { nivelParaIcono } from "@/lib/sobres";
 import { BotonEliminarPartida, FormularioAporte, FormularioPartida, nombresMes } from "./formularios";
 import { exigirSesion } from "@/app/sesion";
 
@@ -78,6 +80,12 @@ export default async function DetalleSobre({ params }: PageProps<"/sobres/[id]">
   const aporteManual = regla?.tipo === "fijo" ? regla.valor : null;
   const aporte = aporteCalculado ?? aporteManual ?? 0;
   const avance = sobre.topeCentavos ? sobre.saldoCentavos / sobre.topeCentavos : null;
+  const nivel = nivelParaIcono({
+    saldoCentavos: sobre.saldoCentavos,
+    topeCentavos: sobre.topeCentavos,
+    anualCentavos: partidas.length > 0 ? totalAnual : null,
+    fijoMensualCentavos: regla?.activa && regla.tipo === "fijo" ? regla.valor : null,
+  });
 
   return (
     <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">
@@ -91,7 +99,7 @@ export default async function DetalleSobre({ params }: PageProps<"/sobres/[id]">
       <div className="flex flex-col gap-4 lg:col-span-7 lg:gap-5">
         <section className="hero rounded-tarjeta p-5 lg:p-6">
           <div className="flex items-center gap-3">
-            <Avatar texto={iniciales(sobre.nombre)} />
+            <IconoSobre clave={sobre.id} tipo={sobre.tipo} nivel={nivel} tamano="lg" />
             <div className="min-w-0">
               <h1 className="truncate text-[20px] font-bold">{sobre.nombre}</h1>
               <p className="text-[13px] text-white/75">{nombreTipo[sobre.tipo] ?? sobre.tipo}</p>

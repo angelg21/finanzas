@@ -18,7 +18,7 @@ const rutas: Ruta[] = [
 ];
 
 // El "+" y "Registrar movimiento" abren la captura de gasto, lo más frecuente (spec 001, criterio 15).
-// Ingreso y Mover siguen en el selector /nuevo; los dos cuentan como "Registrar".
+// Ingreso tiene su pantalla (spec 004) y Mover sigue en el selector /nuevo; todas cuentan como "Registrar".
 /** En la barra lateral y el menú, después de las principales. */
 const secundarias: Ruta[] = [{ href: "/categorias", texto: "Categorías", Icono: Tags }];
 
@@ -32,6 +32,9 @@ function esActiva(href: string, ruta: string) {
 
 function tituloDe(ruta: string) {
   if (ruta.startsWith(registrar.href)) return "Nuevo gasto";
+  if (ruta.startsWith("/nuevo/ingreso")) return "Nuevo ingreso";
+  if (ruta.startsWith("/sobres/reglas")) return "Reglas de reparto";
+  if (ruta.startsWith("/sobres/repartir")) return "Repartir";
   if (esActiva(registrar.href, ruta)) return registrar.texto;
   return [...rutas, ...secundarias].find((r) => esActiva(r.href, ruta))?.texto ?? nombreApp;
 }

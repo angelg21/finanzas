@@ -1,19 +1,13 @@
+import { ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { EnlaceBoton } from "@/components/formulario";
 import { GraficaDona, type SegmentoDona } from "@/components/grafica-dona";
-import {
-  Avatar,
-  Cifra,
-  EncabezadoTarjeta,
-  Pildora,
-  Progreso,
-  Tarjeta,
-  TarjetaPalida,
-  TituloPagina,
-  iniciales,
-} from "@/components/ui";
-import { saldosPorSobre } from "@/db/consultas";
+import { IconoSobre } from "@/components/icono-sobre";
+import { Cifra, EncabezadoTarjeta, Pildora, Progreso, Tarjeta, TarjetaPalida, TituloPagina } from "@/components/ui";
+import { sobresConNivel } from "@/db/sobres";
 import { formatearCentavos, formatearEnteros } from "@/lib/dinero";
+import { pasoDeSobre } from "@/lib/sobres";
 import { exigirSesion } from "@/app/sesion";
 
 export const metadata: Metadata = { title: "Sobres" };
@@ -29,15 +23,6 @@ const descripcion: Record<string, string> = {
   fondo: "Gastos previsibles pero irregulares. Aporte fijo mensual; lo que sobra se acumula.",
 };
 
-const pasoPorTipo: Record<string, SegmentoDona["paso"]> = {
-  emergencia: 1,
-  inversion: 2,
-  meta: 3,
-  gastos: 4,
-  familia: 5,
-  fondo: 6,
-};
-
 function fechaCorta(iso: string) {
   const [a, m] = iso.split("-").map(Number);
   return new Intl.DateTimeFormat("es-VE", { month: "short", year: "numeric" }).format(new Date(a, m - 1, 1));
@@ -45,7 +30,7 @@ function fechaCorta(iso: string) {
 
 export default async function Sobres() {
   await exigirSesion();
-  const sobres = await saldosPorSobre();
+  const sobres = await sobresConNivel();
   const total = sobres.reduce((acc, s) => acc + s.saldoCentavos, 0);
   const porAsignar = sobres.find((s) => s.tipo === "por_asignar");
   const resto = sobres.filter((s) => s.tipo !== "por_asignar");
@@ -54,12 +39,21 @@ export default async function Sobres() {
     clave: String(s.id),
     nombre: s.nombre,
     valorCentavos: Math.max(s.saldoCentavos, 0),
-    paso: pasoPorTipo[s.tipo] ?? 3,
+    paso: pasoDeSobre(s.tipo),
   }));
 
   return (
     <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">
       <TituloPagina titulo="Sobres" detalle={<Cifra centavos={total} tamano="sm" tono="texto-2" />} />
+      <div className="-mt-2 flex justify-end px-1 lg:col-span-12 lg:mt-0 lg:px-0">
+        <Link
+          href="/sobres/reglas"
+          className="flex items-center gap-0.5 text-[13px] font-semibold text-enlace hover:text-texto"
+        >
+          Reglas de reparto
+          <ChevronRight size={16} aria-hidden />
+        </Link>
+      </div>
 
       {porAsignar && porAsignar.saldoCentavos !== 0 ? (
         <section className="hero rounded-tarjeta p-5 lg:col-span-12 lg:flex lg:items-center lg:justify-between lg:p-6">
@@ -69,9 +63,16 @@ export default async function Sobres() {
               <Cifra centavos={porAsignar.saldoCentavos} tamano="hero" />
             </div>
           </div>
-          <p className="mt-3 max-w-sm text-[13px] text-white/75 lg:mt-0 lg:text-right">
-            Este dinero todavía no tiene un sobre. Repártelo según tus reglas.
-          </p>
+          <div className="mt-3 flex flex-col gap-3 lg:mt-0 lg:items-end">
+            <p className="max-w-sm text-[13px] text-white/75 lg:text-right">
+              Este dinero todavía no tiene un sobre. Repártelo según tus reglas.
+            </p>
+            {porAsignar.saldoCentavos > 0 ? (
+              <EnlaceBoton href="/sobres/repartir" variante="secundario" className="w-full lg:w-auto">
+                Repartir
+              </EnlaceBoton>
+            ) : null}
+          </div>
         </section>
       ) : null}
 
@@ -96,7 +97,7 @@ export default async function Sobres() {
             >
               <Tarjeta className="hover:bg-tarjeta-hover">
                 <div className="flex items-center gap-3">
-                  <Avatar texto={iniciales(s.nombre)} />
+                  <IconoSobre clave={s.id} tipo={s.tipo} nivel={s.nivel} />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="truncate text-[13px] font-extrabold uppercase tracking-wide">{s.nombre}</h2>

@@ -26,7 +26,7 @@ export default async function Nuevo({ searchParams }: PageProps<"/nuevo">) {
           return (
             <Link
               key={t}
-              href={t === "gasto" ? "/nuevo/gasto" : `/nuevo?tipo=${t}`}
+              href={t === "mover" ? "/nuevo?tipo=mover" : `/nuevo/${t}`}
               aria-current={activa ? "true" : undefined}
               className={`palida flex items-center gap-4 rounded-palida p-4 lg:flex-col lg:items-start lg:gap-5 lg:p-5 ${
                 activa ? "ring-2 ring-white" : ""
@@ -45,7 +45,7 @@ export default async function Nuevo({ searchParams }: PageProps<"/nuevo">) {
       </div>
       <Tarjeta>
         <p className="text-[13px] text-texto-2">
-          Gasto ya tiene su pantalla de captura rápida. Ingreso y Mover llegan en las siguientes features.
+          Gasto e Ingreso ya tienen su pantalla. Mover llega con la feature de cuentas y transferencias.
         </p>
       </Tarjeta>
     </main>

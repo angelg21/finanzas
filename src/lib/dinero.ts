@@ -81,6 +81,35 @@ export function aCentavos(texto: string): number {
   return centavos;
 }
 
+/**
+ * Como aCentavos, pero lanza si el texto trae fracciones de centavo: "10,555" no se redondea en silencio a 10,56.
+ * Los ceros de más sí valen ("1,500" es 1,50). Para los montos que se confirman uno por uno, como un reparto.
+ */
+export function aCentavosExactos(texto: string): number {
+  const fraccion = /\.(\d*)$/.exec(normalizar(texto))?.[1] ?? "";
+  if (/[1-9]/.test(fraccion.slice(2))) throw new Error(`Más de dos decimales: ${texto}`);
+  return aCentavos(texto);
+}
+
+/** Un monto que se confirma campo por campo: sus centésimas, o por qué no se pudo leer, para el mensaje del campo. */
+export type LecturaExacta = { ok: true; valor: number } | { ok: false; motivo: "vacio" | "decimales" | "invalido" };
+
+/** Lee con aCentavosExactos sin lanzar. Sirve igual para centavos y para puntos base, que también son centésimas. */
+export function leerExacto(texto: string): LecturaExacta {
+  if (normalizar(texto) === "") return { ok: false, motivo: "vacio" };
+  try {
+    return { ok: true, valor: aCentavosExactos(texto) };
+  } catch {
+    // Si aCentavos sí lo lee, lo que sobra son fracciones de centavo; si no, no es un número.
+    try {
+      aCentavos(texto);
+      return { ok: false, motivo: "decimales" };
+    } catch {
+      return { ok: false, motivo: "invalido" };
+    }
+  }
+}
+
 /*
   Tasas: bolívares por dólar. En memoria viajan como enteros en diezmilésimas
   (241,8 → 2418000), la misma precisión que guarda la base en numeric(14,4),

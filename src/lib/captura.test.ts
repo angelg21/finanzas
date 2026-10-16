@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { esIdCaptura, referenciaDeCaptura, resolverReintento } from "./captura";
+import {
+  esIdCaptura,
+  prefijoDeCaptura,
+  referenciaDeCaptura,
+  referenciaDeReasignacion,
+  resolverReintento,
+} from "./captura";
 
 const id = "3f2b8c1e-9a4d-4e6f-8b7a-1c2d3e4f5a6b";
 
@@ -117,5 +123,89 @@ describe('resolverReintento: un choque solo es "ya estaba" si es la misma captur
 
   it('sin nada guardado no hay "ya estaba"', () => {
     expect(resolverReintento([], [gasto], ahora)).toBe("otra");
+  });
+});
+
+describe("referencias de un ingreso y su reparto (spec 004, criterio 7)", () => {
+  it("el ingreso y una reasignación por sobre, distintas entre sí y en minúsculas", () => {
+    expect(referenciaDeCaptura(id, "ingreso")).toBe(`captura-${id}-ingreso`);
+    expect(referenciaDeReasignacion(id, 7)).toBe(`captura-${id}-reasignacion-7`);
+    expect(referenciaDeReasignacion(id.toUpperCase(), 7)).toBe(referenciaDeReasignacion(id, 7));
+    expect(referenciaDeReasignacion(id, 7)).not.toBe(referenciaDeReasignacion(id, 17));
+    expect(referenciaDeReasignacion(id, 7).startsWith("demo-")).toBe(false);
+  });
+
+  it("un sobre que no es un entero positivo no da referencia", () => {
+    for (const sobreId of [0, -1, 1.5, Number.NaN]) expect(() => referenciaDeReasignacion(id, sobreId)).toThrow();
+  });
+
+  const ahora = new Date("2026-10-14T20:00:00Z");
+  const ingreso = {
+    tipo: "ingreso",
+    fecha: "2026-10-14",
+    montoCentavos: 120_000,
+    moneda: "USDT",
+    montoUsdCentavos: 120_000,
+    montoDestinoCentavos: null,
+    monedaDestino: null,
+    tasa: null,
+    cuentaOrigenId: null,
+    cuentaDestinoId: 1,
+    sobreOrigenId: null,
+    sobreDestinoId: 1,
+    categoriaId: 20,
+    nota: null,
+  };
+  const reasignacion = (sobreDestinoId: number, montoCentavos: number) => ({
+    ...ingreso,
+    tipo: "reasignacion",
+    moneda: "USD",
+    montoCentavos,
+    montoUsdCentavos: montoCentavos,
+    cuentaDestinoId: null,
+    sobreOrigenId: 1,
+    sobreDestinoId,
+    categoriaId: null,
+  });
+  const preparadas = [ingreso, reasignacion(2, 45_000), reasignacion(4, 75_000)];
+  const guardadas = preparadas.map((f) => ({ ...f, creadoEn: new Date(ahora.getTime() - 60_000) }));
+
+  it("el mismo ingreso con el mismo reparto, en cualquier orden: ya estaba", () => {
+    expect(resolverReintento([...guardadas].reverse(), preparadas, ahora)).toBe("ya-estaba");
+  });
+
+  it("si cambió el monto de un sobre, el sobre de destino o falta una reasignación, es otra", () => {
+    expect(resolverReintento(guardadas, [ingreso, reasignacion(2, 45_000), reasignacion(4, 74_999)], ahora)).toBe(
+      "otra",
+    );
+    expect(resolverReintento(guardadas, [ingreso, reasignacion(2, 45_000), reasignacion(5, 75_000)], ahora)).toBe(
+      "otra",
+    );
+    expect(resolverReintento(guardadas, [ingreso, reasignacion(2, 45_000)], ahora)).toBe("otra");
+  });
+});
+
+describe("prefijoDeCaptura: para releer todas las filas de una captura tras un choque (spec 004, criterio 7)", () => {
+  it("es el comienzo de cada referencia de la captura, de gasto o de ingreso", () => {
+    const prefijo = prefijoDeCaptura(id);
+    expect(prefijo).toBe(`captura-${id}-`);
+    for (const referencia of [
+      referenciaDeCaptura(id, "gasto"),
+      referenciaDeCaptura(id, "transferencia"),
+      referenciaDeCaptura(id, "ingreso"),
+      referenciaDeReasignacion(id, 7),
+    ]) {
+      expect(referencia.startsWith(prefijo), referencia).toBe(true);
+    }
+  });
+
+  it("en minúsculas, y no abarca otra captura cuyo id empiece igual", () => {
+    expect(prefijoDeCaptura(id.toUpperCase())).toBe(prefijoDeCaptura(id));
+    expect(referenciaDeCaptura(`${id.slice(0, -1)}c`, "gasto").startsWith(prefijoDeCaptura(id))).toBe(false);
+  });
+
+  it("solo con un id de captura válido: nada de comodines de LIKE ni textos sueltos", () => {
+    for (const texto of ["", "%", "_", `${id}%`, "demo-ing-001"])
+      expect(() => prefijoDeCaptura(texto), texto).toThrow();
   });
 });

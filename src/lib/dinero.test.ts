@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   aCentavos,
+  aCentavosExactos,
+  leerExacto,
   aTasa,
   bolivaresDesdeUsd,
   centavosATexto,
@@ -205,5 +207,43 @@ describe("formatearTasaGuardada: la tasa de la base, sin tumbar la página si vi
     expect(formatearTasaGuardada("0.0000")).toBe("0.0000");
     expect(formatearTasaGuardada("-5.0000")).toBe("-5.0000");
     expect(formatearTasaGuardada("abc")).toBe("abc");
+  });
+});
+
+describe("aCentavosExactos: como aCentavos, pero sin redondear fracciones de centavo (spec 004, criterio 8)", () => {
+  it("lee igual que aCentavos los montos con hasta dos decimales", () => {
+    for (const texto of ["187,50", "1.234,56", "1234.56", "2.100", "25", "0", "-10,5"]) {
+      expect(aCentavosExactos(texto), texto).toBe(aCentavos(texto));
+    }
+  });
+
+  it("acepta ceros de más tras los centavos: 1,500 vale 1,50", () => {
+    expect(aCentavosExactos("1,500")).toBe(150);
+    expect(aCentavosExactos("10.5000")).toBe(1_050);
+  });
+
+  it("lanza si trae fracciones de centavo, en vez de redondear en silencio", () => {
+    for (const texto of ["10,555", "0,001", "1.234,567", "3.14159"]) {
+      expect(() => aCentavosExactos(texto), texto).toThrow(/decimales/);
+    }
+  });
+
+  it("lanza como aCentavos con lo vacío o lo que no es número", () => {
+    expect(() => aCentavosExactos("")).toThrow();
+    expect(() => aCentavosExactos("abc")).toThrow();
+  });
+});
+
+describe("leerExacto: un monto que se confirma campo por campo, o por qué no se pudo leer", () => {
+  it("las centésimas cuando se puede", () => {
+    expect(leerExacto("187,50")).toEqual({ ok: true, valor: 18_750 });
+    expect(leerExacto("-5")).toEqual({ ok: true, valor: -500 });
+  });
+
+  it("vacío, con fracciones de centavo o ilegible, cada uno con su motivo", () => {
+    expect(leerExacto("  ")).toEqual({ ok: false, motivo: "vacio" });
+    expect(leerExacto("10,555")).toEqual({ ok: false, motivo: "decimales" });
+    expect(leerExacto("abc")).toEqual({ ok: false, motivo: "invalido" });
+    expect(leerExacto("1e3")).toEqual({ ok: false, motivo: "invalido" });
   });
 });

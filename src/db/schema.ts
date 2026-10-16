@@ -203,6 +203,8 @@ export const reglasReparto = pgTable(
   (t) => [
     uniqueIndex("reglas_reparto_sobre_unico").on(t.sobreId),
     check("reglas_reparto_valor_positivo", sql`${t.valor} > 0`),
+    // Un porcentaje nunca pasa de 100 % (spec 004, criterio 12). El fijo lo acota el tipo integer.
+    check("reglas_reparto_porcentaje_maximo", sql`${t.tipo} <> 'porcentaje' or ${t.valor} <= 10000`),
   ],
 ).enableRLS();
 
