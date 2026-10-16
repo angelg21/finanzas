@@ -3,9 +3,9 @@
  * al empezar el mes de su fecha. Se calcula al repartir y nunca se guarda: guardada, quedaría vieja al cambiar el mes
  * o al pagar. Entra en el reparto como una regla fija más, antes que todas las demás.
  */
-import { repartirHaciaArriba } from "./dinero";
+import { formatearCifraCorta, repartirHaciaArriba } from "./dinero";
 import type { SentidoDeuda } from "./deudas";
-import { type Mes, esFecha, mesDe } from "./fechas";
+import { type Mes, diaYMes, esFecha, mesDe } from "./fechas";
 import type { ReglaParaRepartir } from "./reparto";
 
 export type DeudaParaCuota = { sentido: SentidoDeuda; pendienteCentavos: number; fechaPrevista: string | null };
@@ -70,4 +70,28 @@ export function reglaDeDeudas(
   if (cuotaCentavos <= 0) return null;
   const orden = Math.min(1, ...reglas.map((r) => r.orden)) - 1;
   return { sobreId: sobreDeudasId, orden, tipo: "fijo", valor: cuotaCentavos, topeCentavos: null };
+}
+
+/** La fecha más cercana entre las deudas abiertas que debo, aunque ya haya pasado; null si ninguna tiene fecha. */
+export function proximoVencimiento(deudas: DeudaParaCuota[]): string | null {
+  const fechas = deudas
+    .flatMap((d) => (d.sentido === "debo" && d.pendienteCentavos > 0 && d.fechaPrevista ? [d.fechaPrevista] : []))
+    .sort();
+  return fechas[0] ?? null;
+}
+
+/**
+ * Lo que dice la fila de Deudas en el reparto: "cuota · faltan 385 este mes · vence 22 oct". Lo que falta es la cuota
+ * menos lo recibido en el mes, como los fijos; la fecha es la del vencimiento más cercano.
+ */
+export function pistaDeCuota(
+  cuotaCentavos: number,
+  recibidoEnElMes: number,
+  vencimiento: string | null,
+  hoy: string,
+): string {
+  const falta = Math.max(0, cuotaCentavos - recibidoEnElMes);
+  const partes = [falta > 0 ? `cuota · faltan ${formatearCifraCorta(falta)} este mes` : "cuota · cubierta este mes"];
+  if (vencimiento !== null) partes.push(`${vencimiento < hoy ? "venció" : "vence"} ${diaYMes(vencimiento)}`);
+  return partes.join(" · ");
 }

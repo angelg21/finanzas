@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Boton, Campo, Entrada, ErrorCampo, SelectorPildoras } from "@/components/formulario";
 import { Tarjeta } from "@/components/ui";
-import { formatearCentavos, leerExacto } from "@/lib/dinero";
+import { formatearCentavos, formatearCifra, leerExacto } from "@/lib/dinero";
 import { PUNTOS_BASE_TOTAL } from "@/lib/reparto";
 import { formatearPorcentaje } from "@/lib/reglas";
 import { guardarConFallas } from "./guardar-con-fallas";
@@ -15,6 +15,8 @@ type Datos = {
   editables: { sobreId: number; nombre: string }[];
   /** Sobres de tipo fondo: su aporte se muestra, pero se cambia en su desglose. */
   fondos: { sobreId: number; nombre: string; aporteCentavos: number | null }[];
+  /** El sobre Deudas: su cuota se calcula en cada reparto y va antes que todos los fijos (spec 005, criterio 12). */
+  deudas: { nombre: string; cuotaCentavos: number } | null;
   emergencia: { nombre: string } | null;
 };
 
@@ -54,6 +56,7 @@ export function FormularioReglas({ inicial, ...datos }: Datos & { inicial: Valor
 function Campos({
   editables,
   fondos,
+  deudas,
   emergencia,
   valores,
   errores,
@@ -90,6 +93,23 @@ function Campos({
           Al repartir un ingreso, primero van los fijos, una vez al mes; lo que queda se reparte por porcentaje.
         </p>
         <div className="flex flex-col">
+          {deudas ? (
+            <div className="flex items-center gap-3 border-t border-tarjeta-borde py-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-extrabold uppercase tracking-wide">{deudas.nombre}</p>
+                <p className="mt-0.5 text-[12px] text-texto-3">
+                  Cuota calculada: {formatearCifra(deudas.cuotaCentavos)} este mes · antes que los fijos
+                </p>
+              </div>
+              <Link
+                href="/deudas"
+                className="flex shrink-0 items-center gap-0.5 text-[13px] font-semibold text-enlace hover:text-texto"
+              >
+                Deudas
+                <ChevronRight size={16} aria-hidden />
+              </Link>
+            </div>
+          ) : null}
           {editables.map((s) => {
             const regla = valores.reglas[s.sobreId] ?? { tipo: "ninguna", valor: "" };
             return (

@@ -40,6 +40,11 @@ export function formatearCentavos(centavos: number, moneda: string = "USD"): str
   return `${negativo ? "−" : ""}${numero} ${unidad}`;
 }
 
+/** 270000 → "2.700"; 18750 → "187,50": sin la unidad ni los centavos en cero, para una pista corta. */
+export function formatearCifraCorta(centavos: number): string {
+  return partesCentavos(centavos).numero.replace(/,00$/, "");
+}
+
 /** −11500 → "−115,00": la cifra con su signo y sin unidad, para los avisos que se leen como frase. */
 export function formatearCifra(centavos: number): string {
   const { numero, negativo } = partesCentavos(centavos);

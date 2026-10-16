@@ -11,6 +11,7 @@
 import { config } from "dotenv";
 import { randomUUID } from "node:crypto";
 import { count, eq, isNull, like, not, or } from "drizzle-orm";
+import { reglasReparto } from "../src/db/schema";
 import { prepararApartado, sobresParaApartar } from "../src/lib/apartado";
 import {
   referenciaDeCaptura,
@@ -20,7 +21,8 @@ import {
 } from "../src/lib/captura";
 import { exigirBaseLocal } from "../src/lib/destino-base";
 import { type FilaDeuda, prepararPago, validarDeuda } from "../src/lib/deudas";
-import { hoyEnCaracas } from "../src/lib/fechas";
+import { hoyEnCaracas, inicioDeMes } from "../src/lib/fechas";
+import { proponerReparto } from "../src/lib/reparto";
 import { saldosTras } from "../src/lib/saldos";
 
 const REFERENCIA = "demo-comprobar-005";
@@ -62,6 +64,7 @@ async function main() {
   const { db, deudas, movimientos } = await import("../src/db/index");
   const { saldosPorCuenta, saldosPorSobre } = await import("../src/db/consultas");
   const { deudaPorId, sobreDeudas } = await import("../src/db/deudas");
+  const { cuotaDelMes, datosDelReparto } = await import("../src/db/reparto");
   const { apartarADeudas, borrarDeuda, editarDeuda, pagarDeuda, registrarDeuda } =
     await import("../src/db/guardar-deudas");
 
@@ -409,6 +412,45 @@ async function main() {
       }),
     );
     comprobar("3", "un pago a algo que me deben lo frena la escritura", aMeDeben);
+
+    // ★ 11 y 12 · con deudas con fecha, Deudas entra en el reparto como la primera fija, con su cuota calculada
+    const enDosMeses = inicioDeMes(hoy, 2).replace(/01$/, "15");
+    await registrarDeuda(idDePrueba(), deuda({ persona: "Amigo (comprobar-005)", monto: "250", fechaPrevista: hoy }));
+    await registrarDeuda(idDePrueba(), deuda({ fechaPrevista: enDosMeses }));
+    const cuota = await cuotaDelMes();
+    const reparto = await datosDelReparto();
+    const [primera, ...resto] = reparto.reglas;
+    comprobar(
+      "12",
+      "la regla de Deudas va primero, fija, con la cuota del mes y su pista",
+      !!cuota &&
+        cuota.cuotaCentavos > 0 &&
+        primera?.sobreId === deudasSobre.id &&
+        primera.tipo === "fijo" &&
+        primera.valor === cuota.cuotaCentavos &&
+        primera.cuota?.vencimiento === hoy &&
+        resto.every((r) => r.orden > primera.orden),
+      `cuota ${cuota?.cuotaCentavos}`,
+    );
+    const [{ filasDeDeudas }] = await db
+      .select({ filasDeDeudas: count() })
+      .from(reglasReparto)
+      .where(eq(reglasReparto.sobreId, deudasSobre.id));
+    comprobar("12", "Deudas no tiene fila en reglas_reparto", filasDeDeudas === 0);
+    const propuesta = proponerReparto({
+      monto: 120_000,
+      reglas: reparto.reglas,
+      recibidoEnElMes: reparto.recibidoPorMes[hoy.slice(0, 7)] ?? {},
+      saldos: Object.fromEntries(reparto.reglas.map((r) => [r.sobreId, r.saldoCentavos])),
+    });
+    const aDeudas = propuesta.asignaciones.find((a) => a.sobreId === deudasSobre.id)?.centavos ?? 0;
+    const recibidoDeudas = reparto.recibidoPorMes[hoy.slice(0, 7)]?.[deudasSobre.id] ?? 0;
+    comprobar(
+      "12",
+      "un cobro de 1.200,00 propone a Deudas su cuota menos lo recibido en el mes",
+      !!cuota && aDeudas === Math.min(120_000, Math.max(0, cuota.cuotaCentavos - recibidoDeudas)),
+      `${aDeudas}`,
+    );
 
     // ★ 9 · las sumas de SQL son las de saldosTras, con todos los tipos en la base
     comprobar("9", "las sumas de SQL son iguales a saldosTras sobre todas las filas", await sqlIgualASaldosTras());

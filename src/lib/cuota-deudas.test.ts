@@ -3,7 +3,7 @@
  * fecha. El ejemplo de reparto con Deudas (criterio 12) vive en reparto.criterios.test.ts.
  */
 import { describe, expect, it } from "vitest";
-import { type DeudaParaCuota, cuotaDeDeudas, reglaDeDeudas } from "./cuota-deudas";
+import { type DeudaParaCuota, cuotaDeDeudas, pistaDeCuota, proximoVencimiento, reglaDeDeudas } from "./cuota-deudas";
 
 const hoy = "2026-10-15";
 const amigo: DeudaParaCuota = { sentido: "debo", pendienteCentavos: 25_000, fechaPrevista: "2026-10-22" };
@@ -134,5 +134,43 @@ describe("reglaDeDeudas: la cuota como una regla fija más (criterio 12)", () =>
 
   it("con cuota 0 no hay regla", () => {
     expect(reglaDeDeudas(12, 0, reglas)).toBeNull();
+  });
+});
+
+describe("proximoVencimiento: la fecha más cercana entre las deudas abiertas que debo", () => {
+  it("la más temprana, aunque ya haya pasado", () => {
+    expect(proximoVencimiento([papas, amigo])).toBe("2026-10-22");
+    expect(proximoVencimiento([papas, { ...amigo, fechaPrevista: "2026-09-30" }])).toBe("2026-09-30");
+  });
+
+  it("sin contar las pagadas, lo que me deben ni las que no tienen fecha", () => {
+    const deudas = [
+      { ...amigo, pendienteCentavos: 0 },
+      { ...amigo, sentido: "me_deben" as const, fechaPrevista: "2026-10-16" },
+      { ...amigo, fechaPrevista: null },
+      papas,
+    ];
+    expect(proximoVencimiento(deudas)).toBe("2026-12-15");
+    expect(proximoVencimiento([])).toBeNull();
+  });
+});
+
+describe("pistaDeCuota: lo que dice la fila de Deudas en el reparto (criterio 12)", () => {
+  it("lo que falta este mes y cuándo vence la más cercana", () => {
+    expect(pistaDeCuota(38_500, 0, "2026-10-22", hoy)).toBe("cuota · faltan 385 este mes · vence 22 oct");
+  });
+
+  it("lo recibido en el mes se descuenta, y cubierta cuando ya llegó", () => {
+    expect(pistaDeCuota(38_500, 10_000, "2026-12-15", hoy)).toBe("cuota · faltan 285 este mes · vence 15 dic");
+    expect(pistaDeCuota(38_500, 38_500, "2026-12-15", hoy)).toBe("cuota · cubierta este mes · vence 15 dic");
+  });
+
+  it("una fecha pasada dice venció; hoy todavía vence", () => {
+    expect(pistaDeCuota(25_000, 0, "2026-10-01", hoy)).toBe("cuota · faltan 250 este mes · venció 1 oct");
+    expect(pistaDeCuota(25_000, 0, hoy, hoy)).toBe("cuota · faltan 250 este mes · vence 15 oct");
+  });
+
+  it("sin fecha no dice cuándo vence", () => {
+    expect(pistaDeCuota(38_500, 0, null, hoy)).toBe("cuota · faltan 385 este mes");
   });
 });

@@ -37,7 +37,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 
   Revisión de `guardian-datos`.
 
-- [ ] T8 · Deudas en el reparto (criterio 12):
+- [x] T8 (2026-10-15) · Deudas en el reparto (criterio 12):
   - `datosDelReparto` inyecta la regla calculada;
   - la pista en `TarjetaReparto`;
   - `/sobres/reglas` la muestra en solo lectura;
@@ -137,3 +137,12 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
     - la fecha del pago la valida solo `prepararPago`.
   - Para la T13: el cobro toma `(5, deudaId)`. Si alguna función toma dos candados, siempre en el mismo orden.
   - Aceptado: apartar contra un gasto del mismo sobre no comparte candado. El sobre puede quedar en negativo, como con el gasto solo.
+- 2026-10-15 · T8:
+  - `cuotaDelMes` (`src/db/reparto.ts`) calcula la cuota con lo apartado al empezar el mes. Si no hay sobre Deudas activo, o si una deuda trae datos rotos, devuelve null y el reparto sigue sin Deudas (resguardo H1 de la T6).
+  - `datosDelReparto` pone la regla de Deudas antes que todas las fijas. `reglasActivas` deja fuera cualquier fila de `reglas_reparto` que apunte a Deudas, para que nunca cuente dos veces.
+  - La pista sale de `pistaDeCuota`: "cuota · faltan 385 este mes · vence 22 oct", o "venció" si la fecha ya pasó.
+  - `/sobres/reglas` muestra Deudas primero, en solo lectura, con "Cuota calculada: X este mes · antes que los fijos" y el enlace "Deudas".
+  - `reglaEditable("deudas")` es false, y con eso `guardarReglas` también lo deja fuera.
+  - Se agregaron `diaYMes` ("22 oct") y `formatearCifraCorta`, que `reglas.ts` ya usaba en privado.
+  - `comprobar-005` cubre el criterio 12 contra la base: la regla de Deudas va primero con la cuota (453,00 en la corrida, que cuadra con la cuenta a mano), sin fila en `reglas_reparto`, y propone la cuota menos lo recibido.
+  - Límite conocido: la cuota es la del mes de hoy. Un ingreso con fecha del mes anterior le resta lo recibido en ese mes, como a los fijos. Es un caso raro y no se trata.

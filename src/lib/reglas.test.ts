@@ -153,6 +153,9 @@ describe("pistaDeRegla: lo que dice cada fila del reparto (spec 004, pantallas)"
 });
 
 describe("reglaEditable: qué sobres se editan en /sobres/reglas", () => {
+  it("Deudas tampoco: su cuota se calcula en cada reparto (spec 005, criterio 12)", () => {
+    expect(reglaEditable("deudas")).toBe(false);
+  });
   it("todos menos Por asignar y los fondos, cuya regla sale de su desglose", () => {
     for (const tipo of ["gastos", "familia", "emergencia", "meta", "inversion"])
       expect(reglaEditable(tipo), tipo).toBe(true);

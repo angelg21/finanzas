@@ -1,14 +1,18 @@
 import { and, desc, eq, gte, ne, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
+import { cuotaDeDeudas, proximoVencimiento, reglaDeDeudas } from "@/lib/cuota-deudas";
+import { hoyEnCaracas } from "@/lib/fechas";
 import type { ReglaParaRepartir } from "@/lib/reparto";
 import type { NivelDeSobre } from "@/lib/sobres";
+import { deudasConPendiente, sobreDeudas } from "./deudas";
 import { db } from "./index";
 import { sobresConNivel } from "./sobres";
 import { categorias, cuentas, movimientos, reglasReparto, sobres } from "./schema";
 
 /*
   Lecturas del ingreso y su reparto (spec 004). La propuesta se calcula en src/lib/reparto.ts con lo que sale de
-  aquí; la misma función corre en el servidor y en el cliente, así que el cliente recibe estos datos tal cual.
+  aquí; la misma función corre en el servidor y en el cliente, así que el cliente recibe estos datos tal cual. La
+  regla de Deudas no está en la base: se calcula aquí y llega como una fija más (spec 005).
 */
 
 /**
@@ -25,7 +29,10 @@ export async function sobrePorAsignar() {
   return sobre ?? null;
 }
 
-/** Las reglas activas de sobres activos, sin "Por asignar", ordenadas como las atiende el reparto entre iguales. */
+/**
+ * Las reglas activas de sobres activos, sin "Por asignar" ni Deudas, ordenadas como las atiende el reparto entre
+ * iguales. La de Deudas no se guarda: se calcula (cuotaDelMes); una fila que apuntara a él contaría dos veces.
+ */
 export async function reglasActivas() {
   return db
     .select({
@@ -37,7 +44,14 @@ export async function reglasActivas() {
     })
     .from(reglasReparto)
     .innerJoin(sobres, eq(reglasReparto.sobreId, sobres.id))
-    .where(and(eq(reglasReparto.activa, true), eq(sobres.activo, true), ne(sobres.tipo, "por_asignar")))
+    .where(
+      and(
+        eq(reglasReparto.activa, true),
+        eq(sobres.activo, true),
+        ne(sobres.tipo, "por_asignar"),
+        ne(sobres.tipo, "deudas"),
+      ),
+    )
     .orderBy(reglasReparto.orden, reglasReparto.sobreId);
 }
 
@@ -99,12 +113,33 @@ export async function cuentaDelUltimoIngreso(): Promise<number | null> {
   return ultima?.id ?? null;
 }
 
+/**
+ * La cuota de Deudas de este mes (spec 005, criterios 11 y 12), con su sobre y el vencimiento más cercano. null sin
+ * sobre Deudas activo, o si una deuda trae datos rotos: entonces se reparte sin Deudas en vez de impedir guardar el
+ * ingreso (guardian-datos, T6); /deudas sí lo dice.
+ */
+export async function cuotaDelMes() {
+  const [sobre, deudas] = await Promise.all([sobreDeudas(), deudasConPendiente().catch(() => null)]);
+  if (!sobre?.activo || !deudas) return null;
+  const hoy = hoyEnCaracas(new Date());
+  // Lo apartado al empezar el mes: así la cuota no cambia dentro del mes, aunque lleguen pagos o cobros.
+  const apartado = sobre.saldoCentavos - sobre.recibidoEnElMesCentavos;
+  return {
+    sobreId: sobre.id,
+    cuotaCentavos: cuotaDeDeudas({ deudas, apartado, hoy }),
+    vencimiento: proximoVencimiento(deudas),
+    hoy,
+  };
+}
+
 /** Una regla con lo que la pantalla muestra de su sobre: nombre, saldo, tipo y nivel para su icono. */
 export type ReglaConSobre = ReglaParaRepartir & {
   nombre: string;
   saldoCentavos: number;
   tipoSobre: string;
   nivel: NivelDeSobre;
+  /** Solo la de Deudas: para su pista, "cuota · faltan 385 este mes · vence 22 oct". */
+  cuota?: { vencimiento: string | null; hoy: string };
 };
 
 /**
@@ -112,12 +147,16 @@ export type ReglaConSobre = ReglaParaRepartir & {
  * (para los topes), los sobres que pueden recibir reparto y lo recibido por mes. Lo usan las páginas y las acciones.
  */
 export async function datosDelReparto() {
-  const [porAsignar, reglas, saldos, recibidoPorMes] = await Promise.all([
+  const [porAsignar, guardadas, saldos, recibidoPorMes, cuota] = await Promise.all([
     sobrePorAsignar(),
     reglasActivas(),
     sobresConNivel(),
     recibidoDesdePorAsignarPorMes(),
+    cuotaDelMes(),
   ]);
+  // Deudas, como una fija más antes que todas; con cuota 0 no tiene fila (spec 005, criterio 12).
+  const deDeudas = cuota && reglaDeDeudas(cuota.sobreId, cuota.cuotaCentavos, guardadas);
+  const reglas = deDeudas ? [deDeudas, ...guardadas] : guardadas;
   const saldoDe = new Map(saldos.map((s) => [s.id, s.saldoCentavos]));
   const sobreDe = new Map(saldos.map((s) => [s.id, s]));
   return {
@@ -130,6 +169,7 @@ export async function datosDelReparto() {
         saldoCentavos: sobre?.saldoCentavos ?? 0,
         tipoSobre: sobre?.tipo ?? "",
         nivel: sobre?.nivel ?? { porcentaje: null, alcanzado: false, negativo: false },
+        ...(r === deDeudas && cuota ? { cuota: { vencimiento: cuota.vencimiento, hoy: cuota.hoy } } : {}),
       };
     }),
     /** Activos y sin "Por asignar": los únicos que pueden recibir una reasignación desde él. */

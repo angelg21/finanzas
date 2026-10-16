@@ -3,6 +3,7 @@ import {
   celdasDelMes,
   clavesDeMeses,
   diaAnterior,
+  diaYMes,
   diasQueQuedanDelMes,
   esFecha,
   etiquetaFecha,
@@ -112,6 +113,10 @@ describe("moverMes", () => {
 describe("nombres de fechas en español", () => {
   it("nombreMes", () => {
     expect(nombreMes(10)).toBe("Octubre");
+  });
+  it("diaYMes, para una fecha prevista: 22 oct", () => {
+    expect(diaYMes("2026-10-22")).toBe("22 oct");
+    expect(diaYMes("2027-01-05")).toBe("5 ene");
   });
   it("etiquetaFecha corta para la píldora", () => {
     expect(etiquetaFecha("2026-10-09")).toBe("Vie 9 oct");
