@@ -136,6 +136,8 @@ export function baseMovimientos() {
       cuentaDestino: cuentaDestino.nombre,
       sobreOrigen: sobreOrigen.nombre,
       sobreDestino: sobreDestino.nombre,
+      sobreOrigenId: movimientos.sobreOrigenId,
+      sobreDestinoId: movimientos.sobreDestinoId,
       deudaId: movimientos.deudaId,
       persona: deudas.persona,
     })

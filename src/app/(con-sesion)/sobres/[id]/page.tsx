@@ -3,6 +3,7 @@ import { ArrowLeft, CalendarDays, Repeat } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { IconoSobre } from "@/components/icono-sobre";
+import { tituloDeDeuda } from "@/components/movimiento";
 import {
   Avatar,
   Cifra,
@@ -16,9 +17,12 @@ import {
   iniciales,
 } from "@/components/ui";
 import { movimientosDeSobre, partidasDeSobre, reglaDeSobre, sobrePorId, type MovimientoReciente } from "@/db/consultas";
+import { deudasConPendiente } from "@/db/deudas";
 import type { Sobre } from "@/db/schema";
 import { aporteMensualCentavos, totalAnualCentavos } from "@/lib/fondos";
 import { formatearCentavos } from "@/lib/dinero";
+import { pendientePorSentido } from "@/lib/deudas";
+import { cambioEnSobre } from "@/lib/saldos";
 import { nivelParaIcono } from "@/lib/sobres";
 import { BotonEliminarPartida, FormularioAporte, FormularioPartida, nombresMes } from "./formularios";
 import { exigirSesion } from "@/app/sesion";
@@ -57,14 +61,6 @@ const etiquetaTipo: Record<MovimientoReciente["tipo"], string> = {
   cobro_prestamo: "Cobro de préstamo",
 };
 
-/** Cuánto cambió el saldo de este sobre con el movimiento: positivo si entró, negativo si salió. */
-function efectoEnSobre(m: MovimientoReciente, nombreSobre: string) {
-  if (m.tipo === "ingreso") return m.montoUsdCentavos;
-  if (m.tipo === "gasto") return -m.montoUsdCentavos;
-  if (m.tipo === "reasignacion") return m.sobreDestino === nombreSobre ? m.montoUsdCentavos : -m.montoUsdCentavos;
-  return 0;
-}
-
 export default async function DetalleSobre({ params }: PageProps<"/sobres/[id]">) {
   await exigirSesion();
   const { id } = await params;
@@ -73,10 +69,17 @@ export default async function DetalleSobre({ params }: PageProps<"/sobres/[id]">
   const sobre = await sobrePorId(sobreId);
   if (!sobre) notFound();
 
-  const [partidas, regla, movimientos] = await Promise.all([
+  const [partidas, regla, movimientos, debidoCentavos] = await Promise.all([
     partidasDeSobre(sobreId),
     reglaDeSobre(sobreId),
     movimientosDeSobre(sobreId, 30),
+    // Deudas se mide contra lo que se debe, como en /sobres. Con datos rotos, sin medida (guardian-datos, T6).
+    sobre.tipo === "deudas"
+      ? deudasConPendiente().then(
+          (deudas) => pendientePorSentido(deudas).deboCentavos,
+          () => null,
+        )
+      : null,
   ]);
 
   const esFondo = sobre.tipo === "fondo";
@@ -90,6 +93,7 @@ export default async function DetalleSobre({ params }: PageProps<"/sobres/[id]">
     topeCentavos: sobre.topeCentavos,
     anualCentavos: partidas.length > 0 ? totalAnual : null,
     fijoMensualCentavos: regla?.activa && regla.tipo === "fijo" ? regla.valor : null,
+    debidoCentavos,
   });
 
   return (
@@ -145,12 +149,13 @@ export default async function DetalleSobre({ params }: PageProps<"/sobres/[id]">
           ) : (
             <div className="flex flex-col">
               {movimientos.map((m) => {
-                const efecto = efectoEnSobre(m, sobre.nombre);
+                const efecto = cambioEnSobre(m, sobre.id);
+                const deDeuda = tituloDeDeuda(m.tipo, m.persona);
                 return (
                   <FilaLista
                     key={m.id}
-                    avatar={<Avatar texto={iniciales(m.categoria ?? etiquetaTipo[m.tipo])} />}
-                    titulo={m.nota ?? m.categoria ?? etiquetaTipo[m.tipo]}
+                    avatar={<Avatar texto={iniciales(m.persona ?? m.categoria ?? etiquetaTipo[m.tipo])} />}
+                    titulo={deDeuda ?? m.nota ?? m.categoria ?? etiquetaTipo[m.tipo]}
                     subtitulo={`${fechaCorta(m.fecha)} · ${m.tipo === "reasignacion" ? `${m.sobreOrigen} → ${m.sobreDestino}` : (m.categoria ?? etiquetaTipo[m.tipo])}`}
                     derecha={<Cifra centavos={efecto} tono={efecto > 0 ? "positivo" : "texto"} signo />}
                   />

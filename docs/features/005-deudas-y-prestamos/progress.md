@@ -46,7 +46,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - "Deudas" en el menú y en `tituloDe`;
   - el tono nuevo y el icono de `IconoSobre` para `deudas`, con su prueba de paleta.
 - [x] T10 (2026-10-16) · `/deudas/nueva` y `/deudas/[id]/editar`, con un formulario compartido, `SelectorFecha` en su variante `futura` y "Borrar" sin movimientos (criterios 1 y 16).
-- [ ] T11 · `/deudas/[id]` con el pago, el aviso "Deudas quedará en …", el historial y el aviso de liquidez (criterios 3 y 14). Además, los tipos nuevos en `FilaMovimiento`, en la pestaña Mover y en `/sobres/[id]` (criterio 18).
+- [x] T11 (2026-10-16) · `/deudas/[id]` con el pago, el aviso "Deudas quedará en …", el historial y el aviso de liquidez (criterios 3 y 14). Además, los tipos nuevos en `FilaMovimiento`, en la pestaña Mover y en `/sobres/[id]` (criterio 18).
 - [ ] T12 · `/deudas/apartar` con su acción (criterio 13).
 - [ ] T13 · "Lo que me deben" (criterios 4, 5, 7 y 15):
   - en `src/lib/deudas.ts`, `prepararPrestamo`, `prepararCobro` y `patrimonioNeto`, con sus pruebas, viéndolas fallar primero, y las referencias `-prestamo` y `-cobro`;
@@ -168,3 +168,17 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - Capturas de `/deudas/nueva` y de la edición de Papás (sin movimientos, con "Borrar") en los dos anchos y temas.
   - Sin `required` en los campos: los mensajes son los de la app, como en la captura de gasto.
   - El envío del formulario en el navegador queda para la validación del desarrollador. La escritura ya está probada contra la base en `comprobar-005`.
+- 2026-10-16 · T11:
+  - `/deudas/[id]` muestra:
+    - el hero con lo pendiente, "De X", lo pagado o cobrado, el plazo, la cuenta prevista, el progreso y el aviso de liquidez;
+    - a la derecha, fijo en escritorio, el formulario de pago: el monto con lo pendiente escrito, la cuenta prevista o la primera en dólares, la fecha y la nota, más la línea "Deudas tiene X; quedará en Y", en rojo si queda bajo cero, que se recalcula al escribir;
+    - el historial, y el enlace "Editar".
+  - Pagada, el formulario se cambia por "Pagada". Sin sobre Deudas activo, lo dice.
+  - Tras guardar, vuelve al detalle con "Pago guardado".
+  - La acción del pago busca el reintento antes de `prepararPago` (punto 6 del guardián en la T7). Así, el reintento del pago que saldó la deuda dice "ya estaba" y no "ya está pagada".
+  - El signo y el efecto en un sobre salen de `src/lib/saldos.ts`: `signoDe(tipo)` para `FilaMovimiento` y `cambioEnSobre` para `/sobres/[id]`, que ya no compara nombres de sobre.
+  - En `FilaMovimiento`, los tipos de deudas llevan un círculo neutro con su icono y los títulos "Pago a Papás", "Préstamo a Luis" y "Cobro de Luis".
+  - `/sobres/[id]` mide Deudas contra lo que se debe (H3 del guardián en la T6).
+  - Capturas de los detalles de Andrés, Papás y Luis, del sobre Deudas, de Mover y del inicio. El gastado del mes no cuenta el pago a Andrés.
+  - En escritorio, `lg:grid-rows-[auto_auto_1fr]` evita el hueco que dejaba bajo el hero el formulario, que abarca dos filas.
+  - Lo que me deben todavía no tiene formulario: el cobro llega en la T14.

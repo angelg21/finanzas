@@ -64,6 +64,28 @@ export function tiposCon(lado: keyof Efecto): TipoMovimiento[] {
   return tiposDeMovimiento.filter((tipo) => efectoDe(tipo)[lado]);
 }
 
+/**
+ * El signo con que se muestra un movimiento en las listas (spec 005, criterio 18): negativo si solo sale de una
+ * cuenta (gasto, pago, préstamo), positivo si solo entra (ingreso, cobro), y sin signo si mueve entre cuentas o solo
+ * entre sobres.
+ */
+export function signoDe(tipo: TipoMovimiento): -1 | 0 | 1 {
+  const e = efectoDe(tipo);
+  if (e.saleDeCuenta === e.entraACuenta) return 0;
+  return e.saleDeCuenta ? -1 : 1;
+}
+
+/** Cuánto cambió el saldo del sobre `sobreId` con un movimiento, en USD: positivo si entró, negativo si salió. */
+export function cambioEnSobre(
+  f: { tipo: TipoMovimiento; montoUsdCentavos: number; sobreOrigenId: number | null; sobreDestinoId: number | null },
+  sobreId: number,
+): number {
+  const e = efectoDe(f.tipo);
+  if (e.entraASobre && f.sobreDestinoId === sobreId) return f.montoUsdCentavos;
+  if (e.saleDeSobre && f.sobreOrigenId === sobreId) return -f.montoUsdCentavos;
+  return 0;
+}
+
 type SaldosPorId = Record<number, number>;
 
 /** Lo que mueve saldos en una fila de cualquier tipo. Las del gasto no traen sobre destino. */

@@ -4,7 +4,16 @@
  * base en scripts/comprobar-005.ts.
  */
 import { describe, expect, it } from "vitest";
-import { type FilaQueMueve, type TipoMovimiento, efectoDe, saldosTras, tiposCon, tiposDeMovimiento } from "./saldos";
+import {
+  type FilaQueMueve,
+  type TipoMovimiento,
+  cambioEnSobre,
+  efectoDe,
+  saldosTras,
+  signoDe,
+  tiposCon,
+  tiposDeMovimiento,
+} from "./saldos";
 
 const binance = 1;
 const prima = 2;
@@ -144,5 +153,38 @@ describe("el invariante con los siete tipos (criterio 9)", () => {
     const despues = saldosTras(mes, cuentas, sobres);
     expect(suma(despues.cuentas)).toBe(150_000 + 120_000 - 4_200 - 25_000 - 14_000 + 5_000);
     expect(suma(despues.sobres)).toBe(suma(despues.cuentas));
+  });
+});
+
+describe("signoDe: cómo se muestra un movimiento en las listas (criterio 18)", () => {
+  it("lo que sale de una cuenta va en negativo, lo que entra en positivo y lo que solo mueve, sin signo", () => {
+    expect(Object.fromEntries(tiposDeMovimiento.map((t) => [t, signoDe(t)]))).toEqual({
+      ingreso: 1,
+      gasto: -1,
+      transferencia: 0,
+      reasignacion: 0,
+      pago_deuda: -1,
+      prestamo: -1,
+      cobro_prestamo: 1,
+    });
+  });
+});
+
+describe("cambioEnSobre: cuánto cambió el saldo de un sobre con un movimiento (criterio 18)", () => {
+  const base = { montoUsdCentavos: 5_000, sobreOrigenId: null, sobreDestinoId: null };
+  it("entra en el destino y sale del origen, según el tipo", () => {
+    expect(cambioEnSobre({ ...base, tipo: "pago_deuda", sobreOrigenId: deudas }, deudas)).toBe(-5_000);
+    expect(cambioEnSobre({ ...base, tipo: "cobro_prestamo", sobreDestinoId: porAsignar }, porAsignar)).toBe(5_000);
+    expect(
+      cambioEnSobre({ ...base, tipo: "reasignacion", sobreOrigenId: porAsignar, sobreDestinoId: deudas }, deudas),
+    ).toBe(5_000);
+    expect(
+      cambioEnSobre({ ...base, tipo: "reasignacion", sobreOrigenId: porAsignar, sobreDestinoId: deudas }, porAsignar),
+    ).toBe(-5_000);
+  });
+
+  it("un movimiento que no toca el sobre, o que solo mueve cuentas, no lo cambia", () => {
+    expect(cambioEnSobre({ ...base, tipo: "gasto", sobreOrigenId: gastosDelMes }, deudas)).toBe(0);
+    expect(cambioEnSobre({ ...base, tipo: "transferencia" }, deudas)).toBe(0);
   });
 });
