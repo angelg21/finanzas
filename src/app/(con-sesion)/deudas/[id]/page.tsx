@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { ArrowLeft, CheckCircle2, CircleAlert, Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { EnlaceBoton } from "@/components/formulario";
 import { FilaMovimiento } from "@/components/movimiento";
 import { Cifra, EncabezadoTarjeta, Pildora, Progreso, Tarjeta } from "@/components/ui";
 import { saldosPorCuenta } from "@/db/consultas";
 import { deudaConMovimientos, deudasConPendiente, sobreDeudas } from "@/db/deudas";
+import { sobrePorAsignar } from "@/db/reparto";
 import { cuentaParaPagar } from "@/lib/deudas";
 import { centavosATexto, formatearCifra } from "@/lib/dinero";
 import { hoyEnCaracas } from "@/lib/fechas";
@@ -19,8 +21,8 @@ export const dynamic = "force-dynamic";
 
 /**
  * Una deuda (spec 005): lo pendiente, de cuánto, lo pagado o cobrado, la fecha y la cuenta prevista, el aviso de
- * liquidez, el formulario para pagarla y su historial. Pagada, el formulario se cambia por "Pagada". En escritorio el
- * formulario va a la derecha, fijo al desplazarse, como el reparto del ingreso.
+ * liquidez, el formulario para pagarla o cobrarla y su historial. Saldada, el formulario se cambia por "Pagada" o
+ * "Cobrada". En escritorio el formulario va a la derecha, fijo al desplazarse, como el reparto del ingreso.
  */
 export default async function DetalleDeuda({ params, searchParams }: PageProps<"/deudas/[id]">) {
   await exigirSesion();
@@ -28,9 +30,10 @@ export default async function DetalleDeuda({ params, searchParams }: PageProps<"
   const { guardado } = await searchParams;
   const deudaId = Number(id);
   if (!Number.isSafeInteger(deudaId) || deudaId <= 0) notFound();
-  const [datos, sobre, cuentas, todas] = await Promise.all([
+  const [datos, sobre, porAsignar, cuentas, todas] = await Promise.all([
     deudaConMovimientos(deudaId),
     sobreDeudas(),
+    sobrePorAsignar(),
     saldosPorCuenta(),
     deudasConPendiente(),
   ]);
@@ -101,25 +104,37 @@ export default async function DetalleDeuda({ params, searchParams }: PageProps<"
         <EncabezadoTarjeta
           titulo={debo ? "Registrar pago" : "Registrar cobro"}
           derecha={
-            guardado === "pago" ? (
+            guardado === "pago" || guardado === "cobro" || guardado === "prestamo" ? (
               <Pildora tono="positiva">
                 <CheckCircle2 size={13} aria-hidden />
-                Pago guardado
+                {{ pago: "Pago guardado", cobro: "Cobro guardado", prestamo: "Préstamo guardado" }[guardado]}
               </Pildora>
             ) : undefined
           }
         />
+        {guardado === "cobro" ? (
+          // Lo cobrado entró a "Por asignar": se ofrece repartirlo (criterio 5).
+          <div className="mb-4 flex flex-col gap-2 rounded-[14px] bg-tarjeta-hover p-3">
+            <p className="text-[13px] text-texto-2">Lo cobrado entró a Por asignar. Dale un trabajo:</p>
+            <EnlaceBoton href="/sobres/repartir" variante="secundario">
+              Repartir
+            </EnlaceBoton>
+          </div>
+        ) : null}
         {pagada ? (
           <Pildora tono="positiva">
             <CheckCircle2 size={13} aria-hidden />
             {debo ? "Pagada" : "Cobrada"}
           </Pildora>
-        ) : !debo ? null : !sobre?.activo ? (
+        ) : debo && !sobre?.activo ? (
           <p className="text-[13px] text-negativo">No hay un sobre Deudas activo: no se puede pagar.</p>
+        ) : !debo && !porAsignar?.activo ? (
+          <p className="text-[13px] text-negativo">No hay un sobre Por asignar activo: no se puede cobrar.</p>
         ) : enDolares.length === 0 ? (
           <p className="text-[13px] text-negativo">No hay ninguna cuenta en dólares activa.</p>
         ) : (
           <FormularioPago
+            cual={debo ? "pago" : "cobro"}
             inicial={{
               deudaId: String(deuda.id),
               idCaptura: crypto.randomUUID(),
@@ -130,7 +145,7 @@ export default async function DetalleDeuda({ params, searchParams }: PageProps<"
             }}
             cuentas={enDolares.map(({ id: cuentaId, nombre, moneda }) => ({ id: cuentaId, nombre, moneda }))}
             hoy={hoy}
-            saldoDeudasCentavos={sobre.saldoCentavos}
+            saldoDeudasCentavos={debo && sobre ? sobre.saldoCentavos : null}
           />
         )}
       </Tarjeta>

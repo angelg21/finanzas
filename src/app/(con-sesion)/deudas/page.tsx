@@ -19,11 +19,11 @@ export const dynamic = "force-dynamic";
 const reglaDeUso =
   "Una deuda corta con un amigo se paga antes de repartir el siguiente ingreso. Presta solo lo que podrías regalar sin resentimiento.";
 
-function NadaPorAqui() {
+function NadaPorAqui({ href }: { href: string }) {
   return (
     <p className="py-2 text-[13px] text-texto-3">
       Nada por aquí.{" "}
-      <Link href="/deudas/nueva" className="font-semibold text-enlace hover:text-texto">
+      <Link href={href} className="font-semibold text-enlace hover:text-texto">
         Registrar
       </Link>
     </p>
@@ -49,6 +49,9 @@ export default async function Deudas({ searchParams }: PageProps<"/deudas">) {
   const debo = deudas.filter((d) => d.sentido === "debo");
   const abiertas = debo.filter((d) => d.estado === "abierta");
   const pagadas = debo.filter((d) => d.estado === "pagada");
+  const meDeben = deudas.filter((d) => d.sentido === "me_deben");
+  const porCobrar = meDeben.filter((d) => d.estado === "abierta");
+  const cobradas = meDeben.filter((d) => d.estado === "pagada");
   const deudasActivo = sobre?.activo === true;
   const mes = nombreMes(mesDe(hoy).mes).toLowerCase();
 
@@ -103,7 +106,7 @@ export default async function Deudas({ searchParams }: PageProps<"/deudas">) {
           derecha={abiertas.length > 0 ? <Pildora>{abiertas.length} abiertas</Pildora> : undefined}
         />
         {abiertas.length === 0 ? (
-          <NadaPorAqui />
+          <NadaPorAqui href="/deudas/nueva" />
         ) : (
           <div className="flex flex-col">
             {abiertas.map((d) => {
@@ -119,6 +122,34 @@ export default async function Deudas({ searchParams }: PageProps<"/deudas">) {
             </summary>
             <div className="flex flex-col">
               {pagadas.map((d) => (
+                <FilaDeuda key={d.id} deuda={d} hoy={hoy} />
+              ))}
+            </div>
+          </details>
+        ) : null}
+      </Tarjeta>
+
+      <Tarjeta className="lg:col-span-5">
+        <EncabezadoTarjeta
+          titulo="Me deben"
+          derecha={porCobrar.length > 0 ? <Pildora>{porCobrar.length} abiertas</Pildora> : undefined}
+        />
+        {porCobrar.length === 0 ? (
+          <NadaPorAqui href="/deudas/nueva?sentido=me_deben" />
+        ) : (
+          <div className="flex flex-col">
+            {porCobrar.map((d) => (
+              <FilaDeuda key={d.id} deuda={d} hoy={hoy} />
+            ))}
+          </div>
+        )}
+        {cobradas.length > 0 ? (
+          <details className="mt-2 border-t border-tarjeta-borde pt-2">
+            <summary className="cursor-pointer py-2 text-[13px] font-semibold text-enlace hover:text-texto">
+              Cobradas ({cobradas.length})
+            </summary>
+            <div className="flex flex-col">
+              {cobradas.map((d) => (
                 <FilaDeuda key={d.id} deuda={d} hoy={hoy} />
               ))}
             </div>

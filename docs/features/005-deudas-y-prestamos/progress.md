@@ -54,7 +54,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 
   Revisión de `guardian-datos`.
 
-- [ ] T14 · `/deudas/prestar`, el cobro en `/deudas/[id]` con el enlace "Repartir", la lista "Me deben" en `/deudas` y el patrimonio neto en `/cuentas` (criterios 4, 5, 15 y 21).
+- [x] T14 (2026-10-16) · `/deudas/prestar`, el cobro en `/deudas/[id]` con el enlace "Repartir", la lista "Me deben" en `/deudas` y el patrimonio neto en `/cuentas` (criterios 4, 5, 15 y 21).
 - [ ] T15 · Demo, humo y comprobación (criterios 9 y 22):
   - `semilla-demo.ts` con las deudas `demo-deuda-*` al final y la limpieza en orden de FK;
   - `scripts/humo.mjs` con las rutas nuevas y un 404;
@@ -203,3 +203,14 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
     - H1: `prestar` podía dejar "Por asignar" en negativo, incluso en carrera con un reparto (20 de 20 rondas). Desde "Por asignar" ahora toma el candado del reparto y vuelve a comprobar su saldo después de reconocer el reintento.
     - H2: los inserts de `prestar` y `registrarDeuda` van campo por campo (`columnasDeDeuda`).
   - **Punto abierto:** desde otro sobre, un préstamo se guarda aunque lo deje en negativo, como un gasto. La spec no lo decide.
+- 2026-10-16 · T14:
+  - `/deudas/prestar` pide:
+    - a quién y cuánto, con la unidad de la cuenta elegida;
+    - la cuenta y el sobre de origen, con su saldo; nunca Deudas ni Inversión, y "Por asignar" viene elegido si tiene;
+    - la fecha del préstamo (hoy, ayer u otra pasada), la fecha prevista de cobro (variante `futura`) y la nota.
+  - Si el reintento del préstamo no es el mismo, entrega un id nuevo. Si "Por asignar" no alcanza, el error va en el monto.
+  - Prestar lleva al detalle con "Préstamo guardado".
+  - `/deudas/[id]` cobra lo que me deben con el mismo formulario y la misma acción que el pago (`cual`). El cobro no lleva la línea de Deudas. Tras guardar dice "Cobro guardado" y ofrece "Repartir", que lleva a `/sobres/repartir`.
+  - `/deudas` gana la tarjeta "Me deben", junto a Debo en escritorio (7 + 5), con "Cobradas (n)" y, si está vacía, el enlace a registrar con "Me deben" elegido.
+  - `/cuentas` muestra el patrimonio neto bajo la verificación: el neto, Cuentas, Me deben (+), Debo (−) y "Ver deudas". Con datos de deudas rotos lo dice y la página no se cae (resguardo H1).
+  - Capturas en los dos anchos y temas: patrimonio neto 5.243 + 190 − 670 = 4.763,00.

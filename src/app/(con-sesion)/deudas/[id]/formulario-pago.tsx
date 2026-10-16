@@ -5,16 +5,18 @@ import { SelectorFecha } from "@/components/calendario";
 import { Boton, Campo, CampoMonto, Entrada, ErrorCampo, SelectorPildoras } from "@/components/formulario";
 import { avisoDelSobreDeudas } from "@/lib/deudas";
 import { aCentavos, unidadDe } from "@/lib/dinero";
-import { pagarConFallas } from "./pagar-con-fallas";
+import { cobrarConFallas, pagarConFallas } from "./pagar-con-fallas";
 import type { ErroresFormularioPago, EstadoPago, ValoresPago } from "./valores";
 
 type Datos = {
+  /** Pagar lo que debo o cobrar lo que me deben: mismos campos, otra acción. */
+  cual: "pago" | "cobro";
   inicial: ValoresPago;
   /** Las cuentas activas en dólares. */
   cuentas: { id: number; nombre: string; moneda: string }[];
   hoy: string;
-  /** El saldo de Deudas ahora, para "Deudas tiene X; quedará en Y". */
-  saldoDeudasCentavos: number;
+  /** El saldo de Deudas ahora, para "Deudas tiene X; quedará en Y". Solo al pagar. */
+  saldoDeudasCentavos: number | null;
 };
 
 /** El monto escrito en centavos, o null mientras no se lee como un monto mayor que cero. */
@@ -28,12 +30,14 @@ function leido(texto: string): number | null {
 }
 
 /**
- * Registrar un pago (spec 005, criterio 3): el monto viene con lo pendiente escrito y la cuenta, con la prevista o la
- * primera en dólares. Debajo, lo que tiene Deudas y en cuánto quedará, en rojo si queda bajo cero: se guarda igual y
- * la cuota del siguiente reparto lo repone. Sin JavaScript la línea se calcula con el monto que trae el formulario.
+ * Registrar un pago o un cobro (spec 005, criterios 3 y 5): el monto viene con lo pendiente escrito y la cuenta, con
+ * la prevista o la primera en dólares. Al pagar, debajo, lo que tiene Deudas y en cuánto quedará, en rojo si queda
+ * bajo cero: se guarda igual y la cuota del siguiente reparto lo repone. Sin JavaScript la línea se calcula con el
+ * monto que trae el formulario. Al cobrar, el dinero entra a "Por asignar".
  */
 export function FormularioPago({ inicial, ...datos }: Datos) {
-  const [estado, enviar, pendiente] = useActionState<EstadoPago, FormData>(pagarConFallas, {
+  const accion = datos.cual === "pago" ? pagarConFallas : cobrarConFallas;
+  const [estado, enviar, pendiente] = useActionState<EstadoPago, FormData>(accion, {
     ronda: 0,
     estado: "inicial",
   });
@@ -50,6 +54,7 @@ export function FormularioPago({ inicial, ...datos }: Datos) {
 }
 
 function Campos({
+  cual,
   valores,
   errores,
   cuentas,
@@ -68,14 +73,15 @@ function Campos({
   const [fecha, setFecha] = useState(valores.fecha);
   const moneda = cuentas.find((c) => String(c.id) === cuentaId)?.moneda ?? "USD";
   const centavos = leido(monto);
-  const aviso = centavos === null ? null : avisoDelSobreDeudas(saldoDeudasCentavos, centavos);
+  const aviso =
+    centavos === null || saldoDeudasCentavos === null ? null : avisoDelSobreDeudas(saldoDeudasCentavos, centavos);
 
   return (
     <form action={enviar} className="flex flex-col gap-4">
       <input type="hidden" name="deudaId" value={valores.deudaId} />
       <input type="hidden" name="idCaptura" value={valores.idCaptura} />
 
-      <Campo etiqueta="Monto del pago" error={errores.monto}>
+      <Campo etiqueta={cual === "pago" ? "Monto del pago" : "Monto del cobro"} error={errores.monto}>
         <CampoMonto name="monto" value={monto} onChange={(e) => setMonto(e.target.value)} unidad={unidadDe(moneda)} />
       </Campo>
       {aviso ? (
@@ -105,7 +111,7 @@ function Campos({
 
       <ErrorCampo>{errores.general ?? errores.deuda}</ErrorCampo>
       <Boton type="submit" disabled={pendiente} className="w-full">
-        Registrar pago
+        {cual === "pago" ? "Registrar pago" : "Registrar cobro"}
       </Boton>
     </form>
   );
