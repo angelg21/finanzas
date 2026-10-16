@@ -47,7 +47,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
   - el tono nuevo y el icono de `IconoSobre` para `deudas`, con su prueba de paleta.
 - [x] T10 (2026-10-16) · `/deudas/nueva` y `/deudas/[id]/editar`, con un formulario compartido, `SelectorFecha` en su variante `futura` y "Borrar" sin movimientos (criterios 1 y 16).
 - [x] T11 (2026-10-16) · `/deudas/[id]` con el pago, el aviso "Deudas quedará en …", el historial y el aviso de liquidez (criterios 3 y 14). Además, los tipos nuevos en `FilaMovimiento`, en la pestaña Mover y en `/sobres/[id]` (criterio 18).
-- [ ] T12 · `/deudas/apartar` con su acción (criterio 13).
+- [x] T12 (2026-10-16) · `/deudas/apartar` con su acción (criterio 13).
 - [ ] T13 · "Lo que me deben" (criterios 4, 5, 7 y 15):
   - en `src/lib/deudas.ts`, `prepararPrestamo`, `prepararCobro` y `patrimonioNeto`, con sus pruebas, viéndolas fallar primero, y las referencias `-prestamo` y `-cobro`;
   - las escrituras de prestar (deuda y movimiento en una transacción) y cobrar, con candado.
@@ -182,3 +182,9 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - Capturas de los detalles de Andrés, Papás y Luis, del sobre Deudas, de Mover y del inicio. El gastado del mes no cuenta el pago a Andrés.
   - En escritorio, `lg:grid-rows-[auto_auto_1fr]` evita el hueco que dejaba bajo el hero el formulario, que abarca dos filas.
   - Lo que me deben todavía no tiene formulario: el cobro llega en la T14.
+- 2026-10-16 · T12:
+  - `/deudas/apartar` muestra el hero con lo apartado en Deudas, lo que debo y la cuota del mes, y debajo el sobre de origen (cada uno con su saldo, "Por asignar" elegido si tiene) y el monto.
+  - Los orígenes salen de `sobresParaApartar`: nunca Deudas ni Inversión, y solo los que tienen saldo.
+  - La acción reconoce el reintento antes de `prepararApartado`, que ya no ofrecería un origen vaciado por el primer intento. Escribe con `apartarADeudas`, que toma el candado del reparto sobre el origen.
+  - Al guardar vuelve a `/deudas` con "Apartado guardado" en el hero.
+  - Capturas en los dos anchos y temas.

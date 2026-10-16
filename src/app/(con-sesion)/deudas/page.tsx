@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CircleAlert, HandHelping, Plus, PiggyBank } from "lucide-react";
+import { CheckCircle2, CircleAlert, HandHelping, PiggyBank, Plus } from "lucide-react";
 import Link from "next/link";
 import { Cifra, EncabezadoTarjeta, Mosaico, Pildora, Tarjeta, TarjetaPalida, TituloPagina } from "@/components/ui";
 import { saldosPorCuenta } from "@/db/consultas";
@@ -34,8 +34,9 @@ function NadaPorAqui() {
  * Lo que debo y lo que me deben (spec 005): el total que debo, lo apartado en Deudas y la cuota del mes, la regla de
  * uso y cada deuda abierta con su aviso de liquidez. Sin sobre Deudas activo lo dice y no ofrece apartar (criterio 10).
  */
-export default async function Deudas() {
+export default async function Deudas({ searchParams }: PageProps<"/deudas">) {
   await exigirSesion();
+  const { guardado } = await searchParams;
   const [deudas, sobre, cuota, cuentas] = await Promise.all([
     deudasConPendiente(),
     sobreDeudas(),
@@ -61,6 +62,12 @@ export default async function Deudas() {
           <Cifra centavos={deboCentavos} tamano="hero" />
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
+          {guardado === "apartado" ? (
+            <Pildora tono="positiva">
+              <CheckCircle2 size={13} aria-hidden />
+              Apartado guardado
+            </Pildora>
+          ) : null}
           {deudasActivo ? (
             <>
               <Pildora tono="hero">Apartado {formatearCifra(sobre.saldoCentavos)}</Pildora>
