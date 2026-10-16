@@ -106,10 +106,19 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
     - `✓ humo (3.5 s)`
     - `✓ verify:full en verde en 31.4 s. Árbol sellado.`
 - Revisión (2026-10-15): `revisor`, **APTO PARA FUSIONAR** al primer intento; `guardian-datos`, **APTO** sobre `97437d7`, el único commit que tocó `src/db` sin pasar por él. Ninguno de los hallazgos bloquea:
-  - **Sin decidir:** "1.200" se guarda como 1,20 (la nota de T2). La validación en navegador no lo decidió; lo decide el desarrollador.
+  - "1.200" se guarda como 1,20 (la nota de T2). **Decidido por el desarrollador (2026-10-15): se queda así, el punto se lee como decimal.**
   - `/sobres/reglas`: el aviso "Reglas guardadas" sigue en pantalla mientras se vuelve a editar, aunque lo de la pantalla ya no sea lo guardado.
   - `/sobres/reglas`: los cinco grupos de radios tienen la misma leyenda "Regla"; el nombre del sobre queda fuera del `fieldset`, y un lector de pantalla no sabe de qué sobre es cada uno.
   - `sobresConNivel` lanza un error si un tope pasa de 2^53 o las partidas desbordan un bigint, y ese error tumba el ingreso y el reparto con el monto en el mensaje. Desde la app no se llega (`guardarReglas` y las partidas lo impiden); conviene que deje `porcentaje: null` en vez de lanzar, y vigilarlo en el importador.
   - El nivel se calcula dos veces, en SQL en `sobresConNivel` y en JS en `/sobres/[id]`; hoy coinciden en 8 escenarios. `datosDelReparto` pasa de 4 a 6 conexiones a la vez, con los mismos tiempos; hay que volver a medirlo con el pooler de Supabase.
   - `scripts/humo.mjs` no cubre las tres rutas nuevas; a mano, sin sesión, dan 307 a `/entrar`.
   - La base local quedó como estaba: 118 movimientos `demo-*`, 0 `captura-*`, las seis reglas activas con 40/30/30.
+- Arreglos tras la revisión, por decisión del desarrollador (2026-10-15):
+  - `022990f`: en `/sobres/reglas`, el aviso "Reglas guardadas" se va al tocar cualquier campo y vuelve con el siguiente guardado; cada grupo de radios se anuncia como "Regla de <sobre>" (`detalleEtiqueta` en `SelectorPildoras`, solo para el lector de pantalla).
+  - `789fbc6`: `nivelParaIcono` pinta sin medida un sobre con una medida fuera de los enteros seguros, en vez de lanzar con el monto; la suma del desglose va en `numeric`. `nivelDeSobre` sigue exigiendo enteros y su prueba no cambió.
+  - `08c4ce7`: el humo cubre `/nuevo/ingreso`, `/sobres/repartir` y `/sobres/reglas`.
+- Segunda vuelta (2026-10-15): `revisor`, **APTO PARA FUSIONAR**, sin hallazgos abiertos (probado en Edge con y sin JavaScript y en el árbol de accesibilidad); `guardian-datos`, **APTO** sobre `789fbc6`, con datos normales idéntico a antes. `pnpm verify --forzar` en verde, 495 pruebas. Quedan informativos, todos solo por SQL:
+  - El mensaje de `789fbc6` dice más de lo que arregla: con un tope de 2^53+1, la propuesta sigue lanzando en `registrarIngreso` y en `/sobres/repartir`, ahora desde `validar` de `lib/reparto.ts` (así desde T1). El guardado no se afecta. Si se quiere cerrar, que la propuesta trate ese tope como "sin tope" o que lo frene el importador.
+  - Con una partida de 2^62×4, `/sobres/18` lanza en `aporteMensualCentavos` (de antes de 97437d7).
+  - `nivelParaIcono` descarta todo el nivel si una medida está fuera de rango, también la marca de negativo.
+  - La suma en `numeric` cuesta unos 15 ms más con 200 mil partidas; con las de verdad, nada.

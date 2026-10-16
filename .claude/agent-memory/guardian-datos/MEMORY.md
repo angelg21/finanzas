@@ -7,5 +7,5 @@
 - [Guardas de producción](project_guardas-produccion.md): T3 de 002 NO APTO y luego APTO; migrador = drizzle-kit; postgres-js lee la URL distinto; deny cerrado en db17a31
 - [Respaldo de producción](project_respaldo-produccion.md): T4 de 002 NO APTO y luego APTO; volcado Supabase→vanilla sano; PGPASSWORD; huellas por tabla; residuales T15
 - [Revisión de 003](project_revision-003-movimientos.md): T3 APTO, mediciones; categoría validada contra totales en la página; Mover mezcla tipos por día
-- [Revisión de 004](project_revision-004-reparto.md): T4 SEGURO; T5 APTO (7dd832a); 97437d7 (nivel de sobres, fuera del pipeline) APTO; mirar git log -- src/db
+- [Revisión de 004](project_revision-004-reparto.md): T4 SEGURO; T5 APTO (7dd832a); 97437d7 APTO; su corrección 789fbc6 APTO (la propuesta sigue lanzando); mirar git log -- src/db
 - [Captura idempotente](project_captura-idempotente.md): T12 de 002 NO APTO y luego APTO; 23505 + huella + 15 min; residuales: id reutilizado idéntico, sin editar movimientos, pruebas de base en f-verify

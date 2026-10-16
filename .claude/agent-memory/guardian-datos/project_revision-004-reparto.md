@@ -62,6 +62,13 @@ metadata:
   - el nivel se calcula en dos sitios.
 - Para entonces, el diff `main...HEAD` en `src/db` y `drizzle` tenía 3 commits: b8ef818, 7dd832a y 97437d7. Los blobs de reparto.ts son iguales desde b8ef818 hasta 97437d7^, y el hash de 0004 coincide con el aplicado.
 
-**How to apply:** el autor hace commits "fuera del pipeline" que tocan `src/db`. En cada revisión, correr `git log main..HEAD -- src/db drizzle` y comparar los blobs con lo que ya medí.
+**789fbc6 (2026-10-15), la corrección de mi hallazgo 1: APTO.** Usa `nivelParaIcono` y la suma en numeric. Medido en la copia `finanzas_g97c`:
+
+- **Con datos normales**, `sobresConNivel` y `datosDelReparto` salen idénticos antes y ahora (`deepStrictEqual`). Las sumas dan 4300 en bigint y 4300 en numeric.
+- **Con un tope de 2^53+1, una partida de 2^62×4 o una de 2^52×3,** `datosDelReparto` responde y el sobre queda sin medida.
+- **El mensaje del commit dice más de lo que arregla.** Con el tope fuera de rango, `registrarIngreso` al proponer y `/sobres/repartir` siguen lanzando desde `lib/reparto`, como antes de 97437d7.
+- **Tiempos:** con 2 partidas no hay diferencia. Con 200 mil partidas, la suma en numeric pasa de 17 ms a 30-34 ms.
+
+**How to apply:** el autor hace commits "fuera del pipeline" que tocan `src/db`. Cuando me digan "ya no lanza", medir también la ruta completa (la propuesta y las páginas), no solo la función tocada. En cada revisión, correr `git log main..HEAD -- src/db drizzle` y comparar los blobs con lo que ya medí.
 
 Ver también [[defectos-datos-encontrados]] y [[entorno-de-prueba]].

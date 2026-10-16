@@ -47,11 +47,15 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
 
 **Abiertos, nuevos en la auditoría de 97437d7 (2026-10-15). Info, ninguno bloquea** (ver [[revision-004-reparto]])
 
-- `sobresConNivel` lanza si un tope, un saldo o la suma anual no es un entero seguro (`exigirEntero` en `lib/sobres.ts`), o si `sum(monto*veces)` desborda (22003). Como `datosDelReparto` lo usa, eso tumba `registrarIngreso`, `repartir`, el inicio, `/sobres` y `/nuevo/ingreso`.
-  - Medido con un tope de 2^53+1 y con una partida de 2^62×4 metidos por SQL.
-  - Desde la app no se llega: `guardarReglas` y `AporteFueraDeRango` lo acotan.
-  - El RangeError lleva el monto en el mensaje y no pasa por `registrarFalla`. Es la misma familia que "tasa ≤ 0".
-  - La captura de gasto no lo usa.
+- **Cerrado en 789fbc6 (medido el 2026-10-15):** `sobresConNivel` lanzaba con medidas fuera de los enteros seguros, o con `sum(monto*veces)` desbordado (22003). Ahora usa `nivelParaIcono` y la suma va en numeric, así que `datosDelReparto`, el inicio, `/sobres` y el guardado del ingreso ya responden.
+- **Siguen abiertos (info, de antes de 97437d7, solo por SQL):** con un tope que no es un entero seguro en un sobre con regla, `validar` de `lib/reparto.ts` (desde T1) lanza con el monto en el mensaje. Lo hace en:
+  - `registrarIngreso` al proponer;
+  - `/sobres/repartir` cuando "Por asignar" tiene saldo;
+  - el formulario del cliente.
+
+  Con un desglose así, `/sobres/[id]` lanza en `aporteMensualCentavos`. La acción `repartir` y el guardado del ingreso responden. Desde la app no se llega: `guardarReglas` y `AporteFueraDeRango` lo acotan.
+
+- Info, en 789fbc6: un sobre en negativo con un tope fuera de rango pierde la marca de negativo.
 - Las conexiones simultáneas pasan de 4 a 6 en `datosDelReparto` y de 5 a 7 en el inicio. La acción del ingreso usa 8 de las 10 que postgres-js abre por defecto. Medirlo junto con el pooler (T15).
 - El nivel se calcula en dos sitios: `sobresConNivel` (SQL) y `/sobres/[id]` (JS). Hoy dan lo mismo.
 

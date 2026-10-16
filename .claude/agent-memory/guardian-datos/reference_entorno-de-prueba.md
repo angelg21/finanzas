@@ -105,7 +105,8 @@ metadata:
   - `comparar.cts <viejo/reparto.ts>`: compara, en el mismo proceso, la versión vieja con HEAD y el nivel con SQL;
   - `bordes.cts`: los escenarios del nivel, con `registrarIngreso` real (sesión, `next/cache` y `registrarFalla` falsos);
   - `medir.cts <viejo> conexiones-*|tiempos`: cuenta las conexiones con `pg_stat_activity` desde otra conexión.
-  Los tres necesitan `NODE_PATH=<repo>/node_modules` para el archivo viejo.
+    Los tres necesitan `NODE_PATH=<repo>/node_modules` para el archivo viejo.
+- `fix.cts <viejo2>` y `fix2.cts previo|tiempos <scratch>` (789fbc6, solo contra `finanzas_g97c*`): renderizan las páginas reales con `renderToStaticMarkup(await Pagina(props))`, con sesión, `next/cache` y `registrarFalla` falsos. Funciona en CJS con tsx: `jsx` es `react-jsx`. Así se ve qué página lanza con un dato y desde dónde.
 - `comprobar-004` se niega si la copia trae movimientos que no son demo. Primero se borran **en la copia** y luego se corre con `en-copia.mjs`.
 - **El log no dice de qué base viene cada línea** (el prefijo es solo `%m [%p]`). Los errores de mis copias y los de la base real salen mezclados en `docker logs`. Hay que atribuirlos por la hora y por lo que yo corrí.
 - **Ordenar escrituras ajenas:** comparar el `xmin` de las filas con `txid_current()`. Los xid son de todo el clúster, así que lo que hago en las copias también los consume.

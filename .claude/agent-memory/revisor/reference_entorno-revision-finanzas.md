@@ -24,4 +24,7 @@ metadata:
 - Entrar en el Edge de revisión: un `entrar.mjs` en el scratchpad que hace `process.loadEnvFile(".env" + ".local")` por dentro (como `scripts/capturas.mjs`), llena `correo`/`clave` del primer `<form>` de `/entrar` y hace `requestSubmit()`. Correrlo con cwd en el repo; nunca imprimir las credenciales. La cookie queda en el perfil del Edge para los guiones siguientes.
 - Reparto (004): el demo cubre los fijos de 2026-06 a 2026-10; para ver fijos propuestos hay que fechar el ingreso en mayo 2026 (calendario: "Otra fecha", cinco veces "Mes anterior"). En local, Ocasiones vale 4,00 (de su desglose), no los 25 de la semilla. `scripts/comprobar-004.ts` se limpia solo y deja 118 filas.
 
+- Nombre accesible sin lector de pantalla: `Accessibility.enable` y `Accessibility.getFullAXTree`, filtrando `role.value === "group"`; da el nombre que calcula el navegador (con `sr-only`). Para "lo visible no cambia", regenerar la captura y comparar posiciones con la anterior.
+- Guiones del Edge: escribirlos con Write, no con heredoc. Dentro de un heredoc las barras de `\\n` o `\\s` en una expresión regular dentro de un template se pierden y `Runtime.evaluate` da SyntaxError.
+
 Ver [[donde-se-esconden-defectos]].

@@ -25,6 +25,8 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 
 - 004, vuelta 1 (2026-10-15): APTO al primer intento. Ejercité con JS, sin JS, Enter, "Registrar otro", confirmación de "Quedan X", fijos en un mes sin reparto y topes: todo cuadró. Lo que quedó fue de pantalla: un mensaje de éxito (`guardado`) que sigue visible mientras se edita algo distinto sin guardar (el formulario no se vuelve a montar hasta la siguiente respuesta), y cinco `SelectorPildoras` con la misma leyenda "Regla" sin el nombre del sobre. El autor también mete en la rama de la feature commits "fuera del pipeline, por decisión del desarrollador" (iconos, inicio, cuentas) sin spec: revisarlos solo contra reglas duras y decirlo. Y deja decisiones de dinero "para decidir aparte" en el progress (aquí "1.200" se lee 1,20) que la nota de validación luego no resuelve.
 
+- 004, vuelta 2 (2026-10-15): APTO. Los arreglos (aviso con `onChange` en el `<form>` y `sr-only` en la leyenda) salieron limpios y sin efectos fuera de su pantalla; el autor añadió por su cuenta `nivelParaIcono` (no lanza con medidas fuera de rango) y las rutas nuevas al humo. El desarrollador decidió que "1.200" es 1,20: no reabrirlo.
+
 **Why:** la demo es toda `origen = importado`, así que la lógica que depende de historial `manual` no se ve. La validación en navegador sigue el camino feliz, en un solo momento, y no pasa por un error de validación ni por el paso del tiempo antes de guardar.
 
 **How to apply:**
