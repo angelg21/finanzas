@@ -105,7 +105,7 @@ Al terminar, en el despliegue, pestaña **Source**: deben estar solo `src/`, `pu
 
 ## Operación
 
-- **Migrar producción** cuando una feature traiga una migración: `pnpm db:migrate:produccion` antes de publicar el código que la usa, con la app sin uso. Los bloqueos de la migración pueden chocar con un gasto que se guarde en ese momento.
+- **Migrar producción** cuando una feature traiga una migración: `pnpm db:respaldo:produccion` y luego `pnpm db:migrate:produccion` antes de publicar el código que la usa, con la app sin uso. Los bloqueos de la migración pueden chocar con un gasto que se guarde en ese momento. Si la feature cambió `src/db/seed.ts`, también `pnpm db:seed:produccion`, que solo añade lo que falta. Publicar `main` despliega al instante, así que `/f-ship` no publica hasta que producción esté migrada: el 2026-10-16 se publicaron la 004 y la 005 con producción en la 0003.
 - **Respaldar**: `pnpm db:respaldo:produccion`. No incluye `auth.users`: si hubiera que rehacer el proyecto, el usuario se crea otra vez a mano.
 - **Ataque al límite de intentos** (ADR 0010): si dejas de poder entrar con "Demasiados intentos", activa **Attack Challenge Mode** en Vercel (**Firewall**) y espera unos minutos.
 - **Celular perdido o sesión robada** (ADR 0010):

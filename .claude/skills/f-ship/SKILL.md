@@ -12,6 +12,7 @@ Fusionar la feature **$ARGUMENTS**.
 2. Árbol limpio: `git status --porcelain` vacío.
 3. `pnpm verify --forzar` en verde **ahora**, no "hace un rato". Pega la última línea.
 4. El autor repasó su diff: muestra `git diff main...HEAD --stat` y pide al usuario que confirme que lo leyó línea por línea. Si cambió algo sustancial después de `/f-review`, vuelve a `/f-review`.
+5. **Producción va primero.** Publicar `main` despliega en Vercel al instante. Si `git diff main...HEAD --stat -- drizzle/ src/db/seed.ts` no está vacío, para y pide al desarrollador que corra en PowerShell, en este orden, `pnpm db:respaldo:produccion`, `pnpm db:migrate:produccion` y, si cambió la semilla, `pnpm db:seed:produccion` (`docs/despliegue.md`, "Operación"). No publiques hasta que pegue "Migraciones aplicadas." con todas las comprobaciones en ✓. Razón: el 2026-10-16 se publicaron la 004 y la 005 con producción en la 0003, y la app buscaba la tabla `deudas`, que no existía.
 
 ## Historial
 
