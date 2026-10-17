@@ -10,7 +10,13 @@ import {
   saldosPorCuenta,
   sobresParaGasto,
 } from "@/db/consultas";
-import { type MovimientoParaEditar, movimientoParaEditar, vistaPreviaDeBorrado } from "@/db/editar-movimientos";
+import {
+  type MovimientoParaEditar,
+  type PagoOCobro,
+  movimientoParaEditar,
+  pagoOCobroParaDeshacer,
+  vistaPreviaDeBorrado,
+} from "@/db/editar-movimientos";
 import { categoriasDeIngresoPorUso } from "@/db/reparto";
 import { centavosATexto, formatearCentavos, formatearCifra, formatearTasaGuardada } from "@/lib/dinero";
 import { hoyEnCaracas } from "@/lib/fechas";
@@ -37,9 +43,14 @@ export default async function EditarMovimiento({ params, searchParams }: PagePro
   const { borrar, volver: pedido } = await searchParams;
   const movimientoId = Number(id);
   if (!Number.isSafeInteger(movimientoId) || movimientoId <= 0) notFound();
-  const m = await movimientoParaEditar(movimientoId);
-  if (!m) notFound();
   const volver = destinoDeVuelta(typeof pedido === "string" ? pedido : "");
+  const m = await movimientoParaEditar(movimientoId);
+  if (!m) {
+    // Spec 007: un pago o un cobro de una deuda no se edita, se deshace.
+    const p = await pagoOCobroParaDeshacer(movimientoId);
+    if (!p) notFound();
+    return <DeshacerPagoOCobro p={p} volver={volver} confirmar={borrar === "1"} />;
+  }
   const hoy = hoyEnCaracas(new Date());
   const esGasto = m.movimiento.tipo === "gasto";
 
@@ -48,7 +59,7 @@ export default async function EditarMovimiento({ params, searchParams }: PagePro
       <header className="flex flex-col gap-2 px-1 lg:col-span-12 lg:px-0">
         <Link href={volver} className="flex items-center gap-1 text-[13px] font-semibold text-enlace hover:text-texto">
           <ArrowLeft size={16} aria-hidden />
-          {volver === "/" ? "Inicio" : "Movimientos"}
+          {etiquetaDeVuelta(volver)}
         </Link>
         <h1 className="text-[24px] font-extrabold tracking-tight">{esGasto ? "Editar gasto" : "Editar ingreso"}</h1>
       </header>
@@ -57,6 +68,52 @@ export default async function EditarMovimiento({ params, searchParams }: PagePro
       ) : (
         <EdicionDeIngreso m={m} volver={volver} hoy={hoy} confirmar={borrar === "1"} />
       )}
+    </main>
+  );
+}
+
+const etiquetaDeVuelta = (volver: string) =>
+  volver === "/" ? "Inicio" : volver.startsWith("/deudas/") ? "Deuda" : "Movimientos";
+
+/** Un pago o un cobro (spec 007, criterios 1 y 2): lo que fue, y "Deshacer" con su confirmación. */
+function DeshacerPagoOCobro({ p, volver, confirmar }: { p: PagoOCobro; volver: string; confirmar: boolean }) {
+  const esPago = p.tipo === "pago_deuda";
+  const titulo = `${esPago ? "Pago a" : "Cobro de"} ${p.persona}`;
+  const monto = formatearCentavos(p.montoCentavos, p.moneda);
+  const deshacer = {
+    id: p.id,
+    tipo: esPago ? ("pago" as const) : ("cobro" as const),
+    volver,
+    queSeBorra: esPago
+      ? `Se deshace el pago de ${monto} a ${p.persona}: vuelve a la cuenta y al sobre Deudas, y la deuda vuelve a deberse.`
+      : `Se deshace el cobro de ${monto} de ${p.persona}: sale de la cuenta y de Por asignar, y vuelve a deberte.`,
+    avisos: [],
+  };
+  return (
+    <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">
+      <header className="flex flex-col gap-2 px-1 lg:col-span-12 lg:px-0">
+        <Link href={volver} className="flex items-center gap-1 text-[13px] font-semibold text-enlace hover:text-texto">
+          <ArrowLeft size={16} aria-hidden />
+          {etiquetaDeVuelta(volver)}
+        </Link>
+        <h1 className="text-[24px] font-extrabold tracking-tight">{titulo}</h1>
+      </header>
+      <div className="flex flex-col gap-4 lg:col-span-6 lg:col-start-4">
+        {confirmar ? (
+          <Tarjeta>
+            <ConfirmarBorrado {...deshacer} />
+          </Tarjeta>
+        ) : null}
+        <Tarjeta>
+          <p className="text-[28px] font-extrabold tracking-tight">{monto}</p>
+          <p className="mt-1 text-[13px] text-texto-2">
+            {[p.cuenta, p.fecha.split("-").reverse().join("-"), p.nota].filter(Boolean).join(" · ")}
+          </p>
+        </Tarjeta>
+        <div className="flex">
+          <BotonBorrar {...deshacer} />
+        </div>
+      </div>
     </main>
   );
 }

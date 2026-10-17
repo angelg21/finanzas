@@ -27,7 +27,9 @@ export type EstadoBorrar = { error?: string };
 
 /** A dónde volver tras guardar o borrar: el inicio o Movimientos con sus filtros. Cualquier otra cosa, Movimientos. */
 export function destinoDeVuelta(texto: string): string {
-  return texto === "/" || /^\/movimientos(\?[\w=&%.-]*)?$/.test(texto) ? texto : "/movimientos";
+  return texto === "/" || /^\/movimientos(\?[\w=&%.-]*)?$/.test(texto) || /^\/deudas\/\d{1,10}$/.test(texto)
+    ? texto
+    : "/movimientos";
 }
 
 /** El destino con el aviso de lo hecho: "?editado=gasto", "?editado=ingreso" o "?borrado=1". */
@@ -41,11 +43,15 @@ export function avisoDeVuelta(params: Record<string, string | string[] | undefin
   if (params.editado === "ingreso") return "Ingreso actualizado";
   if (params.borrado === "1") return "Borrado";
   if (params.borrado === "ya") return "Ya estaba borrado";
+  if (params.borrado === "deshecho") return "Deshecho";
   return null;
 }
 
-/** La dirección de edición de un gasto o un ingreso, con a dónde volver; los demás tipos no se editan (criterio 8). */
+/**
+ * La dirección de un gasto o un ingreso para editarlo, o de un pago o un cobro para deshacerlo (spec 007), con a
+ * dónde volver. Transferencias, reasignaciones y préstamos no abren nada (spec 006, criterio 8).
+ */
 export function enlaceDeEdicion(m: { id: number; tipo: string }, volver: string): string | undefined {
-  if (m.tipo !== "gasto" && m.tipo !== "ingreso") return undefined;
+  if (!["gasto", "ingreso", "pago_deuda", "cobro_prestamo"].includes(m.tipo)) return undefined;
   return `/movimientos/${m.id}?volver=${encodeURIComponent(volver)}`;
 }

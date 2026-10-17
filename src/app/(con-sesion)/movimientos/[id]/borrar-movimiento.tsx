@@ -7,7 +7,7 @@ import type { EstadoBorrar } from "./valores";
 
 type Datos = {
   id: number;
-  tipo: "gasto" | "ingreso";
+  tipo: "gasto" | "ingreso" | "pago" | "cobro";
   volver: string;
   /** "Se borran el gasto y la venta de 20,00 USDT." */
   queSeBorra: string;
@@ -16,6 +16,13 @@ type Datos = {
   /** Por qué no se puede borrar ("Por asignar tiene 30,00; le faltan 770,00"): entonces no se ofrece. */
   impedido?: string;
 };
+
+const etiquetaDe = {
+  gasto: "Borrar gasto",
+  ingreso: "Borrar ingreso",
+  pago: "Deshacer pago",
+  cobro: "Deshacer cobro",
+} as const;
 
 /** La confirmación con su formulario: en el `<dialog>` con JavaScript, o en la página con `?borrar=1` sin él. */
 export function ConfirmarBorrado({
@@ -43,7 +50,7 @@ export function ConfirmarBorrado({
       <div className="flex gap-2">
         {impedido ? null : (
           <Boton type="submit" variante="peligro" disabled={pendiente} className="flex-1">
-            {pendiente ? "Borrando…" : "Sí, borrar"}
+            {pendiente ? "Un momento…" : tipo === "pago" || tipo === "cobro" ? "Sí, deshacer" : "Sí, borrar"}
           </Boton>
         )}
         {alCancelar ? (
@@ -73,11 +80,11 @@ export function BotonBorrar(datos: Datos) {
         }}
         className="mx-auto"
       >
-        {datos.tipo === "gasto" ? "Borrar gasto" : "Borrar ingreso"}
+        {etiquetaDe[datos.tipo]}
       </EnlaceBoton>
       <dialog
         ref={ventana}
-        aria-label={datos.tipo === "gasto" ? "Borrar gasto" : "Borrar ingreso"}
+        aria-label={etiquetaDe[datos.tipo]}
         onClick={(e) => {
           if (e.target === e.currentTarget) ventana.current?.close();
         }}
