@@ -294,3 +294,12 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - `cuotaDelMes`: el `.catch(() => null)` se traga cualquier error, también un corte de conexión, sin `registrarFalla`; la propuesta pierde Deudas sin aviso.
   - Conexiones: `datosDelReparto` abre 9 (eran 7 en la T6), la acción del ingreso llena las 10 de postgres-js y `deudasConPendiente` corre dos veces. Hay que medirlo con el pooler de producción.
   - La base local quedó en 122 movimientos y 4 deudas, todos `demo-*`, con 6 reglas. `guardian-datos` recargó la demo, así que los ids de las deudas pasaron de 21-24 a 66-69.
+- Después de fusionar (2026-10-16), los hallazgos de la revisión que no bloqueaban, como cambios directos sobre `main`:
+  - `d822dcd`: en `/deudas/[id]`, «Pago guardado» y «Cobro guardado» pasan al formulario y se van al tocar un campo o si vuelve un error; vuelven con el siguiente guardado, con el pendiente nuevo escrito. El aviso de liquidez va después del hero. Saldada, el hero dice «Pagada» o «Cobrada».
+  - `6b6f1de`: al prestar, «<sobre> tiene X; quedará en Y», en rojo si queda bajo cero; se guarda igual (decisión del desarrollador).
+  - `fbd8a96`: `/deudas/apartar` no elige sobre si «Por asignar» no tiene saldo (decisión del desarrollador).
+  - `a698be9`: `montoPositivo` en `dinero.ts`, en vez de tres copias.
+  - Probado en Edge sin ventana contra el servidor de desarrollo, con y sin JavaScript: el aviso se va al escribir, al tocar «Ayer», al elegir otra cuenta y tras un envío con error («Escribe un monto mayor que cero»); dos pagos reales de 1,00 dejaron el aviso de nuevo y el monto en 519 y luego 518; la línea del préstamo con 1.000 desde Gastos del mes dice «Gastos del mes tiene 633,00; quedará en −367,00» en rojo, y con 10, sin rojo. Los dos pagos de prueba se borraron.
+  - Aceptado: `borrarDeudaAccion` empieza con `exigirSesion()`; CLAUDE.md admite las dos formas.
+  - Pasado al importador, en el plan: las fechas fuera de rango escritas por SQL y el `.catch` de `cuotaDelMes`.
+  - Las conexiones con el pooler de producción se miden después de migrar producción (ver la 002, T16).

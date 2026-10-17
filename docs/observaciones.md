@@ -11,17 +11,15 @@ Lista viva de las observaciones del usuario sobre la interfaz, lo que se cambió
 **Pendiente para el final**:
 
 - ~~El modelo marca esa cuenta con `es_propia = false`, lo que la excluye de la suma de cuentas y del invariante con los sobres.~~ Resuelto el 2026-10-11 con el ADR 0006 (spec 001, criterio 16). La cuenta sigue con `es_propia = false` como marca legal, pero entra al cuadre con los sobres y desde ella se puede gastar.
-- Ajustar las semillas (`src/db/seed.ts`): tipo, nota y `esPropia` de "Cuenta prima".
-- Ajustar `docs/plan-financiero-y-app.md`, secciones 1, 2 y 4, donde dice que es de tránsito y que debe mantener saldo bajo. El riesgo legal sigue siendo real y conviene dejarlo escrito, pero como riesgo, no como regla de uso.
+- ~~Ajustar las semillas (`src/db/seed.ts`): tipo, nota y `esPropia` de "Cuenta prima".~~ Resuelto el 2026-10-16: la nota ya decía que el dinero es suyo y entra al cuadre; `esPropia = false` se queda como marca legal (ADR 0006); el tipo interno `transito` se queda, porque solo decide el aspecto "en el exterior" y cambiarlo pide una migración sin cambiar nada visible.
+- ~~Ajustar `docs/plan-financiero-y-app.md`, secciones 1, 2 y 4, donde dice que es de tránsito y que debe mantener saldo bajo.~~ Resuelto el 2026-10-16: el riesgo legal queda escrito como riesgo en la sección 1, sin la regla del saldo bajo, y la tabla dice "Banco en el exterior".
 - Revisar el flujo de ingreso: el sueldo remoto entra en esa cuenta y de ahí se mueve a Binance. Desde la feature 004 (2026-10-14), el ingreso se registra en "Cuenta prima" como en cualquier otra cuenta en dólares, cae en "Por asignar" y cuadra con los sobres (ADR 0006). **Sigue pendiente**, para la feature de cuentas y transferencias: mover de la prima a Binance con "Mover", y que las semillas de demostración pongan el sueldo en la prima en vez de directo en Binance.
 
 ## 2. "Segunda billetera USDC" no existe
 
 **Observación**: el usuario preguntó qué cuenta es. Es el marcador del segundo sitio para el fondo de emergencia (plan, sección 1, riesgo de concentración en Binance). Hoy es una cuenta vacía con nombre genérico.
 
-**Decisión pendiente del usuario**: quitarla hasta abrir una de verdad (recomendado), o renombrarla si ya sabe cuál será: billetera sin custodia (Trust Wallet, MetaMask), otro exchange, o considerar la cuenta de la prima como segundo sitio.
-
-**Pendiente para el final**: ajustar semillas y la tabla de cuentas del plan según la decisión.
+**Hecho** el 16 de octubre de 2026: el usuario decidió quitarla hasta abrir una de verdad. La semilla y la demostración ya no la crean, la tabla de cuentas del plan no la lista y la sección 1 dice que el segundo sitio entra a la app el día que exista. En la base local se borró (no tenía movimientos). En producción se archiva desde la pantalla de cuentas cuando exista (observación 3), o antes, a mano, si no tiene movimientos.
 
 ## 3. Administrar cuentas desde la app
 
@@ -104,6 +102,6 @@ Lista viva de las observaciones del usuario sobre la interfaz, lo que se cambió
 **Hecho** el 16 de octubre de 2026, en la feature 005: `/deudas` con lo que debo y lo que me deben, el sobre Deudas con su cuota en el reparto, pagos, préstamos y cobros como movimientos propios, el aviso de liquidez y el patrimonio neto en Cuentas. Queda:
 
 - Mover entre cuentas para resolver un aviso de liquidez (por ejemplo, de la prima a Binance): es de la observación 1, administrar cuentas y transferencias.
-- Por decidir: un préstamo desde un sobre que no sea "Por asignar" se guarda aunque lo deje en negativo, como un gasto. ¿Se avisa antes, como en el pago?
+- ~~Por decidir: un préstamo desde un sobre que no sea "Por asignar" se guarda aunque lo deje en negativo, como un gasto. ¿Se avisa antes, como en el pago?~~ Decidido y hecho el 16 de octubre de 2026: se avisa antes ("Gastos del mes tiene 633,00; quedará en −367,00", en rojo) y se guarda igual. En `/deudas/apartar`, sin saldo en "Por asignar", ya no viene elegido ningún sobre.
 - Decidido el 16 de octubre de 2026, al validar en el navegador: la captura de gasto ya no ofrece Deudas, y pagar o cobrar se registra también desde Registrar, en `/nuevo/deuda`, eligiendo la deuda (spec 005, criterio 23).
 - Pedir prestado con dinero que entra, perdonar un préstamo, intereses y cuotas pactadas: fuera de la 005.

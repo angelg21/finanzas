@@ -2,7 +2,7 @@
 
 Fecha: 30 de septiembre de 2026.
 
-Contexto: ingeniero informático en Venezuela. Ingreso fijo remoto de 1.200 $/mes más un proyecto local temporal que lleva el total a unos 2.000 $/mes hasta fin de 2026. Gasto actual entre 200 y 250 $/mes. Sin deudas. El dinero vive en dólares: USDT en Binance y una cuenta de tránsito de una prima en EE. UU. Los bolívares son de paso: se cambia lo justo para un gasto concreto y la cuenta vuelve a cero.
+Contexto: ingeniero informático en Venezuela. Ingreso fijo remoto de 1.200 $/mes más un proyecto local temporal que lleva el total a unos 2.000 $/mes hasta fin de 2026. Gasto actual entre 200 y 250 $/mes. Sin deudas. El dinero vive en dólares: USDT en Binance y una cuenta en EE. UU. a nombre de una prima, donde paga la empresa de Chile. Los bolívares son de paso: se cambia lo justo para un gasto concreto y la cuenta vuelve a cero.
 
 ---
 
@@ -19,8 +19,8 @@ Estás ahorrando más del 60 % del ingreso. El problema nunca fue disciplina: fu
 **Riesgos reales**
 
 - Inflación de estilo de vida: cuando el ingreso se triplica, el gasto sube "un poquito" cada mes hasta comerse la diferencia.
-- Concentración: todo el dinero en una sola plataforma. Binance puede congelar cuentas, caerse o bloquear el país.
-- La cuenta de tu prima legalmente es de tu prima. Sirve de tránsito, no para guardar ni invertir.
+- Concentración: todo el dinero en una sola plataforma. Binance puede congelar cuentas, caerse o bloquear el país. El segundo sitio para el fondo de emergencia (una billetera propia u otro exchange) entra a la app el día que exista, no antes.
+- La cuenta de tu prima legalmente es de tu prima. Ahí paga la empresa de Chile y, sin una cuenta propia fuera del país, el dinero se queda un buen tiempo. Es un riesgo, no una regla de uso: si la cuenta se congela o se cierra, ese dinero no está a tu nombre.
 - El proyecto local es temporal. Si el presupuesto se arma con 2.000 $, en enero se rompe.
 - El acceso a brókers y plataformas desde Venezuela cambia con las sanciones. Hoy es incierto.
 
@@ -56,7 +56,6 @@ Con 700 $/mes el fondo de emergencia se llena en 4 meses. Cuando esté lleno, es
 - El reparto ocurre el día que cobras, antes de gastar nada. Primero te pagas a ti.
 - El fondo de emergencia solo se usa para emergencias definidas de antemano: salud, pérdida de ingreso, emergencia familiar. Una laptop no es una emergencia.
 - El sobre de inversión nunca se retira. Si un mes no puedes aportar, no pasa nada. Pero no se saca.
-- La cuenta de tránsito se mantiene con saldo bajo.
 
 **Los sobres**
 
@@ -134,13 +133,12 @@ La app anterior respondía "¿dónde está mi dinero?". La nueva responde tambi�
 
 El dólar es la única unidad de cuenta. Todo se guarda y se muestra en dólares.
 
-| Cuenta            | Moneda      | Tipo                 | Nota                                            |
-| ----------------- | ----------- | -------------------- | ----------------------------------------------- |
-| Binance           | USDT        | Exchange             | Principal                                       |
-| Segunda billetera | USDC o USDT | Exchange o billetera | Parte del fondo de emergencia                   |
-| Efectivo          | USD         | Efectivo             | Parte pequeña del fondo                         |
-| Cuenta prima      | USD         | Tránsito             | Marcada "a nombre de mi prima"; entra al cuadre |
-| Bolívares         | VES         | De paso              | Casi siempre en cero                            |
+| Cuenta       | Moneda | Tipo                 | Nota                                            |
+| ------------ | ------ | -------------------- | ----------------------------------------------- |
+| Binance      | USDT   | Exchange             | Principal                                       |
+| Efectivo     | USD    | Efectivo             | Parte pequeña del fondo                         |
+| Cuenta prima | USD    | Banco en el exterior | Marcada "a nombre de mi prima"; entra al cuadre |
+| Bolívares    | VES    | De paso              | Casi siempre en cero                            |
 
 **Gasto en bolívares, el único caso especial**
 
@@ -217,7 +215,10 @@ Referencia antes de diseñar: Actual Budget, open source, usa exactamente el mod
 - Cuentas, categorías, movimientos con nota. Los gastos con nota y las categorías con icono y color están hechos en la feature 001, y los ingresos en la 004; faltan administrar cuentas (observación 3) y los movimientos entre cuentas.
 - Flujo de gasto en bolívares. **Hecho** en la feature 001, fusionada el 12 de octubre de 2026.
 - Sobres con reglas de reparto y confirmación de un clic. **Hecho** en la feature 004: `/nuevo/ingreso` registra el ingreso en una cuenta en dólares, lo deja en "Por asignar" y propone el reparto (los fijos una vez al mes, los porcentajes sobre lo que queda, con el tope de Emergencia), que se ajusta y se guarda con un clic; `/sobres/repartir` reparte lo que quede en "Por asignar"; `/sobres/reglas` edita las reglas y el tope. Las reglas sembradas reparten 40/30/30 tras los fijos y no dan la tabla de la sección 2 (187,50 y 187,50 frente a 175 y 200): se ajustan desde `/sobres/reglas`. Quedan para después las reglas según el monto del ingreso y los ingresos en bolívares.
-- Importador de Gestor de Gastos.
+- Importador de Gestor de Gastos. Antes de importar, lo que las revisiones de la 004 y la 005 dejaron para él, porque desde la app no se llega y con datos importados sí:
+  - los escritores de `src/db` validan las fechas con `esFecha`: una `fecha_prevista` como `0050-01-01` hace lanzar a `cuotaDeDeudas` y tumba el ingreso, el reparto y `/deudas`;
+  - `cuotaDelMes` registra por qué se quedó sin cuota (hoy su `.catch` se traga también un corte de conexión) y cubre también el cálculo, no solo la lectura;
+  - un tope de Emergencia o una partida fuera de los enteros seguros no tumba la propuesta del reparto: se trata como "sin tope" o lo frena el importador.
 - Gráficas básicas: por mes y por categoría. La de mes está en Inicio. **La de categoría, hecha** en la feature 003: el anillo de `/movimientos` para gastos e ingresos, por día, semana, mes o año.
 - Formulario de captura rápida de gasto. **Hecho** en la feature 001, fusionada el 12 de octubre de 2026.
 - PWA instalable y despliegue para usar la app a diario (feature 002): base en Supabase, Supabase Auth para un solo usuario, Vercel, y `/f-audit` antes de publicar. **Hecho**: publicada en https://arca-ag.vercel.app desde el 14 de octubre de 2026, con `main` como rama de producción.
