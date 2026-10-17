@@ -16,6 +16,8 @@ export const dynamic = "force-dynamic";
 /**
  * Apartar lo que ya se tiene (spec 005, criterio 13): arriba lo que tiene Deudas, lo que se debe y la cuota del mes;
  * debajo, de qué sobre y cuánto. Nunca desde Deudas ni desde Inversión; "Por asignar" sí, y viene elegido si tiene.
+ * Si no tiene, ninguno: hay que elegir de dónde sale, como al prestar (decidido el 2026-10-16), porque un apartado
+ * todavía no se puede deshacer.
  */
 export default async function Apartar() {
   await exigirSesion();
@@ -27,7 +29,7 @@ export default async function Apartar() {
   ]);
   const { deboCentavos } = pendientePorSentido(lista);
   const origenes = sobresParaApartar(sobres).filter((s) => s.id !== deudas?.id);
-  const inicial = origenes.find((s) => s.tipo === "por_asignar") ?? origenes[0];
+  const inicial = origenes.find((s) => s.tipo === "por_asignar");
   const mes = nombreMes(mesDe(hoyEnCaracas(new Date())).mes).toLowerCase();
 
   return (
