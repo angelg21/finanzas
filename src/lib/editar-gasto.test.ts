@@ -33,7 +33,7 @@ function entrada(cambios: Partial<EntradaGasto> = {}): EntradaGasto {
 }
 
 const vendiendo = (cambios: Partial<EntradaGasto> = {}) =>
-  entrada({ forma: "vendiendo", monto: "2.100", tasa: "241,8", vendido: "10", ...cambios });
+  entrada({ forma: "vendiendo", monto: "2100", tasa: "241,8", vendido: "10", ...cambios });
 const delSaldo = (cambios: Partial<EntradaGasto> = {}) =>
   entrada({ forma: "saldo", monto: "500", tasa: "241,8", ...cambios });
 
@@ -109,7 +109,7 @@ describe("★ 1 · el cuadre: editar es como si el gasto viejo no hubiera existi
   const sobres = { [gastosDelMes]: 80_000, [familia]: 40_000 };
   const casos: [string, EntradaGasto, EntradaGasto][] = [
     ["dólares → dólares", entrada(), entrada({ monto: "30", cuentaOrigen: efectivo, sobreId: familia })],
-    ["vendiendo → vendiendo", vendiendo(), vendiendo({ tasa: "250", vendido: "12", monto: "2.500" })],
+    ["vendiendo → vendiendo", vendiendo(), vendiendo({ tasa: "250", vendido: "12", monto: "2500" })],
     ["vendiendo → saldo", vendiendo(), delSaldo()],
     ["vendiendo → dólares", vendiendo(), entrada()],
     ["dólares → vendiendo", entrada(), vendiendo()],
