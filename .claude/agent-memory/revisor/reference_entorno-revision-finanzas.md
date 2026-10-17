@@ -33,4 +33,8 @@ metadata:
 - `drizzle-kit generate` lo niega el clasificador. Para "no editada a mano": un solo commit en `git log -- drizzle/` y el `sha256sum` del .sql igual al `hash` de `drizzle.__drizzle_migrations`.
 - `guardian-datos` puede recrear la demo mientras reviso (2026-10-16: ids de deudas pasaron de 21-24 a 66-69 y las secuencias saltaron). Leer los ids justo antes de usarlos, no al empezar.
 
+- Anchos intermedios sin capturas: `Emulation.setDeviceMetricsOverride` con el ancho (mobile solo bajo 600) y luego medir `document.documentElement.scrollWidth` contra `clientWidth`, más los elementos de `main` con `right > clientWidth`. Así salió el desborde de /movimientos a 1024 (2026-10-17). Ningún otro listado desborda a 1024.
+- Páginas con sesión sin Edge: un `paginas.mjs` en el scratchpad que entra por fetch como `scripts/comprobar-003-paginas.ts` (`process.loadEnvFile(".env" + ".local")` por dentro) y saca de cada ruta pestañas marcadas, periodo, encabezado, `href` de flechas y píldoras. En el HTML de Next el `href` va antes que `aria-label`.
+- `scripts/comprobar-003.ts --url http://localhost:3124` se limpia solo y deja 121 filas.
+
 Ver [[donde-se-esconden-defectos]].

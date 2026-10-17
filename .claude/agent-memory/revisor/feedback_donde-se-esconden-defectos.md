@@ -29,6 +29,8 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 
 - 005, vuelta 1 (2026-10-16): APTO. Prestar, cobrar, pagar, apartar, registrar y editar, con JS, sin JS, con Enter, tras error y con el atrás del sistema: todas las filas correctas y Cuadra. Lo que quedó fue de pantalla, otra vez: "Cobro guardado" + "Repartir" siguen a la vista junto al error de un segundo cobro (`?guardado=` en la URL); el aviso de liquidez metido dentro del hero (spec lo ponía después) con rojo sobre `pildora-hero`, contraste ~1,5-2:1; el hero de una deuda pagada dice "vencida hace 15 días"; y un valor por defecto que la spec no pide (apartar preselecciona el primer sobre con saldo si Por asignar está en 0). Punto "por decidir" en la observación 11 sin decidir (prestar deja un sobre en negativo sin aviso).
 
+- 003, vuelta 1 (2026-10-17, revisión después de fusionar): NO APTO. Los ★ de funciones puras y el script contra la base, impecables. Lo que falló: `?categoria=` se valida contra los totales del periodo (`totales.find`), no contra el tipo de la pestaña como dice el ★ 6, así que una categoría válida sin movimientos en ese periodo cae en "Todas" en silencio; las flechas, las píldoras Día/Semana/Mes/Año y el calendario la pierden para siempre (Mes→Día→Mes sin filtro), y la rama "No hay gastos de X" es inalcanzable. La prueba de página del ★ 6 eligió Comida, que sí tiene movimientos: muestra derivada del código. El autor lo había anotado "sin decidir, para /f-review". Además: de 1024 a 1093 px de ancho, la cabecera de /movimientos desborda (scroll horizontal, flecha siguiente fuera); `pnpm capturas` solo mira 1440 y 390.
+
 **Why:** la demo es toda `origen = importado`, así que la lógica que depende de historial `manual` no se ve. La validación en navegador sigue el camino feliz, en un solo momento, y no pasa por un error de validación ni por el paso del tiempo antes de guardar.
 
 **How to apply:**
@@ -50,6 +52,8 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 - Si el éxito viaja en `?guardado=`, envía después algo inválido desde la misma pantalla: el éxito y el error conviven.
 - Toda `Pildora tono="negativa"` sobre el hero: mide el contraste (rojo `--negativo` sobre `pildora-hero`); es la primera vez que se usa ahí.
 - Las piezas de estado (plazo, "vence", "vencida") se pintan también cuando la cosa ya está saldada: abre el detalle de una pagada con fecha pasada.
+- Todo filtro que viaja en la dirección: valídalo contra lo que la spec llama "válido", no contra lo que hay en pantalla. Pon el filtro con una categoría escasa (en la demo, Tecnología solo tiene 2026-07-20) y recorre flechas, píldoras de periodo y calendario ida y vuelta: ¿vuelve el filtro?
+- Si la spec dice "Escritorio (1024 px o más)", mide 1024 con `scrollWidth > clientWidth`: las capturas del autor son de 1440.
 - Tras un `revert` con "se conservan los demás arreglos": cada pieza conservada se diseñó para el contexto que se fue. Mira si su condición sigue teniendo sentido (un handler que antes servía al dato precargado ahora corre siempre) y ejercítala con un toque real, no con `autoFocus`.
 
 Ver [[entorno-revision-finanzas]].
