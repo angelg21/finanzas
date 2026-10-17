@@ -2,11 +2,20 @@
 
 import { RotateCcw, Search } from "lucide-react";
 import { useActionState, useEffect, useId, useRef, useState } from "react";
-import { Boton, Campo, Entrada, SelectorColor, SelectorIcono, SelectorPildoras } from "@/components/formulario";
+import {
+  Boton,
+  Campo,
+  Entrada,
+  ErrorCampo,
+  SelectorColor,
+  SelectorIcono,
+  SelectorPildoras,
+} from "@/components/formulario";
 import { CirculoCategoria, Tarjeta, TarjetaPalida } from "@/components/ui";
 import { type TipoCategoria, buscarIconos } from "@/lib/categorias";
 import { conFallas, mensajeDeFalla } from "@/lib/fallas";
-import { type EstadoCategoria, type ValoresCategoria, guardarCategoria, restaurarCategoriaAccion } from "./acciones";
+import { type EstadoBoton, type EstadoCategoria, type ValoresCategoria, guardarCategoria } from "./acciones";
+import { restaurarConFallas } from "./restaurar-con-fallas";
 
 /** Sin red o con una versión vieja, el mensaje junto al botón y lo escrito en su sitio (spec 002, criterio 19). */
 const guardarConFallas = conFallas<EstadoCategoria>(guardarCategoria, (previo, datos, causa) => {
@@ -96,6 +105,7 @@ function Campos({
   const [busqueda, setBusqueda] = useState("");
   const zonaIconos = useRef<HTMLFieldSetElement>(null);
   const formularioRestaurar = useId();
+  const [restauracion, restaurar, restaurando] = useActionState<EstadoBoton, FormData>(restaurarConFallas, {});
 
   // Al abrir, la lista de iconos se desplaza hasta el elegido, que puede quedar abajo (al editar).
   useEffect(() => {
@@ -138,15 +148,19 @@ function Campos({
             />
           </Campo>
           {archivada !== undefined ? (
-            // Pertenece al formulario de restaurar, fuera de este: Enter aquí guarda, nunca restaura (criterio 19).
-            <button
-              type="submit"
-              form={formularioRestaurar}
-              className="-mt-3 flex w-fit items-center gap-1.5 rounded-full px-2 py-1 text-[13px] font-bold text-enlace hover:bg-tarjeta-hover"
-            >
-              <RotateCcw size={14} aria-hidden />
-              Restaurar la archivada
-            </button>
+            <div className="-mt-3 flex flex-col items-start gap-1">
+              {/* Pertenece al formulario de restaurar, fuera de este: Enter aquí guarda, nunca restaura (criterio 19). */}
+              <button
+                type="submit"
+                form={formularioRestaurar}
+                disabled={restaurando}
+                className="flex w-fit items-center gap-1.5 rounded-full px-2 py-1 text-[13px] font-bold text-enlace hover:bg-tarjeta-hover disabled:opacity-60"
+              >
+                <RotateCcw size={14} aria-hidden />
+                Restaurar la archivada
+              </button>
+              <ErrorCampo>{restauracion.error}</ErrorCampo>
+            </div>
           ) : null}
 
           {tipoFijo ? (
@@ -216,7 +230,7 @@ function Campos({
         </form>
         {archivada !== undefined ? (
           // Formulario aparte, sin nada visible: su único botón vive arriba, bajo el nombre, con form={id}.
-          <form id={formularioRestaurar} action={restaurarCategoriaAccion} className="hidden">
+          <form id={formularioRestaurar} action={restaurar} className="hidden">
             <input type="hidden" name="restaurar" value={archivada} />
             {volver ? <input type="hidden" name="volver" value={volver} /> : null}
           </form>

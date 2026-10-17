@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Boton } from "@/components/formulario";
 import { Tarjeta, TituloPagina } from "@/components/ui";
 import { saldosPorCuenta } from "@/db/consultas";
 import { deudaPorId } from "@/db/deudas";
 import { centavosATexto } from "@/lib/dinero";
 import { hoyEnCaracas } from "@/lib/fechas";
-import { borrarDeudaAccion } from "../../acciones";
 import { FormularioDeuda } from "../../formulario-deuda";
+import { BotonBorrarDeuda } from "./boton-borrar";
 import { exigirSesion } from "@/app/sesion";
 
 export const metadata: Metadata = { title: "Editar deuda" };
@@ -46,14 +45,7 @@ export default async function EditarDeuda({ params }: PageProps<"/deudas/[id]/ed
           hoy={hoy}
           editando
         />
-        {deuda.movimientos === 0 ? (
-          <form action={borrarDeudaAccion} className="mt-4 flex justify-center border-t border-tarjeta-borde pt-3">
-            <input type="hidden" name="id" value={deuda.id} />
-            <Boton type="submit" variante="peligro">
-              Borrar
-            </Boton>
-          </form>
-        ) : null}
+        {deuda.movimientos === 0 ? <BotonBorrarDeuda id={deuda.id} /> : null}
       </Tarjeta>
     </main>
   );

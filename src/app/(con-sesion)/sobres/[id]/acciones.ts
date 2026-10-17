@@ -12,7 +12,7 @@ import {
 } from "@/db/fondos";
 import { aCentavos } from "@/lib/dinero";
 import { cabeEnRegla } from "@/lib/fondos";
-import { exigirSesion, leerSesion } from "@/app/sesion";
+import { leerSesion } from "@/app/sesion";
 import { mensajeDeFalla } from "@/lib/fallas";
 import { registrarFalla } from "@/app/registro-de-fallas";
 
@@ -96,19 +96,24 @@ export async function agregarPartida(
   return { ok: Date.now() };
 }
 
-/** Quita una ocasión del desglose y recalcula el aporte. */
-export async function eliminarPartida(formData: FormData) {
-  await exigirSesion();
+/**
+ * Quita una ocasión del desglose y recalcula el aporte. Para `useActionState`: con la sesión vencida o si la base
+ * falla, responde con el mensaje junto al botón en vez de cambiar la pantalla (spec 002, criterio 19).
+ */
+export async function eliminarPartida(_previo: EstadoFormulario, formData: FormData): Promise<EstadoFormulario> {
+  const sesion = await leerSesion();
+  if (!sesion) return { error: mensajeDeFalla("sesion", "no se guardó") };
   const id = Number(formData.get("id"));
   const sobreId = Number(formData.get("sobreId"));
-  if (!Number.isInteger(id) || !Number.isInteger(sobreId)) return;
+  if (!Number.isInteger(id) || !Number.isInteger(sobreId)) return {};
   try {
     await eliminarPartidaYSincronizar(id, sobreId);
   } catch (error) {
     registrarFalla("No se pudo quitar la ocasión", error);
-    throw new Error("No se pudo quitar la ocasión.");
+    return { error: mensajeDeFalla("otra", "no se guardó") };
   }
   revalidar(sobreId);
+  return {};
 }
 
 /** Fija el aporte mensual a mano, cuando el sobre no tiene desglose. */

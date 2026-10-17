@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Plus, RotateCcw } from "lucide-react";
+import { Plus } from "lucide-react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Pestanas } from "@/components/pestanas";
 import { CirculoCategoria, EncabezadoTarjeta, Tarjeta } from "@/components/ui";
 import { type CategoriaConUso, categoriasConUso } from "@/db/categorias";
-import { restaurarCategoriaAccion } from "./acciones";
+import { BotonRestaurar } from "./boton-restaurar";
 import { exigirSesion } from "@/app/sesion";
 
 export const metadata: Metadata = { title: "Categorías" };
@@ -81,16 +81,7 @@ export default async function Categorias({ searchParams }: PageProps<"/categoria
                 <li key={c.id} className="flex flex-col items-center gap-1.5 text-center">
                   <CirculoCategoria icono={c.icono} color={c.color} tamano="lg" className="opacity-45" />
                   <span className="w-full truncate text-[12px] font-semibold text-texto-3">{c.nombre}</span>
-                  <form action={restaurarCategoriaAccion}>
-                    <input type="hidden" name="id" value={c.id} />
-                    <button
-                      type="submit"
-                      className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold text-enlace hover:bg-tarjeta-hover"
-                    >
-                      <RotateCcw size={12} aria-hidden />
-                      Restaurar
-                    </button>
-                  </form>
+                  <BotonRestaurar id={c.id} />
                 </li>
               ))}
             </ul>

@@ -12,7 +12,7 @@ import {
   restaurarCategoria,
 } from "@/db/categorias";
 import { type ErroresCategoria, type TipoCategoria, repetidaDe, validarCategoria } from "@/lib/categorias";
-import { exigirSesion, leerSesion } from "@/app/sesion";
+import { leerSesion } from "@/app/sesion";
 import { mensajeDeFalla } from "@/lib/fallas";
 import { registrarFalla } from "@/app/registro-de-fallas";
 
@@ -24,6 +24,9 @@ export type EstadoCategoria = { ronda: number } & (
   /** `archivada`: id de una archivada con el mismo nombre, para ofrecer restaurarla (criterio 19). */
   | { estado: "error"; errores: ErroresCategoria & { general?: string }; valores: ValoresCategoria; archivada?: number }
 );
+
+/** Eliminar y restaurar son un solo botón: si no se pudo, solo hay un mensaje que mostrar junto a él. */
+export type EstadoBoton = { error?: string };
 
 /** A dónde puede volver el formulario tras crear: solo rutas conocidas, nunca una dirección cualquiera. */
 const destinos = new Set(["/nuevo/gasto"]);
@@ -106,16 +109,20 @@ export async function guardarCategoria(previo: EstadoCategoria, formData: FormDa
   redirect(`/categorias?tipo=${validada.valores.tipo}`);
 }
 
-/** Criterio 21: borra la categoría si no tiene movimientos; si los tiene, la archiva. */
-export async function eliminarCategoriaAccion(formData: FormData) {
-  await exigirSesion();
+/**
+ * Criterio 21: borra la categoría si no tiene movimientos; si los tiene, la archiva. Para `useActionState`, como
+ * restaurar: con la sesión vencida o si la base falla, el mensaje va junto al botón (spec 002, criterio 19).
+ */
+export async function eliminarCategoriaAccion(_previo: EstadoBoton, formData: FormData): Promise<EstadoBoton> {
+  const sesion = await leerSesion();
+  if (!sesion) return { error: mensajeDeFalla("sesion", "no se guardó") };
   const categoria = await categoriaPorId(Number(texto(formData, "id")));
   if (!categoria) redirect("/categorias");
   try {
     await eliminarCategoria(categoria.id);
   } catch (error) {
     registrarFalla("No se pudo eliminar la categoría", error);
-    throw new Error("No se pudo eliminar la categoría.");
+    return { error: mensajeDeFalla("otra", "no se guardó") };
   }
   revalidar();
   redirect(`/categorias?tipo=${categoria.tipo}`);
@@ -124,10 +131,11 @@ export async function eliminarCategoriaAccion(formData: FormData) {
 /**
  * Criterios 19 y 22: restaura una archivada. Lee `restaurar` (el formulario aparte del botón "Restaurar la
  * archivada", al crear o editar) o, si no viene, `id` (la lista de archivadas). Si se llegó desde la
- * captura, vuelve a ella con la categoría elegida, como al crear (25).
+ * captura, vuelve a ella con la categoría elegida, como al crear (25). Para `useActionState`, como eliminar.
  */
-export async function restaurarCategoriaAccion(formData: FormData) {
-  await exigirSesion();
+export async function restaurarCategoriaAccion(_previo: EstadoBoton, formData: FormData): Promise<EstadoBoton> {
+  const sesion = await leerSesion();
+  if (!sesion) return { error: mensajeDeFalla("sesion", "no se guardó") };
   const id = Number(texto(formData, "restaurar") || texto(formData, "id"));
   const existentes = await categoriasConUso();
   const categoria = existentes.find((c) => c.id === id);
@@ -141,7 +149,7 @@ export async function restaurarCategoriaAccion(formData: FormData) {
     await restaurarCategoria(categoria.id);
   } catch (error) {
     registrarFalla("No se pudo restaurar la categoría", error);
-    throw new Error("No se pudo restaurar la categoría.");
+    return { error: mensajeDeFalla("otra", "no se guardó") };
   }
   revalidar();
   const volver = texto(formData, "volver");

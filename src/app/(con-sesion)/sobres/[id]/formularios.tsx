@@ -2,7 +2,7 @@
 
 import { Plus, Trash2 } from "lucide-react";
 import { useActionState } from "react";
-import { Boton, Campo, Entrada, Selector } from "@/components/formulario";
+import { Boton, Campo, Entrada, ErrorCampo, Selector } from "@/components/formulario";
 import { centavosATexto } from "@/lib/dinero";
 import { type CausaFalla, conFallas, mensajeDeFalla } from "@/lib/fallas";
 import { agregarPartida, eliminarPartida, fijarAporteManual, type EstadoFormulario } from "./acciones";
@@ -68,16 +68,29 @@ export function FormularioPartida({ sobreId }: { sobreId: number }) {
   );
 }
 
-/** Botón de borrar una ocasión. */
+const quitarConFallas = conFallas(eliminarPartida, alFallar);
+
+/**
+ * Botón de borrar una ocasión. Si falla, el mensaje ocupa una línea propia bajo la fila (que la envuelve) y la
+ * ocasión sigue en su sitio.
+ */
 export function BotonEliminarPartida({ id, sobreId, nombre }: { id: number; sobreId: number; nombre: string }) {
+  const [estado, enviar, pendiente] = useActionState<EstadoFormulario, FormData>(quitarConFallas, {});
   return (
-    <form action={eliminarPartida}>
-      <input type="hidden" name="id" value={id} />
-      <input type="hidden" name="sobreId" value={sobreId} />
-      <Boton type="submit" variante="peligro" aria-label={`Quitar ${nombre}`}>
-        <Trash2 size={15} aria-hidden />
-      </Boton>
-    </form>
+    <>
+      <form action={enviar}>
+        <input type="hidden" name="id" value={id} />
+        <input type="hidden" name="sobreId" value={sobreId} />
+        <Boton type="submit" variante="peligro" disabled={pendiente} aria-label={`Quitar ${nombre}`}>
+          <Trash2 size={15} aria-hidden />
+        </Boton>
+      </form>
+      {estado.error ? (
+        <span className="basis-full text-right">
+          <ErrorCampo>{estado.error}</ErrorCampo>
+        </span>
+      ) : null}
+    </>
   );
 }
 

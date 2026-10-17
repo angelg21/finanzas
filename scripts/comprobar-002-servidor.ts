@@ -152,12 +152,17 @@ async function accionesSinSesion(base: string) {
       `${accion.nombre} sin sesión, con JavaScript → ${redirige ? "a /entrar" : (mensaje ?? `${r.status}, sin pedir entrar`)}`,
       (redirige || Boolean(mensaje)) && !/Centavos/.test(cuerpo),
     );
-    // Criterio 19: el mensaje de la captura, y el mismo sin nombrar el gasto en categorías y sobres.
+    // Criterio 19: el mensaje de la captura, y el mismo sin nombrar el gasto en categorías y sobres, también en sus
+    // botones sueltos (quitar una ocasión, eliminar y restaurar una categoría). Borrar una deuda (spec 005), igual.
     const esperado = {
       registrarGasto: "Tu sesión terminó: el gasto no se guardó. Entra de nuevo.",
       guardarCategoria: "Tu sesión terminó: no se guardó. Entra de nuevo.",
+      eliminarCategoriaAccion: "Tu sesión terminó: no se guardó. Entra de nuevo.",
+      restaurarCategoriaAccion: "Tu sesión terminó: no se guardó. Entra de nuevo.",
       agregarPartida: "Tu sesión terminó: no se guardó. Entra de nuevo.",
+      eliminarPartida: "Tu sesión terminó: no se guardó. Entra de nuevo.",
       fijarAporteManual: "Tu sesión terminó: no se guardó. Entra de nuevo.",
+      borrarDeudaAccion: "Tu sesión terminó: la deuda no se borró. Entra de nuevo.",
     }[accion.nombre];
     if (esperado) comprobar("19", `${accion.nombre}: el mensaje de la spec`, mensaje === esperado);
     if (accion.nombre === "registrarGasto") {

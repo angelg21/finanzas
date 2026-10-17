@@ -11,7 +11,7 @@ import { type CuentaDeuda, validarDeuda } from "@/lib/deudas";
 import { formatearCifra } from "@/lib/dinero";
 import { mensajeDeFalla } from "@/lib/fallas";
 import { registrarFalla } from "@/app/registro-de-fallas";
-import { exigirSesion, leerSesion } from "@/app/sesion";
+import { leerSesion } from "@/app/sesion";
 import { type ErroresFormularioDeuda, type EstadoDeuda, type ValoresDeuda, tecleadoDe } from "./valores";
 
 const esquema = z.object({
@@ -109,9 +109,18 @@ async function procesar(datos: FormData): Promise<Resultado> {
   return { destino: "/deudas" };
 }
 
-/** Borra una deuda sin movimientos (criterio 16); con movimientos, la base se niega y se vuelve al detalle. */
-export async function borrarDeudaAccion(datos: FormData) {
-  await exigirSesion();
+/** Borrar es un solo botón: si no se pudo, solo hay un mensaje que mostrar junto a él. */
+export type EstadoBorrar = { error?: string };
+
+const queNoSeBorro = "la deuda no se borró";
+
+/**
+ * Borra una deuda sin movimientos (criterio 16); con movimientos, la base se niega y se vuelve al detalle. Para
+ * `useActionState`: con la sesión vencida o si la base falla, el mensaje va junto al botón (spec 002, criterio 19).
+ */
+export async function borrarDeudaAccion(_previo: EstadoBorrar, datos: FormData): Promise<EstadoBorrar> {
+  const sesion = await leerSesion();
+  if (!sesion) return { error: mensajeDeFalla("sesion", queNoSeBorro) };
   const id = Number(datos.get("id"));
   if (!Number.isSafeInteger(id) || id <= 0) redirect("/deudas");
   let resultado: Awaited<ReturnType<typeof borrarDeuda>>;
@@ -119,7 +128,7 @@ export async function borrarDeudaAccion(datos: FormData) {
     resultado = await borrarDeuda(id);
   } catch (error) {
     registrarFalla("No se pudo borrar la deuda", error);
-    throw new Error("No se pudo borrar la deuda.");
+    return { error: mensajeDeFalla("otra", queNoSeBorro) };
   }
   revalidar();
   redirect("conMovimientos" in resultado ? `/deudas/${id}` : "/deudas");

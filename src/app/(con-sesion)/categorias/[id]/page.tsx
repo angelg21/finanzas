@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import { Archive, ChevronLeft, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Boton } from "@/components/formulario";
 import { Tarjeta } from "@/components/ui";
 import { categoriaPorId } from "@/db/categorias";
 import { destinoAlEliminar } from "@/lib/categorias";
-import { eliminarCategoriaAccion } from "../acciones";
 import { FormularioCategoria } from "../formulario-categoria";
+import { BotonEliminarCategoria } from "./boton-eliminar";
 import { exigirSesion } from "@/app/sesion";
 
 export const metadata: Metadata = { title: "Editar categoría" };
@@ -56,12 +55,7 @@ export default async function EditarCategoria({ params }: PageProps<"/categorias
                   ? `Tiene ${cuantos}: se archivará, no se borra. Deja de ofrecerse al registrar y sus movimientos la conservan; puedes restaurarla.`
                   : "No tiene movimientos: se borrará del todo."}
               </p>
-              <form action={eliminarCategoriaAccion}>
-                <input type="hidden" name="id" value={categoria.id} />
-                <Boton type="submit" variante="peligro">
-                  {archivar ? "Sí, archivar" : "Sí, eliminar"}
-                </Boton>
-              </form>
+              <BotonEliminarCategoria id={categoria.id} archivar={archivar} />
             </div>
           </details>
         </Tarjeta>
