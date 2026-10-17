@@ -16,9 +16,11 @@ const barraDeEstado: Record<Tema, string> = { claro: "#f5f6f2", oscuro: "#15241f
 /**
  * Script que corre antes de pintar para que no haya destello de tema. Sin preferencia guardada, sigue al sistema
  * operativo. También pinta la barra de estado con el tema elegido: los meta theme-color del layout siguen al
- * sistema, y se reescriben al cargar. Debe ser autónomo: no importa nada.
+ * sistema, y se reescriben al cargar y cada vez que Next los vuelve a poner al navegar (revisión de la 002: tras un
+ * enlace, la barra volvía al tema del sistema). Solo escribe si el color cambia, para no despertarse a sí mismo.
+ * Debe ser autónomo: no importa nada.
  */
-export const scriptTemaInicial = `(function(){var d=document.documentElement;var c=${JSON.stringify(barraDeEstado)};function b(){var m=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<m.length;i++){m[i].setAttribute("content",c[d.dataset.tema]);}}try{var q=new URLSearchParams(location.search).get("${CLAVE}");if(q==="claro"||q==="oscuro"){localStorage.setItem("${CLAVE}",q);}var t=localStorage.getItem("${CLAVE}");if(t!=="claro"&&t!=="oscuro"){t=matchMedia("(prefers-color-scheme: dark)").matches?"oscuro":"claro";}d.dataset.tema=t;}catch(e){d.dataset.tema="claro";}b();document.addEventListener("DOMContentLoaded",b);})();`;
+export const scriptTemaInicial = `(function(){var d=document.documentElement;var c=${JSON.stringify(barraDeEstado)};function b(){var v=c[d.dataset.tema];var m=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<m.length;i++){if(m[i].getAttribute("content")!==v){m[i].setAttribute("content",v);}}}try{var q=new URLSearchParams(location.search).get("${CLAVE}");if(q==="claro"||q==="oscuro"){localStorage.setItem("${CLAVE}",q);}var t=localStorage.getItem("${CLAVE}");if(t!=="claro"&&t!=="oscuro"){t=matchMedia("(prefers-color-scheme: dark)").matches?"oscuro":"claro";}d.dataset.tema=t;}catch(e){d.dataset.tema="claro";}b();document.addEventListener("DOMContentLoaded",b);try{new MutationObserver(b).observe(document.head,{childList:true,subtree:true,attributes:true,attributeFilter:["content"]});}catch(e){/* sin MutationObserver: se pinta solo al cargar */}})();`;
 
 /** Pinta la barra de estado del celular con el color del tema. */
 function pintarBarraDeEstado(tema: Tema) {
