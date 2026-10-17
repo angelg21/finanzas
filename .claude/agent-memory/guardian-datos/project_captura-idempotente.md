@@ -35,7 +35,7 @@ Medido en copia con la acción real:
 Residuales:
 
 - Un contenido idéntico con un id reutilizado en menos de 15 minutos se toma como "ya estaba".
-- No hay edición ni borrado de movimientos: con "otra", el usuario solo puede ver el gasto equivocado.
+- ~~No hay edición ni borrado de movimientos~~: desde 006 (T3, 2026-10-17) se pueden editar y borrar. El reintento de la captura original después de editar da "otra" con +0 filas. Si el gasto se borró, el reintento lo vuelve a meter (ver [[revision-006-editar]]).
 - La ventana compara el reloj de la app con el `creado_en` de la base.
 - Para `/f-verify` faltan pruebas contra la base de C, D y G (`registrarCaptura` no tiene prueba en el repo).
 

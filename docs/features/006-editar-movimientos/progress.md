@@ -43,3 +43,10 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - sin JavaScript, `?borrar=1` borra y vuelve a `/movimientos?borrado=1`;
   - la base termina con los mismos 121 movimientos.
 - Pendiente para `/f-verify 006`: borrar un ingreso con reparto por la pantalla (con sobres en negativo y con "Por asignar" que no alcanza), carreras con el reparto, y la prueba `src/app` de que las acciones nuevas pasan por `conFallas` (la de la 002 ya las recorre).
+- T3, `guardian-datos` (2026-10-17): **SEGURO DE APLICAR**. En copias de la base: el cuadre en cada paso, 5 de 5 sin nada a medias al forzar fallas a mitad de transacción, y 20 rondas por par de carreras (editar o borrar un ingreso contra repartir, prestar y apartar; dos ediciones del mismo gasto; editar contra borrar) sin "Por asignar" en negativo. Con el mutante sin candado quedó en −1000 en 20 de 20. Hallazgos:
+  1. **Baja, defensa:** el escritor copiaba el plan entero en el `set` y usaba los ids del plan. **Corregido:** campo por campo (nunca el tipo, el origen, la referencia ni el sobre destino), con los ids leídos bajo el bloqueo y el tipo de cada fila comprobado.
+  2. **Baja, futuro:** editar o borrar un movimiento de una cuenta archivada con saldo 0 descuadra. Hoy nada archiva cuentas ni sobres; queda para la observación 3.
+  3. **Baja:** un id mayor que el de un `integer` daba 500. **Corregido:** `movimientoParaEditar` y los escritores lo tratan como inexistente.
+  4. **Info:** una referencia con el UUID en mayúsculas (solo por SQL o un importador) no encuentra su venta. Va al importador.
+  5. **Info:** el mensaje del ingreso dice siempre "Por asignar"; un `tipo` cambiado en el formulario de borrar responde "Ya estaba borrado" sin tocar nada; un gasto con venta que venga del chat (fase 2) necesitará su propio enlace.
+  - Tras los arreglos: 43 de 43 unitarias y el recorrido de punta a punta de nuevo en verde.

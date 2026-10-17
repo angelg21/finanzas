@@ -8,7 +8,7 @@ import {
   type RepartoGuardado,
   planDeBorradoDeIngreso,
 } from "../lib/editar-ingreso";
-import type { ErroresGasto } from "../lib/gastos";
+import type { ErroresGasto, FilaMovimiento } from "../lib/gastos";
 import { db } from "./index";
 import { type Ejecutor, claveReparto, guardadasDeCaptura, saldoDeSobre } from "./movimientos";
 import { movimientos, sobres } from "./schema";
@@ -21,8 +21,40 @@ import { movimientos, sobres } from "./schema";
 
 const soloEditables = ["gasto", "ingreso"] as const;
 
+/** El mayor id de una columna integer: uno más grande no existe, y Postgres lo rechazaría con 22003 (guardian, T3). */
+const idMaximo = 2_147_483_647;
+const idValido = (id: number) => Number.isSafeInteger(id) && id > 0 && id <= idMaximo;
+
+/**
+ * Los valores que la edición puede cambiar en una fila, campo por campo: nunca el tipo, el origen, la referencia ni
+ * la fecha de creación. El escritor no se fía de lo que traiga el plan más allá de esto (guardian, T3).
+ */
+const valoresDeGasto = (f: FilaMovimiento) => ({
+  fecha: f.fecha,
+  montoCentavos: f.montoCentavos,
+  moneda: f.moneda,
+  montoUsdCentavos: f.montoUsdCentavos,
+  tasa: f.tasa,
+  cuentaOrigenId: f.cuentaOrigenId,
+  sobreOrigenId: f.sobreOrigenId,
+  categoriaId: f.categoriaId,
+  nota: f.nota,
+});
+const valoresDeVenta = (f: FilaMovimiento) => ({
+  fecha: f.fecha,
+  montoCentavos: f.montoCentavos,
+  moneda: f.moneda,
+  montoUsdCentavos: f.montoUsdCentavos,
+  montoDestinoCentavos: f.montoDestinoCentavos,
+  monedaDestino: f.monedaDestino,
+  tasa: f.tasa,
+  cuentaOrigenId: f.cuentaOrigenId,
+  cuentaDestinoId: f.cuentaDestinoId,
+});
+
 /** Un gasto o un ingreso con lo enlazado por su captura; null si no existe o es de otro tipo (criterio 8). */
 export async function movimientoParaEditar(id: number) {
+  if (!idValido(id)) return null;
   const [movimiento] = await db
     .select()
     .from(movimientos)
@@ -42,6 +74,7 @@ export type MovimientoParaEditar = NonNullable<Awaited<ReturnType<typeof movimie
 
 /** La fila, bloqueada hasta el final de la transacción, si es del tipo pedido. */
 async function filaBloqueada(tx: Ejecutor, id: number, tipo: (typeof soloEditables)[number]) {
+  if (!idValido(id)) return null;
   const [fila] = await tx
     .select()
     .from(movimientos)
@@ -81,26 +114,30 @@ export async function editarGasto(
     const venta = await ventaBloqueada(tx, captura);
     const plan = planear({ gastoId: gasto.id, ventaId: venta?.id ?? null });
     if (!plan.ok) return plan;
+    if (
+      plan.gasto.fila.tipo !== "gasto" ||
+      (plan.venta && plan.venta.accion !== "borrar" && plan.venta.fila.tipo !== "transferencia")
+    ) {
+      throw new Error("El plan de un gasto trae filas de otro tipo");
+    }
     if (plan.venta?.accion === "crear" && !captura) {
       // Sin captura, la venta nueva no quedaría enlazada al gasto (criterio 8).
       const vendido = "Este gasto no se registró en la app: para pagarlo vendiendo USDT, bórralo y regístralo de nuevo";
       return { ok: false as const, errores: { vendido } };
     }
-    await tx
-      .update(movimientos)
-      .set({ ...plan.gasto.fila, origen: gasto.origen })
-      .where(eq(movimientos.id, gasto.id));
-    if (plan.venta?.accion === "actualizar") {
-      await tx
-        .update(movimientos)
-        .set({ ...plan.venta.fila, nota: venta?.nota ?? null })
-        .where(eq(movimientos.id, plan.venta.id));
-    } else if (plan.venta?.accion === "crear" && captura) {
-      await tx
-        .insert(movimientos)
-        .values({ ...plan.venta.fila, referenciaExterna: referenciaDeCaptura(captura, "transferencia") });
-    } else if (plan.venta?.accion === "borrar") {
-      await tx.delete(movimientos).where(eq(movimientos.id, plan.venta.id));
+    await tx.update(movimientos).set(valoresDeGasto(plan.gasto.fila)).where(eq(movimientos.id, gasto.id));
+    // La venta se toca por el id leído bajo el bloqueo, nunca por el que traiga el plan.
+    if (plan.venta?.accion === "actualizar" && venta) {
+      await tx.update(movimientos).set(valoresDeVenta(plan.venta.fila)).where(eq(movimientos.id, venta.id));
+    } else if (plan.venta?.accion === "crear" && captura && !venta) {
+      await tx.insert(movimientos).values({
+        ...valoresDeVenta(plan.venta.fila),
+        tipo: "transferencia",
+        origen: "manual",
+        referenciaExterna: referenciaDeCaptura(captura, "transferencia"),
+      });
+    } else if (plan.venta?.accion === "borrar" && venta) {
+      await tx.delete(movimientos).where(eq(movimientos.id, venta.id));
     }
     return { ok: true as const };
   });
@@ -136,9 +173,22 @@ export async function editarIngreso(
     };
     const plan = planear(guardado, saldo);
     if (!plan.ok) return plan;
+    if (plan.fila.tipo !== "ingreso" || plan.fila.sobreDestinoId !== ingreso.sobreDestinoId) {
+      throw new Error("El plan de un ingreso no es de este ingreso");
+    }
+    // Campo por campo: ni el tipo, ni el sobre que lo recibió, ni el origen o la referencia cambian.
+    const f = plan.fila;
     await tx
       .update(movimientos)
-      .set({ ...plan.fila, origen: ingreso.origen })
+      .set({
+        fecha: f.fecha,
+        montoCentavos: f.montoCentavos,
+        moneda: f.moneda,
+        montoUsdCentavos: f.montoUsdCentavos,
+        cuentaDestinoId: f.cuentaDestinoId,
+        categoriaId: f.categoriaId,
+        nota: f.nota,
+      })
       .where(eq(movimientos.id, ingreso.id));
     return { ok: true as const };
   });
