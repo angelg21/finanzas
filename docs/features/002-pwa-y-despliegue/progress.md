@@ -308,8 +308,8 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
     - `ECONNREFUSED 127.0.0.1:5433`: la variable tenía la cadena local;
     - `28P01 password authentication failed`: la contraseña no era la de la base. Se armó desde la cadena del pooler en modo sesión, cambiando solo el puerto a 6543.
   - Después, sin errores en los registros de producción.
-  - Humo contra producción (2026-10-14), `node scripts/humo.mjs --url https://arca-ag.vercel.app --sin-sesion`: once rutas a `/entrar`, POST a 303, la petición RSC "cortada por la sesión y sin datos", PUT/PATCH/DELETE a 405 y las cabeceras de las rutas públicas y de `sw.js`. Última línea: "✓ humo: todo responde como debe." (criterio 12).
-  - Faltan: la prueba de que el usuario de prueba no entra en producción y el primer respaldo (criterio 13).
+  - Humo contra producción (2026-10-14), `node scripts/humo.mjs --url https://arca-ag.vercel.app --sin-sesion`: once rutas a `/entrar`, POST a 303, la petición RSC "cortada por la sesión y sin datos", PUT/PATCH/DELETE a 405 y las cabeceras de las rutas públicas y de `sw.js`. Última línea: "✓ humo: todo responde como debe." (criterio 13).
+  - Faltan: la prueba de que el usuario de prueba no entra en producción (criterio 13) y el primer respaldo (criterio 12).
 - **Fusión adelantada (2026-10-14).** El desarrollador decidió fusionar en `main` y publicarla ya, para que Vercel despliegue desde `main` y no desde esta rama. Se hizo con `pnpm verify` en verde, sin `/f-verify` ni `/f-review`. Quedan pendientes y se hacen sobre `main`:
   - T15: conectar el repositorio, las variables, el despliegue, el humo contra producción, la prueba en el celular y el primer respaldo;
   - T16 y T17;
@@ -360,3 +360,14 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
     - `✓ verify:full en verde en 38.9 s. Árbol sellado.`;
     - `pnpm exec tsx scripts/comprobar-002.ts`: `✓ comprobar-002: todo en verde`;
     - `pnpm exec tsx scripts/comprobar-002-servidor.ts`: `✓ comprobar-002-servidor: todo en verde`.
+- Revisión (2026-10-17), primera vuelta: `revisor`, **NO APTO**, con `pnpm verify --forzar` en verde y ninguna fila mal en lo que probó. Hallazgos:
+  1. **Media-alta, ★ 19.** Los formularios sueltos (quitar una partida en `/sobres/[id]`, eliminar y restaurar una categoría, y `borrarDeudaAccion` de la 005) no pasan por `conFallas` y la app no tiene `error.tsx`: sin red, la pantalla entera cambia por el error de Next en inglés.
+  2. **Media, ★ 2.** La regla de la sesión no veía un `"use server"` fuera de `src/app`, ni un `export *` en un archivo de acciones, ni una rama sin sesión con `void escribir(d)`.
+  3. **Media-baja, criterio 17.** Tras navegar con un enlace, Next volvía a poner los `theme-color` del sistema: la barra de estado quedaba en claro con la app en oscuro.
+  4. **Baja, para el desarrollador.** "Sin conexión: el gasto no se guardó." puede ser falso si el corte llega después de guardar. Reintentar en la misma captura no duplica, pero una captura nueva sí.
+  5. **Baja, documentos.** La spec conservaba "Finanzas", `aria-label="Finanzas"`, el panel de 440 px y `NavInferior`; este archivo cruzaba los criterios 12 y 13; las capturas de `/entrar` y `/sin-conexion` eran anteriores al ajuste del celular.
+- Arreglos (2026-10-17):
+  - **2** (`1108868`): un `"use server"` en `src/db`, `src/lib` o `src/components` es error; `export *` en un archivo de acciones también; la rama sin sesión solo puede llamar a `mensajeDeFalla`, `tecleadoDe` y `valoresDe`, sin `await`, y termina en `return`. Tres pruebas nuevas en `sesion.criterios.test.ts`, que fallaron antes (3 de 45) y pasan después (45 de 45); `estructura --todo`: 0 errores.
+  - **3** (`8d66de0`): el script del tema vigila los `theme-color` con un `MutationObserver` y los repinta solo si el color cambia. En Edge, a 390 px: con el sistema en claro y la app en oscuro, `#15241f` en los tres metas al cargar y tras enlaces a `/movimientos`, `/sobres`, `/nuevo/gasto` y `/`; al revés, `#f5f6f2` en todos.
+  - **5**: la spec dice lo que quedó el 2026-10-14 y remite a `docs/diseno.md`; los criterios 12 y 13, en su sitio; capturas de `/entrar` y `/sin-conexion` regeneradas.
+  - **4**: queda para el desarrollador.

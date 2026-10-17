@@ -67,7 +67,7 @@ No cambia el plan. Al cerrar se marca la línea de la fase 1 como hecha.
 
 **Rutas nuevas** `/entrar` y `/sin-conexion`. Las rutas actuales no cambian de dirección. Se reparten en dos grupos:
 
-- `src/app/(con-sesion)/`: el cascarón actual, con `BarraLateral`, `NavInferior`, `MenuMovil` y `TituloRuta`.
+- `src/app/(con-sesion)/`: el cascarón actual, con `BarraLateral`, `MenuMovil`, `TituloRuta` y el "+" flotante (`BotonFlotanteRegistrar`, que reemplazó a `NavInferior` el 2026-10-14).
 - `src/app/(sin-sesion)/`: el lienzo y el panel, sin navegación.
 
 El `layout.tsx` raíz conserva `<html>`, la fuente, el script del tema y los metadatos.
@@ -75,7 +75,7 @@ El `layout.tsx` raíz conserva `<html>`, la fuente, el script del tema y los met
 **`/entrar`, móvil.** Panel a pantalla completa, sin barra superior ni inferior. Una columna centrada en vertical, con 16 px de relleno lateral:
 
 1. **Emblema** (pieza nueva) de 72 px.
-2. "Finanzas" a 24 px y peso 800; debajo, "Cada dólar tiene un trabajo." en `texto-2`.
+2. "Finanzas" a 24 px y peso 800; debajo, "Cada dólar tiene un trabajo." en `texto-2`. **Quedó distinto el 2026-10-14:** "Arca" va en el lado de la marca, y el formulario lleva "Entrar" a 28 px; el detalle vigente está en `docs/diseno.md`, "Acceso y sin conexión".
 3. Una `Tarjeta` con dos campos:
    - `Campo` "Correo", con una `Entrada` de `type="email"`, `autoComplete="username"` y `inputMode="email"`;
    - `Campo` "Contraseña", con una `Entrada` de `type="password"` y `autoComplete="current-password"`.
@@ -83,7 +83,7 @@ El `layout.tsx` raíz conserva `<html>`, la fuente, el script del tema y los met
 
 El error se muestra encima del botón, en `negativo`, con `role="alert"`.
 
-**`/entrar`, escritorio.** El lienzo visible y el panel flotante, de 440 px de ancho y centrado, con el mismo contenido. Sin barra lateral.
+**`/entrar`, escritorio.** ~~El lienzo visible y el panel flotante, de 440 px de ancho y centrado, con el mismo contenido.~~ Desde el 2026-10-14, la pantalla partida en dos: la marca a la izquierda y el formulario, de hasta 400 px, a la derecha (`docs/diseno.md`, "Acceso y sin conexión"). Sin barra lateral.
 
 **`/sin-conexion`.** El mismo marco que `/entrar`: el emblema, "Sin conexión" a 24 px y el texto del criterio 20 en `texto-2`. Abajo, un `Boton` `secundario` "Reintentar" que recarga la página. La página es estática: no consulta la base ni la sesión, porque se guarda al instalar.
 
@@ -91,7 +91,7 @@ El error se muestra encima del botón, en `negativo`, con `role="alert"`.
 
 **Fallas al guardar** (criterio 19). Una línea en `negativo` con `role="alert"`, encima del botón "Guardar gasto". Usa el mismo estilo que el error de un `Campo`.
 
-**Pieza nueva `Emblema`**, en `src/components/emblema.tsx`: el emblema del logo en SVG, con el tamaño por prop y `aria-label="Finanzas"`. Sus colores son los del logo y no cambian con el tema, porque es una imagen de marca y no interfaz. Es la única excepción a "solo tokens", y se documenta en `docs/diseno.md`. La misma fuente genera los iconos con `ImageResponse`: el favicon, el `apple-icon` de 180 y los de 192, 512 y 512 adaptable del manifiesto. Ningún PNG se edita a mano.
+**Pieza nueva `Emblema`**, en `src/components/emblema.tsx`: el emblema del logo en SVG, con el tamaño por prop y `aria-label` con el nombre de la app, hoy "Arca" (`src/lib/marca.ts`). Sus colores son los del logo y no cambian con el tema, porque es una imagen de marca y no interfaz. Es la única excepción a "solo tokens", y se documenta en `docs/diseno.md`. La misma fuente genera los iconos con `ImageResponse`: el favicon, el `apple-icon` de 180 y los de 192, 512 y 512 adaptable del manifiesto. Ningún PNG se edita a mano.
 
 ## Datos
 
