@@ -1,6 +1,6 @@
 # 006 · Editar o borrar un gasto o un ingreso
 
-Fecha: 2026-10-17. Estado: borrador.
+Fecha: 2026-10-17. Estado: aprobada (2026-10-17, el desarrollador: "si la apruebo, haz el desarrollo ya").
 
 ## Para qué
 
