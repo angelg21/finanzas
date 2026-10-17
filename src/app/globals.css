@@ -45,6 +45,8 @@
   --palida-borde: rgba(255, 255, 255, 0.75);
   --palida-texto: #0e3b32;
   --palida-texto-2: #3d6a5b;
+  /* Rojo para avisos sobre la tarjeta pálida: el negativo no llega a 3:1 en ella. 5,05:1 o más en su degradado. */
+  --palida-negativo: #8f1d17;
   --palida-pista: rgba(14, 59, 50, 0.12);
 
   --pildora-oscura: #e6ebe5;
@@ -135,6 +137,8 @@
   --palida-borde: rgba(255, 255, 255, 0.5);
   --palida-texto: #0e3b32;
   --palida-texto-2: #3d6a5b;
+  /* Rojo para avisos sobre la tarjeta pálida: el negativo no llega a 3:1 en ella. 5,05:1 o más en su degradado. */
+  --palida-negativo: #8f1d17;
   --palida-pista: rgba(14, 59, 50, 0.14);
 
   --pildora-oscura: rgba(255, 255, 255, 0.1);
@@ -186,6 +190,7 @@
   --color-palida-borde: var(--palida-borde);
   --color-palida-texto: var(--palida-texto);
   --color-palida-texto-2: var(--palida-texto-2);
+  --color-palida-negativo: var(--palida-negativo);
   --color-palida-pista: var(--palida-pista);
   --color-pildora-oscura: var(--pildora-oscura);
   --color-pildora-oscura-texto: var(--pildora-oscura-texto);

@@ -21,9 +21,10 @@ const campoBase =
   "h-12 w-full rounded-[14px] border border-tarjeta-borde bg-tarjeta-hover px-4 text-[16px] text-texto placeholder:text-texto-3 focus:outline-none focus:ring-2 focus:ring-palido lg:text-[15px]";
 
 /** Mensaje de error junto al campo o al botón; `role="alert"` para que el lector de pantalla lo anuncie. */
-export function ErrorCampo({ children }: { children?: string }) {
+/** El mensaje de error de un campo. `palida`, sobre la tarjeta pálida, donde el rojo de siempre no se lee. */
+export function ErrorCampo({ children, palida = false }: { children?: string; palida?: boolean }) {
   return children ? (
-    <span role="alert" className="text-[12px] font-semibold text-negativo">
+    <span role="alert" className={`text-[12px] font-semibold ${palida ? "text-palida-negativo" : "text-negativo"}`}>
       {children}
     </span>
   ) : null;
@@ -287,13 +288,16 @@ export function Selector({ className = "", children, ...props }: SelectHTMLAttri
   );
 }
 
-type VarianteBoton = "primario" | "secundario" | "peligro";
+type VarianteBoton = "primario" | "secundario" | "peligro" | "peligro-palida";
 
 const estilosBoton: Record<VarianteBoton, string> = {
   primario: "boton-pino h-12 rounded-full px-5 text-[14px] font-semibold disabled:opacity-60",
   secundario:
     "h-12 rounded-full border border-tarjeta-borde bg-tarjeta px-5 text-[14px] font-semibold text-texto hover:bg-tarjeta-hover disabled:opacity-60",
   peligro: "h-9 rounded-full px-3 text-[13px] font-semibold text-negativo hover:bg-tarjeta-hover disabled:opacity-60",
+  // Sobre la tarjeta pálida el rojo de siempre no se lee (revisión de la 002): su propio rojo y su propio hover.
+  "peligro-palida":
+    "h-9 rounded-full px-3 text-[13px] font-semibold text-palida-negativo hover:bg-palida-pista disabled:opacity-60",
 };
 
 export function Boton({

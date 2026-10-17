@@ -81,13 +81,13 @@ export function BotonEliminarPartida({ id, sobreId, nombre }: { id: number; sobr
       <form action={enviar}>
         <input type="hidden" name="id" value={id} />
         <input type="hidden" name="sobreId" value={sobreId} />
-        <Boton type="submit" variante="peligro" disabled={pendiente} aria-label={`Quitar ${nombre}`}>
+        <Boton type="submit" variante="peligro-palida" disabled={pendiente} aria-label={`Quitar ${nombre}`}>
           <Trash2 size={15} aria-hidden />
         </Boton>
       </form>
       {estado.error ? (
         <span className="basis-full text-right">
-          <ErrorCampo>{estado.error}</ErrorCampo>
+          <ErrorCampo palida>{estado.error}</ErrorCampo>
         </span>
       ) : null}
     </>
@@ -113,7 +113,7 @@ export function FormularioAporte({ sobreId, actualCentavos }: { sobreId: number;
         />
       </Campo>
       {estado.error ? (
-        <p role="alert" className="text-[13px] font-semibold text-negativo">
+        <p role="alert" className="text-[13px] font-semibold text-palida-negativo">
           {estado.error}
         </p>
       ) : null}

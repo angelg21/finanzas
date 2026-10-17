@@ -374,3 +374,14 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - **4** (`68ee9fd`), decidido por el desarrollador: sin red, "Sin conexión: no se pudo confirmar. Vuelve a tocar Guardar cuando tengas red; no se duplica."; los formularios sin id de captura dicen "…no se pudo confirmar si se guardó. Vuelve a intentarlo cuando tengas red.". Spec y `fallas.test.ts` al día (2 ✗ antes, 13 ✓ después).
   - Observación de diseño, sin arreglar: en tema oscuro, el rojo `negativo` del mensaje de "Quitar" sobre la tarjeta pálida se lee poco, igual que la papelera de al lado. No hay token de rojo para la tarjeta pálida.
   - `pnpm verify --forzar` con todo: `✓ verify:full en verde en 32.3 s. Árbol sellado.` (863 pruebas).
+- Revisión (2026-10-17), segunda vuelta: `revisor`, **NO APTO**, con `pnpm verify --forzar` en verde. Hallazgos:
+  1. **Alta, regresión de `8d66de0`:** el vigilante de los `theme-color` escribía "undefined" sin fin en la página de error de Next, que trae un `<html>` sin `data-tema`, y la pestaña se colgaba (Salir sin red, o la base caída y un enlace).
+  2. **Media-alta, ★ 2:** la regla de "use server" solo miraba las capas de la lista: `src/acciones.ts`, una carpeta nueva o un `.js` pasaban, y un POST sin cookies ejecutó la acción en un build.
+  3. **Media-baja, ★ 19:** el rojo del mensaje de "Quitar" y de la papelera sobre la tarjeta pálida: 1,43 a 1,75:1 en oscuro.
+  4. **Baja:** la prueba de `conFallas` solo reconocía acciones importadas de `*/acciones`.
+- Arreglos (2026-10-17):
+  - **1** (`d2e67f2`): el vigilante no escribe sin tema. `src/components/tema.test.ts` corre el script con un documento simulado: con el código anterior falló la de la página de error (bucle hasta el tope); con el arreglo, 3 de 3.
+  - **2** (`92a0b2c`): "use server" fuera de `src/app` es error en cualquier carpeta de `src`; dentro, solo en un `acciones.ts`; un `.js`, `.jsx`, `.mjs` o `.cjs` en `src` es error y `--todo` los lista. Tres pruebas nuevas que fallaron antes; la existente de `otra-cosa.ts` ahora exige también el error del nombre.
+  - **4**: cubierto por el mismo arreglo: fuera de un `acciones.ts` no puede haber acciones, así que la prueba de `conFallas` las ve todas.
+  - **3**: token `palida-negativo` (`#8f1d17`, 5,05:1 o más en los cuatro tonos del degradado pálido, claro y oscuro), `ErrorCampo palida` y la variante de botón `peligro-palida`, en "Quitar" y en el aporte manual de `/sobres/[id]`. En Edge, a 390 px en oscuro, la papelera calcula `rgb(143, 29, 23)`.
+  - `pnpm verify:fast` en verde.
