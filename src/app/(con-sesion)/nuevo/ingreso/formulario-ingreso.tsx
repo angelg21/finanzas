@@ -7,7 +7,7 @@ import { Boton, Campo, CampoMonto, Entrada, SelectorPildoras } from "@/component
 import { IconoSobre } from "@/components/icono-sobre";
 import { TarjetaReparto } from "@/components/reparto";
 import { Tarjeta } from "@/components/ui";
-import { type Moneda, aCentavos, partesCentavos, unidadDe } from "@/lib/dinero";
+import { type Moneda, montoPositivo, partesCentavos, unidadDe } from "@/lib/dinero";
 import { esFecha, fechaDesdeAtajo } from "@/lib/fechas";
 import { type ReglaConSaldo, type RecibidoPorMes, camposDePropuesta, recibidoDelMes } from "@/lib/ingresos";
 import { pistaDeCuota } from "@/lib/cuota-deudas";
@@ -32,16 +32,6 @@ type Datos = {
   hoy: string;
 };
 type Inicial = { cuentaId: string; categoriaId: string; idCaptura: string };
-
-/** El monto tecleado en centavos, o null si todavía no es un monto mayor que cero. */
-function centavosDe(texto: string): number | null {
-  try {
-    const centavos = aCentavos(texto);
-    return centavos > 0 ? centavos : null;
-  } catch {
-    return null;
-  }
-}
 
 /** Registro de un ingreso con su reparto. "Registrar otro" lo vuelve a montar con la misma cuenta. */
 export function FormularioIngreso({ inicial, ...datos }: Datos & { inicial: Inicial }) {
@@ -139,11 +129,11 @@ function Campos({
 
   const resuelta = fechaDesdeAtajo(fecha, hoy);
   const delMes = recibidoDelMes(recibidoPorMes, esFecha(resuelta) ? resuelta : hoy);
-  const montoCentavos = centavosDe(monto);
+  const montoCentavos = montoPositivo(monto);
 
   /** Con JavaScript la propuesta sigue al monto y a la fecha, y el primer clic ya guarda (criterio 13). */
   function proponer(nuevoMonto: string, nuevaFecha: string) {
-    const centavos = centavosDe(nuevoMonto);
+    const centavos = montoPositivo(nuevoMonto);
     const dia = fechaDesdeAtajo(nuevaFecha, hoy);
     setAsignaciones(centavos === null || !esFecha(dia) ? {} : camposDePropuesta(centavos, dia, reglas, recibidoPorMes));
     setPropuestaDe(claveDePropuesta(nuevoMonto, nuevaFecha));

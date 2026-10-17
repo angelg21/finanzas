@@ -3,6 +3,7 @@ import {
   aCentavos,
   aCentavosExactos,
   leerExacto,
+  montoPositivo,
   aTasa,
   bolivaresDesdeUsd,
   centavosATexto,
@@ -258,5 +259,17 @@ describe("leerExacto: un monto que se confirma campo por campo, o por qué no se
     expect(leerExacto("10,555")).toEqual({ ok: false, motivo: "decimales" });
     expect(leerExacto("abc")).toEqual({ ok: false, motivo: "invalido" });
     expect(leerExacto("1e3")).toEqual({ ok: false, motivo: "invalido" });
+  });
+});
+
+describe("montoPositivo: lo que se va tecleando, para los avisos antes de guardar", () => {
+  it("un monto mayor que cero se lee en centavos, como aCentavos", () => {
+    expect(montoPositivo("250")).toBe(25_000);
+    expect(montoPositivo("1.234,56")).toBe(123_456);
+    expect(montoPositivo("0,01")).toBe(1);
+  });
+
+  it("vacío, a medio escribir, cero o negativo no es un monto todavía: null, sin lanzar", () => {
+    for (const texto of ["", "   ", "abc", ",", "0", "0,00", "-5"]) expect(montoPositivo(texto)).toBeNull();
   });
 });

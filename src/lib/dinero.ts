@@ -92,6 +92,16 @@ export function aCentavos(texto: string): number {
   return centavos;
 }
 
+/** El monto tecleado en centavos, o null mientras no se lee como un monto mayor que cero. Para los avisos en vivo. */
+export function montoPositivo(texto: string): number | null {
+  try {
+    const centavos = aCentavos(texto);
+    return centavos > 0 ? centavos : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Como aCentavos, pero lanza si el texto trae fracciones de centavo: "10,555" no se redondea en silencio a 10,56.
  * Los ceros de más sí valen ("1,500" es 1,50). Para los montos que se confirman uno por uno, como un reparto.
