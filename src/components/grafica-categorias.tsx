@@ -69,6 +69,8 @@ export function GraficaCategorias({
   });
 
   const resaltada = porciones.find((p) => p.clave === activa) ?? null;
+  // Una categoría filtrada sin movimientos en el periodo no tiene porción: entonces no se atenúa ninguna.
+  const elegidaEnAnillo = porciones.some((p) => p.clave === elegida);
   const cifra = partesCentavos(resaltada ? resaltada.centavos : total);
   const textoCifra = `${cifra.entero},${cifra.decimales}`;
 
@@ -94,7 +96,7 @@ export function GraficaCategorias({
             />
           ) : (
             arcos.map((p) => {
-              const apagada = (elegida !== null && elegida !== p.clave) || (activa !== null && activa !== p.clave);
+              const apagada = (elegidaEnAnillo && elegida !== p.clave) || (activa !== null && activa !== p.clave);
               return (
                 <path
                   key={p.clave}

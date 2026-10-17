@@ -54,7 +54,8 @@ function cuando({ periodo, fecha }: Filtros, hoy: string) {
 /**
  * Movimientos (spec 003): Gastos, Ingresos y Mover; el periodo con sus flechas; en Gastos e Ingresos, el anillo por
  * categoría con su leyenda que filtra; y la lista por día. Todo son enlaces con parámetros que valida `leerFiltros`:
- * funciona sin JavaScript. Tres consultas: totales por categoría, lista y resumen por día.
+ * funciona sin JavaScript. Tres consultas: totales por categoría, lista y resumen por día; con filtro, una cuarta
+ * busca la categoría por su tipo.
  */
 export default async function Movimientos({ searchParams }: PageProps<"/movimientos">) {
   await exigirSesion();

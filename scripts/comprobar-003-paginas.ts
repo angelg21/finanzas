@@ -90,7 +90,8 @@ async function abrirSesion(origen: string) {
 /** Lo que dice qué se está mirando: pestaña y periodo marcados, el nombre del periodo y el encabezado de la lista. */
 function firma(html: string) {
   const marcadas = [...html.matchAll(/<span aria-current="page"[^>]*>([^<]*)<\/span>/g)].map((m) => m[1]);
-  const periodo = /aria-label="Elegir un día en el calendario"[\s\S]*?<\/svg>([\s\S]*?)<\/button>/.exec(html)?.[1];
+  // El botón del calendario: su texto visible, sin la parte que solo oye el lector de pantalla.
+  const periodo = /aria-haspopup="dialog"[\s\S]*?<\/svg>([\s\S]*?)<span class="sr-only">/.exec(html)?.[1];
   const encabezado = /<h2 class="flex items-baseline[^"]*">([\s\S]*?)<\/h2>/.exec(html)?.[1];
   return `${marcadas.join(" · ")} | ${texto(periodo ?? "?")} | ${texto(encabezado ?? "?")}`;
 }
@@ -209,7 +210,11 @@ export async function comprobarPaginas(origen: string, d: DatosDePaginas, compro
     comprobar(
       "6",
       `${manipuladas.length} direcciones manipuladas responden 200 y muestran lo mismo que /movimientos`,
-      normal.estado === 200 && esperada.startsWith("Gastos · Mes | ") && fallidas.length === 0,
+      // Sin periodo leído, la firma diría "?" en las dos páginas y compararía nada: eso también es una falla.
+      normal.estado === 200 &&
+        esperada.startsWith("Gastos · Mes | ") &&
+        !esperada.includes("| ? |") &&
+        fallidas.length === 0,
       fallidas.length ? fallidas.join("; ") : esperada,
     );
     const conComida = firma((await sesion.pagina(`/movimientos?categoria=${d.comidaId}`)).html);
