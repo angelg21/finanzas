@@ -220,7 +220,7 @@ Referencia antes de diseñar: Actual Budget, open source, usa exactamente el mod
 - Importador de Gestor de Gastos.
 - Gráficas básicas: por mes y por categoría. La de mes está en Inicio. **La de categoría, hecha** en la feature 003: el anillo de `/movimientos` para gastos e ingresos, por día, semana, mes o año.
 - Formulario de captura rápida de gasto. **Hecho** en la feature 001, fusionada el 12 de octubre de 2026.
-- PWA instalable y despliegue para usar la app a diario (feature 002): base en Supabase, Supabase Auth para un solo usuario, Vercel, y `/f-audit` antes de publicar.
+- PWA instalable y despliegue para usar la app a diario (feature 002): base en Supabase, Supabase Auth para un solo usuario, Vercel, y `/f-audit` antes de publicar. **Hecho**: publicada en https://arca-ag.vercel.app desde el 14 de octubre de 2026, con `main` como rama de producción.
   - **Auditoría completa (`/f-audit completo`), 2026-10-14, sobre la rama de la 002, en dos vueltas.**
     - `auditor-seguridad` encontró:
       - una redirección abierta tras entrar;

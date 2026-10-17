@@ -83,13 +83,14 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
     - Arreglo: `campoBase` y la fecha sin JavaScript pasan a 16 px en el celular (15 en escritorio). Medido después: todos los campos en 16 px o más; con la escala de antes, el arrastre ya no corre la página.
   - Faltan los tiempos cronometrados, los dos temas en el celular y entrar y salir.
 
-- [ ] T17 · Documentos:
-  - ADR 0010 con `/f-adr` (Supabase solo en el servidor, dos proyectos, RLS con la API de datos apagada, migraciones de producción a mano, orden del primer despliegue);
-  - el plan: la línea de la fase 1 marcada como hecha;
-  - `docs/diseno.md`: `Emblema`, `/entrar`, `/sin-conexion`, los iconos y la excepción de color del logo;
-  - `CLAUDE.md`: los comandos nuevos, la regla de migraciones con su variante de producción y los modos del humo;
-  - `docs/WORKFLOW.md`, si cambió el orden de la auditoría;
-  - las observaciones, si cambió algo.
+- [x] T17 · (2026-10-16) Documentos:
+  - ADR 0010 con `/f-adr` (Supabase solo en el servidor, dos proyectos, RLS con la API de datos apagada, migraciones de producción a mano, orden del primer despliegue): ya estaba, junto con el 0011;
+  - el plan: la línea de la fase 1 marcada como hecha, con la dirección de producción;
+  - `docs/diseno.md`: la sección "Acceso y sin conexión", `Emblema` y `Marca` en las piezas base, la app a pantalla completa en escritorio, y en "Logo" los iconos y la excepción de color;
+  - `CLAUDE.md`: los comandos de producción, la regla de migraciones con su variante y los dos modos del humo ya estaban;
+  - `docs/WORKFLOW.md`: sin cambios, la auditoría siguió el orden escrito (antes de exponer nada);
+  - las observaciones: la 8 marcada como hecha;
+  - además, `docs/despliegue.md` ("Operación") y `/f-ship` piden migrar producción antes de publicar `main`, y sembrar si cambió la semilla.
 
 ## Validación en navegador
 

@@ -41,10 +41,21 @@ Es una aplicación web progresiva: en el celular se ve como las pantallas de la 
 
 **Escritorio (1024 px o más)**
 
-- Lienzo visible con 20 px de margen; panel flotante de hasta 1480 px con radio 28.
-- Barra lateral de 248 px dentro del panel: marca, navegación con la activa en azul pálido, botón "Registrar movimiento" con el degradado del hero, tema y lema abajo. Fija al desplazarse.
+- La app a pantalla completa, sin el panel flotante sobre el lienzo (cambio del desarrollador, 2026-10-14). El contenido llega a 1400 px de ancho y se centra.
+- Barra lateral de 248 px: marca, navegación con la activa en azul pálido, botón "Registrar movimiento" con el degradado del hero, tema y lema abajo. Fija al desplazarse.
 - Barra superior con el título de la página y la fecha a la izquierda; tema y avatar a la derecha.
 - Contenido en rejilla de 12 columnas con 20 px de separación. Inicio: hero 7 + anillo 5; Sobres 5 + gráfica 7; Cuentas 5 + últimos movimientos 7. Sobres: anillo fijo 5 + lista 7. Cuentas: hero 7 + verificación 5, listas 7 + 5. Movimientos: pestañas de tipo a la izquierda y periodo con flechas a la derecha; debajo, anillo fijo 5 + lista 7, y en Mover solo la lista, centrada.
+
+## Acceso y sin conexión
+
+`/entrar` y `/sin-conexion` comparten el marco del grupo `(sin-sesion)`, a pantalla completa, sin navegación (spec 002, cambio del 2026-10-14):
+
+- **La marca**: el verde pino con brillos menta (`marca-brillo`, `marca-brillo-2`), anillos (`marca-anillo`) y la textura de puntos. Encima, el `Emblema` sobre un disco claro (`marca-disco`), "Arca", el lema "Cada dólar tiene un trabajo." y tres píldoras con icono: Sobres, Metas, Inversión.
+- **Celular**: la marca es el fondo de toda la pantalla, con el emblema de 72 px en un disco de 104 px, y el formulario va en una hoja clara que flota sobre ella (`acceso-hoja`).
+- **Escritorio**: la pantalla partida en dos columnas iguales, la marca a la izquierda (emblema de 164 px en un disco de 236 px, el nombre a 56 px) y el formulario a la derecha, de hasta 400 px.
+- **`/entrar`**: "Entrar" a 28 px, peso 800, y "Con tu correo y tu contraseña." en `texto-2`; los campos Correo y Contraseña y el botón primario "Entrar" de 52 px a todo el ancho. El error va encima del botón, en `negativo`, con `role="alert"`.
+- **`/sin-conexion`**: "Sin conexión" y "Sin red no se puede registrar ni consultar. Tus datos siguen a salvo."; "Reintentar" es un botón secundario de 52 px dentro de un formulario GET, porque sin red no hay JavaScript. Es estática: nunca muestra saldos.
+- **Salir**: abajo en la barra lateral, junto al tema, con el icono `LogOut` y la forma de un enlace lateral; en el menú móvil, al final. Es un formulario con su acción.
 
 ## Tipografía
 
@@ -119,6 +130,8 @@ Desviación consciente: los colores de las barras son los de la imagen, azul pá
 | `TarjetaReparto`                                                                  | Reparto de un ingreso o de "Por asignar": `TarjetaPalida` con una fila por sobre con regla (nombre, pista y campo de monto) y un pie que suma. En `reparto.tsx`                                                                                                                                                                                                                                                   |
 | `IconoSobre`                                                                      | Un sobre: funda con muesca y solapa, del tono de su porción en el anillo, con un icono de línea por tipo; se llena desde abajo con borde en onda según su saldo. `sm`, `md`, `lg`; `superficie="palida"` sobre la tarjeta menta. En `icono-sobre.tsx`                                                                                                                                                             |
 | `GraficaCategorias`                                                               | Anillo por categoría con el color `cat-*` de cada una, separadas por 2 px del color de la tarjeta; leyenda de enlaces que filtran, primero "Todas"                                                                                                                                                                                                                                                                |
+| `Emblema`                                                                         | El emblema del logo en SVG, con `tamano` y `aria-label` "Arca". Sus colores no cambian con el tema (ver "Logo"). En `emblema.tsx`                                                                                                                                                                                                                                                                                 |
+| `Marca`                                                                           | `Emblema` junto a "Arca" (`nombreApp` de `src/lib/marca.ts`) a 21 px y peso 800; en la barra lateral y en la barra superior móvil. En `navegacion.tsx`                                                                                                                                                                                                                                                            |
 | `BarraLateral`, `BotonFlotanteRegistrar`, `MenuMovil`, `TituloRuta`, `CambioTema` | Cascarón y navegación                                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## Formularios
@@ -176,6 +189,8 @@ Transiciones de 140 ms en color, fondo, borde y opacidad. Botones y enlaces se e
 ## Logo
 
 El usuario entregó su logo el 12 de octubre de 2026: `docs/referencias/logo-original.jpg`, con "ANGEL GUEVARA" debajo. La app usa **solo el emblema, nunca las letras**: un círculo verde con una flecha que sube sobre barras. Está recortado con fondo transparente en `docs/referencias/logo-emblema.png`, de 310 px, la resolución del original. Es el icono de la app instalada en el celular, en la feature 002 (PWA instalable). En el icono adaptable de Android, la punta de la flecha toca la esquina del recorte, así que necesita más margen que el 80 % de la zona segura.
+
+En la app el emblema es la pieza `Emblema`, vectorizada desde ese recorte, junto al nombre **Arca**, elegido por el desarrollador el 14 de octubre de 2026. Sus dos verdes (`verdesEmblema`: `#207656` y `#3fa36f`) son los del logo y no cambian con el tema: es una imagen de marca, no interfaz, y es **la única excepción a "solo tokens"**. De la misma fuente salen, con `ImageResponse`, el favicon, el `apple-icon` de 180 px y los iconos de 192, 512 y 512 adaptable del manifiesto; el `apple-icon` y el adaptable van sobre el claro `#f5f6f2` del disco, los demás sin fondo. Ningún PNG se edita a mano. En el adaptable, la punta de la flecha llega al 37 % del lado desde el centro, dentro de la zona segura de Android (40 %).
 
 ## Tema
 
