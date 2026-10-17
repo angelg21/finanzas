@@ -6,6 +6,7 @@ import {
   referenciaDeReasignacion,
   resolverReintento,
   resolverReintentoDeDeuda,
+  idDeReferencia,
 } from "./captura";
 
 const id = "3f2b8c1e-9a4d-4e6f-8b7a-1c2d3e4f5a6b";
@@ -281,5 +282,20 @@ describe("referencias de una deuda y su pago (spec 005, criterio 7)", () => {
     }
     const vieja = { ...deuda, creadoEn: new Date(ahora.getTime() - 16 * 60_000) };
     expect(resolverReintentoDeDeuda(vieja, deuda, ahora)).toBe("otra");
+  });
+});
+
+describe("idDeReferencia: el id de la captura que guardó una fila (spec 006)", () => {
+  const id = "0c040004-1111-4222-8333-444455556666";
+  it("lo saca de cualquier referencia de captura, también de las del reparto", () => {
+    expect(idDeReferencia(`captura-${id}-gasto`)).toBe(id);
+    expect(idDeReferencia(`captura-${id}-transferencia`)).toBe(id);
+    expect(idDeReferencia(`captura-${id}-reasignacion-12`)).toBe(id);
+  });
+
+  it("null si la fila no vino de una captura: importada, de demostración o sin referencia", () => {
+    for (const referencia of [null, "demo-001", "gestor-123", `captura-${id}`, `captura-no-es-un-uuid-gasto`]) {
+      expect(idDeReferencia(referencia)).toBeNull();
+    }
   });
 });

@@ -8,7 +8,7 @@ Cada tarea cabe en 30 a 60 minutos y termina en verde con un commit. Se marca co
 
 - [x] T1 · (2026-10-17) `src/lib/editar-gasto.ts` con su prueba primero: de las filas guardadas y la entrada nueva, qué se actualiza, qué se crea y qué se borra en cada cambio de forma de pago; el cuadre antes y después con `saldosTras` (criterios 1 a 3).
 - [x] T2 · (2026-10-17) `src/lib/editar-ingreso.ts` con su prueba primero: la diferencia de monto, si "Por asignar" alcanza, y lo que devuelve cada sobre al borrar con el reparto (criterios 4, 5 y 7).
-- [ ] T3 · `src/db/editar-movimientos.ts`: leer un gasto o un ingreso con lo enlazado por su captura; editar y borrar en una transacción, los ingresos con el candado de "Por asignar". `guardian-datos` antes de usarlo.
+- [x] T3 · (2026-10-17) `src/db/editar-movimientos.ts`: leer un gasto o un ingreso con lo enlazado por su captura; editar y borrar en una transacción, los ingresos con el candado de "Por asignar". `guardian-datos` antes de usarlo.
 - [ ] T4 · `/movimientos/[id]` para un gasto: el formulario de la captura en modo edición, sus acciones con `conFallas`, y "Borrar" con su confirmación (criterios 2, 3, 6, 9 y 10).
 - [ ] T5 · `/movimientos/[id]` para un ingreso: su formulario, la línea del reparto, sus acciones y "Borrar" (criterios 4, 5, 7, 9 y 10).
 - [ ] T6 · `FilaMovimiento` con `href`, en `/movimientos` y en el inicio; el 404 para lo que no es gasto ni ingreso; el aviso al volver (criterios 8, 11 y 12). Capturas en móvil y escritorio, claro y oscuro.

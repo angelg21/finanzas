@@ -12,6 +12,15 @@ export function esIdCaptura(texto: string): boolean {
 }
 
 /**
+ * El id de la captura que guardó una fila, de su referencia "captura-<id>-<tipo>", o null si no vino de una captura
+ * (importada, de demostración). Con él se encuentra lo enlazado: la venta de un gasto o el reparto de un ingreso.
+ */
+export function idDeReferencia(referencia: string | null): string | null {
+  const id = /^captura-([0-9a-f-]{36})-[a-z]/i.exec(referencia ?? "")?.[1];
+  return id && esIdCaptura(id) ? id.toLowerCase() : null;
+}
+
+/**
  * "captura-<id>-gasto": una por fila, igual en cada reintento. Nunca empieza por "demo-". "deuda" es la fila de la
  * tabla deudas; las demás, movimientos (spec 005, criterio 7).
  */
