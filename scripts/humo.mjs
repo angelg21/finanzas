@@ -12,6 +12,7 @@
  * Sin --url requiere la base local arriba (pnpm db:up) y un build hecho (verify lo hace antes).
  */
 import { execSync, spawn } from "node:child_process";
+import fs from "node:fs";
 import { config } from "dotenv";
 
 const argumentos = process.argv.slice(2).filter((a) => a !== "--");
@@ -207,6 +208,39 @@ async function sinSesion() {
       faltan.length ? `faltan ${faltan.join(", ")}` : `esperado ${esperado}`,
     );
   }
+  if (!urlRemota) await rutasDelBuildSinSesion();
+}
+
+/**
+ * Criterio 1, también para las rutas que se agreguen después: todas las que trae el build, no solo las de la lista.
+ * Fuera de las públicas, cada una redirige a /entrar sin datos. Solo contra el build local, que tiene el manifiesto.
+ */
+async function rutasDelBuildSinSesion() {
+  const manifiesto = JSON.parse(fs.readFileSync(".next/app-path-routes-manifest.json", "utf8"));
+  const rutas = [...new Set(Object.values(manifiesto))]
+    .filter((ruta) => !ruta.startsWith("/_"))
+    .map((ruta) => ruta.replace("[__metadata_id__]", "32").replace(/\[[^\]]+\]/g, "1"));
+  const responden = publicas.map(([ruta]) => ruta);
+  let redirigen = 0;
+  for (const ruta of rutas.filter((r) => !responden.includes(r))) {
+    const r = await pedir(ruta);
+    const cuerpo = await r.text();
+    const ubicacion = r.headers.get("location") ?? "";
+    const ok =
+      r.status === 307 && ubicacion.endsWith(`/entrar?siguiente=${encodeURIComponent(ruta)}`) && cuerpo.length < 300;
+    if (ok) redirigen++;
+    else
+      comprobar(
+        false,
+        `${ruta} (del build) → ${r.status} a /entrar`,
+        `${r.status} ${ubicacion}, ${cuerpo.length} bytes`,
+      );
+  }
+  const publicasDelBuild = rutas.filter((r) => responden.includes(r)).length;
+  comprobar(
+    redirigen + publicasDelBuild === rutas.length && rutas.length > 0,
+    `las ${rutas.length} rutas del build: ${publicasDelBuild} públicas y ${redirigen} redirigen a /entrar`,
+  );
 }
 
 /** Criterio 14: el service worker nunca se guarda en caché y lleva su propia CSP. */

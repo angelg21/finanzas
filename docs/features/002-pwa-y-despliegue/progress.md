@@ -113,7 +113,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 - [x] Spec leída y corregida por el desarrollador (2026-10-13)
 - [ ] Construida (todas las tareas con commit)
 - [x] Validada en navegador (2026-10-14)
-- [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
+- [x] Verificada (2026-10-17): `pnpm verify` en verde y cada ★ con su prueba, sobre `main`. Lo que solo se comprueba en producción quedó pendiente del desarrollador, en los ★ 3, 9, 11, 12 y 13 (ver notas, "/f-verify")
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
 - [x] Fusionada en `main` el 2026-10-14, por decisión del desarrollador antes de verificar y revisar (ver notas)
 
@@ -314,3 +314,49 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - T15: conectar el repositorio, las variables, el despliegue, el humo contra producción, la prueba en el celular y el primer respaldo;
   - T16 y T17;
   - las pruebas de `/f-verify` y la revisión de `/f-review`.
+- **/f-verify (2026-10-17), sobre `main`.** Una prueba por criterio ★, escrita desde su texto; las de la construcción se reutilizan donde ya cubrían el texto. Cada ★, con su prueba y lo que queda para el desarrollador:
+  - **★ 1.** `pnpm humo` sin sesión: las 22 rutas de su lista y, nuevo, todas las del build (`app-path-routes-manifest.json`): "las 26 rutas del build: 6 públicas y 20 redirigen a /entrar". Una ruta nueva entra sola.
+  - **★ 2.**
+    - `src/app/sesion.criterios.test.ts`: la regla con acciones y páginas inventadas en una ruta futura, y todo `src/app` leído también sin la regla.
+    - `scripts/comprobar-002-servidor.ts`: las 17 acciones del build, sin sesión. Con JavaScript (cabecera `next-action`), cada una redirige a `/entrar` o responde "Tu sesión terminó: … Entra de nuevo."; sin él, las 17 van con 303 a `/entrar`. Ninguna tabla cambió de filas.
+  - **★ 3.**
+    - `src/lib/acceso.test.ts`: la comparación del correo.
+    - `comprobar-002-servidor`, con el build y otro `USUARIO_PERMITIDO`: la cuenta de prueba, válida, recibe "Correo o contraseña incorrectos.", lo mismo que una contraseña equivocada, y no le queda cookie de sesión. Con el permitido en blanco, nadie entra. En "finanzas-dev", `signUp` responde `signup_disabled`.
+    - **Pendiente del desarrollador:** en el panel de Supabase de producción, confirmar que "Allow new users to sign up" sigue apagado.
+  - **★ 4.** `src/lib/acceso.test.ts`: los casos del texto y los de la auditoría.
+  - **★ 8.**
+    - `src/app/supabase.criterios.test.ts`: la regla de las variables públicas (lista vacía, también en `next.config.ts`); ningún componente de cliente alcanza Supabase ni sus variables por sus imports; solo `src/app/supabase.ts` crea un cliente; ningún archivo versionado trae `sb_secret_` ni un JWT de `service_role`.
+    - `comprobar-002-servidor`: ningún valor de las 9 variables del entorno está en los 35 archivos de `.next/static` ni en las páginas públicas, y no hay clave de servicio.
+    - Las cookies `HttpOnly`, `SameSite=Lax` y `Secure`: `pnpm humo` con sesión, contra el build.
+  - **★ 9.**
+    - `src/db/schema.test.ts`, sobre el código. `scripts/comprobar-002.ts`: `revisarEstadoBase` en la base local (las 7 tablas dueñas, con RLS y sin FORCE; ninguna vista; `anon` fuera de `drizzle`; 6 de 6 migraciones) y ninguna fila en `pg_policies`. En producción, `db:migrate:produccion` dio 10 de 10 ✓ el 2026-10-14.
+    - **Pendiente del desarrollador:** la segunda capa, la Data API apagada en el panel de Supabase de producción.
+  - **★ 10.** `src/lib/destino-base.test.ts`. `comprobar-002`: `pnpm db:demo`, con un `DATABASE_URL` remoto (un servidor TCP de mentira en 127.0.0.2 que cuenta las conexiones), termina con el error de la guarda sin intentar conectar; `pnpm db:demo:limpiar` no se niega e intenta conectar.
+  - **★ 11.**
+    - `src/db/conexion-script.criterios.test.ts`: `urlProduccion` con la terminal simulada. Sin terminal no corre; muestra `host:puerto/base` sin usuario ni contraseña; solo sigue con `produccion`; se niega sin `sslmode=require`; un `DATABASE_URL` del entorno no decide nada.
+    - `comprobar-002`: `pnpm db:seed` y `pnpm db:migrate`, con un remoto, se niegan sin intentar conectar.
+    - **Pendiente del desarrollador:** en una terminal, `pnpm db:seed:produccion`, pegar la cadena y escribir algo distinto de `produccion`. Debe responder "Cancelado: no se tocó la base." y no sembrar nada.
+  - **★ 12.**
+    - El mecanismo, ensayado en local con `pnpm exec tsx src/db/respaldo.ts`: dejó `data/respaldos/2026-10-17-ensayo-local.sql` y lo restauró en `finanzas_restauracion` con las 7 tablas, los movimientos por tipo y las 6 migraciones iguales, 15 de 15 ✓. `git check-ignore` confirma que `data/` no se versiona.
+    - **Pendiente del desarrollador:** el primer respaldo, `pnpm db:respaldo:produccion`. Debe terminar en "Respaldo comprobado: data/respaldos/AAAA-MM-DD.sql", con cada línea en ✓.
+  - **★ 13.**
+    - El modo del humo para producción, contra el build local: `comprobar-002-servidor` corre `humo --url … --sin-sesion` y termina en "✓ humo: todo responde como debe.".
+    - **Pendiente del desarrollador:** `pnpm humo -- --url https://arca-ag.vercel.app --sin-sesion` otra vez (la última fue el 2026-10-14); en Vercel, las cuatro variables solo en Production; y que el usuario de prueba no entra: en `/entrar` de producción, con `HUMO_CORREO` y `HUMO_CLAVE`, debe salir "Correo o contraseña incorrectos.".
+  - **★ 18.** `src/components/service-worker.criterios.test.ts`: `public/sw.js` cargado tal cual, con `self`, cachés y red simulados. El registro con alcance `/` y sin `useOffline`; la instalación guarda solo `/sin-conexion`, su CSS y sus fuentes, sin los scripts de Next; cada navegación va a la red y sin red responde `/sin-conexion`; no toca POST (con y sin JavaScript), PUT, PATCH, DELETE ni RSC, y no guarda nada más; sin `skipWaiting` ni `clients.claim`.
+  - **★ 19.**
+    - `src/lib/fallas.test.ts`: los tres mensajes y ningún reintento.
+    - `comprobar-002`, con `registrarCaptura` y `resolverReintento` como la acción: el mismo gasto dos veces es una sola fila; con otro monto, o de dólares a vendiendo y al revés, avisa y no guarda nada más; seis intentos a la vez dejan una sola captura; el cuadre sigue intacto.
+    - `comprobar-002-servidor`: sin sesión, la captura responde "Tu sesión terminó: el gasto no se guardó. Entra de nuevo." con lo tecleado, y categorías, partidas y aporte, "Tu sesión terminó: no se guardó. Entra de nuevo.".
+  - Los criterios sin ★ que se miden en el celular (15 a 17, 20 y 21, con los tiempos cronometrados) siguen en T16.
+  - **Defectos encontrados:** ninguno en el código.
+  - Las capturas de `comprobar-002` llevan ids que empiezan por `0c050002` y la nota `demo-comprobar-002-captura`: la referencia tiene que ser `captura-<id>-<tipo>` para que actúe el índice único. Se borran al terminar; la base quedó igual (sobres 524300 y cuentas 524300, antes y después).
+  - Aquí el sandbox corta las conexiones a 127.0.0.2 (`EACCES`): `db:demo:limpiar` intenta conectar y falla en el driver, y eso cuenta como intento.
+  - `comprobar-002-servidor` usa los puertos 3141 a 3143 y se niega si alguno está ocupado: en la primera corrida, el 3124 era de otro servidor, que respondía con su propio build.
+  - Últimas líneas de los gates, en verde:
+    - `✓ tipos (2.6 s)`, `✓ lint (8.4 s)`, `✓ formato (4.8 s)`, `estructura: 0 errores, 58 avisos`;
+    - unitarias: `Tests  855 passed (855)`;
+    - `✓ build (14.6 s)`;
+    - humo: `✓ humo: todo responde como debe.`;
+    - `✓ verify:full en verde en 38.9 s. Árbol sellado.`;
+    - `pnpm exec tsx scripts/comprobar-002.ts`: `✓ comprobar-002: todo en verde`;
+    - `pnpm exec tsx scripts/comprobar-002-servidor.ts`: `✓ comprobar-002-servidor: todo en verde`.
