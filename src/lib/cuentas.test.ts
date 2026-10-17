@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { aspectoDeCuenta } from "./cuentas";
 
 describe("aspectoDeCuenta: el icono y el color de una cuenta salen de su tipo y su moneda", () => {
-  it("las cuentas sembradas: Binance, Segunda billetera, Efectivo, Cuenta prima y Bolívares", () => {
+  it("un aspecto por tipo: exchange, billetera, efectivo, la cuenta de la prima y bolívares", () => {
     expect(aspectoDeCuenta({ tipo: "exchange", moneda: "USDT" })).toBe("cripto");
     expect(aspectoDeCuenta({ tipo: "billetera", moneda: "USDC" })).toBe("billetera");
     expect(aspectoDeCuenta({ tipo: "efectivo", moneda: "USD" })).toBe("efectivo");

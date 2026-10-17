@@ -54,7 +54,6 @@ async function main() {
   }
 
   const binance = cuenta("Binance");
-  const billetera = cuenta("Segunda billetera");
   const efectivo = cuenta("Efectivo");
   const bolivares = cuenta("Bolívares");
   const porAsignar = sobre("Por asignar");
@@ -227,7 +226,6 @@ async function main() {
   filas.push(gasto("2026-09-21", 9_000, "Regalos", "Cumpleaños de mamá", ocasiones));
 
   // Parte del fondo de emergencia fuera de Binance.
-  filas.push(transferir("2026-08-01", 30_000, binance, billetera, "USDC", "Reserva fuera de Binance"));
   filas.push(transferir("2026-08-01", 10_000, binance, efectivo, "USD", "Efectivo de reserva"));
 
   // Deudas y préstamos (spec 005, criterio 22). Van al final: las referencias de los movimientos son posicionales.

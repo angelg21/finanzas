@@ -17,14 +17,8 @@ async function main() {
   await db
     .insert(schema.cuentas)
     .values([
+      // Sin segunda billetera hasta que exista una de verdad (observación 2, decidido el 2026-10-16).
       { nombre: "Binance", moneda: "USDT", tipo: "exchange", orden: 1, nota: "Principal." },
-      {
-        nombre: "Segunda billetera",
-        moneda: "USDC",
-        tipo: "billetera",
-        orden: 2,
-        nota: "Parte del fondo de emergencia.",
-      },
       { nombre: "Efectivo", moneda: "USD", tipo: "efectivo", orden: 3, nota: "Parte pequeña del fondo de emergencia." },
       {
         nombre: "Cuenta prima",
