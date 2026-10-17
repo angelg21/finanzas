@@ -27,7 +27,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 - [ ] Validada en navegador
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
-- [ ] Fusionada en `main` el AAAA-MM-DD
+- [x] Fusionada en `main` el 2026-10-17, por decisión del desarrollador antes de validar, verificar y revisar (ver notas)
 
 ## Notas
 
@@ -50,3 +50,4 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   4. **Info:** una referencia con el UUID en mayúsculas (solo por SQL o un importador) no encuentra su venta. Va al importador.
   5. **Info:** el mensaje del ingreso dice siempre "Por asignar"; un `tipo` cambiado en el formulario de borrar responde "Ya estaba borrado" sin tocar nada; un gasto con venta que venga del chat (fase 2) necesitará su propio enlace.
   - Tras los arreglos: 43 de 43 unitarias y el recorrido de punta a punta de nuevo en verde.
+- **Fusión adelantada (2026-10-17).** El desarrollador pidió construirla y publicarla ya: "haz el desarrollo ya y súbelo que lo necesito; recuerda anotar y hacer las pruebas después". Se fusionó con `pnpm verify` en verde, el recorrido de punta a punta en verde y `guardian-datos` SEGURO DE APLICAR, sin validación en navegador del desarrollador, sin `/f-verify` y sin `/f-review`. Quedan en cola, en este orden: la validación del desarrollador en su navegador, `/f-verify 006` y `/f-review 006`.
