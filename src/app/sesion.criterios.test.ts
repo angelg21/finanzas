@@ -116,13 +116,48 @@ export async function borrarTodo(id: number) {
     }
   });
 
+  it("tampoco en la raíz de src ni en una carpeta nueva (segunda revisión de la 002)", () => {
+    const archivo = `${directiva}
+export async function borrarTodo(id: number) {
+  await db.execute("delete");
+}`;
+    for (const ruta of ["src/acciones.ts", "src/servidor/acciones.ts", "src/hooks/usar.ts", "src/x.tsx"]) {
+      expect(errores(ruta, archivo)).toEqual([expect.stringContaining("fuera de src/app")]);
+    }
+  });
+
+  it("dentro de src/app, una acción solo va en un archivo acciones.ts, donde la ve la prueba de conFallas", () => {
+    const archivo = `${directiva}
+export async function quitar(datos: FormData) {
+  await exigirSesion();
+  await eliminar(Number(datos.get("id")));
+}`;
+    expect(errores("src/app/(con-sesion)/futura/quitar.ts", archivo)).toEqual([expect.stringContaining("acciones.ts")]);
+  });
+
+  it("en src todo es TypeScript: un .js o .jsx, que la regla no leería, no pasa (segunda revisión de la 002)", () => {
+    const accion = `${directiva}
+export async function borrar(datos) {
+  await eliminar(Number(datos.get("id")));
+}`;
+    for (const ruta of [
+      "src/app/(con-sesion)/futura/acciones.js",
+      "src/app/(con-sesion)/futura/page.jsx",
+      "src/app/(con-sesion)/futura/route.js",
+    ]) {
+      expect(errores(ruta, accion)).toEqual([expect.stringContaining("TypeScript")]);
+    }
+  });
+
   it("la directiva de servidor fuera de acciones.ts también se revisa", () => {
     const archivo = `${directiva}
 export async function borrar(datos: FormData) {
   await eliminar(Number(datos.get("id")));
 }`;
+    // La sesión se revisa igual, y además el archivo tiene que llamarse acciones.ts (segunda revisión de la 002).
     expect(errores("src/app/(con-sesion)/futura/otra-cosa.ts", archivo)).toEqual([
       expect.stringContaining("La acción borrar"),
+      expect.stringContaining("se llama acciones.ts"),
     ]);
   });
 });

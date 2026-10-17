@@ -104,6 +104,12 @@ export function revisarArchivo(ruta, contenido) {
     aviso(`${lineas} líneas: pasa de ${AVISO_LINEAS}. Comprueba que el archivo siga tratando de una sola cosa.`);
   }
 
+  // Las reglas leen .ts y .tsx: un .js en src (allowJs está activo) pasaría sin que nadie lo mire, también una acción
+  // o una página sin sesión (segunda revisión de la 002).
+  if (enSrc && /\.(jsx?|mjs|cjs)$/.test(rel)) {
+    error("En src todo es TypeScript (.ts o .tsx): las reglas de estructura, como la de la sesión, solo leen esos.");
+  }
+
   if (enSrc && esTs) {
     if (/\bdark:/.test(contenido)) {
       error(
@@ -183,8 +189,16 @@ export function revisarArchivo(ruta, contenido) {
     }
     // Fuera de src/app la regla de la sesión no mira, y src/db o src/lib ni siquiera pueden importarla: una acción ahí
     // sería un endpoint sin sesión en cuanto una página la pase a un formulario (revisión de la 002).
-    if (capa !== null && capa !== "app" && !/\.test\.tsx?$/.test(rel) && /["']use server["']/.test(contenido)) {
+    // Vale para cualquier carpeta de src, también las que aún no existen (segunda revisión de la 002).
+    const enApp = /(^|\/)src\/app\//.test(rel);
+    if (!enApp && !esPrueba && /["']use server["']/.test(contenido)) {
       error('Una acción "use server" fuera de src/app: va en el acciones.ts de su ruta, donde se exige la sesión.');
+    }
+    // Y dentro de src/app, solo en un acciones.ts: ahí la ven esta regla y la prueba que exige conFallas (★ 19).
+    if (enApp && !esPrueba && delServidor && !/\/acciones\.ts$/.test(rel)) {
+      error(
+        'Un archivo "use server" en src/app se llama acciones.ts: así lo ven la regla de la sesión y la de conFallas.',
+      );
     }
     if (conSesion && !delServidor && /["']use server["']/.test(contenido)) {
       error('Una acción "use server" dentro de otro archivo: va en su acciones.ts, donde la regla de la sesión la ve.');
@@ -274,7 +288,8 @@ function listarTs(dir, acumulado = []) {
     if (entrada.isDirectory()) {
       if (entrada.name === "node_modules" || entrada.name === ".next") continue;
       listarTs(ruta, acumulado);
-    } else if (/\.tsx?$/.test(entrada.name)) {
+    } else if (/\.(tsx?|jsx?|mjs|cjs)$/.test(entrada.name)) {
+      // También los .js: así la regla de "todo es TypeScript" los encuentra.
       acumulado.push(ruta);
     }
   }
