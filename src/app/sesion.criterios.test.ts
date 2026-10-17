@@ -79,6 +79,43 @@ export const borrar = async (datos: FormData) => {
     expect(errores(acciones, archivo).length).toBeGreaterThan(0);
   });
 
+  it("la rama sin sesión solo responde: cualquier otra llamada, con o sin await, no pasa (revisión de la 002)", () => {
+    const conVoid = `${directiva}
+export async function guardar(previo: Estado, datos: FormData): Promise<Estado> {
+  const sesion = await leerSesion();
+  if (!sesion) {
+    void escribir(datos);
+    return previo;
+  }
+  return previo;
+}`;
+    const enElReturn = `${directiva}
+export async function guardar(previo: Estado, datos: FormData): Promise<Estado> {
+  const sesion = await leerSesion();
+  if (!sesion) return escribir(datos);
+  return previo;
+}`;
+    for (const archivo of [conVoid, enElReturn]) {
+      expect(errores(acciones, archivo)).toEqual([expect.stringContaining("La acción guardar")]);
+    }
+  });
+
+  it("export * desde un archivo de acciones no pasa: la regla no vería lo que reexporta (revisión de la 002)", () => {
+    const archivo = `${directiva}
+export * from "./otras-acciones";`;
+    expect(errores(acciones, archivo).length).toBeGreaterThan(0);
+  });
+
+  it("una acción de servidor fuera de src/app no pasa: allí la regla de la sesión no la vería (revisión de la 002)", () => {
+    const archivo = `${directiva}
+export async function borrarTodo(id: number) {
+  await db.execute("delete");
+}`;
+    for (const ruta of ["src/db/acciones.ts", "src/lib/x.ts", "src/components/x.tsx"]) {
+      expect(errores(ruta, archivo)).toEqual([expect.stringContaining("fuera de src/app")]);
+    }
+  });
+
   it("la directiva de servidor fuera de acciones.ts también se revisa", () => {
     const archivo = `${directiva}
 export async function borrar(datos: FormData) {

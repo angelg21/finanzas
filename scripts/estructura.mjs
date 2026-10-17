@@ -47,8 +47,36 @@ function cuerpoDesde(contenido, inicio) {
  * `return` sin hacer nada más (criterio 19: el formulario muestra el mensaje y no pierde la pantalla).
  */
 const empiezaConSesion = (cuerpo) =>
-  /^(?:const \w+ = )?await exigirSesion\(\);/.test(cuerpo) ||
-  /^const (\w+) = await leerSesion\(\);\s*if \(!\1\)\s*(?:return\b|\{(?:(?!await)[^}])*\breturn\b)/.test(cuerpo);
+  /^(?:const \w+ = )?await exigirSesion\(\);/.test(cuerpo) || soloRespondeSinSesion(cuerpo);
+
+/** Lo único que la rama sin sesión puede llamar: armar el mensaje y devolver lo escrito. */
+const llamadasSinSesion = new Set(["mensajeDeFalla", "tecleadoDe", "valoresDe"]);
+
+/**
+ * `const sesion = await leerSesion(); if (!sesion) …` donde la rama sin sesión solo responde: termina en `return`, sin
+ * `await` y sin llamar a nada más que `llamadasSinSesion`. Así ni un `void escribir(d)` ni un `return escribir(d)`
+ * pasan por una respuesta (revisión de la 002).
+ */
+function soloRespondeSinSesion(cuerpo) {
+  const inicio = /^const (\w+) = await leerSesion\(\);\s*if \(!\1\)\s*/.exec(cuerpo);
+  if (!inicio) return false;
+  const resto = cuerpo.slice(inicio[0].length);
+  let rama;
+  if (resto.startsWith("{")) {
+    let profundidad = 0;
+    let i = 0;
+    for (; i < resto.length; i++) {
+      if (resto[i] === "{") profundidad++;
+      else if (resto[i] === "}" && --profundidad === 0) break;
+    }
+    rama = resto.slice(1, i);
+  } else {
+    rama = resto.slice(0, resto.indexOf(";") + 1);
+  }
+  if (!/\breturn\b/.test(rama) || /\bawait\b/.test(rama)) return false;
+  const sinComentarios = rama.replace(/\/\/[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
+  return [...sinComentarios.matchAll(/([\w$]+)\s*\(/g)].every((m) => llamadasSinSesion.has(m[1]));
+}
 
 /** Módulos importados en tiempo de ejecución. Los `import type` no acoplan y no cuentan. */
 function importsEnEjecucion(contenido) {
@@ -147,11 +175,16 @@ export function revisarArchivo(ruta, contenido) {
           );
         }
       }
-      if (/^export\s+(?:const|let|var|function|default|\{)|^export\s+async\s+function\s*\*/m.test(contenido)) {
+      if (/^export\s+(?:const|let|var|function|default|\{|\*)|^export\s+async\s+function\s*\*/m.test(contenido)) {
         error(
           'Un archivo "use server" solo exporta funciones async con nombre, para que la regla de la sesión las vea todas.',
         );
       }
+    }
+    // Fuera de src/app la regla de la sesión no mira, y src/db o src/lib ni siquiera pueden importarla: una acción ahí
+    // sería un endpoint sin sesión en cuanto una página la pase a un formulario (revisión de la 002).
+    if (capa !== null && capa !== "app" && !/\.test\.tsx?$/.test(rel) && /["']use server["']/.test(contenido)) {
+      error('Una acción "use server" fuera de src/app: va en el acciones.ts de su ruta, donde se exige la sesión.');
     }
     if (conSesion && !delServidor && /["']use server["']/.test(contenido)) {
       error('Una acción "use server" dentro de otro archivo: va en su acciones.ts, donde la regla de la sesión la ve.');
