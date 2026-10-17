@@ -113,3 +113,18 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
     - `✓ build (9.0 s)`
     - `✓ humo (4.2 s)`
     - `✓ verify:full en verde en 32.3 s. Árbol sellado.`
+- Revisión (2026-10-17), primera vuelta: `revisor`, **NO APTO**, con `pnpm verify --forzar` en verde y sin defectos de dinero ni de datos. Hallazgos:
+  1. **Bloqueante, ★ 6 y criterio 8.** La categoría se validaba contra las que tenían movimientos en el periodo, no contra "un id de categoría entero positivo del tipo de la pestaña". Al navegar a un periodo sin esa categoría se caía a "Todas" sin aviso, y las flechas, las píldoras y el calendario perdían el filtro. "No hay gastos de {categoría}…" nunca se veía. La prueba de página solo usaba Comida en octubre.
+  2. **Media.** El escritorio desbordaba entre 1024 y 1093 px (`scrollWidth` 1093 a 1024): la flecha siguiente quedaba fuera y la leyenda partía "70 %".
+  3. **Baja, criterio 14.** El `aria-label` del botón del calendario tapaba el periodo visible: el lector de pantalla nunca lo anunciaba (WCAG 2.5.3).
+  4. **Baja.** Un nombre de más de unos 23 caracteres se salía del centro del anillo.
+  5. **Muy baja.** Con la URL manipulada, los años 0100 a 0999 daban "100-06-01" en `rangoDePeriodo` y `moverPeriodo`, que `esFecha` rechaza.
+  6. **Proceso.** La validación en navegador no dijo en qué anchos se miró.
+- Arreglos (2026-10-17), con las pruebas primero y vistas fallar:
+  - **1:** `categoriaDeLaPestana` en `src/db/movimientos-del-periodo.ts` valida por el tipo, tenga o no movimientos; la página muestra "Comida · 0,00 USD" y "No hay gastos de Comida en enero de 2020.", y el filtro viaja en flechas, píldoras y calendario. Prueba nueva en `comprobar-003-paginas.ts`, que falló antes del arreglo con los enlaces sin `categoria=` y pasa después.
+  - **2:** los tres controles van en fila desde 1280 px (`xl:`); entre 1024 y 1279 se apilan. El porcentaje de la leyenda va en un `span` que no se parte.
+  - **3:** sin `aria-label`; el nombre es "Septiembre de 2026, elegir un día en el calendario", con lo que se ve primero.
+  - **4:** el nombre del centro se corta con "…" pasados 20 caracteres. El nombre completo sigue en la leyenda y en la porción.
+  - **5:** el año con cuatro cifras (`cuatroCifras`), con pruebas en `periodos.test.ts` que fallaron antes (2 de 2).
+  - **6:** medido por el agente en Edge sin ventana: `scrollWidth ≤ clientWidth` a 1024, 1050, 1093, 1180, 1280, 1440 y 390 px en Gastos por semana, Mover y Gastos por mes; el nombre accesible empieza por "Septiembre de 2026"; ningún porcentaje se parte a 1024.
+  - `pnpm exec tsx scripts/comprobar-003.ts --url http://localhost:3000`: `✓ comprobar-003: todo en verde` (59 ✓).
