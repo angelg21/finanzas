@@ -26,6 +26,8 @@ export type Filtros = {
 const TOPE_ID = 2_147_483_647;
 
 const dosCifras = (n: number) => String(n).padStart(2, "0");
+// El año con sus cuatro cifras también antes del 1000: "0100-06-01", no "100-06-01", que esFecha rechaza.
+const cuatroCifras = (n: number) => String(n).padStart(4, "0");
 const ultimoDia = (anio: number, mes: number) => new Date(Date.UTC(anio, mes, 0)).getUTCDate();
 const mayuscula = (texto: string) => texto.charAt(0).toUpperCase() + texto.slice(1);
 
@@ -42,7 +44,7 @@ function sumarDias(fecha: string, dias: number): string {
 
 /** El mismo día en otro mes, o el último si ese mes es más corto: el 31 de enero más un mes es el 28 de febrero. */
 function diaEnMes(anio: number, mes: number, dia: number): string {
-  return `${anio}-${dosCifras(mes)}-${dosCifras(Math.min(dia, ultimoDia(anio, mes)))}`;
+  return `${cuatroCifras(anio)}-${dosCifras(mes)}-${dosCifras(Math.min(dia, ultimoDia(anio, mes)))}`;
 }
 
 export function rangoDePeriodo(tipo: TipoPeriodo, ancla: string): Rango {
@@ -56,9 +58,9 @@ export function rangoDePeriodo(tipo: TipoPeriodo, ancla: string): Rango {
       return { desde: lunes, hasta: sumarDias(lunes, 6) };
     }
     case "mes":
-      return { desde: `${anio}-${dosCifras(mes)}-01`, hasta: diaEnMes(anio, mes, 31) };
+      return { desde: `${cuatroCifras(anio)}-${dosCifras(mes)}-01`, hasta: diaEnMes(anio, mes, 31) };
     case "anio":
-      return { desde: `${anio}-01-01`, hasta: `${anio}-12-31` };
+      return { desde: `${cuatroCifras(anio)}-01-01`, hasta: `${cuatroCifras(anio)}-12-31` };
   }
 }
 

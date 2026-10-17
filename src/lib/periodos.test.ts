@@ -170,3 +170,16 @@ describe("consultaDeFiltros", () => {
     expect(leerFiltros(Object.fromEntries(new URLSearchParams(consulta)), hoy)).toEqual(filtros);
   });
 });
+
+describe("años de menos de cuatro cifras (revisión de la 003, hallazgo 5)", () => {
+  it("el rango de un mes o un año lleva el año con sus cuatro cifras", () => {
+    expect(rangoDePeriodo("mes", "0100-06-15")).toEqual({ desde: "0100-06-01", hasta: "0100-06-30" });
+    expect(rangoDePeriodo("anio", "0999-03-01")).toEqual({ desde: "0999-01-01", hasta: "0999-12-31" });
+  });
+
+  it("moverse a otro mes o año también", () => {
+    expect(moverPeriodo("anio", "0100-06-15", -1, hoy)).toBe("0099-06-15");
+    expect(moverPeriodo("mes", "0999-12-15", 1, hoy)).toBe("1000-01-15");
+    expect(moverPeriodo("mes", "0100-01-31", -1, hoy)).toBe("0099-12-31");
+  });
+});
