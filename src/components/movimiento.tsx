@@ -7,6 +7,7 @@ import {
   HandHelping,
   Shuffle,
 } from "lucide-react";
+import Link from "next/link";
 import type { MovimientoReciente } from "@/db/consultas";
 import { formatearCentavos, formatearTasaGuardada } from "@/lib/dinero";
 import { signoDe } from "@/lib/saldos";
@@ -48,7 +49,7 @@ export function tituloDeDeuda(tipo: MovimientoReciente["tipo"], persona: string 
  * "origen → destino". Pagos, préstamos y cobros de deudas, un círculo neutro con su icono y "Pago a Papás"; el signo
  * sale de signoDe, como el de un gasto o un ingreso.
  */
-export function FilaMovimiento({ m }: { m: MovimientoReciente }) {
+export function FilaMovimiento({ m, href }: { m: MovimientoReciente; href?: string }) {
   const Icono = iconoTipo[m.tipo];
   const esMover = m.tipo === "transferencia" || m.tipo === "reasignacion";
   const deDeuda = tituloDeDeuda(m.tipo, m.persona);
@@ -68,7 +69,7 @@ export function FilaMovimiento({ m }: { m: MovimientoReciente }) {
         ? [etiquetaTipo[m.tipo], m.nota]
         : [m.nota ? m.categoria : null, cuenta];
 
-  return (
+  const fila = (
     <div className="flex items-center gap-3 py-3">
       {neutro ? (
         <span
@@ -105,5 +106,16 @@ export function FilaMovimiento({ m }: { m: MovimientoReciente }) {
         ) : null}
       </span>
     </div>
+  );
+  // Un gasto o un ingreso se edita tocando su fila (spec 006, criterio 11): la fila entera es el enlace.
+  if (!href) return fila;
+  return (
+    <Link
+      href={href}
+      className="-mx-2 block rounded-[14px] px-2 hover:bg-tarjeta-hover focus-visible:outline-2 focus-visible:outline-offset-2"
+    >
+      {fila}
+      <span className="sr-only">, editar</span>
+    </Link>
   );
 }

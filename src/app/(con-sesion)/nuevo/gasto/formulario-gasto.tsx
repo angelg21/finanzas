@@ -2,7 +2,7 @@
 
 import { CircleAlert, Plus } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { type ReactNode, useActionState, useState } from "react";
 import { SelectorFecha } from "@/components/calendario";
 import {
   Boton,
@@ -127,7 +127,7 @@ function Captura({
 
   return (
     // Con la ronda como key los campos se montan de nuevo con lo tecleado tras cada respuesta.
-    <Campos
+    <CamposGasto
       key={estado.ronda}
       {...datos}
       valores={valores}
@@ -142,7 +142,11 @@ function Captura({
   );
 }
 
-function Campos({
+/**
+ * Los campos del gasto. Los usa también editar un gasto (spec 006): con `textoBoton`, sin "Antes y después" (el
+ * antes ya incluiría el gasto que se edita), sin la píldora "Nueva" (saldría de la edición) y con sus `ocultos`.
+ */
+export function CamposGasto({
   categorias,
   sobres,
   cuentas,
@@ -155,6 +159,10 @@ function Campos({
   alTocarSobre,
   enviar,
   pendiente,
+  textoBoton = "Guardar gasto",
+  conAntesYDespues = true,
+  conNuevaCategoria = true,
+  ocultos,
 }: Datos & {
   valores: ValoresGasto;
   errores: ErroresFormularioGasto;
@@ -164,6 +172,10 @@ function Campos({
   alTocarSobre: () => void;
   enviar: (formData: FormData) => void;
   pendiente: boolean;
+  textoBoton?: string;
+  conAntesYDespues?: boolean;
+  conNuevaCategoria?: boolean;
+  ocultos?: ReactNode;
 }) {
   const [forma, setForma] = useState<FormaPago>(valores.forma);
   const [cuentaId, setCuentaId] = useState(valores.cuentaId);
@@ -192,6 +204,7 @@ function Campos({
       <Tarjeta className="lg:col-span-7">
         <form action={enviar} className="group/gasto flex flex-col gap-5">
           <input type="hidden" name="idCaptura" value={valores.idCaptura} />
+          {ocultos}
           <Campo etiqueta="Monto" error={errores.monto}>
             <CampoMonto
               name="monto"
@@ -290,13 +303,15 @@ function Campos({
             }}
             error={errores.categoria}
             extra={
-              <Link
-                href="/categorias/nueva?volver=/nuevo/gasto"
-                className={`${pildoraOpcion} ${pildoraNormal} shrink-0 border-dashed`}
-              >
-                <Plus size={16} aria-hidden />
-                Nueva
-              </Link>
+              conNuevaCategoria ? (
+                <Link
+                  href="/categorias/nueva?volver=/nuevo/gasto"
+                  className={`${pildoraOpcion} ${pildoraNormal} shrink-0 border-dashed`}
+                >
+                  <Plus size={16} aria-hidden />
+                  Nueva
+                </Link>
+              ) : undefined
             }
           />
 
@@ -342,11 +357,11 @@ function Campos({
           ) : null}
 
           <Boton type="submit" disabled={pendiente} autoFocus={confirmando} className="w-full">
-            {pendiente ? "Guardando…" : confirmando ? "Sí, gastar de Inversión" : "Guardar gasto"}
+            {pendiente ? "Guardando…" : confirmando ? "Sí, gastar de Inversión" : textoBoton}
           </Boton>
         </form>
       </Tarjeta>
-      <AntesYDespues {...afectados} />
+      {conAntesYDespues ? <AntesYDespues {...afectados} /> : null}
     </>
   );
 }

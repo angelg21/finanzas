@@ -1,4 +1,4 @@
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, CalendarDays, TrendingDown } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, CalendarDays, CheckCircle2, TrendingDown } from "lucide-react";
 import Link from "next/link";
 import { CirculoCuenta } from "@/components/circulo-cuenta";
 import { GraficaDona, type SegmentoDona } from "@/components/grafica-dona";
@@ -14,6 +14,7 @@ import { diasQueQuedanDelMes, hoyEnCaracas } from "@/lib/fechas";
 import { etiquetaDia } from "@/lib/periodos";
 import { pasoDeSobre } from "@/lib/sobres";
 import { exigirSesion } from "@/app/sesion";
+import { avisoDeVuelta, enlaceDeEdicion } from "./movimientos/[id]/valores";
 
 export const dynamic = "force-dynamic";
 
@@ -41,8 +42,9 @@ function diasRestantesDelMes() {
   return diasQueQuedanDelMes(hoyEnCaracas(new Date()));
 }
 
-export default async function Inicio() {
+export default async function Inicio({ searchParams }: PageProps<"/">) {
   await exigirSesion();
+  const aviso = avisoDeVuelta(await searchParams);
   const [sobres, cuentas, gastado, resumen, recientes] = await Promise.all([
     sobresConNivel(),
     saldosPorCuenta(),
@@ -69,6 +71,14 @@ export default async function Inicio() {
 
   return (
     <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">
+      {aviso ? (
+        <div role="status" className="lg:col-span-12">
+          <Pildora tono="positiva">
+            <CheckCircle2 size={13} aria-hidden />
+            {aviso}
+          </Pildora>
+        </div>
+      ) : null}
       {/* Tarjeta principal: lo único que se puede gastar es el sobre de gastos del mes. */}
       <section className="hero rounded-tarjeta p-5 lg:col-span-7 lg:p-6">
         <p className="text-[13px] font-semibold text-white/75">Disponible para gastar</p>
@@ -185,7 +195,7 @@ export default async function Inicio() {
               <ul className="divide-y divide-tarjeta-borde">
                 {movimientos.map((m) => (
                   <li key={m.id}>
-                    <FilaMovimiento m={m} />
+                    <FilaMovimiento m={m} href={enlaceDeEdicion(m, "/")} />
                   </li>
                 ))}
               </ul>

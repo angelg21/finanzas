@@ -6,7 +6,8 @@ import { Boton, Entrada } from "@/components/formulario";
 import { GraficaCategorias } from "@/components/grafica-categorias";
 import { FilaMovimiento } from "@/components/movimiento";
 import { Pestanas } from "@/components/pestanas";
-import { Cifra, Tarjeta, TituloPagina } from "@/components/ui";
+import { CheckCircle2 } from "lucide-react";
+import { Cifra, Pildora, Tarjeta, TituloPagina } from "@/components/ui";
 import {
   type MovimientoDelPeriodo,
   categoriaDeLaPestana,
@@ -15,6 +16,7 @@ import {
   totalesPorCategoria,
 } from "@/db/movimientos-del-periodo";
 import { exigirSesion } from "@/app/sesion";
+import { avisoDeVuelta, enlaceDeEdicion } from "./[id]/valores";
 import { distribuirPorCategoria } from "@/lib/distribucion";
 import { hoyEnCaracas } from "@/lib/fechas";
 import {
@@ -60,7 +62,9 @@ function cuando({ periodo, fecha }: Filtros, hoy: string) {
 export default async function Movimientos({ searchParams }: PageProps<"/movimientos">) {
   await exigirSesion();
   const hoy = hoyEnCaracas(new Date());
-  const pedidos = leerFiltros(await searchParams, hoy);
+  const parametros = await searchParams;
+  const pedidos = leerFiltros(parametros, hoy);
+  const aviso = avisoDeVuelta(parametros);
   const rango = rangoDePeriodo(pedidos.periodo, pedidos.fecha);
   const conAnillo = pedidos.pestana !== "mover";
 
@@ -136,7 +140,7 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
               <ul className="divide-y divide-tarjeta-borde">
                 {movimientos.map((m) => (
                   <li key={m.id}>
-                    <FilaMovimiento m={m} />
+                    <FilaMovimiento m={m} href={enlaceDeEdicion(m, enlace({}))} />
                   </li>
                 ))}
               </ul>
@@ -153,6 +157,14 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
   return (
     <main className="flex flex-col gap-4 lg:gap-5">
       <TituloPagina titulo="Movimientos" />
+      {aviso ? (
+        <div role="status">
+          <Pildora tono="positiva">
+            <CheckCircle2 size={13} aria-hidden />
+            {aviso}
+          </Pildora>
+        </div>
+      ) : null}
 
       {/* En fila solo desde 1280 px: entre 1024 y 1279 los tres controles no caben junto a la barra lateral. */}
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">

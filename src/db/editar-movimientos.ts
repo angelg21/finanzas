@@ -176,17 +176,23 @@ export async function repartoConSaldos(
   return { ids: filas.map((f) => f.id), reparto };
 }
 
-/** Lo que pasaría al borrar un ingreso, para la confirmación (criterio 7). Sin candado: la acción vuelve a mirar. */
-export async function vistaPreviaDeBorrado(m: MovimientoParaEditar): Promise<PlanDeBorrado | null> {
+/**
+ * Lo que pasaría al borrar un ingreso, para la confirmación (criterio 7), y su reparto con el nombre de cada sobre.
+ * Sin candado: la acción vuelve a mirar.
+ */
+export async function vistaPreviaDeBorrado(
+  m: MovimientoParaEditar,
+): Promise<{ plan: PlanDeBorrado; reparto: RepartoGuardado[] } | null> {
   const destinoId = m.movimiento.sobreDestinoId;
   if (m.movimiento.tipo !== "ingreso" || destinoId === null) return null;
   const { reparto } = await repartoConSaldos(db, m.captura, destinoId);
   const [destino] = await db.select({ nombre: sobres.nombre }).from(sobres).where(eq(sobres.id, destinoId));
-  return planDeBorradoDeIngreso({
+  const plan = planDeBorradoDeIngreso({
     montoUsdCentavos: m.movimiento.montoUsdCentavos,
     destino: { nombre: destino?.nombre ?? "Por asignar", saldoCentavos: await saldoDeSobre(db, destinoId) },
     reparto,
   });
+  return { plan, reparto };
 }
 
 /** Criterio 7: el ingreso y su reparto, con el candado de "Por asignar"; no deja "Por asignar" en negativo. */
