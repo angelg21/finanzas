@@ -9,3 +9,8 @@
 !next.config.ts
 !tsconfig.json
 !postcss.config.mjs
+# Las pruebas de la regla de sesión (src/app/*.criterios.test.ts) importan la regla, y el build revisa los tipos de
+# todo src: sin este archivo, el despliegue falla. Solo él, no el resto de scripts/.
+!scripts/
+/scripts/*
+!scripts/estructura.mjs
