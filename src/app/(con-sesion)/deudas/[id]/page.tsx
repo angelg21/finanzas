@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ArrowLeft, CircleAlert, Pencil } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CircleAlert, Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FilaMovimiento } from "@/components/movimiento";
@@ -14,6 +14,7 @@ import { plazoDeDeuda } from "@/lib/plazos";
 import type { Guardado } from "./formulario-pago";
 import { Saldar } from "./saldar";
 import { exigirSesion } from "@/app/sesion";
+import { avisoDeVuelta, enlaceDeEdicion } from "../../movimientos/[id]/valores";
 
 export const metadata: Metadata = { title: "Deuda" };
 export const dynamic = "force-dynamic";
@@ -30,7 +31,9 @@ const guardados: readonly Guardado[] = ["pago", "cobro", "prestamo"];
 export default async function DetalleDeuda({ params, searchParams }: PageProps<"/deudas/[id]">) {
   await exigirSesion();
   const { id } = await params;
-  const { guardado: deLaDireccion } = await searchParams;
+  const parametros = await searchParams;
+  const { guardado: deLaDireccion } = parametros;
+  const deshecho = avisoDeVuelta(parametros);
   const guardado = guardados.find((g) => g === deLaDireccion);
   const deudaId = Number(id);
   if (!Number.isSafeInteger(deudaId) || deudaId <= 0) notFound();
@@ -57,6 +60,14 @@ export default async function DetalleDeuda({ params, searchParams }: PageProps<"
           <ArrowLeft size={16} aria-hidden />
           Deudas
         </Link>
+        {deshecho ? (
+          <span role="status">
+            <Pildora tono="positiva">
+              <CheckCircle2 size={13} aria-hidden />
+              {deshecho}
+            </Pildora>
+          </span>
+        ) : null}
         <Link
           href={`/deudas/${deuda.id}/editar`}
           className="flex items-center gap-1 text-[13px] font-semibold text-enlace hover:text-texto"
@@ -126,7 +137,7 @@ export default async function DetalleDeuda({ params, searchParams }: PageProps<"
         ) : (
           <div className="flex flex-col divide-y divide-tarjeta-borde">
             {historial.map((m) => (
-              <FilaMovimiento key={m.id} m={m} />
+              <FilaMovimiento key={m.id} m={m} href={enlaceDeEdicion(m, `/deudas/${deuda.id}`)} />
             ))}
           </div>
         )}

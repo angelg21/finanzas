@@ -11,6 +11,7 @@ import { Cifra, Pildora, Tarjeta, TituloPagina } from "@/components/ui";
 import {
   type MovimientoDelPeriodo,
   categoriaDeLaPestana,
+  etiquetasDelPeriodo,
   movimientosDelPeriodo,
   resumenPorDia,
   totalesPorCategoria,
@@ -18,6 +19,7 @@ import {
 import { exigirSesion } from "@/app/sesion";
 import { avisoDeVuelta, enlaceDeEdicion } from "./[id]/valores";
 import { distribuirPorCategoria } from "@/lib/distribucion";
+import { leerEtiqueta } from "@/lib/etiquetas";
 import { hoyEnCaracas } from "@/lib/fechas";
 import {
   type Filtros,
@@ -65,6 +67,8 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
   const parametros = await searchParams;
   const pedidos = leerFiltros(parametros, hoy);
   const aviso = avisoDeVuelta(parametros);
+  // Spec 007: la etiqueta con # se valida aparte, sin tocar los filtros de la 003, y viaja en los enlaces de la página.
+  const etiqueta = leerEtiqueta(parametros.etiqueta);
   const rango = rangoDePeriodo(pedidos.periodo, pedidos.fecha);
   const conAnillo = pedidos.pestana !== "mover";
 
@@ -82,12 +86,18 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
     centavos: totales.find((t) => t.categoriaId === pedida.categoriaId)?.centavos ?? 0,
   };
   const filtros: Filtros = { ...pedidos, categoria: categoria?.categoriaId ?? null };
-  const [lista, dias] = await Promise.all([
-    movimientosDelPeriodo(filtros.pestana, rango, filtros.categoria, LIMITE),
-    resumenPorDia(filtros.pestana, rango, filtros.categoria),
+  const [lista, dias, etiquetas] = await Promise.all([
+    movimientosDelPeriodo(filtros.pestana, rango, filtros.categoria, LIMITE, etiqueta),
+    resumenPorDia(filtros.pestana, rango, filtros.categoria, etiqueta),
+    etiquetasDelPeriodo(filtros.pestana, rango),
   ]);
 
-  const enlace = (cambios: Partial<Filtros>) => `/movimientos${consultaDeFiltros({ ...filtros, ...cambios }, hoy)}`;
+  const enlace = (cambios: Partial<Filtros> & { etiqueta?: string | null }) => {
+    const { etiqueta: conEtiqueta = etiqueta, ...resto } = cambios;
+    const base = `/movimientos${consultaDeFiltros({ ...filtros, ...resto }, hoy)}`;
+    if (!conEtiqueta) return base;
+    return `${base}${base.includes("?") ? "&" : "?"}etiqueta=${encodeURIComponent(conEtiqueta)}`;
+  };
   const { total, porciones } = distribuirPorCategoria(totales);
   const cuantos = dias.reduce((a, d) => a + d.cantidad, 0);
   const porDia = new Map(dias.map((d) => [d.fecha, d.centavos]));
@@ -100,8 +110,11 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
       {conAnillo ? (
         <div className="flex items-baseline justify-between gap-3 px-1">
           <h2 className="flex items-baseline gap-1.5 text-[15px] font-bold">
-            {categoria ? categoria.nombre : "Todas"} ·{" "}
-            <Cifra centavos={categoria ? categoria.centavos : total} tamano="md" />
+            {[categoria?.nombre, etiqueta ? `#${etiqueta}` : null].filter(Boolean).join(" · ") || "Todas"} ·{" "}
+            <Cifra
+              centavos={etiqueta ? dias.reduce((a, d) => a + d.centavos, 0) : categoria ? categoria.centavos : total}
+              tamano="md"
+            />
           </h2>
           {cuantos > lista.length ? (
             <span className="text-[12px] text-texto-3">
@@ -119,7 +132,8 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
         <Tarjeta>
           <p className="text-texto-2">
             {nada[filtros.pestana]}
-            {categoria ? ` de ${categoria.nombre}` : ""} {cuando(filtros, hoy)}.
+            {categoria ? ` de ${categoria.nombre}` : ""}
+            {etiqueta ? ` con #${etiqueta}` : ""} {cuando(filtros, hoy)}.
           </p>
         </Tarjeta>
       ) : (
@@ -241,6 +255,22 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
           </noscript>
         </div>
       </div>
+
+      {etiquetas.length > 0 ? (
+        // Spec 007: las etiquetas con # del periodo. Tocar una filtra la lista y su total; tocarla otra vez la quita.
+        <nav aria-label="Etiquetas" className="flex flex-wrap gap-2">
+          {etiquetas.map((e) => (
+            <Link
+              key={e}
+              href={enlace({ etiqueta: e === etiqueta ? null : e })}
+              aria-current={e === etiqueta ? "true" : undefined}
+              className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2"
+            >
+              <Pildora tono={e === etiqueta ? "palida" : "oscura"}>#{e}</Pildora>
+            </Link>
+          ))}
+        </nav>
+      ) : null}
 
       {conAnillo ? (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5">

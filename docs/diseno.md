@@ -175,6 +175,12 @@ Primer uso: el desglose del sobre Ocasiones en `/sobres/[id]`. La captura de gas
 - Borrar confirma en un `<dialog>` como el del calendario, con lo que se borra y los sobres que quedarían en negativo en `negativo`; sin JavaScript, la misma confirmación en la página con `?borrar=1`. Si no se puede borrar, solo el motivo.
 - Al volver, en `/movimientos` o en el inicio, una `Pildora` `positiva` con "Gasto actualizado", "Ingreso actualizado" o "Borrado".
 
+**Ajustes de uso diario** (feature 007):
+
+- `/movimientos/[id]` de un pago o un cobro: el título ("Pago a Papás"), el monto a 28 px en una `Tarjeta`, la cuenta, la fecha y la nota, y "Deshacer pago" o "Deshacer cobro" con la confirmación de borrar de la 006 ("Sí, deshacer").
+- En `/movimientos`, bajo los controles de periodo, una fila de `Pildora` enlazadas con las etiquetas (#sax); la elegida en `palida`, con `aria-current`. Con etiqueta, encima de la lista "#sax · 1.200,00 USD".
+- `/nuevo/mover`: el selector de Registrar con Mover en menta y una `Tarjeta` de 6 columnas centradas con "De" y "A" en `SelectorPildoras` (con el saldo de cada sobre), `CampoMonto`, nota y "Mover". Desde Inversión, la línea en `negativo` con `CircleAlert` y el botón "Sí, mover de Inversión". En `/sobres`, el enlace "Mover entre sobres" junto a "Reglas de reparto" y, al volver, la `Pildora` `positiva` "Movido".
+
 **Deudas y préstamos** (feature 005):
 
 - `/deudas`: hero con lo que debo en `Cifra` hero, las píldoras "Apartado", "Cuota de octubre" y "Me deben", y los mosaicos "Nueva deuda", "Prestar" y "Apartar". Debajo, la regla de uso en una `TarjetaPalida`, y las tarjetas "Debo" y "Me deben". Cada deuda es una `FilaLista` con el `Avatar` de las iniciales de la persona; el subtítulo dice cuándo vence ("vence en 3 días", "para el 15 dic", "vencida hace 2 días", "sin fecha") y con qué cuenta se paga, y a la derecha va lo pendiente y "de X". El aviso de liquidez va debajo de la fila, en una `Pildora` `negativa`; las pagadas, en un `<details>`. En escritorio, hero 7 + regla 5, y Debo 7 + Me deben 5.

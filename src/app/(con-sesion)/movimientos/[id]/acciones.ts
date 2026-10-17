@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { categoriasDeGastoPorUso, saldosPorCuenta, sobresParaGasto } from "@/db/consultas";
 import { borrarGasto, borrarIngreso, editarGasto, editarIngreso } from "@/db/editar-movimientos";
+import { deshacerPagoOCobro } from "@/db/guardar-deudas";
 import { categoriasDeIngresoPorUso } from "@/db/reparto";
 import { planDeEdicionDeGasto } from "@/lib/editar-gasto";
 import { planDeEdicionDeIngreso } from "@/lib/editar-ingreso";
@@ -64,6 +65,7 @@ function revalidar() {
   for (const ruta of ["/", "/movimientos", "/sobres", "/cuentas", "/deudas"]) revalidatePath(ruta);
   revalidatePath("/sobres/[id]", "page");
   revalidatePath("/movimientos/[id]", "page");
+  revalidatePath("/deudas/[id]", "page");
 }
 
 const nota = z.string().trim().max(200, "La nota admite hasta 200 caracteres");
@@ -194,9 +196,18 @@ export async function borrarMovimientoAccion(_previo: EstadoBorrar, datos: FormD
   const id = idDe(datos);
   if (id === null) redirect("/movimientos");
   const tipo = texto(datos, "tipo");
-  let resultado: Awaited<ReturnType<typeof borrarGasto>> | Awaited<ReturnType<typeof borrarIngreso>>;
+  const deshacer = tipo === "pago" || tipo === "cobro";
+  let resultado:
+    | Awaited<ReturnType<typeof borrarGasto>>
+    | Awaited<ReturnType<typeof borrarIngreso>>
+    | Awaited<ReturnType<typeof deshacerPagoOCobro>>;
   try {
-    resultado = tipo === "ingreso" ? await borrarIngreso(id) : await borrarGasto(id);
+    // Spec 007: un pago o un cobro se deshace; un gasto o un ingreso se borra con lo enlazado (spec 006).
+    resultado = deshacer
+      ? await deshacerPagoOCobro(id)
+      : tipo === "ingreso"
+        ? await borrarIngreso(id)
+        : await borrarGasto(id);
   } catch (error) {
     registrarFalla("No se pudo borrar el movimiento", error);
     return { error: mensajeDeFalla("otra", "no se borró") };
@@ -204,5 +215,5 @@ export async function borrarMovimientoAccion(_previo: EstadoBorrar, datos: FormD
   if ("noExiste" in resultado) redirect(conAviso("/movimientos", "borrado=ya"));
   if (!resultado.ok) return { error: resultado.error };
   revalidar();
-  redirect(conAviso(destinoDeVuelta(texto(datos, "volver")), "borrado=1"));
+  redirect(conAviso(destinoDeVuelta(texto(datos, "volver")), deshacer ? "borrado=deshecho" : "borrado=1"));
 }

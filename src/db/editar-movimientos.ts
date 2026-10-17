@@ -11,7 +11,7 @@ import {
 import type { ErroresGasto, FilaMovimiento } from "../lib/gastos";
 import { db } from "./index";
 import { type Ejecutor, claveReparto, guardadasDeCaptura, saldoDeSobre } from "./movimientos";
-import { movimientos, sobres } from "./schema";
+import { cuentas, deudas, movimientos, sobres } from "./schema";
 
 /*
   Editar o borrar un gasto o un ingreso (spec 006). Cada operación es una transacción: se vuelve a leer la fila y lo
@@ -271,3 +271,30 @@ export async function borrarIngreso(id: number): Promise<PlanDeBorrado | { noExi
     return plan;
   });
 }
+
+/** Un pago o un cobro de una deuda, con la persona y la cuenta, para deshacerlo (spec 007, criterio 1); null si no. */
+export async function pagoOCobroParaDeshacer(id: number) {
+  if (!idValido(id)) return null;
+  const [m] = await db
+    .select({
+      id: movimientos.id,
+      tipo: movimientos.tipo,
+      fecha: movimientos.fecha,
+      montoCentavos: movimientos.montoCentavos,
+      moneda: movimientos.moneda,
+      nota: movimientos.nota,
+      deudaId: movimientos.deudaId,
+      persona: deudas.persona,
+      cuentaId: sql<number | null>`coalesce(${movimientos.cuentaOrigenId}, ${movimientos.cuentaDestinoId})`,
+    })
+    .from(movimientos)
+    .innerJoin(deudas, eq(deudas.id, movimientos.deudaId))
+    .where(and(eq(movimientos.id, id), inArray(movimientos.tipo, ["pago_deuda", "cobro_prestamo"])));
+  if (!m) return null;
+  const [cuenta] = m.cuentaId
+    ? await db.select({ nombre: cuentas.nombre }).from(cuentas).where(eq(cuentas.id, m.cuentaId))
+    : [];
+  return { ...m, cuenta: cuenta?.nombre ?? null };
+}
+
+export type PagoOCobro = NonNullable<Awaited<ReturnType<typeof pagoOCobroParaDeshacer>>>;
