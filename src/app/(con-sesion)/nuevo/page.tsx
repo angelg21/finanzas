@@ -10,7 +10,7 @@ const opciones = [
   { tipo: "gasto", texto: "Gasto", detalle: "Lo más frecuente. En dólares o en bolívares.", Icono: ArrowUpRight },
   { tipo: "ingreso", texto: "Ingreso", detalle: "Cae en Por asignar y propone el reparto.", Icono: ArrowDownLeft },
   { tipo: "deuda", texto: "Deuda", detalle: "Paga lo que debes o cobra lo que te deben.", Icono: HandCoins },
-  { tipo: "mover", texto: "Mover", detalle: "Entre cuentas o entre sobres.", Icono: ArrowLeftRight },
+  { tipo: "mover", texto: "Mover", detalle: "Entre sobres. Entre cuentas, más adelante.", Icono: ArrowLeftRight },
 ] as const;
 
 export default async function Nuevo({ searchParams }: PageProps<"/nuevo">) {
@@ -27,7 +27,7 @@ export default async function Nuevo({ searchParams }: PageProps<"/nuevo">) {
           return (
             <Link
               key={t}
-              href={t === "mover" ? "/nuevo?tipo=mover" : `/nuevo/${t}`}
+              href={`/nuevo/${t}`}
               aria-current={activa ? "true" : undefined}
               className={`palida flex items-center gap-4 rounded-palida p-4 lg:flex-col lg:items-start lg:gap-5 lg:p-5 ${
                 activa ? "ring-2 ring-white" : ""
@@ -46,7 +46,7 @@ export default async function Nuevo({ searchParams }: PageProps<"/nuevo">) {
       </div>
       <Tarjeta>
         <p className="text-[13px] text-texto-2">
-          Gasto, Ingreso y Deuda ya tienen su pantalla. Mover llega con la feature de cuentas y transferencias.
+          Mover entre sobres ya tiene su pantalla. Mover entre cuentas llega con la feature de cuentas y transferencias.
         </p>
       </Tarjeta>
     </main>

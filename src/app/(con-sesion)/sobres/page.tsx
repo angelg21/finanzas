@@ -1,4 +1,4 @@
-import { ChevronRight } from "lucide-react";
+import { CheckCircle2, ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EnlaceBoton } from "@/components/formulario";
@@ -30,7 +30,7 @@ function fechaCorta(iso: string) {
   return new Intl.DateTimeFormat("es-VE", { month: "short", year: "numeric" }).format(new Date(a, m - 1, 1));
 }
 
-export default async function Sobres() {
+export default async function Sobres({ searchParams }: PageProps<"/sobres">) {
   await exigirSesion();
   const sobres = await sobresConNivel();
   const total = sobres.reduce((acc, s) => acc + s.saldoCentavos, 0);
@@ -47,7 +47,22 @@ export default async function Sobres() {
   return (
     <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">
       <TituloPagina titulo="Sobres" detalle={<Cifra centavos={total} tamano="sm" tono="texto-2" />} />
-      <div className="-mt-2 flex justify-end px-1 lg:col-span-12 lg:mt-0 lg:px-0">
+      <div className="-mt-2 flex items-center justify-end gap-4 px-1 lg:col-span-12 lg:mt-0 lg:px-0">
+        {(await searchParams).movido === "1" ? (
+          <span role="status" className="mr-auto">
+            <Pildora tono="positiva">
+              <CheckCircle2 size={13} aria-hidden />
+              Movido
+            </Pildora>
+          </span>
+        ) : null}
+        <Link
+          href="/nuevo/mover"
+          className="flex items-center gap-0.5 text-[13px] font-semibold text-enlace hover:text-texto"
+        >
+          Mover entre sobres
+          <ChevronRight size={16} aria-hidden />
+        </Link>
         <Link
           href="/sobres/reglas"
           className="flex items-center gap-0.5 text-[13px] font-semibold text-enlace hover:text-texto"
