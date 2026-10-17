@@ -26,7 +26,12 @@ export function causaDeFalla(error: unknown): CausaFalla | "de-next" {
 export function mensajeDeFalla(causa: CausaFalla | "sesion", queNoSeGuardo = "el gasto no se guardó"): string {
   switch (causa) {
     case "sin-red":
-      return `Sin conexión: ${queNoSeGuardo}.`;
+      // Sin red no se sabe si llegó: el corte pudo ser después de guardar (decisión del desarrollador, 2026-10-17).
+      // Volver a tocar Guardar en la misma captura no duplica el gasto, que lleva su id; no todos los formularios
+      // lo llevan, así que los demás no lo prometen.
+      return queNoSeGuardo === "el gasto no se guardó"
+        ? "Sin conexión: no se pudo confirmar. Vuelve a tocar Guardar cuando tengas red; no se duplica."
+        : "Sin conexión: no se pudo confirmar si se guardó. Vuelve a intentarlo cuando tengas red.";
     case "sesion":
       return `Tu sesión terminó: ${queNoSeGuardo}. Entra de nuevo.`;
     case "version":

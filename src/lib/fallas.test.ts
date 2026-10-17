@@ -35,13 +35,19 @@ describe("causaDeFalla (spec 002, criterio 19)", () => {
 
 describe("mensajeDeFalla: un mensaje por causa (criterio 19)", () => {
   it("dice exactamente lo de la spec para el gasto", () => {
-    expect(mensajeDeFalla("sin-red")).toBe("Sin conexión: el gasto no se guardó.");
+    // Sin red no se sabe si llegó: el corte pudo ser después de guardar (decisión del desarrollador, 2026-10-17).
+    expect(mensajeDeFalla("sin-red")).toBe(
+      "Sin conexión: no se pudo confirmar. Vuelve a tocar Guardar cuando tengas red; no se duplica.",
+    );
     expect(mensajeDeFalla("sesion")).toBe("Tu sesión terminó: el gasto no se guardó. Entra de nuevo.");
     expect(mensajeDeFalla("version")).toBe("La app se actualizó: recarga y vuelve a guardar.");
   });
 
   it("en categorías y sobres dice lo mismo sin nombrar el gasto", () => {
-    expect(mensajeDeFalla("sin-red", "no se guardó")).toBe("Sin conexión: no se guardó.");
+    expect(mensajeDeFalla("sin-red", "no se guardó")).toBe(
+      "Sin conexión: no se pudo confirmar si se guardó. Vuelve a intentarlo cuando tengas red.",
+    );
+    expect(mensajeDeFalla("sin-red", "el ingreso no se guardó")).toBe(mensajeDeFalla("sin-red", "no se guardó"));
     expect(mensajeDeFalla("sesion", "no se guardó")).toBe("Tu sesión terminó: no se guardó. Entra de nuevo.");
     expect(mensajeDeFalla("version", "no se guardó")).toBe("La app se actualizó: recarga y vuelve a guardar.");
   });
