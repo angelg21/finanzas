@@ -1,2 +1,2 @@
-- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — "por defecto", key={ronda}, Enter, estado fuera de React, filtro validado por lo que hay, 1024 px, extractores "?", "todos los formularios" con lista propia, reglas en otras capas, theme-color tras Link
-- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, con o sin JS, sin red por CDP, MSYS_NO_PATHCONV, "Salir", Edge por PID, hash de migración, anchos, scratchpad que persiste
+- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — "por defecto", key={ronda}, Enter, estado fuera de React, filtros, 1024 px, extractores "?", listas propias, reglas fuera de mi lista, observadores en el error global
+- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, con o sin JS, sin red, base caída en 3125, pestaña colgada, acción como endpoint, Edge por PID, scratchpad
