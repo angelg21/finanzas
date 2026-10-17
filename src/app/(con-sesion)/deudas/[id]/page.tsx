@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import { ArrowLeft, CheckCircle2, CircleAlert, Pencil } from "lucide-react";
+import { ArrowLeft, CircleAlert, Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { EnlaceBoton } from "@/components/formulario";
 import { FilaMovimiento } from "@/components/movimiento";
 import { Cifra, EncabezadoTarjeta, Pildora, Progreso, Tarjeta } from "@/components/ui";
 import { saldosPorCuenta } from "@/db/consultas";
@@ -12,21 +11,27 @@ import { formatearCifra } from "@/lib/dinero";
 import { hoyEnCaracas } from "@/lib/fechas";
 import { avisosDeLiquidez } from "@/lib/liquidez";
 import { plazoDeDeuda } from "@/lib/plazos";
+import type { Guardado } from "./formulario-pago";
 import { Saldar } from "./saldar";
 import { exigirSesion } from "@/app/sesion";
 
 export const metadata: Metadata = { title: "Deuda" };
 export const dynamic = "force-dynamic";
 
+/** Los valores de `?guardado=` que traen aviso; cualquier otro se ignora. */
+const guardados: readonly Guardado[] = ["pago", "cobro", "prestamo"];
+
 /**
  * Una deuda (spec 005): lo pendiente, de cuánto, lo pagado o cobrado, la fecha y la cuenta prevista, el aviso de
- * liquidez, el formulario para pagarla o cobrarla y su historial. Saldada, el formulario se cambia por "Pagada" o
- * "Cobrada". En escritorio el formulario va a la derecha, fijo al desplazarse, como el reparto del ingreso.
+ * liquidez después del hero, el formulario para pagarla o cobrarla y su historial. Saldada, el formulario se cambia
+ * por "Pagada" o "Cobrada", y el hero lo dice en vez del plazo. En escritorio el formulario va a la derecha, fijo al
+ * desplazarse, como el reparto del ingreso.
  */
 export default async function DetalleDeuda({ params, searchParams }: PageProps<"/deudas/[id]">) {
   await exigirSesion();
   const { id } = await params;
-  const { guardado } = await searchParams;
+  const { guardado: deLaDireccion } = await searchParams;
+  const guardado = guardados.find((g) => g === deLaDireccion);
   const deudaId = Number(id);
   if (!Number.isSafeInteger(deudaId) || deudaId <= 0) notFound();
   const [datos, sobre, porAsignar, cuentas, todas] = await Promise.all([
@@ -40,6 +45,7 @@ export default async function DetalleDeuda({ params, searchParams }: PageProps<"
   const { deuda, historial } = datos;
   const hoy = hoyEnCaracas(new Date());
   const debo = deuda.sentido === "debo";
+  const saldada = deuda.estado === "pagada";
   const total = deuda.montoInicialCentavos + deuda.prestadoCentavos;
   const aviso = avisosDeLiquidez({ deudas: todas, cuentas }).get(deuda.id);
 
@@ -60,64 +66,57 @@ export default async function DetalleDeuda({ params, searchParams }: PageProps<"
         </Link>
       </div>
 
-      <section className="hero rounded-tarjeta p-5 lg:col-span-7 lg:col-start-1 lg:row-start-2 lg:p-6">
-        <h1 className="truncate text-[20px] font-bold">{deuda.persona}</h1>
-        <p className="text-[13px] text-white/75">{debo ? "Le debo" : "Me debe"}</p>
-        <div className="mt-4">
-          <Cifra centavos={deuda.pendienteCentavos} tamano="hero" />
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Pildora tono="hero">De {formatearCifra(total)}</Pildora>
-          <Pildora tono="hero">
-            {debo ? "Pagado" : "Cobrado"} {formatearCifra(deuda.saldadoCentavos)}
-          </Pildora>
-          <Pildora tono="hero">{plazoDeDeuda(deuda.fechaPrevista, hoy)}</Pildora>
-          {deuda.cuentaPrevista ? (
-            <Pildora tono="hero">
-              {deuda.cuentaPrevista} {deuda.monedaPrevista}
-            </Pildora>
-          ) : null}
-        </div>
-        {total > 0 ? (
+      {/* El aviso de liquidez va después del hero, sobre el fondo de la página: dentro, el rojo no se leía. */}
+      <div className="flex flex-col gap-4 lg:col-span-7 lg:col-start-1 lg:row-start-2">
+        <section className="hero rounded-tarjeta p-5 lg:p-6">
+          <h1 className="truncate text-[20px] font-bold">{deuda.persona}</h1>
+          <p className="text-[13px] text-white/75">{debo ? "Le debo" : "Me debe"}</p>
           <div className="mt-4">
-            <Progreso valor={deuda.saldadoCentavos / total} />
-            <p className="mt-2 text-[12px] text-white/75">
-              {Math.floor((deuda.saldadoCentavos * 100) / total)} % {debo ? "pagado" : "cobrado"}
-            </p>
+            <Cifra centavos={deuda.pendienteCentavos} tamano="hero" />
           </div>
-        ) : null}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Pildora tono="hero">De {formatearCifra(total)}</Pildora>
+            <Pildora tono="hero">
+              {debo ? "Pagado" : "Cobrado"} {formatearCifra(deuda.saldadoCentavos)}
+            </Pildora>
+            <Pildora tono="hero">
+              {saldada ? (debo ? "Pagada" : "Cobrada") : plazoDeDeuda(deuda.fechaPrevista, hoy)}
+            </Pildora>
+            {deuda.cuentaPrevista ? (
+              <Pildora tono="hero">
+                {deuda.cuentaPrevista} {deuda.monedaPrevista}
+              </Pildora>
+            ) : null}
+          </div>
+          {total > 0 ? (
+            <div className="mt-4">
+              <Progreso valor={deuda.saldadoCentavos / total} />
+              <p className="mt-2 text-[12px] text-white/75">
+                {Math.floor((deuda.saldadoCentavos * 100) / total)} % {debo ? "pagado" : "cobrado"}
+              </p>
+            </div>
+          ) : null}
+        </section>
         {aviso?.texto ? (
-          <div className="mt-4">
+          <div>
             <Pildora tono="negativa">
               <CircleAlert size={13} aria-hidden className="shrink-0" />
               {aviso.texto}
             </Pildora>
           </div>
         ) : null}
-      </section>
+      </div>
 
       <Tarjeta className="lg:sticky lg:top-24 lg:col-span-5 lg:col-start-8 lg:row-span-2 lg:row-start-2">
-        <EncabezadoTarjeta
-          titulo={debo ? "Registrar pago" : "Registrar cobro"}
-          derecha={
-            guardado === "pago" || guardado === "cobro" || guardado === "prestamo" ? (
-              <Pildora tono="positiva">
-                <CheckCircle2 size={13} aria-hidden />
-                {{ pago: "Pago guardado", cobro: "Cobro guardado", prestamo: "Préstamo guardado" }[guardado]}
-              </Pildora>
-            ) : undefined
-          }
+        <EncabezadoTarjeta titulo={debo ? "Registrar pago" : "Registrar cobro"} />
+        <Saldar
+          deuda={deuda}
+          sobreDeudas={sobre}
+          porAsignar={porAsignar}
+          cuentas={cuentas}
+          hoy={hoy}
+          guardado={guardado}
         />
-        {guardado === "cobro" ? (
-          // Lo cobrado entró a "Por asignar": se ofrece repartirlo (criterio 5).
-          <div className="mb-4 flex flex-col gap-2 rounded-[14px] bg-tarjeta-hover p-3">
-            <p className="text-[13px] text-texto-2">Lo cobrado entró a Por asignar. Dale un trabajo:</p>
-            <EnlaceBoton href="/sobres/repartir" variante="secundario">
-              Repartir
-            </EnlaceBoton>
-          </div>
-        ) : null}
-        <Saldar deuda={deuda} sobreDeudas={sobre} porAsignar={porAsignar} cuentas={cuentas} hoy={hoy} />
       </Tarjeta>
 
       <Tarjeta className="lg:col-span-7 lg:col-start-1 lg:row-start-3">

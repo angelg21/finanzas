@@ -3,7 +3,7 @@ import { Pildora } from "@/components/ui";
 import type { DeudaConPendiente } from "@/db/deudas";
 import { cuentaParaPagar } from "@/lib/deudas";
 import { type Moneda, centavosATexto } from "@/lib/dinero";
-import { FormularioPago } from "./formulario-pago";
+import { AvisoGuardado, FormularioPago, type Guardado } from "./formulario-pago";
 
 type Datos = {
   deuda: Pick<DeudaConPendiente, "id" | "sentido" | "estado" | "pendienteCentavos" | "cuentaPrevistaId">;
@@ -13,6 +13,8 @@ type Datos = {
   /** Las cuentas activas: aquí se dejan las de dólares. */
   cuentas: { id: number; nombre: string; moneda: Moneda }[];
   hoy: string;
+  /** Lo que se acaba de guardar, si se llega desde el guardado; /nuevo/deuda no lo pasa. */
+  guardado?: Guardado;
 };
 
 /**
@@ -20,15 +22,21 @@ type Datos = {
  * ya saldada, sin el sobre que hace falta activo o sin cuentas en dólares. Lo comparten el detalle de la deuda y
  * /nuevo/deuda (criterio 23), con la misma acción: cada apertura es una captura nueva.
  */
-export function Saldar({ deuda, sobreDeudas, porAsignar, cuentas, hoy }: Datos) {
+export function Saldar({ deuda, sobreDeudas, porAsignar, cuentas, hoy, guardado }: Datos) {
   const debo = deuda.sentido === "debo";
   const enDolares = cuentas.filter((c) => c.moneda !== "VES");
   if (deuda.estado === "pagada") {
+    // Sin formulario, el aviso de lo guardado no puede quedar viejo: va siempre que se llegue desde el guardado.
     return (
-      <Pildora tono="positiva">
-        <CheckCircle2 size={13} aria-hidden />
-        {debo ? "Pagada" : "Cobrada"}
-      </Pildora>
+      <div className="flex flex-col gap-4">
+        {guardado ? <AvisoGuardado guardado={guardado} /> : null}
+        <div>
+          <Pildora tono="positiva">
+            <CheckCircle2 size={13} aria-hidden />
+            {debo ? "Pagada" : "Cobrada"}
+          </Pildora>
+        </div>
+      </div>
     );
   }
   const impedimento =
@@ -58,6 +66,7 @@ export function Saldar({ deuda, sobreDeudas, porAsignar, cuentas, hoy }: Datos) 
       cuentas={enDolares.map(({ id, nombre, moneda }) => ({ id, nombre, moneda }))}
       hoy={hoy}
       saldoDeudasCentavos={debo && sobreDeudas ? sobreDeudas.saldoCentavos : null}
+      guardado={guardado}
     />
   );
 }
