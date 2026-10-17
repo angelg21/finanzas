@@ -30,6 +30,8 @@ function gastoTecleado(datos: FormData): ValoresGasto {
     fecha: leer(datos, "fecha"),
     nota: leer(datos, "nota"),
     idCaptura: leer(datos, "idCaptura"),
+    etiquetaId: leer(datos, "etiquetaId"),
+    etiquetaNueva: leer(datos, "etiquetaNueva"),
   };
 }
 
@@ -40,6 +42,8 @@ function ingresoTecleado(datos: FormData): ValoresIngresoEditado {
     categoriaId: leer(datos, "categoriaId"),
     fecha: leer(datos, "fecha"),
     nota: leer(datos, "nota"),
+    etiquetaId: leer(datos, "etiquetaId"),
+    etiquetaNueva: leer(datos, "etiquetaNueva"),
   };
 }
 

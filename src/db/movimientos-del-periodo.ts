@@ -1,9 +1,8 @@
 import { and, count, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
-import { etiquetasDe, patronDeEtiqueta } from "@/lib/etiquetas";
 import type { PestanaMovimientos, Rango } from "@/lib/periodos";
 import { baseMovimientos } from "./consultas";
 import { db } from "./index";
-import { categorias, movimientos } from "./schema";
+import { categorias, etiquetas, movimientos } from "./schema";
 
 /*
   Lecturas de /movimientos (spec 003): tres consultas por página, todas sobre `movimientos_fecha_idx`, y con filtro
@@ -19,22 +18,19 @@ const tiposDe = {
   mover: ["transferencia", "reasignacion", "pago_deuda", "prestamo", "cobro_prestamo"],
 } as const satisfies Record<PestanaMovimientos, readonly (typeof movimientos.$inferSelect.tipo)[]>;
 
-/**
- * Los movimientos de la pestaña en el periodo; con categoría y con etiqueta, solo los suyos. La etiqueta llega ya
- * validada por leerEtiqueta y su patrón va como parámetro (spec 007, criterio 6).
- */
+/** Los movimientos de la pestaña en el periodo; con categoría y con etiqueta (spec 008), solo los suyos. */
 function delPeriodo(
   pestana: PestanaMovimientos,
   rango: Rango,
   categoriaId: number | null,
-  etiqueta: string | null = null,
+  etiquetaId: number | null = null,
 ) {
   return and(
     inArray(movimientos.tipo, [...tiposDe[pestana]]),
     gte(movimientos.fecha, rango.desde),
     lte(movimientos.fecha, rango.hasta),
     categoriaId === null ? undefined : eq(movimientos.categoriaId, categoriaId),
-    etiqueta === null ? undefined : sql`${movimientos.nota} ~* ${patronDeEtiqueta(etiqueta)}`,
+    etiquetaId === null ? undefined : eq(movimientos.etiquetaId, etiquetaId),
   );
 }
 
@@ -78,10 +74,10 @@ export async function movimientosDelPeriodo(
   rango: Rango,
   categoriaId: number | null,
   limite = 200,
-  etiqueta: string | null = null,
+  etiquetaId: number | null = null,
 ) {
   return baseMovimientos()
-    .where(delPeriodo(pestana, rango, categoriaId, etiqueta))
+    .where(delPeriodo(pestana, rango, categoriaId, etiquetaId))
     .orderBy(desc(movimientos.fecha), desc(movimientos.id))
     .limit(limite);
 }
@@ -96,7 +92,7 @@ export async function resumenPorDia(
   pestana: PestanaMovimientos,
   rango: Rango,
   categoriaId: number | null,
-  etiqueta: string | null = null,
+  etiquetaId: number | null = null,
 ) {
   return db
     .select({
@@ -105,17 +101,24 @@ export async function resumenPorDia(
       centavos: sql<number>`sum(${movimientos.montoUsdCentavos})::bigint`.mapWith(Number),
     })
     .from(movimientos)
-    .where(delPeriodo(pestana, rango, categoriaId, etiqueta))
+    .where(delPeriodo(pestana, rango, categoriaId, etiquetaId))
     .groupBy(movimientos.fecha);
 }
 
-/** Las etiquetas con # que aparecen en las notas de la pestaña en el periodo, las más usadas primero (spec 007). */
-export async function etiquetasDelPeriodo(pestana: PestanaMovimientos, rango: Rango): Promise<string[]> {
-  const notas = await db
-    .select({ nota: movimientos.nota })
+/**
+ * Las etiquetas con movimientos de la pestaña en el periodo, con su total en USD, de la que más suma a la que menos
+ * (spec 008, criterio 5). Con categoría, solo lo de esa categoría.
+ */
+export async function etiquetasDelPeriodo(pestana: PestanaMovimientos, rango: Rango, categoriaId: number | null) {
+  return db
+    .select({
+      id: etiquetas.id,
+      nombre: etiquetas.nombre,
+      centavos: sql<number>`sum(${movimientos.montoUsdCentavos})::bigint`.mapWith(Number),
+    })
     .from(movimientos)
-    .where(and(delPeriodo(pestana, rango, null), sql`${movimientos.nota} like '%#%'`));
-  const usos = new Map<string, number>();
-  for (const { nota } of notas) for (const e of etiquetasDe(nota)) usos.set(e, (usos.get(e) ?? 0) + 1);
-  return [...usos.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([e]) => e);
+    .innerJoin(etiquetas, eq(movimientos.etiquetaId, etiquetas.id))
+    .where(delPeriodo(pestana, rango, categoriaId))
+    .groupBy(etiquetas.id)
+    .orderBy(desc(sql`sum(${movimientos.montoUsdCentavos})`), etiquetas.id);
 }

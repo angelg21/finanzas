@@ -24,6 +24,8 @@ function tecleadoDe(datos: FormData): ValoresGasto {
     nota: leer("nota"),
     // El mismo id: tocar "Guardar gasto" otra vez no duplica si el primer intento sí llegó.
     idCaptura: leer("idCaptura"),
+    etiquetaId: leer("etiquetaId"),
+    etiquetaNueva: leer("etiquetaNueva"),
   };
 }
 

@@ -11,6 +11,7 @@ type Datos = {
   volver: string;
   inicial: ValoresGasto;
   categorias: { id: number; nombre: string; icono: string; color: string }[];
+  etiquetas: { id: number; nombre: string }[];
   sobres: SobreGasto[];
   cuentas: CuentaGasto[];
   hoy: string;

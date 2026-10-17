@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Tarjeta } from "@/components/ui";
 import { saldosPorCuenta } from "@/db/consultas";
+import { todasLasEtiquetas } from "@/db/etiquetas";
 import { categoriasDeIngresoPorUso, cuentaDelUltimoIngreso, datosDelReparto } from "@/db/reparto";
 import { hoyEnCaracas } from "@/lib/fechas";
 import { SelectorTipo } from "../selector-tipo";
@@ -14,11 +15,12 @@ export const dynamic = "force-dynamic";
 export default async function NuevoIngreso({ searchParams }: PageProps<"/nuevo/ingreso">) {
   await exigirSesion();
   const parametros = await searchParams;
-  const [reparto, categorias, cuentas, ultima] = await Promise.all([
+  const [reparto, categorias, cuentas, ultima, etiquetas] = await Promise.all([
     datosDelReparto(),
     categoriasDeIngresoPorUso(),
     saldosPorCuenta(),
     cuentaDelUltimoIngreso(),
+    todasLasEtiquetas(),
   ]);
 
   // Los bolívares no se ofrecen: un ingreso en Bs pediría una tasa (fuera de alcance).
@@ -38,6 +40,7 @@ export default async function NuevoIngreso({ searchParams }: PageProps<"/nuevo/i
         <FormularioIngreso
           cuentas={enDolares.map(({ id, nombre, moneda, esPropia }) => ({ id, nombre, moneda, esPropia }))}
           categorias={categorias.map(({ id, nombre, icono, color }) => ({ id, nombre, icono, color }))}
+          etiquetas={etiquetas}
           reglas={reparto.reglas}
           recibidoPorMes={reparto.recibidoPorMes}
           hoy={hoyEnCaracas(new Date())}

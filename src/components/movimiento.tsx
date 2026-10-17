@@ -67,7 +67,8 @@ export function FilaMovimiento({ m, href }: { m: MovimientoReciente; href?: stri
       ? [etiquetaTipo[m.tipo], cuenta, m.nota]
       : esMover
         ? [etiquetaTipo[m.tipo], m.nota]
-        : [m.nota ? m.categoria : null, cuenta];
+        : // La etiqueta, si tiene (spec 008): "Sueldo remoto · Binance · SAX".
+          [m.nota ? m.categoria : null, cuenta, m.etiqueta];
 
   const fila = (
     <div className="flex items-center gap-3 py-3">

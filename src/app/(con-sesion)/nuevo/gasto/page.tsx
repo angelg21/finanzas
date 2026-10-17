@@ -6,6 +6,7 @@ import {
   saldosPorCuenta,
   sobresParaGasto,
 } from "@/db/consultas";
+import { todasLasEtiquetas } from "@/db/etiquetas";
 import { hoyEnCaracas } from "@/lib/fechas";
 import { SelectorTipo } from "../selector-tipo";
 import { FormularioGasto } from "./formulario-gasto";
@@ -20,12 +21,13 @@ const formas = ["dolares", "vendiendo", "saldo"] as const;
 export default async function NuevoGasto({ searchParams }: PageProps<"/nuevo/gasto">) {
   await exigirSesion();
   const parametros = await searchParams;
-  const [categorias, sobres, cuentas, cuentaPorDefecto, cuentaVentaPorDefecto] = await Promise.all([
+  const [categorias, sobres, cuentas, cuentaPorDefecto, cuentaVentaPorDefecto, etiquetas] = await Promise.all([
     categoriasDeGastoPorUso(),
     sobresParaGasto(),
     saldosPorCuenta(),
     cuentaPorDefectoParaGasto(),
     cuentaPorDefectoParaVenta(),
+    todasLasEtiquetas(),
   ]);
 
   const enDolares = cuentas.filter((c) => c.moneda !== "VES");
@@ -47,6 +49,7 @@ export default async function NuevoGasto({ searchParams }: PageProps<"/nuevo/gas
 
       <FormularioGasto
         categorias={categorias.map(({ id, nombre, icono, color }) => ({ id, nombre, icono, color }))}
+        etiquetas={etiquetas}
         sobres={sobres.map(({ id, nombre, tipo, saldoCentavos, topeCentavos }) => ({
           id,
           nombre,

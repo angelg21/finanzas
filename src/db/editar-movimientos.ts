@@ -106,6 +106,7 @@ export type ResultadoEdicion<E> = { ok: true } | { ok: false; errores: E } | { n
 export async function editarGasto(
   id: number,
   planear: (guardado: GastoGuardado) => PlanDeGasto,
+  etiquetaId: number | null = null,
 ): Promise<ResultadoEdicion<ErroresGasto>> {
   return db.transaction(async (tx) => {
     const gasto = await filaBloqueada(tx, id, "gasto");
@@ -125,7 +126,10 @@ export async function editarGasto(
       const vendido = "Este gasto no se registró en la app: para pagarlo vendiendo USDT, bórralo y regístralo de nuevo";
       return { ok: false as const, errores: { vendido } };
     }
-    await tx.update(movimientos).set(valoresDeGasto(plan.gasto.fila)).where(eq(movimientos.id, gasto.id));
+    await tx
+      .update(movimientos)
+      .set({ ...valoresDeGasto(plan.gasto.fila), etiquetaId })
+      .where(eq(movimientos.id, gasto.id));
     // La venta se toca por el id leído bajo el bloqueo, nunca por el que traiga el plan.
     if (plan.venta?.accion === "actualizar" && venta) {
       await tx.update(movimientos).set(valoresDeVenta(plan.venta.fila)).where(eq(movimientos.id, venta.id));
@@ -160,6 +164,7 @@ export async function borrarGasto(id: number): Promise<{ ok: true; conVenta: boo
 export async function editarIngreso(
   id: number,
   planear: (guardado: IngresoGuardado, saldoDestinoCentavos: number) => PlanDeIngreso,
+  etiquetaId: number | null = null,
 ): Promise<ResultadoEdicion<Extract<PlanDeIngreso, { ok: false }>["errores"]>> {
   return db.transaction(async (tx) => {
     const ingreso = await filaBloqueada(tx, id, "ingreso");
@@ -188,6 +193,7 @@ export async function editarIngreso(
         cuentaDestinoId: f.cuentaDestinoId,
         categoriaId: f.categoriaId,
         nota: f.nota,
+        etiquetaId,
       })
       .where(eq(movimientos.id, ingreso.id));
     return { ok: true as const };

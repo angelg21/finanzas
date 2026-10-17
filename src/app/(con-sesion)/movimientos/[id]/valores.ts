@@ -15,9 +15,14 @@ export type ValoresIngresoEditado = {
   categoriaId: string;
   fecha: string;
   nota: string;
+  /** La etiqueta elegida, o lo escrito para crearla (spec 008). */
+  etiquetaId: string;
+  etiquetaNueva: string;
 };
 
-export type ErroresIngresoEditado = Partial<Record<"monto" | "cuenta" | "categoria" | "fecha" | "general", string>>;
+export type ErroresIngresoEditado = Partial<
+  Record<"monto" | "cuenta" | "categoria" | "etiqueta" | "fecha" | "general", string>
+>;
 
 export type EstadoEdicionIngreso = { ronda: number } & (
   { estado: "inicial" } | { estado: "error"; errores: ErroresIngresoEditado; valores: ValoresIngresoEditado }
