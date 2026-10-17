@@ -190,7 +190,6 @@ export function BotonCalendario({
       <button
         type="button"
         aria-haspopup="dialog"
-        aria-label="Elegir un día en el calendario"
         onClick={() => {
           setVista(mesDe(inicio));
           ventana.current?.showModal();
@@ -198,7 +197,9 @@ export function BotonCalendario({
         className="flex items-center gap-2 rounded-full px-3 py-2 text-[15px] font-bold hover:bg-tarjeta-hover"
       >
         <CalendarDays size={18} className="text-texto-3" aria-hidden />
+        {/* El nombre accesible empieza por lo que se ve, "Septiembre de 2026", y añade qué hace (WCAG 2.5.3). */}
         {children}
+        <span className="sr-only">, elegir un día en el calendario</span>
       </button>
       <dialog
         ref={ventana}

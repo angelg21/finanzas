@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useState } from "react";
+import { type ReactNode, useId, useState } from "react";
 import { colorPorDefecto, coloresCategoria } from "@/lib/categorias";
 import { formatearCentavos, partesCentavos } from "@/lib/dinero";
 import { sector } from "./grafica-dona";
@@ -31,6 +31,10 @@ function rellenoDe(color: string) {
 }
 
 const textoPorcentaje = (p: PorcionGrafica) => (p.menosDeUno ? "<1 %" : `${p.porcentaje} %`);
+
+/** El nombre en el centro del anillo cabe en el hueco hasta unos 20 caracteres; más largo, se corta con "…". */
+const nombreEnElCentro = (nombre: string) =>
+  nombre.length > 20 ? `${nombre.slice(0, 19).trimEnd()}…`.toUpperCase() : nombre.toUpperCase();
 
 export function GraficaCategorias({
   porciones,
@@ -118,7 +122,7 @@ export function GraficaCategorias({
             {textoCifra}
           </text>
           <text x={centro} y={centro + 22} textAnchor="middle" className="fill-texto-3 text-[11px] font-bold">
-            {resaltada ? resaltada.nombre.toUpperCase() : etiquetaCentro}
+            {resaltada ? nombreEnElCentro(resaltada.nombre) : etiquetaCentro}
           </text>
         </svg>
       </div>
@@ -138,7 +142,13 @@ export function GraficaCategorias({
               href={p.href}
               elegida={elegida === p.clave}
               nombre={p.nombre}
-              detalle={`${formatearCentavos(p.centavos)} · ${textoPorcentaje(p)}`}
+              detalle={
+                // El porcentaje no se parte: entre 1024 y 1100 px "70" y "%" quedaban en dos líneas.
+                <>
+                  {`${formatearCentavos(p.centavos)} · `}
+                  <span className="whitespace-nowrap">{textoPorcentaje(p)}</span>
+                </>
+              }
               punto={fondoDe(p.color)}
             />
           </li>
@@ -158,7 +168,7 @@ function EntradaLeyenda({
   href: string;
   elegida: boolean;
   nombre: string;
-  detalle: string;
+  detalle: ReactNode;
   punto?: string;
 }) {
   return (
