@@ -9,4 +9,5 @@
 - [Revisión de 003](project_revision-003-movimientos.md): T3 APTO, mediciones; categoría validada contra totales en la página; Mover mezcla tipos por día
 - [Revisión de 004](project_revision-004-reparto.md): T4 SEGURO; T5 APTO (7dd832a); 97437d7 APTO; su corrección 789fbc6 APTO (la propuesta sigue lanzando); mirar git log -- src/db
 - [Revisión de 005](project_revision-005-deudas.md): 0005 APTA; T6/T7/T13 con cambios, arreglos medidos; /f-review SEGURO (2026-10-16); fecha prevista rara tumba reparto
+- [Revisión de 006](project_revision-006-editar.md): T3 SEGURO (2026-10-17); candado (3,PA) probado con mutante; el escritor confía en el plan; cuenta archivada; ids > int4
 - [Captura idempotente](project_captura-idempotente.md): T12 de 002 NO APTO y luego APTO; 23505 + huella + 15 min; residuales: id reutilizado idéntico, sin editar movimientos, pruebas de base en f-verify

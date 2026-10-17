@@ -1,6 +1,6 @@
 ---
 name: defectos-datos-encontrados
-description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en 003, 004, 97437d7 y 005 (cerrados de T6/T7/T13 y la fecha rara, 2026-10-16)
+description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en 003, 004, 97437d7, 005 (cerrados de T6/T7/T13 y la fecha rara, 2026-10-16) y T3 de 006 (2026-10-17)
 metadata:
   type: project
 ---
@@ -99,6 +99,14 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
 - **Baja, solo por SQL.** Con una `fecha_prevista` que `esFecha` rechaza (0050-01-01, 10000-01-01, 0044-03-15 BC), `cuotaDeDeudas` lanza fuera del `.catch` de `cuotaDelMes` (`reparto.ts`). Se caen el ingreso con su acción, `/sobres/repartir` con la suya, `/sobres/reglas`, `/deudas` y `/deudas/apartar`. La app lo frena al validar; el escritor de `src/db` no.
 - **Info.** `cuotaDelMes` se traga cualquier error sin registrarlo. `datosDelReparto` abre 9 conexiones y la acción del ingreso llena las 10.
 - **Sigue abierto, decidido en la spec:** desde otro sobre, prestar puede dejarlo en negativo, como un gasto.
+
+**Abiertos, nuevos en T3 de 006 (2026-10-17). Ninguno bloquea** (ver [[revision-006-editar]])
+
+- **Baja, defensa.** `editarGasto` y `editarIngreso` hacen spread del plan en `.set` y usan `plan.venta.id`. Un plan fabricado borra filas ajenas, cambia el tipo o pisa la referencia. Hoy el plan sale de lib y no pasa.
+- **Baja, futuro.** Editar o borrar un movimiento de una cuenta o un sobre archivado descuadra (medido: 500).
+- **Baja.** Un id entre 2^31 y 2^53 en `/movimientos/[id]` da un 500 (22003) en vez del 404.
+- **Info.** Una referencia `captura-` en mayúsculas lleva a una venta doble al editar.
+- **Info.** Si se borra el gasto, el reintento de la captura original lo vuelve a meter.
 
 **Abiertos de antes**
 

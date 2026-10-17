@@ -33,6 +33,7 @@ Lista viva de las observaciones del usuario sobre la interfaz, lo que se cambió
 - Campos: nombre, moneda, tipo, nota, y si está a nombre de un tercero.
 - El monto no se escribe en la cuenta: el saldo siempre sale de los movimientos. Al crear una cuenta con dinero ya adentro, la app registra un movimiento de "saldo inicial" que cae en "Por asignar", y de ahí se reparte a los sobres. Así el invariante nunca se rompe.
 - Eliminar solo si la cuenta no tiene movimientos; si los tiene, se archiva (deja de verse pero conserva el historial).
+- **Del guardián, en la feature 006 (2026-10-17):** archivar una cuenta o un sobre tiene que impedir editar o borrar los movimientos que los tocan, o no archivar con historial: editar el gasto de una cuenta archivada con saldo 0 descuadró en 500 en una copia de la base.
 
 ## 4. Nueva paleta de colores y fuente
 

@@ -147,6 +147,11 @@ metadata:
   - `conexiones-rev.mts <reparto|accion>`;
   - `huella-demo.sql`: huella de la demo sin ids, con la deuda por su referencia. Es estable entre la base real y una vacía.
 - **Tras `db:demo:limpiar` + `db:demo` en la base real, cambian los ids**, y con ellos el md5 de `huella-t6.sql`. Para comparar contenido, usar `huella-demo.sql`. Tomar la huella de referencia de nuevo después de recargar.
+- **Herramientas de T3 de 006** (carpeta `fff6d62f…/scratchpad/t3/`):
+  - `sonda-t3.mts <gastos|ingresos|atomico|carreras|lento|bordes|archivada>`: solo corre en `finanzas_g006_*`. Se lanza con `DATABASE_URL=...5433/<copia> pnpm exec tsx <ruta>`.
+  - `mutar.mjs <destino.ts>`: copia `editar-movimientos.ts` con los imports en URL absolutas (drizzle-orm por `node_modules/drizzle-orm/index.js`) y sin las líneas del candado. Con `SONDA_MUT=x SONDA_MUT_RUTA=<destino>`, la sonda lo usa. Funciona en ESM sin `NODE_PATH`.
+- **Forzar el orden de una carrera con candado:** un trigger `before update or delete ... when (old.nota = 'sonda-lento')` que hace `pg_sleep(0.6)`. A escribe la fila marcada y queda dormido con el candado tomado; B se lanza a los 150 ms. Así se ve si B espera (> 300 ms) y si lee el saldo nuevo. Sin candado (el mutante), sale el negativo en todas las rondas. Con `Promise.all` a secas, casi siempre gana el que no toma `for update` primero.
+- **Fallos a mitad de transacción:** un trigger que lanza según una tabla `sonda_t3_flag(k)`, y se cambia la bandera entre caso y caso. Al final se hace `drop` del trigger, la función y la tabla.
 - **Mientras reviso, otros corren cosas en la base real** (2026-10-16): hubo dos firmas de `comprobar-005` en el log con 44 s de diferencia, y yo corrí una sola contra la copia. Las secuencias de la real subieron +24/+16 con las tablas idénticas. Además, había 10 conexiones postgres.js abiertas (un servidor de la app). Es esperable: decirlo en el informe y no atribuírmelo sin pruebas.
 
 Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].
