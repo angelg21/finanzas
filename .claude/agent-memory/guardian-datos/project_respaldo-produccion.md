@@ -33,5 +33,6 @@ T4 de 002: `src/db/respaldo.ts` + `db:respaldo:produccion`. Primera vuelta (2026
 - Si Supabase crea el proyecto en PG 18, pg_dump 17 se niega: mirar `select version()` en T15.
 - pg_dump por el pooler real en modo sesión no está medido. El contenedor resuelve el pooler a una IPv4.
 - Si cambia algo en la restauración, repetir el modo `--produccion` contra la sonda con TLS (método en [[entorno-de-prueba]]).
+- **Medido en la 0006 de 008 (2026-10-17):** `resumir` recorre `tablasDelEsquema`. Con el código de una feature que añade una tabla, el respaldo de una base todavía sin migrar falla con 42P01 y deja `.sin-comprobar`. Antes de migrar hay que respaldar desde `main`, antes de fusionar. Además, la huella de una tabla con una columna nueva cambia aunque los datos sean los mismos. Ver [[revision-008-etiquetas]].
 
 Ver también [[guardas-produccion]], [[rls-supabase]] y [[defectos-datos-encontrados]].

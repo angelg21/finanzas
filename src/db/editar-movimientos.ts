@@ -106,7 +106,7 @@ export type ResultadoEdicion<E> = { ok: true } | { ok: false; errores: E } | { n
 export async function editarGasto(
   id: number,
   planear: (guardado: GastoGuardado) => PlanDeGasto,
-  etiquetaId: number | null = null,
+  etiquetaId: number | null,
 ): Promise<ResultadoEdicion<ErroresGasto>> {
   return db.transaction(async (tx) => {
     const gasto = await filaBloqueada(tx, id, "gasto");
@@ -164,7 +164,7 @@ export async function borrarGasto(id: number): Promise<{ ok: true; conVenta: boo
 export async function editarIngreso(
   id: number,
   planear: (guardado: IngresoGuardado, saldoDestinoCentavos: number) => PlanDeIngreso,
-  etiquetaId: number | null = null,
+  etiquetaId: number | null,
 ): Promise<ResultadoEdicion<Extract<PlanDeIngreso, { ok: false }>["errores"]>> {
   return db.transaction(async (tx) => {
     const ingreso = await filaBloqueada(tx, id, "ingreso");

@@ -154,4 +154,11 @@ metadata:
 - **Fallos a mitad de transacción:** un trigger que lanza según una tabla `sonda_t3_flag(k)`, y se cambia la bandera entre caso y caso. Al final se hace `drop` del trigger, la función y la tabla.
 - **Mientras reviso, otros corren cosas en la base real** (2026-10-16): hubo dos firmas de `comprobar-005` en el log con 44 s de diferencia, y yo corrí una sola contra la copia. Las secuencias de la real subieron +24/+16 con las tablas idénticas. Además, había 10 conexiones postgres.js abiertas (un servidor de la app). Es esperable: decirlo en el informe y no atribuírmelo sin pruebas.
 
+- **Métodos de la 0006 de 008 (2026-10-17)**, en `fff6d62f…/scratchpad/g008/`:
+  - **Copia con un dueño sin superusuario, de una vez:** `createdb -U finanzas -O <rol> <copia>` y luego `pg_dump -U finanzas --no-owner --no-privileges finanzas | psql -U <rol> -d <copia>`, dentro del contenedor (el socket local entra sin clave). Todo queda del rol, también el esquema drizzle. Más simple que `ALTER ... OWNER` tabla por tabla.
+  - **Ensayo de `respaldo.ts` sin dejar archivos en el repo:** cwd en el scratchpad, y `DATABASE_URL=<copia> node <repo>/node_modules/tsx/dist/cli.mjs <repo>/src/db/respaldo.ts`. El volcado cae en `<scratch>/data/respaldos`. Para la versión de `main`, lo mismo con `NODE_PATH=<repo>/node_modules` sobre `git archive main src/db src/lib`.
+  - El usuario de la URL tiene que ser `finanzas`. Con un rol no superusuario, la restauración (`--no-privileges`) lo deja sin USAGE en public, y sale "relation categorias does not exist". Es un artefacto del montaje, no un defecto.
+  - **Bloqueos de una migración con la app en uso** (`bloqueos.mts`): A abre una transacción, lee y duerme 2 s; el migrador real entra a los 200 ms; B inserta un gasto a los 400 ms. Con `alter database <copia> set log_min_duration_statement=0` se ve la duración de cada DDL.
+  - `drizzle-kit migrate` con `DATABASE_URL=<copia>` en la línea sigue funcionando para una base vacía.
+
 Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].

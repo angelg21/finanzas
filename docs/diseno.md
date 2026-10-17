@@ -178,8 +178,16 @@ Primer uso: el desglose del sobre Ocasiones en `/sobres/[id]`. La captura de gas
 **Ajustes de uso diario** (feature 007):
 
 - `/movimientos/[id]` de un pago o un cobro: el título ("Pago a Papás"), el monto a 28 px en una `Tarjeta`, la cuenta, la fecha y la nota, y "Deshacer pago" o "Deshacer cobro" con la confirmación de borrar de la 006 ("Sí, deshacer").
-- En `/movimientos`, bajo los controles de periodo, una fila de `Pildora` enlazadas con las etiquetas (#sax); la elegida en `palida`, con `aria-current`. Con etiqueta, encima de la lista "#sax · 1.200,00 USD".
+- En `/movimientos`, bajo los controles de periodo, una fila de `Pildora` enlazadas con las etiquetas del periodo y su total ("SAX 1.200"); la elegida en `palida`, con `aria-current`. Con etiqueta, encima de la lista "SAX · 1.200,00 USD" (feature 008).
 - `/nuevo/mover`: el selector de Registrar con Mover en menta y una `Tarjeta` de 6 columnas centradas con "De" y "A" en `SelectorPildoras` (con el saldo de cada sobre), `CampoMonto`, nota y "Mover". Desde Inversión, la línea en `negativo` con `CircleAlert` y el botón "Sí, mover de Inversión". En `/sobres`, el enlace "Mover entre sobres" junto a "Reglas de reparto" y, al volver, la `Pildora` `positiva` "Movido".
+
+**Etiquetas** (feature 008), pieza `SelectorEtiqueta` en `selector-etiqueta.tsx`, según la maqueta del desarrollador:
+
+- "Etiquetas" en `texto-3` y, a la derecha, la lupa (`Search`) como botón redondo en `enlace`;
+- las etiquetas en píldoras de contorno (`pildoraOpcion` y `pildoraNormal`; la elegida, menta), envueltas; tocar la elegida la quita;
+- "+ Añadir etiqueta" con borde punteado en `enlace`. Con la lupa abre un `Entrada` "Nombre de la etiqueta" con una X para cerrar; lo escrito filtra las píldoras y debajo dice "Se creará «X» al guardar" o "Se usará «SAX», que ya existe.";
+- sin JavaScript, el campo a la vista y una píldora "Sin etiqueta";
+- va después del sobre en el gasto y de la categoría en el ingreso; las filas de movimientos la muestran al final del detalle.
 
 **Deudas y préstamos** (feature 005):
 
