@@ -8,6 +8,7 @@ import {
   type CuentaDeuda,
   type EntradaDeuda,
   type EntradaPago,
+  avisoDelSobre,
   avisoDelSobreDeudas,
   cuentaParaPagar,
   estadoDe,
@@ -376,5 +377,26 @@ describe("patrimonioNeto: cuentas más lo que me deben menos lo que debo (criter
 
   it("puede quedar en negativo", () => {
     expect(patrimonioNeto({ cuentasCentavos: 10_000, meDebenCentavos: 0, deboCentavos: 25_000 })).toBe(-15_000);
+  });
+});
+
+describe("avisoDelSobre: el aviso antes de prestar desde un sobre (observación 11, decidido el 2026-10-16)", () => {
+  it("dice cuánto tiene el sobre elegido y en cuánto quedará, en negativo si no alcanza", () => {
+    expect(avisoDelSobre("Gastos del mes", 4_000, 10_000)).toEqual({
+      texto: "Gastos del mes tiene 40,00; quedará en −60,00",
+      negativo: true,
+    });
+  });
+
+  it("si alcanza, la misma línea sin marca negativa; justo en cero no es negativo", () => {
+    expect(avisoDelSobre("Por asignar", 30_000, 10_000)).toEqual({
+      texto: "Por asignar tiene 300,00; quedará en 200,00",
+      negativo: false,
+    });
+    expect(avisoDelSobre("Planes", 10_000, 10_000).negativo).toBe(false);
+  });
+
+  it("el de Deudas es el mismo aviso con su nombre", () => {
+    expect(avisoDelSobreDeudas(13_500, 25_000)).toEqual(avisoDelSobre("Deudas", 13_500, 25_000));
   });
 });

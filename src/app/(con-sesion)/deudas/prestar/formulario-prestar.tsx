@@ -3,7 +3,8 @@
 import { useActionState, useState } from "react";
 import { SelectorFecha } from "@/components/calendario";
 import { Boton, Campo, CampoMonto, Entrada, ErrorCampo, SelectorPildoras } from "@/components/formulario";
-import { formatearCifra, unidadDe } from "@/lib/dinero";
+import { avisoDelSobre } from "@/lib/deudas";
+import { formatearCifra, montoPositivo, unidadDe } from "@/lib/dinero";
 import { prestarConFallas } from "./prestar-con-fallas";
 import type { ErroresFormularioPrestamo, EstadoPrestamo, ValoresPrestamo } from "./valores";
 
@@ -18,7 +19,9 @@ type Datos = {
 
 /**
  * Prestar dinero a otro (spec 005, criterio 4): a quién, cuánto, de qué cuenta y de qué sobre, cuándo se prestó y
- * cuándo se espera cobrarlo. La unidad del monto sigue a la cuenta elegida.
+ * cuándo se espera cobrarlo. La unidad del monto sigue a la cuenta elegida. Con sobre y monto, debajo del sobre, lo
+ * que tiene y en cuánto quedará, en rojo si queda bajo cero: se guarda igual, como un gasto (observación 11, decidido
+ * el 2026-10-16). Sin JavaScript la línea no sale, porque el monto llega vacío.
  */
 export function FormularioPrestar({ inicial, ...datos }: Datos) {
   const [estado, enviar, pendiente] = useActionState<EstadoPrestamo, FormData>(prestarConFallas, {
@@ -51,10 +54,15 @@ function Campos({
   enviar: (datos: FormData) => void;
   pendiente: boolean;
 }) {
+  const [monto, setMonto] = useState(valores.monto);
   const [cuentaId, setCuentaId] = useState(valores.cuentaId);
+  const [sobreId, setSobreId] = useState(valores.sobreOrigenId);
   const [fecha, setFecha] = useState(valores.fecha);
   const [fechaPrevista, setFechaPrevista] = useState(valores.fechaPrevista);
   const moneda = cuentas.find((c) => String(c.id) === cuentaId)?.moneda ?? "USD";
+  const sobre = sobres.find((s) => String(s.id) === sobreId);
+  const centavos = montoPositivo(monto);
+  const aviso = sobre && centavos !== null ? avisoDelSobre(sobre.nombre, sobre.saldoCentavos, centavos) : null;
 
   return (
     <form action={enviar} className="flex flex-col gap-4">
@@ -65,7 +73,7 @@ function Campos({
       </Campo>
 
       <Campo etiqueta="Cuánto" error={errores.monto}>
-        <CampoMonto name="monto" defaultValue={valores.monto} unidad={unidadDe(moneda)} />
+        <CampoMonto name="monto" value={monto} onChange={(e) => setMonto(e.target.value)} unidad={unidadDe(moneda)} />
       </Campo>
 
       <SelectorPildoras
@@ -87,9 +95,18 @@ function Campos({
           detalle: formatearCifra(s.saldoCentavos),
         }))}
         valorInicial={valores.sobreOrigenId}
+        onCambio={setSobreId}
         envolver
         error={errores.sobre}
       />
+      {aviso ? (
+        <p
+          aria-live="polite"
+          className={`-mt-2 text-[13px] font-semibold ${aviso.negativo ? "text-negativo" : "text-texto-3"}`}
+        >
+          {aviso.texto}
+        </p>
+      ) : null}
 
       <SelectorFecha name="fecha" valor={fecha} hoy={hoy} onCambio={setFecha} error={errores.fecha} />
 

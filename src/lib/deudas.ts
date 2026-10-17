@@ -147,10 +147,18 @@ export function cuentaParaPagar(cuentaPrevistaId: number | null, cuentas: Cuenta
   return enDolares.find((c) => c.id === cuentaPrevistaId)?.id ?? enDolares[0]?.id ?? null;
 }
 
+/**
+ * La línea antes de guardar: lo que tiene el sobre y en cuánto quedará, en negativo si no alcanza. Se guarda igual.
+ * En el pago es Deudas (criterio 3); al prestar, el sobre de origen (observación 11, decidido el 2026-10-16).
+ */
+export function avisoDelSobre(nombre: string, saldoCentavos: number, montoCentavos: number) {
+  const queda = saldoCentavos - montoCentavos;
+  return { texto: `${nombre} tiene ${cifra(saldoCentavos)}; quedará en ${cifra(queda)}`, negativo: queda < 0 };
+}
+
 /** La línea del formulario de pago: lo que tiene Deudas y en cuánto quedará (criterio 3). */
 export function avisoDelSobreDeudas(saldoCentavos: number, montoCentavos: number) {
-  const queda = saldoCentavos - montoCentavos;
-  return { texto: `Deudas tiene ${cifra(saldoCentavos)}; quedará en ${cifra(queda)}`, negativo: queda < 0 };
+  return avisoDelSobre("Deudas", saldoCentavos, montoCentavos);
 }
 
 /** Un movimiento de deudas listo para insertar, con la forma que exige el check por tipo (criterio 8). */
