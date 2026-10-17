@@ -162,6 +162,22 @@ export const deudas = pgTable(
   ],
 ).enableRLS();
 
+/**
+ * Etiquetas (spec 008): una por gasto o ingreso, para marcar de qué cliente viene y ver cuánto entró por cada una.
+ * `clave` es el nombre sin mayúsculas, acentos ni espacios de más (claveDeNombre): única, para que "SAX" y "sax" no
+ * sean dos etiquetas.
+ */
+export const etiquetas = pgTable(
+  "etiquetas",
+  {
+    id: id(),
+    nombre: text().notNull(),
+    clave: text().notNull(),
+    creadoEn: creadoEn(),
+  },
+  (t) => [uniqueIndex("etiquetas_clave_unica").on(t.clave)],
+).enableRLS();
+
 export const movimientos = pgTable(
   "movimientos",
   {
@@ -185,6 +201,8 @@ export const movimientos = pgTable(
     categoriaId: integer().references(() => categorias.id),
     /** Solo pagos, préstamos y cobros: la deuda que mueven. */
     deudaId: integer().references(() => deudas.id),
+    /** Solo gastos e ingresos (spec 008): la etiqueta que elige el usuario, o ninguna. */
+    etiquetaId: integer().references(() => etiquetas.id),
     nota: text(),
     origen: origenMovimientoEnum().notNull().default("manual"),
     /**
@@ -202,10 +220,15 @@ export const movimientos = pgTable(
     index("movimientos_sobre_destino_idx").on(t.sobreDestinoId),
     index("movimientos_categoria_idx").on(t.categoriaId),
     index("movimientos_deuda_idx").on(t.deudaId),
+    index("movimientos_etiqueta_idx").on(t.etiquetaId),
     uniqueIndex("movimientos_origen_referencia_unico")
       .on(t.origen, t.referenciaExterna)
       .where(sql`${t.referenciaExterna} is not null`),
     check("movimientos_monto_positivo", sql`${t.montoCentavos} > 0 and ${t.montoUsdCentavos} > 0`),
+    check(
+      "movimientos_etiqueta_solo_gasto_ingreso",
+      sql`${t.etiquetaId} is null or ${t.tipo}::text in ('gasto', 'ingreso')`,
+    ),
     check(
       "movimientos_forma_por_tipo",
       sql`case ${t.tipo}::text

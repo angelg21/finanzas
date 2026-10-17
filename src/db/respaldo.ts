@@ -87,6 +87,15 @@ async function resumir(url: string): Promise<Linea[]> {
       await sql`set local timezone = 'UTC'`;
       const lineas: Linea[] = [];
       for (const tabla of tablasDelEsquema) {
+        // Una tabla del esquema que la base aún no tiene (respaldo antes de migrar, guardian 008): se dice, sin fallar.
+        // Origen y restauración salen del mismo volcado, así que coinciden también en eso.
+        const [{ existe }] = await sql<
+          { existe: boolean }[]
+        >`select to_regclass(${`public.${tabla}`}) is not null as existe`;
+        if (!existe) {
+          lineas.push({ nombre: tabla, valor: "todavía no existe en esta base" });
+          continue;
+        }
         const [{ filas, huella }] = await sql<{ filas: number; huella: string }[]>`
           select count(*)::int as filas, md5(coalesce(string_agg(t::text, '|' order by t.id), '')) as huella
           from ${sql(tabla)} t`;

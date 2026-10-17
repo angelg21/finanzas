@@ -11,6 +11,7 @@ import { fechaDesdeAtajo, hoyEnCaracas } from "@/lib/fechas";
 import { type EntradaIngreso, type FilaIngreso, camposDePropuesta, prepararIngreso } from "@/lib/ingresos";
 import { registrarFalla } from "@/app/registro-de-fallas";
 import { leerSesion } from "@/app/sesion";
+import { etiquetaDelFormulario } from "../../etiqueta-del-formulario";
 import {
   type ErroresFormularioIngreso,
   type EstadoIngreso,
@@ -28,6 +29,8 @@ const esquema = z.object({
   categoriaId: z.string(),
   fecha: z.string().trim(),
   nota: z.string().trim().max(200, "La nota admite hasta 200 caracteres"),
+  etiquetaId: z.string(),
+  etiquetaNueva: z.string().max(60, "Hasta 30 caracteres"),
   // Sin un id de captura válido, la página es de antes de esta versión.
   idCaptura: z.string().refine(esIdCaptura, mensajeDeFalla("version")),
   propuestaDe: z.string(),
@@ -117,12 +120,21 @@ async function procesarIngreso(formData: FormData): Promise<ResultadoIngreso> {
     return { estado: "confirmar", valores, sinAsignarCentavos: preparado.sinAsignar };
   }
 
+  // La etiqueta al final, cuando lo demás ya es válido: así no se crea una de un ingreso que no se guarda (spec 008).
+  const etiqueta = await etiquetaDelFormulario(formData);
+  if (!etiqueta.ok) return { estado: "error", errores: { etiqueta: etiqueta.error }, valores };
+
   // Cada fila con la referencia de esta captura: un reintento choca con el índice único y no duplica nada.
   const referencia = (f: FilaIngreso) =>
     f.tipo === "ingreso"
       ? referenciaDeCaptura(valores.idCaptura, "ingreso")
       : referenciaDeReasignacion(valores.idCaptura, f.sobreDestinoId);
-  const filas = preparado.filas.map((f) => ({ ...f, referenciaExterna: referencia(f) }));
+  // Solo el ingreso lleva la etiqueta; su reparto no (spec 008, criterio 4).
+  const filas = preparado.filas.map((f) => ({
+    ...f,
+    referenciaExterna: referencia(f),
+    etiquetaId: f.tipo === "ingreso" ? etiqueta.etiquetaId : null,
+  }));
   let registro: Awaited<ReturnType<typeof registrarCaptura>>;
   try {
     registro = await registrarCaptura(valores.idCaptura, filas);

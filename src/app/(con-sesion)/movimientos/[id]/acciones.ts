@@ -14,6 +14,7 @@ import { fechaDesdeAtajo, hoyEnCaracas } from "@/lib/fechas";
 import { type FormaPago, prepararGasto } from "@/lib/gastos";
 import { registrarFalla } from "@/app/registro-de-fallas";
 import { leerSesion } from "@/app/sesion";
+import { etiquetaDelFormulario } from "../../etiqueta-del-formulario";
 import type { ErroresFormularioGasto, ValoresGasto } from "../../nuevo/gasto/acciones";
 import {
   type EstadoBorrar,
@@ -58,6 +59,8 @@ function tecleadoDe(datos: FormData): ValoresGasto {
     fecha: texto(datos, "fecha"),
     nota: texto(datos, "nota"),
     idCaptura: texto(datos, "idCaptura"),
+    etiquetaId: texto(datos, "etiquetaId"),
+    etiquetaNueva: texto(datos, "etiquetaNueva"),
   };
 }
 
@@ -115,10 +118,13 @@ export async function editarGastoAccion(previo: EstadoEdicionGasto, datos: FormD
   if (sobre.tipo === "inversion" && texto(datos, "confirmarSobre") !== String(sobre.id)) {
     return { ronda, estado: "confirmar", valores };
   }
+  // La etiqueta al final, cuando lo demás ya es válido (spec 008).
+  const etiqueta = await etiquetaDelFormulario(datos);
+  if (!etiqueta.ok) return { ronda, estado: "error", errores: { etiqueta: etiqueta.error }, valores };
 
   let resultado: Awaited<ReturnType<typeof editarGasto>>;
   try {
-    resultado = await editarGasto(id, (guardado) => planDeEdicionDeGasto(guardado, entrada, hoy));
+    resultado = await editarGasto(id, (guardado) => planDeEdicionDeGasto(guardado, entrada, hoy), etiqueta.etiquetaId);
   } catch (error) {
     registrarFalla("No se pudo editar el gasto", error);
     return { ronda, estado: "error", errores: { general: mensajeDeFalla("otra") }, valores };
@@ -136,6 +142,8 @@ function valoresDe(datos: FormData): ValoresIngresoEditado {
     categoriaId: texto(datos, "categoriaId"),
     fecha: texto(datos, "fecha"),
     nota: texto(datos, "nota"),
+    etiquetaId: texto(datos, "etiquetaId"),
+    etiquetaNueva: texto(datos, "etiquetaNueva"),
   };
 }
 
@@ -170,11 +178,17 @@ export async function editarIngresoAccion(
   if (!categoria) return { ronda, estado: "error", errores: { categoria: "Elige una categoría" }, valores };
   const hoy = hoyEnCaracas(new Date());
   const nueva = { ...valores, fecha: fechaDesdeAtajo(valores.fecha, hoy), categoriaId: categoria.id };
+  // La etiqueta al final, cuando lo demás ya es válido (spec 008).
+  const etiqueta = await etiquetaDelFormulario(datos);
+  if (!etiqueta.ok) return { ronda, estado: "error", errores: { etiqueta: etiqueta.error }, valores };
 
   let resultado: Awaited<ReturnType<typeof editarIngreso>>;
   try {
-    resultado = await editarIngreso(id, (guardado, saldo) =>
-      planDeEdicionDeIngreso(guardado, nueva, cuenta && { id: cuenta.id, moneda: cuenta.moneda }, saldo, hoy),
+    resultado = await editarIngreso(
+      id,
+      (guardado, saldo) =>
+        planDeEdicionDeIngreso(guardado, nueva, cuenta && { id: cuenta.id, moneda: cuenta.moneda }, saldo, hoy),
+      etiqueta.etiquetaId,
     );
   } catch (error) {
     registrarFalla("No se pudo editar el ingreso", error);

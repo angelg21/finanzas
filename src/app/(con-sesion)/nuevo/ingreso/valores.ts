@@ -10,6 +10,9 @@ export type ValoresIngreso = {
   nota: string;
   /** El UUID de esta captura (src/lib/captura.ts): el mismo en cada reintento, para no duplicar el ingreso. */
   idCaptura: string;
+  /** La etiqueta elegida, o lo escrito para crearla (spec 008). */
+  etiquetaId: string;
+  etiquetaNueva: string;
   /**
    * El monto y la fecha para los que se mostró la propuesta. Si no coinciden con los enviados, el envío propone en
    * vez de guardar: sin JavaScript, el primer envío llena los campos del reparto y el segundo guarda (criterio 13).
@@ -19,7 +22,7 @@ export type ValoresIngreso = {
   asignaciones: Record<string, string>;
 };
 
-export type ErroresFormularioIngreso = ErroresIngreso & { categoria?: string; general?: string };
+export type ErroresFormularioIngreso = ErroresIngreso & { categoria?: string; etiqueta?: string; general?: string };
 
 /** Lo registrado, para el estado de éxito. */
 export type ResumenIngreso = {
@@ -60,6 +63,8 @@ export function tecleadoDe(datos: FormData): ValoresIngreso {
     fecha: leer("fecha"),
     nota: leer("nota"),
     idCaptura: leer("idCaptura"),
+    etiquetaId: leer("etiquetaId"),
+    etiquetaNueva: leer("etiquetaNueva"),
     propuestaDe: leer("propuestaDe"),
     asignaciones: asignacionesDelFormulario(datos),
   };

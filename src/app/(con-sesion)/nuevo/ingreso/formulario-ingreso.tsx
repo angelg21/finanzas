@@ -3,6 +3,7 @@
 import { CircleAlert } from "lucide-react";
 import { useActionState, useState } from "react";
 import { SelectorFecha } from "@/components/calendario";
+import { SelectorEtiqueta } from "@/components/selector-etiqueta";
 import { Boton, Campo, CampoMonto, Entrada, SelectorPildoras } from "@/components/formulario";
 import { IconoSobre } from "@/components/icono-sobre";
 import { TarjetaReparto } from "@/components/reparto";
@@ -21,6 +22,8 @@ export type CuentaIngreso = { id: number; nombre: string; moneda: Moneda; esProp
 type Datos = {
   cuentas: CuentaIngreso[];
   categorias: { id: number; nombre: string; icono: string; color: string }[];
+  /** Las etiquetas, para elegir o crear una (spec 008). */
+  etiquetas: { id: number; nombre: string }[];
   reglas: (ReglaConSaldo & {
     nombre: string;
     tipoSobre: string;
@@ -78,6 +81,8 @@ function Captura({
           fecha: "hoy",
           nota: "",
           idCaptura: inicial.idCaptura,
+          etiquetaId: "",
+          etiquetaNueva: "",
           propuestaDe: "",
           asignaciones: {},
         }
@@ -100,6 +105,7 @@ function Captura({
 }
 
 function Campos({
+  etiquetas,
   cuentas,
   categorias,
   reglas,
@@ -192,6 +198,13 @@ function Campos({
             }))}
             valorInicial={valores.categoriaId}
             error={errores.categoria}
+          />
+
+          <SelectorEtiqueta
+            etiquetas={etiquetas}
+            valorInicial={valores.etiquetaId}
+            nuevaInicial={valores.etiquetaNueva}
+            error={errores.etiqueta}
           />
 
           <SelectorFecha

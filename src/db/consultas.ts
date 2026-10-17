@@ -3,7 +3,7 @@ import { alias } from "drizzle-orm/pg-core";
 import { db } from "./index";
 import { clavesDeMeses, hoyEnCaracas, inicioDeMes } from "@/lib/fechas";
 import { sobreAceptaGasto } from "@/lib/gastos";
-import { categorias, cuentas, deudas, movimientos, partidasSobre, reglasReparto, sobres } from "./schema";
+import { categorias, cuentas, deudas, etiquetas, movimientos, partidasSobre, reglasReparto, sobres } from "./schema";
 import { efectoEnCuenta, efectoEnCuentaUsd, efectoEnSobre } from "./sumas-de-saldo";
 
 /** Saldo de cada sobre activo, en centavos de dólar. */
@@ -141,6 +141,8 @@ export function baseMovimientos() {
       sobreDestinoId: movimientos.sobreDestinoId,
       deudaId: movimientos.deudaId,
       persona: deudas.persona,
+      etiquetaId: movimientos.etiquetaId,
+      etiqueta: etiquetas.nombre,
     })
     .from(movimientos)
     .leftJoin(categorias, eq(movimientos.categoriaId, categorias.id))
@@ -148,7 +150,8 @@ export function baseMovimientos() {
     .leftJoin(cuentaDestino, eq(movimientos.cuentaDestinoId, cuentaDestino.id))
     .leftJoin(sobreOrigen, eq(movimientos.sobreOrigenId, sobreOrigen.id))
     .leftJoin(sobreDestino, eq(movimientos.sobreDestinoId, sobreDestino.id))
-    .leftJoin(deudas, eq(movimientos.deudaId, deudas.id));
+    .leftJoin(deudas, eq(movimientos.deudaId, deudas.id))
+    .leftJoin(etiquetas, eq(movimientos.etiquetaId, etiquetas.id));
 }
 
 /** Últimos movimientos de toda la app. */

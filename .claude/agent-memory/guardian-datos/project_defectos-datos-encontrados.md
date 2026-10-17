@@ -1,6 +1,6 @@
 ---
 name: defectos-datos-encontrados
-description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en 003, 004, 97437d7, 005 (cerrados de T6/T7/T13 y la fecha rara, 2026-10-16) y T3 de 006 (2026-10-17)
+description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en 003, 004, 97437d7, 005 (cerrados de T6/T7/T13 y la fecha rara, 2026-10-16), T3 de 006 y la 0006 de 008 (2026-10-17)
 metadata:
   type: project
 ---
@@ -107,6 +107,15 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
 - **Baja.** Un id entre 2^31 y 2^53 en `/movimientos/[id]` da un 500 (22003) en vez del 404.
 - **Info.** Una referencia `captura-` en mayúsculas lleva a una venta doble al editar.
 - **Info.** Si se borra el gasto, el reintento de la captura original lo vuelve a meter.
+
+**Abiertos, nuevos en la 0006 de 008 (2026-10-17). Ninguno bloquea** (ver [[revision-008-etiquetas]])
+
+- **Media, operativo.** `respaldo.ts`, con el código de una feature que añade una tabla, falla contra producción antes de migrar: 42P01, y el volcado queda `.sin-comprobar`. Hay que respaldar desde `main` antes de fusionar, o que `resumir` compare solo las tablas que existen en el origen.
+- **Baja.** `etiquetas` sin marca demo: lo que cree una sonda o `comprobar-008` en la base local no lo borra `db:demo:limpiar`.
+- **Info.**
+  - Checks evaluados por orden alfabético.
+  - Nombre y clave de la etiqueta sin check en la base.
+  - `etiquetaId = null` por defecto en `editarGasto` y `editarIngreso`.
 
 **Abiertos de antes**
 

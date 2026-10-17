@@ -13,6 +13,7 @@ import {
   pildoraNormal,
   pildoraOpcion,
 } from "@/components/formulario";
+import { SelectorEtiqueta } from "@/components/selector-etiqueta";
 import { Tarjeta } from "@/components/ui";
 import { type Moneda, unidadDe } from "@/lib/dinero";
 import { type FormaPago, sobreSugerido } from "@/lib/gastos";
@@ -31,6 +32,8 @@ export type SobreGasto = {
 };
 type Datos = {
   categorias: { id: number; nombre: string; icono: string; color: string }[];
+  /** Las etiquetas, para elegir o crear una (spec 008). */
+  etiquetas: { id: number; nombre: string }[];
   sobres: SobreGasto[];
   cuentas: CuentaGasto[];
   hoy: string;
@@ -122,6 +125,8 @@ function Captura({
           fecha: "hoy",
           nota: "",
           idCaptura: inicial.idCaptura,
+          etiquetaId: "",
+          etiquetaNueva: "",
         }
       : estado.valores;
 
@@ -148,6 +153,7 @@ function Captura({
  */
 export function CamposGasto({
   categorias,
+  etiquetas,
   sobres,
   cuentas,
   hoy,
@@ -329,6 +335,13 @@ export function CamposGasto({
             // Tocar el sobre ya marcado también cuenta: es elegirlo a mano (criterio 8).
             alTocar={alTocarSobre}
             error={errores.sobre}
+          />
+
+          <SelectorEtiqueta
+            etiquetas={etiquetas}
+            valorInicial={valores.etiquetaId}
+            nuevaInicial={valores.etiquetaNueva}
+            error={errores.etiqueta}
           />
 
           <SelectorFecha name="fecha" valor={fecha} hoy={hoy} onCambio={setFecha} error={errores.fecha} />

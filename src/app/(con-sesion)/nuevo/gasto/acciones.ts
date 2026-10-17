@@ -12,6 +12,7 @@ import { type ErroresGasto, type FormaPago, prepararGasto } from "@/lib/gastos";
 import { saldosTras } from "@/lib/saldos";
 import { registrarFalla } from "@/app/registro-de-fallas";
 import { leerSesion } from "@/app/sesion";
+import { etiquetaDelFormulario } from "../../etiqueta-del-formulario";
 
 /** Lo que se tecleó, para volver a llenar el formulario si hay que corregir o confirmar. */
 export type ValoresGasto = {
@@ -29,9 +30,17 @@ export type ValoresGasto = {
   nota: string;
   /** El UUID de esta captura (src/lib/captura.ts): el mismo en cada reintento, para no duplicar el gasto. */
   idCaptura: string;
+  /** La etiqueta elegida, o lo escrito para crearla (spec 008). */
+  etiquetaId: string;
+  etiquetaNueva: string;
 };
 
-export type ErroresFormularioGasto = ErroresGasto & { categoria?: string; sobre?: string; general?: string };
+export type ErroresFormularioGasto = ErroresGasto & {
+  categoria?: string;
+  sobre?: string;
+  etiqueta?: string;
+  general?: string;
+};
 
 /** Datos del resumen tras guardar (criterio 13) y de los avisos de sobre negativo y vuelto (10 y 4). */
 export type ResumenGasto = {
@@ -85,6 +94,8 @@ const esquema = z.object({
   sobreId: z.string(),
   fecha: z.string().trim(),
   nota: z.string().trim().max(200, "La nota admite hasta 200 caracteres"),
+  etiquetaId: z.string(),
+  etiquetaNueva: z.string().max(60, "Hasta 30 caracteres"),
   // Sin un id de captura válido, la página es de antes de esta versión.
   idCaptura: z.string().refine(esIdCaptura, mensajeDeFalla("version")),
 });
@@ -101,6 +112,8 @@ const campos = [
   "fecha",
   "nota",
   "idCaptura",
+  "etiquetaId",
+  "etiquetaNueva",
 ] as const satisfies readonly (keyof ValoresGasto)[];
 
 /** Un campo como texto; si falta, vacío. */
@@ -181,10 +194,16 @@ async function procesarGasto(formData: FormData): Promise<Resultado> {
 
   if (sobre.tipo === "inversion" && confirmarSobre !== String(sobre.id)) return { estado: "confirmar", valores };
 
+  // La etiqueta al final, cuando lo demás ya es válido: así no se crea una de un gasto que no se guarda (spec 008).
+  const etiqueta = await etiquetaDelFormulario(formData);
+  if (!etiqueta.ok) return { estado: "error", errores: { etiqueta: etiqueta.error }, valores };
+
   // Cada fila con la referencia de esta captura: un reintento choca con el índice único y no duplica.
   const filas = preparado.filas.map((f) => ({
     ...f,
     referenciaExterna: referenciaDeCaptura(valores.idCaptura, f.tipo),
+    // Solo el gasto lleva la etiqueta; la venta de USDT no (spec 008, criterio 4).
+    etiquetaId: f.tipo === "gasto" ? etiqueta.etiquetaId : null,
   }));
   let registro: Awaited<ReturnType<typeof registrarCaptura>>;
   try {

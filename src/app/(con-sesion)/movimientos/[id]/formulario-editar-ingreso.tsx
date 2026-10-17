@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { SelectorFecha } from "@/components/calendario";
+import { SelectorEtiqueta } from "@/components/selector-etiqueta";
 import { Boton, Campo, CampoMonto, Entrada, ErrorCampo, SelectorPildoras } from "@/components/formulario";
 import { unidadDe } from "@/lib/dinero";
 import { editarIngresoConFallas } from "./editar-con-fallas";
@@ -14,6 +15,7 @@ type Datos = {
   /** Las cuentas activas en dólares. */
   cuentas: { id: number; nombre: string; moneda: string }[];
   categorias: { id: number; nombre: string; icono: string; color: string }[];
+  etiquetas: { id: number; nombre: string }[];
   /** "Se repartió: Gastos del mes 175,00 · Familia 100,00", o null si no tiene reparto. */
   reparto: string | null;
   hoy: string;
@@ -45,6 +47,7 @@ function Campos({
   volver,
   cuentas,
   categorias,
+  etiquetas,
   reparto,
   hoy,
   valores,
@@ -92,6 +95,13 @@ function Campos({
         }))}
         valorInicial={valores.categoriaId}
         error={errores.categoria}
+      />
+
+      <SelectorEtiqueta
+        etiquetas={etiquetas}
+        valorInicial={valores.etiquetaId}
+        nuevaInicial={valores.etiquetaNueva}
+        error={errores.etiqueta}
       />
 
       <SelectorFecha name="fecha" valor={fecha} hoy={hoy} onCambio={setFecha} error={errores.fecha} />

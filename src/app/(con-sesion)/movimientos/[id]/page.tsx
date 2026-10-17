@@ -17,6 +17,7 @@ import {
   pagoOCobroParaDeshacer,
   vistaPreviaDeBorrado,
 } from "@/db/editar-movimientos";
+import { todasLasEtiquetas } from "@/db/etiquetas";
 import { categoriasDeIngresoPorUso } from "@/db/reparto";
 import { centavosATexto, formatearCentavos, formatearCifra, formatearTasaGuardada } from "@/lib/dinero";
 import { hoyEnCaracas } from "@/lib/fechas";
@@ -121,12 +122,13 @@ function DeshacerPagoOCobro({ p, volver, confirmar }: { p: PagoOCobro; volver: s
 type Props = { m: MovimientoParaEditar; volver: string; hoy: string; confirmar: boolean };
 
 async function EdicionDeGasto({ m, volver, hoy, confirmar }: Props) {
-  const [categorias, sobres, cuentas, cuentaPorDefecto, cuentaVentaPorDefecto] = await Promise.all([
+  const [categorias, sobres, cuentas, cuentaPorDefecto, cuentaVentaPorDefecto, etiquetas] = await Promise.all([
     categoriasDeGastoPorUso(),
     sobresParaGasto(),
     saldosPorCuenta(),
     cuentaPorDefectoParaGasto(),
     cuentaPorDefectoParaVenta(),
+    todasLasEtiquetas(),
   ]);
   const g = m.movimiento;
   const forma: FormaPago = m.venta ? "vendiendo" : g.moneda === "VES" ? "saldo" : "dolares";
@@ -150,6 +152,7 @@ async function EdicionDeGasto({ m, volver, hoy, confirmar }: Props) {
         id={g.id}
         volver={volver}
         categorias={categorias.map(({ id, nombre, icono, color }) => ({ id, nombre, icono, color }))}
+        etiquetas={etiquetas}
         sobres={sobres.map(({ id, nombre, tipo, saldoCentavos, topeCentavos }) => ({
           id,
           nombre,
@@ -177,6 +180,8 @@ async function EdicionDeGasto({ m, volver, hoy, confirmar }: Props) {
           fecha: g.fecha,
           nota: g.nota ?? "",
           idCaptura: m.captura ?? "",
+          etiquetaId: String(g.etiquetaId ?? ""),
+          etiquetaNueva: "",
         }}
       />
       <div className="flex lg:col-span-7">
@@ -187,10 +192,11 @@ async function EdicionDeGasto({ m, volver, hoy, confirmar }: Props) {
 }
 
 async function EdicionDeIngreso({ m, volver, hoy, confirmar }: Props) {
-  const [categorias, cuentas, previa] = await Promise.all([
+  const [categorias, cuentas, previa, etiquetas] = await Promise.all([
     categoriasDeIngresoPorUso(),
     saldosPorCuenta(),
     vistaPreviaDeBorrado(m),
+    todasLasEtiquetas(),
   ]);
   const i = m.movimiento;
   const reparto = previa?.reparto ?? [];
@@ -224,9 +230,12 @@ async function EdicionDeIngreso({ m, volver, hoy, confirmar }: Props) {
             categoriaId: String(i.categoriaId ?? ""),
             fecha: i.fecha,
             nota: i.nota ?? "",
+            etiquetaId: String(i.etiquetaId ?? ""),
+            etiquetaNueva: "",
           }}
           cuentas={cuentas.filter((c) => c.moneda !== "VES").map(({ id, nombre, moneda }) => ({ id, nombre, moneda }))}
           categorias={categorias.map(({ id, nombre, icono, color }) => ({ id, nombre, icono, color }))}
+          etiquetas={etiquetas}
           reparto={repartido}
           hoy={hoy}
         />

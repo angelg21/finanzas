@@ -16,10 +16,12 @@ import {
   resumenPorDia,
   totalesPorCategoria,
 } from "@/db/movimientos-del-periodo";
+import { etiquetaPorId } from "@/db/etiquetas";
 import { exigirSesion } from "@/app/sesion";
 import { avisoDeVuelta, enlaceDeEdicion } from "./[id]/valores";
 import { distribuirPorCategoria } from "@/lib/distribucion";
-import { leerEtiqueta } from "@/lib/etiquetas";
+import { leerIdEtiqueta } from "@/lib/etiquetas";
+import { formatearCifraCorta } from "@/lib/dinero";
 import { hoyEnCaracas } from "@/lib/fechas";
 import {
   type Filtros,
@@ -67,8 +69,10 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
   const parametros = await searchParams;
   const pedidos = leerFiltros(parametros, hoy);
   const aviso = avisoDeVuelta(parametros);
-  // Spec 007: la etiqueta con # se valida aparte, sin tocar los filtros de la 003, y viaja en los enlaces de la página.
-  const etiqueta = leerEtiqueta(parametros.etiqueta);
+  // Spec 008: la etiqueta se valida aparte, sin tocar los filtros de la 003, y viaja en los enlaces de la página. Una
+  // que no existe no filtra.
+  const idEtiqueta = leerIdEtiqueta(parametros.etiqueta);
+  const etiqueta = idEtiqueta === null ? null : await etiquetaPorId(idEtiqueta);
   const rango = rangoDePeriodo(pedidos.periodo, pedidos.fecha);
   const conAnillo = pedidos.pestana !== "mover";
 
@@ -87,16 +91,16 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
   };
   const filtros: Filtros = { ...pedidos, categoria: categoria?.categoriaId ?? null };
   const [lista, dias, etiquetas] = await Promise.all([
-    movimientosDelPeriodo(filtros.pestana, rango, filtros.categoria, LIMITE, etiqueta),
-    resumenPorDia(filtros.pestana, rango, filtros.categoria, etiqueta),
-    etiquetasDelPeriodo(filtros.pestana, rango),
+    movimientosDelPeriodo(filtros.pestana, rango, filtros.categoria, LIMITE, etiqueta?.id ?? null),
+    resumenPorDia(filtros.pestana, rango, filtros.categoria, etiqueta?.id ?? null),
+    filtros.pestana === "mover" ? [] : etiquetasDelPeriodo(filtros.pestana, rango, filtros.categoria),
   ]);
 
-  const enlace = (cambios: Partial<Filtros> & { etiqueta?: string | null }) => {
-    const { etiqueta: conEtiqueta = etiqueta, ...resto } = cambios;
+  const enlace = (cambios: Partial<Filtros> & { etiqueta?: number | null }) => {
+    const { etiqueta: conEtiqueta = etiqueta?.id ?? null, ...resto } = cambios;
     const base = `/movimientos${consultaDeFiltros({ ...filtros, ...resto }, hoy)}`;
     if (!conEtiqueta) return base;
-    return `${base}${base.includes("?") ? "&" : "?"}etiqueta=${encodeURIComponent(conEtiqueta)}`;
+    return `${base}${base.includes("?") ? "&" : "?"}etiqueta=${conEtiqueta}`;
   };
   const { total, porciones } = distribuirPorCategoria(totales);
   const cuantos = dias.reduce((a, d) => a + d.cantidad, 0);
@@ -110,7 +114,7 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
       {conAnillo ? (
         <div className="flex items-baseline justify-between gap-3 px-1">
           <h2 className="flex items-baseline gap-1.5 text-[15px] font-bold">
-            {[categoria?.nombre, etiqueta ? `#${etiqueta}` : null].filter(Boolean).join(" · ") || "Todas"} ·{" "}
+            {[categoria?.nombre, etiqueta?.nombre].filter(Boolean).join(" · ") || "Todas"} ·{" "}
             <Cifra
               centavos={etiqueta ? dias.reduce((a, d) => a + d.centavos, 0) : categoria ? categoria.centavos : total}
               tamano="md"
@@ -133,7 +137,7 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
           <p className="text-texto-2">
             {nada[filtros.pestana]}
             {categoria ? ` de ${categoria.nombre}` : ""}
-            {etiqueta ? ` con #${etiqueta}` : ""} {cuando(filtros, hoy)}.
+            {etiqueta ? ` con ${etiqueta.nombre}` : ""} {cuando(filtros, hoy)}.
           </p>
         </Tarjeta>
       ) : (
@@ -257,16 +261,18 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
       </div>
 
       {etiquetas.length > 0 ? (
-        // Spec 007: las etiquetas con # del periodo. Tocar una filtra la lista y su total; tocarla otra vez la quita.
+        // Spec 008: las etiquetas del periodo con su total. Tocar una filtra la lista y su total; otra vez, lo quita.
         <nav aria-label="Etiquetas" className="flex flex-wrap gap-2">
           {etiquetas.map((e) => (
             <Link
-              key={e}
-              href={enlace({ etiqueta: e === etiqueta ? null : e })}
-              aria-current={e === etiqueta ? "true" : undefined}
+              key={e.id}
+              href={enlace({ etiqueta: e.id === etiqueta?.id ? null : e.id })}
+              aria-current={e.id === etiqueta?.id ? "true" : undefined}
               className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2"
             >
-              <Pildora tono={e === etiqueta ? "palida" : "oscura"}>#{e}</Pildora>
+              <Pildora tono={e.id === etiqueta?.id ? "palida" : "oscura"}>
+                {e.nombre} <span className="tabular opacity-70">{formatearCifraCorta(e.centavos)}</span>
+              </Pildora>
             </Link>
           ))}
         </nav>
