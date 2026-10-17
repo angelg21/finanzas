@@ -77,7 +77,7 @@ No cambia el plan. Al cerrar, la línea de gráficas se marca como hecha en lo q
     - La página sigue empezando con `await exigirSesion()`.
     - Las consultas nuevas viven en `src/db/` y la aritmética en `src/lib/`.
     - La página no habla con Drizzle.
-16. **Sin coste para la captura.** La página hace a lo sumo tres consultas (totales por categoría, lista y resumen por día) y no toca `/nuevo/gasto`.
+16. **Sin coste para la captura.** La página hace a lo sumo tres consultas (totales por categoría, lista y resumen por día), y una cuarta con el filtro por categoría, que la busca por su tipo (revisión, 2026-10-17). No toca `/nuevo/gasto`.
 17. **Calendario** (pedido del desarrollador al validar, 2026-10-14). Tocar el nombre del periodo abre el calendario propio de la captura de gasto:
     - se abre en el mes del periodo y los días futuros están apagados;
     - elegir un día lleva a ese día (Día) sin cambiar la pestaña ni la categoría;
@@ -109,7 +109,7 @@ No cambia el plan. Al cerrar, la línea de gráficas se marca como hecha en lo q
 
 **Escritorio** (1024 px o más):
 
-- Arriba, en una fila: pestañas de tipo a la izquierda; periodo y flechas a la derecha.
+- Arriba, en una fila desde 1280 px: pestañas de tipo a la izquierda; periodo y flechas a la derecha. Entre 1024 y 1279 px no caben junto a la barra lateral y se apilan, como en el celular (revisión, 2026-10-17).
 - Debajo, la rejilla de 12 columnas: anillo y leyenda en 5, fijos al desplazar (`sticky`); la lista en 7.
 
 **Mover**: sin la tarjeta del anillo; la lista ocupa todo el ancho en móvil y 7 columnas centradas en escritorio.

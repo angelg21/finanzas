@@ -47,7 +47,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 - [x] Construida (todas las tareas con commit, 2026-10-14)
 - [x] Validada en navegador (2026-10-14)
 - [x] Verificada: `pnpm verify` en verde, cada ★ con su prueba (2026-10-17, después de fusionar)
-- [ ] Revisada: veredicto APTO PARA FUSIONAR
+- [x] Revisada: veredicto APTO PARA FUSIONAR (2026-10-17, segunda vuelta, después de fusionar)
 - [x] Fusionada en `main` el 2026-10-14, por decisión del desarrollador sin verificar ni revisar (ver notas)
 
 ## Notas
@@ -128,3 +128,8 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - **5:** el año con cuatro cifras (`cuatroCifras`), con pruebas en `periodos.test.ts` que fallaron antes (2 de 2).
   - **6:** medido por el agente en Edge sin ventana: `scrollWidth ≤ clientWidth` a 1024, 1050, 1093, 1180, 1280, 1440 y 390 px en Gastos por semana, Mover y Gastos por mes; el nombre accesible empieza por "Septiembre de 2026"; ningún porcentaje se parte a 1024.
   - `pnpm exec tsx scripts/comprobar-003.ts --url http://localhost:3000`: `✓ comprobar-003: todo en verde` (59 ✓).
+- Revisión (2026-10-17), segunda vuelta: `revisor`, **APTO PARA FUSIONAR** sobre `e980fbb`. Comprobó los cinco arreglos en Edge y por fetch, a 320, 360, 390, 1024, 1100, 1279, 1280, 1300, 1366 y 1440 px. Corrió `verify:full` en verde en un `git worktree` limpio (765 pruebas, build y humo), porque el árbol tenía archivos a medias de la verificación de la 002. Hallazgos que no bloqueaban, cerrados el mismo día:
+  1. La firma de `comprobar-003-paginas.ts` buscaba el periodo por el `aria-label` que quitó `94e3f24`: comparaba "?" con "?". Ahora lo lee del botón del calendario, y la comprobación falla si no lo encuentra. Corrida: `✓ 6 · 21 direcciones manipuladas … (Gastos · Mes | Octubre de 2026 | Todas · 142,00USD)` y `✓ comprobar-003: todo en verde` (59 ✓).
+  2. Con filtro, la página hace cuatro consultas: el criterio 16 de la spec y los comentarios lo dicen ahora.
+  3. Los controles en fila solo desde 1280 px: la spec ("Escritorio") y `docs/diseno.md` lo dicen ahora.
+  4. Una categoría filtrada sin movimientos en el periodo ya no atenúa todo el anillo. Medido en Edge: con Tecnología en octubre, 0 de 2 porciones atenuadas; con Comida, 1 de 2.

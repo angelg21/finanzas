@@ -44,7 +44,7 @@ Es una aplicación web progresiva: en el celular se ve como las pantallas de la 
 - La app a pantalla completa, sin el panel flotante sobre el lienzo (cambio del desarrollador, 2026-10-14). El contenido llega a 1400 px de ancho y se centra.
 - Barra lateral de 248 px: marca, navegación con la activa en azul pálido, botón "Registrar movimiento" con el degradado del hero, tema y lema abajo. Fija al desplazarse.
 - Barra superior con el título de la página y la fecha a la izquierda; tema y avatar a la derecha.
-- Contenido en rejilla de 12 columnas con 20 px de separación. Inicio: hero 7 + anillo 5; Sobres 5 + gráfica 7; Cuentas 5 + últimos movimientos 7. Sobres: anillo fijo 5 + lista 7. Cuentas: hero 7 + verificación 5, listas 7 + 5. Movimientos: pestañas de tipo a la izquierda y periodo con flechas a la derecha; debajo, anillo fijo 5 + lista 7, y en Mover solo la lista, centrada.
+- Contenido en rejilla de 12 columnas con 20 px de separación. Inicio: hero 7 + anillo 5; Sobres 5 + gráfica 7; Cuentas 5 + últimos movimientos 7. Sobres: anillo fijo 5 + lista 7. Cuentas: hero 7 + verificación 5, listas 7 + 5. Movimientos: pestañas de tipo a la izquierda y periodo con flechas a la derecha, en fila desde 1280 px (antes se apilan); debajo, anillo fijo 5 + lista 7, y en Mover solo la lista, centrada.
 
 ## Acceso y sin conexión
 
