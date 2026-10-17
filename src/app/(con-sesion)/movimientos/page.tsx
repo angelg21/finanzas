@@ -9,6 +9,7 @@ import { Pestanas } from "@/components/pestanas";
 import { Cifra, Tarjeta, TituloPagina } from "@/components/ui";
 import {
   type MovimientoDelPeriodo,
+  categoriaDeLaPestana,
   movimientosDelPeriodo,
   resumenPorDia,
   totalesPorCategoria,
@@ -62,9 +63,19 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
   const rango = rangoDePeriodo(pedidos.periodo, pedidos.fecha);
   const conAnillo = pedidos.pestana !== "mover";
 
-  const totales = pedidos.pestana === "mover" ? [] : await totalesPorCategoria(pedidos.pestana, rango);
-  // Una categoría sin movimientos de esta pestaña en el periodo (de otro tipo, o que no existe) no filtra.
-  const categoria = totales.find((t) => t.categoriaId === pedidos.categoria) ?? null;
+  const [totales, pedida] =
+    pedidos.pestana === "mover"
+      ? [[], null]
+      : await Promise.all([
+          totalesPorCategoria(pedidos.pestana, rango),
+          pedidos.categoria === null ? null : categoriaDeLaPestana(pedidos.pestana, pedidos.categoria),
+        ]);
+  // Filtra cualquier categoría del tipo de la pestaña, aunque no tenga movimientos en el periodo: entonces lo dice y el
+  // filtro sigue en las flechas, las píldoras y el calendario (criterio 6). Una de otro tipo, o que no existe, no filtra.
+  const categoria = pedida && {
+    ...pedida,
+    centavos: totales.find((t) => t.categoriaId === pedida.categoriaId)?.centavos ?? 0,
+  };
   const filtros: Filtros = { ...pedidos, categoria: categoria?.categoriaId ?? null };
   const [lista, dias] = await Promise.all([
     movimientosDelPeriodo(filtros.pestana, rango, filtros.categoria, LIMITE),
@@ -142,8 +153,9 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
     <main className="flex flex-col gap-4 lg:gap-5">
       <TituloPagina titulo="Movimientos" />
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="lg:w-[360px]">
+      {/* En fila solo desde 1280 px: entre 1024 y 1279 los tres controles no caben junto a la barra lateral. */}
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div className="xl:w-[360px]">
           <Pestanas
             etiqueta="Tipo de movimiento"
             llena

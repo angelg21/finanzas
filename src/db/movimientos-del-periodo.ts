@@ -26,6 +26,20 @@ function delPeriodo(pestana: PestanaMovimientos, rango: Rango, categoriaId: numb
   );
 }
 
+const tipoDeCategoria = { gastos: "gasto", ingresos: "ingreso" } as const;
+
+/**
+ * La categoría del filtro si es del tipo de la pestaña, tenga o no movimientos en el periodo (criterio 6); null si es
+ * de otro tipo o no existe. Las archivadas también: siguen teniendo su historial.
+ */
+export async function categoriaDeLaPestana(pestana: "gastos" | "ingresos", categoriaId: number) {
+  const [categoria] = await db
+    .select({ categoriaId: categorias.id, nombre: categorias.nombre })
+    .from(categorias)
+    .where(and(eq(categorias.id, categoriaId), eq(categorias.tipo, tipoDeCategoria[pestana])));
+  return categoria ?? null;
+}
+
 /** Total en USD de cada categoría con movimientos de la pestaña en el periodo, sin el corte de la lista. */
 export async function totalesPorCategoria(pestana: "gastos" | "ingresos", rango: Rango) {
   return (

@@ -221,6 +221,30 @@ export async function comprobarPaginas(origen: string, d: DatosDePaginas, compro
       conComida.includes("| Comida · ") && ingresosConComida === ingresosSolos && ingresosSolos.includes("| Todas · "),
       `${conComida}; ${ingresosConComida}`,
     );
+    // ★ 6: válida es "un id de categoría entero positivo del tipo de la pestaña", tenga o no movimientos en el periodo.
+    // Comida en enero de 2020, sin movimientos: el filtro se queda, lo dice y viaja en las flechas y las píldoras.
+    const vacio = await sesion.pagina(`/movimientos?fecha=2020-01-15&categoria=${d.comidaId}`);
+    const sinAmp = (h: string) => h.replace(/&amp;/g, "&");
+    const hrefDe = (etiqueta: string) =>
+      sinAmp(
+        /href="([^"]*)"/.exec(new RegExp(`<a[^>]*aria-label="${etiqueta}"[^>]*>`).exec(vacio.html)?.[0] ?? "")?.[1] ??
+          "",
+      );
+    const flechas = [hrefDe("Periodo anterior"), hrefDe("Periodo siguiente")];
+    const pildoras = [...vacio.html.matchAll(/href="(\/movimientos[^"]*periodo=(?:dia|semana|anio)[^"]*)"/g)].map((m) =>
+      sinAmp(m[1]),
+    );
+    const conFiltro = (h: string) => h.includes(`categoria=${d.comidaId}`);
+    comprobar(
+      "6",
+      "una categoría del tipo de la pestaña sin movimientos en el periodo sigue filtrando, lo dice y viaja en los enlaces",
+      vacio.estado === 200 &&
+        texto(vacio.html).includes("No hay gastos de Comida en enero de 2020.") &&
+        flechas.every(conFiltro) &&
+        pildoras.length === 3 &&
+        pildoras.every(conFiltro),
+      [...flechas, ...pildoras].join(" "),
+    );
   } finally {
     await sesion.salir();
   }
