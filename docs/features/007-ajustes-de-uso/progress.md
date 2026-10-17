@@ -4,7 +4,7 @@ Rama: `feat/007-ajustes-de-uso`. Spec: `spec.md`.
 
 ## Tareas
 
-- [ ] T1 · `src/lib/mover.ts` y `src/lib/etiquetas.ts`, con su prueba mínima primero.
+- [x] T1 · (2026-10-17) `src/lib/mover.ts` y `src/lib/etiquetas.ts`, con su prueba mínima primero.
 - [ ] T2 · Deshacer un pago o un cobro: escritor con candados, `/movimientos/[id]` para esos tipos y las filas del historial de la deuda enlazadas (criterios 1 a 3).
 - [ ] T3 · Etiquetas en `/movimientos`: filtro en las consultas, las píldoras y el total (criterios 4 a 6).
 - [ ] T4 · `/nuevo/mover`: escritor con candado, acción con `conFallas`, confirmación de Inversión y enlaces desde Registrar y `/sobres` (criterios 7 a 9).
