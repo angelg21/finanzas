@@ -31,6 +31,8 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 
 - 003, vuelta 1 (2026-10-17, revisión después de fusionar): NO APTO. Los ★ de funciones puras y el script contra la base, impecables. Lo que falló: `?categoria=` se valida contra los totales del periodo (`totales.find`), no contra el tipo de la pestaña como dice el ★ 6, así que una categoría válida sin movimientos en ese periodo cae en "Todas" en silencio; las flechas, las píldoras Día/Semana/Mes/Año y el calendario la pierden para siempre (Mes→Día→Mes sin filtro), y la rama "No hay gastos de X" es inalcanzable. La prueba de página del ★ 6 eligió Comida, que sí tiene movimientos: muestra derivada del código. El autor lo había anotado "sin decidir, para /f-review". Además: de 1024 a 1093 px de ancho, la cabecera de /movimientos desborda (scroll horizontal, flecha siguiente fuera); `pnpm capturas` solo mira 1440 y 390.
 
+- 003, vuelta 2 (2026-10-17): APTO. Los cinco arreglos funcionan (filtro por tipo viaja en flechas, píldoras, calendario y el campo sin JS; sin desborde de 320 a 1440 con las etiquetas más largas). El defecto nuevo vivía en la prueba, no en el código: quitar el `aria-label` del botón del calendario (arreglo de accesibilidad) dejó `firma()` de `comprobar-003-paginas.ts` sin encontrar el periodo, y el ★ 6 de página compara "? == ?" en 21 direcciones; la salida imprime "| ? |" y nadie lo leyó. Además el arreglo añadió una cuarta consulta (`categoriaDeLaPestana`) contra el criterio 16 ("a lo sumo tres") y cambió la cabecera de escritorio (en fila solo desde 1280) sin tocar spec ni `docs/diseno.md`.
+
 **Why:** la demo es toda `origen = importado`, así que la lógica que depende de historial `manual` no se ve. La validación en navegador sigue el camino feliz, en un solo momento, y no pasa por un error de validación ni por el paso del tiempo antes de guardar.
 
 **How to apply:**
@@ -54,6 +56,8 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 - Las piezas de estado (plazo, "vence", "vencida") se pintan también cuando la cosa ya está saldada: abre el detalle de una pagada con fecha pasada.
 - Todo filtro que viaja en la dirección: valídalo contra lo que la spec llama "válido", no contra lo que hay en pantalla. Pon el filtro con una categoría escasa (en la demo, Tecnología solo tiene 2026-07-20) y recorre flechas, píldoras de periodo y calendario ida y vuelta: ¿vuelve el filtro?
 - Si la spec dice "Escritorio (1024 px o más)", mide 1024 con `scrollWidth > clientWidth`: las capturas del autor son de 1440.
+- Si un arreglo cambia el marcado (`aria-label`, clases, textos), busca en `scripts/comprobar-*` las expresiones regulares que lo leían, y lee el detalle de cada ✓, no solo la marca: un extractor que no encuentra nada devuelve "?" en los dos lados y la comparación pasa.
+- Tras un arreglo que añade una consulta, un estado o un paso, relee los criterios con números ("a lo sumo tres consultas", "en una fila desde 1024") y los documentos dueños: el autor arregla el hallazgo y no actualiza spec ni `docs/diseno.md`.
 - Tras un `revert` con "se conservan los demás arreglos": cada pieza conservada se diseñó para el contexto que se fue. Mira si su condición sigue teniendo sentido (un handler que antes servía al dato precargado ahora corre siempre) y ejercítala con un toque real, no con `autoFocus`.
 
 Ver [[entorno-revision-finanzas]].

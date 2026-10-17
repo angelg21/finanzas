@@ -37,4 +37,7 @@ metadata:
 - Páginas con sesión sin Edge: un `paginas.mjs` en el scratchpad que entra por fetch como `scripts/comprobar-003-paginas.ts` (`process.loadEnvFile(".env" + ".local")` por dentro) y saca de cada ruta pestañas marcadas, periodo, encabezado, `href` de flechas y píldoras. En el HTML de Next el `href` va antes que `aria-label`.
 - `scripts/comprobar-003.ts --url http://localhost:3124` se limpia solo y deja 121 filas.
 
+- Árbol sucio por otro agente en paralelo (2026-10-17: pruebas sin seguimiento de la 002 rompían `tipos`): verify sobre un `git worktree add --detach <scratchpad>/wt HEAD`, `pnpm install --frozen-lockfile --offline` (10 s), `next typegen` antes (sin `.next` no existen `PageProps`/`LayoutProps` y `tipos` falla), y todo bajo un `con-entorno.mjs` del scratchpad que hace `process.loadEnvFile` del repo por dentro y lanza el comando con ese entorno (build, humo, `next start -p 3124`). `rm -rf` está denegado: `git worktree remove --force` desregistra aunque falle al borrar por rutas largas; la carpeta queda en el scratchpad.
+- El perfil de Edge del scratchpad puede conservar la sesión de una corrida anterior: mirar `location.pathname` antes de correr `entrar.mjs`.
+
 Ver [[donde-se-esconden-defectos]].

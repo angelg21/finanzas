@@ -1,2 +1,2 @@
-- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — "por defecto", key={ronda}, Enter, estado fuera de React, éxito que no se borra, filtro validado por lo que hay, 1024 px, "sin decidir"
-- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, guion con o sin JS, "Salir", Edge por PID, hash de migración, anchos intermedios, páginas por fetch
+- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — "por defecto", key={ronda}, Enter, estado fuera de React, filtro validado por lo que hay, 1024 px, extractores de comprobar-* que el arreglo deja en "?", criterios numéricos tras un arreglo
+- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, guion con o sin JS, "Salir", Edge por PID, hash de migración, anchos, páginas por fetch, worktree limpio si otro agente ensucia el árbol
