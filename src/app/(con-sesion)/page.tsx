@@ -1,4 +1,12 @@
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, CalendarDays, CheckCircle2, TrendingDown } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowLeftRight,
+  ArrowUpRight,
+  CalendarDays,
+  CheckCircle2,
+  ClipboardList,
+  TrendingDown,
+} from "lucide-react";
 import Link from "next/link";
 import { CirculoCuenta } from "@/components/circulo-cuenta";
 import { GraficaDona, type SegmentoDona } from "@/components/grafica-dona";
@@ -8,6 +16,7 @@ import { FilaMovimiento } from "@/components/movimiento";
 import { Cifra, EncabezadoTarjeta, FilaLista, Mosaico, Pildora, Tarjeta, TarjetaPalida } from "@/components/ui";
 import { gastadoEsteMes, movimientosRecientes, resumenMensual, saldosPorCuenta } from "@/db/consultas";
 import type { Sobre } from "@/db/schema";
+import { contarPorCompletar } from "@/db/por-completar";
 import { sobresConNivel } from "@/db/sobres";
 import { formatearCentavos, formatearEnteros } from "@/lib/dinero";
 import { diasQueQuedanDelMes, hoyEnCaracas } from "@/lib/fechas";
@@ -45,12 +54,13 @@ function diasRestantesDelMes() {
 export default async function Inicio({ searchParams }: PageProps<"/">) {
   await exigirSesion();
   const aviso = avisoDeVuelta(await searchParams);
-  const [sobres, cuentas, gastado, resumen, recientes] = await Promise.all([
+  const [sobres, cuentas, gastado, resumen, recientes, porCompletar] = await Promise.all([
     sobresConNivel(),
     saldosPorCuenta(),
     gastadoEsteMes(),
     resumenMensual(6),
     movimientosRecientes(5),
+    contarPorCompletar(),
   ]);
 
   const gastosDelMes = sobres.find((s) => s.tipo === "gastos");
@@ -71,6 +81,15 @@ export default async function Inicio({ searchParams }: PageProps<"/">) {
 
   return (
     <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">
+      {porCompletar > 0 ? (
+        // Spec 009, criterio 5: lo anotado sin monto, cuenta o sobre.
+        <Link href="/por-completar" className="self-start lg:col-span-12">
+          <Pildora tono="navy">
+            <ClipboardList size={13} aria-hidden />
+            {porCompletar === 1 ? "1 gasto por completar" : `${porCompletar} gastos por completar`}
+          </Pildora>
+        </Link>
+      ) : null}
       {aviso ? (
         <div role="status" className="lg:col-span-12">
           <Pildora tono="positiva">

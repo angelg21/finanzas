@@ -1,6 +1,6 @@
 import { and, count, desc, eq, max, sql } from "drizzle-orm";
 import { db } from "./index";
-import { categorias, movimientos } from "./schema";
+import { categorias, gastosPorCompletar, movimientos } from "./schema";
 
 import { type TipoCategoria, destinoAlEliminar } from "@/lib/categorias";
 
@@ -24,7 +24,11 @@ export async function categoriasConUso() {
       icono: categorias.icono,
       color: categorias.color,
       activa: categorias.activa,
-      movimientos: count(movimientos.id),
+      // Con los gastos por completar que la usan (spec 009): con alguno, se archiva en vez de borrarse.
+      movimientos:
+        sql<number>`(count(${movimientos.id}) + (select count(*) from ${gastosPorCompletar} where ${gastosPorCompletar.categoriaId} = ${categorias.id}))::int`.mapWith(
+          Number,
+        ),
       usos,
     })
     .from(categorias)
@@ -67,7 +71,12 @@ async function bloquearYContar(tx: Transaccion, id: number) {
   const [fila] = await tx.select({ tipo: categorias.tipo }).from(categorias).where(eq(categorias.id, id)).for("update");
   if (!fila) return null;
   const [{ cuantos }] = await tx.select({ cuantos: count() }).from(movimientos).where(eq(movimientos.categoriaId, id));
-  return { tipo: fila.tipo, movimientos: cuantos };
+  // Los gastos por completar también la usan (spec 009): con alguno, ni cambia de tipo ni se borra, se archiva.
+  const [{ anotados }] = await tx
+    .select({ anotados: count() })
+    .from(gastosPorCompletar)
+    .where(eq(gastosPorCompletar.categoriaId, id));
+  return { tipo: fila.tipo, movimientos: cuantos + anotados };
 }
 
 /**

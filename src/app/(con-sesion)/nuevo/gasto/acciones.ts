@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { categoriasDeGastoPorUso, saldosPorCuenta, sobresParaGasto } from "@/db/consultas";
 import { registrarCaptura } from "@/db/movimientos";
+import { completarPorCompletar } from "@/db/por-completar";
 import type { Moneda } from "@/lib/dinero";
 import { fechaDesdeAtajo, hoyEnCaracas } from "@/lib/fechas";
 import { esIdCaptura, referenciaDeCaptura, resolverReintento } from "@/lib/captura";
@@ -205,9 +207,23 @@ async function procesarGasto(formData: FormData): Promise<Resultado> {
     // Solo el gasto lleva la etiqueta; la venta de USDT no (spec 008, criterio 4).
     etiquetaId: f.tipo === "gasto" ? etiqueta.etiquetaId : null,
   }));
+  // Spec 009: completar un pendiente es registrar el gasto y borrarlo en la misma transacción. Sin él, como siempre.
+  const pendiente = Number(formData.get("pendienteId"));
+  const pendienteId = Number.isSafeInteger(pendiente) && pendiente > 0 && pendiente <= 2_147_483_647 ? pendiente : null;
   let registro: Awaited<ReturnType<typeof registrarCaptura>>;
   try {
-    registro = await registrarCaptura(valores.idCaptura, filas);
+    if (pendienteId === null) registro = await registrarCaptura(valores.idCaptura, filas);
+    else {
+      const completado = await completarPorCompletar(valores.idCaptura, [pendienteId], filas);
+      if ("faltan" in completado) {
+        return { estado: "error", errores: { general: "Este gasto ya se completó o se descartó" }, valores };
+      }
+      if ("otra" in completado) {
+        const general = "Esta captura ya se usó para otra cosa: vuelve a guardar.";
+        return { estado: "error", errores: { general }, valores: { ...valores, idCaptura: crypto.randomUUID() } };
+      }
+      registro = completado;
+    }
   } catch (error) {
     registrarFalla("No se pudo registrar el gasto", error);
     return { estado: "error", errores: { general: "No se pudo guardar. Intenta de nuevo." }, valores };
@@ -245,6 +261,11 @@ async function procesarGasto(formData: FormData): Promise<Resultado> {
 
   for (const ruta of ["/", "/movimientos", "/sobres", `/sobres/${sobre.id}`, "/cuentas", "/nuevo/gasto"]) {
     revalidatePath(ruta);
+  }
+  if (pendienteId !== null) {
+    revalidatePath("/por-completar");
+    revalidatePath("/nuevo");
+    redirect("/por-completar?completado=1");
   }
 
   return {

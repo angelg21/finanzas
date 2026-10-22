@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, HandCoins } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ClipboardList, HandCoins } from "lucide-react";
 import Link from "next/link";
-import { Tarjeta, TituloPagina } from "@/components/ui";
+import { Pildora, Tarjeta, TituloPagina } from "@/components/ui";
+import { contarPorCompletar } from "@/db/por-completar";
 import { exigirSesion } from "@/app/sesion";
 
 export const metadata: Metadata = { title: "Registrar" };
@@ -11,17 +12,33 @@ const opciones = [
   { tipo: "ingreso", texto: "Ingreso", detalle: "Cae en Por asignar y propone el reparto.", Icono: ArrowDownLeft },
   { tipo: "deuda", texto: "Deuda", detalle: "Paga lo que debes o cobra lo que te deben.", Icono: HandCoins },
   { tipo: "mover", texto: "Mover", detalle: "Entre sobres. Entre cuentas, más adelante.", Icono: ArrowLeftRight },
+  {
+    tipo: "por-completar",
+    texto: "Por completar",
+    detalle: "Anota ahora; el monto y el sobre, después.",
+    Icono: ClipboardList,
+  },
 ] as const;
 
 export default async function Nuevo({ searchParams }: PageProps<"/nuevo">) {
   await exigirSesion();
   const { tipo } = await searchParams;
   const elegido = typeof tipo === "string" ? tipo : null;
+  const pendientes = await contarPorCompletar();
 
   return (
     <main className="flex flex-col gap-4 lg:gap-5">
       <TituloPagina titulo="Registrar" />
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-4 lg:gap-5">
+      {pendientes > 0 ? (
+        // Spec 009, criterio 5: lo que quedó anotado sin completar.
+        <Link href="/por-completar" className="self-start">
+          <Pildora tono="navy">
+            <ClipboardList size={13} aria-hidden />
+            {pendientes === 1 ? "1 gasto por completar" : `${pendientes} gastos por completar`}
+          </Pildora>
+        </Link>
+      ) : null}
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-5 lg:gap-5">
         {opciones.map(({ tipo: t, texto, detalle, Icono }) => {
           const activa = elegido === t;
           return (

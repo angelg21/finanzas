@@ -1,0 +1,2 @@
+ALTER TABLE "gastos_por_completar" DROP CONSTRAINT "gastos_por_completar_monto";--> statement-breakpoint
+ALTER TABLE "gastos_por_completar" ADD CONSTRAINT "gastos_por_completar_monto" CHECK (("gastos_por_completar"."monto_centavos" is null) = ("gastos_por_completar"."moneda" is null) and ("gastos_por_completar"."monto_centavos" is null or ("gastos_por_completar"."monto_centavos" > 0 and "gastos_por_completar"."moneda"::text in ('VES', 'USD'))));

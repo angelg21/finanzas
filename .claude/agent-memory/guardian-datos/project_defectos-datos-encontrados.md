@@ -1,6 +1,6 @@
 ---
 name: defectos-datos-encontrados
-description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en 003, 004, 97437d7, 005 (cerrados de T6/T7/T13 y la fecha rara, 2026-10-16), T3 de 006 y la 0006 de 008 (2026-10-17)
+description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en 003, 004, 97437d7, 005 (cerrados de T6/T7/T13 y la fecha rara, 2026-10-16), T3 de 006, la 0006 de 008 (2026-10-17) y 009 (2026-10-22: cerrados en 0d8904e; abierto "el último hereda la venta")
 metadata:
   type: project
 ---
@@ -110,12 +110,22 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
 
 **Abiertos, nuevos en la 0006 de 008 (2026-10-17). Ninguno bloquea** (ver [[revision-008-etiquetas]])
 
-- **Media, operativo.** `respaldo.ts`, con el código de una feature que añade una tabla, falla contra producción antes de migrar: 42P01, y el volcado queda `.sin-comprobar`. Hay que respaldar desde `main` antes de fusionar, o que `resumir` compare solo las tablas que existen en el origen.
+- ~~**Media, operativo.** `respaldo.ts`, con el código de una feature que añade una tabla, falla contra producción antes de migrar.~~ **Cerrado en a3d9bc4.** `resumir` usa `to_regclass` y escribe "todavía no existe". Medido con la 0007 el 2026-10-22: el respaldo pasa antes y después de migrar.
 - **Baja.** `etiquetas` sin marca demo: lo que cree una sonda o `comprobar-008` en la base local no lo borra `db:demo:limpiar`.
 - **Info.**
   - Checks evaluados por orden alfabético.
   - Nombre y clave de la etiqueta sin check en la base.
   - `etiquetaId = null` por defecto en `editarGasto` y `editarIngreso`.
+
+**009 (2026-10-22)** (ver [[revision-009-por-completar]])
+
+- **Cerrados en 0d8904e (medidos en la 2.ª vuelta):** el check con NULL (0008, casos 4, 5 y 21 → 23514); la venta compartida rota por borrar/editar uno; la categoría sin validar en varios y los pendientes sin contar en categorías; el id reusado que daba "completados" (ahora `otra`). Lección: al revisar cualquier check nuevo, evaluar su expresión con filas a medias y buscar NULL.
+- **Abiertos, Baja.** El último gasto de un grupo de varios hereda la venta compartida entera (editar la encoge, borrar la borra), porque "compartida" se decide contando los gastos que quedan.
+- **Abiertos, Info.**
+  - Ese conteo va antes del candado de la venta: dos borrados simultáneos la dejan sin gastos.
+  - Mismo id con otros pendientes a la vez: el catch de 23505 da "ya" (vendiendo) o entran los dos grupos (dólares).
+  - `categoriasConUso` no cuenta pendientes: la página promete borrar y el escritor archiva.
+  - Anotar no compara contenido en un reintento. La base acepta fechas raras, una referencia vacía y un monto > 2^53.
 
 **Abiertos de antes**
 
