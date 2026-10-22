@@ -26,7 +26,7 @@ export function idDeReferencia(referencia: string | null): string | null {
  */
 export function referenciaDeCaptura(
   id: string,
-  tipo: "gasto" | "transferencia" | "ingreso" | "deuda" | "pago" | "prestamo" | "cobro",
+  tipo: "gasto" | "transferencia" | "ingreso" | "deuda" | "pago" | "prestamo" | "cobro" | "pendiente",
 ): string {
   return `captura-${id.toLowerCase()}-${tipo}`;
 }

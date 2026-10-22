@@ -266,6 +266,36 @@ export const movimientos = pgTable(
  * Primero las reglas fijas (gastos del mes, familia), luego las de porcentaje sobre lo que queda.
  * El tope del sobre (emergencia) corta la regla cuando se alcanza.
  */
+/**
+ * Gastos por completar (spec 009): lo que se gastó y todavía no se puede registrar porque falta saber el monto en
+ * dólares, la cuenta o el sobre. No es un movimiento: no mueve dinero ni entra en ningún saldo. Al completarlo se
+ * vuelve un gasto y la fila se borra en la misma transacción. `referencia` es la de la captura que lo anotó: un
+ * reintento no lo anota dos veces.
+ */
+export const gastosPorCompletar = pgTable(
+  "gastos_por_completar",
+  {
+    id: id(),
+    fecha: date({ mode: "string" }).notNull(),
+    categoriaId: integer()
+      .notNull()
+      .references(() => categorias.id),
+    nota: text(),
+    /** Opcional, los dos o ninguno: lo que se sabe del monto, en Bs o en USD. */
+    montoCentavos: centavos(),
+    moneda: monedaEnum(),
+    referencia: text().notNull(),
+    creadoEn: creadoEn(),
+  },
+  (t) => [
+    uniqueIndex("gastos_por_completar_referencia_unica").on(t.referencia),
+    check(
+      "gastos_por_completar_monto",
+      sql`(${t.montoCentavos} is null and ${t.moneda} is null) or (${t.montoCentavos} > 0 and ${t.moneda}::text in ('VES', 'USD'))`,
+    ),
+  ],
+).enableRLS();
+
 export const reglasReparto = pgTable(
   "reglas_reparto",
   {
