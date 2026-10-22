@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import {
   categoriasDeGastoPorUso,
   cuentaPorDefectoParaGasto,
@@ -45,6 +46,10 @@ export default async function NuevoGasto({ searchParams }: PageProps<"/nuevo/gas
       <header className="flex flex-col gap-3 px-1 lg:col-span-12 lg:px-0">
         <h1 className="text-[24px] font-extrabold tracking-tight lg:hidden">Nuevo gasto</h1>
         <SelectorTipo actual="gasto" />
+        {/* Spec 009: si todavía no se sabe el monto en dólares, la cuenta o el sobre. */}
+        <Link href="/nuevo/por-completar" className="self-start text-[13px] font-semibold text-enlace hover:text-texto">
+          Anotar sin monto
+        </Link>
       </header>
 
       <FormularioGasto

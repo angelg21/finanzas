@@ -7,7 +7,7 @@ Rama: `feat/009-gastos-por-completar`. Spec: `spec.md`.
 - [x] T1 · (2026-10-22) `src/lib/por-completar.ts` con su prueba primero: validar un pendiente y preparar "completar varios" en las tres formas de pago, con el cuadre (criterios 1, 8 y 9).
 - [x] T2 · (2026-10-22, generada; se aplica tras el guardián) Esquema: tabla `gastos_por_completar` con sus checks; `pnpm db:generate`, `guardian-datos` y `pnpm db:migrate`.
 - [x] T3 · (2026-10-22) `src/db/por-completar.ts`: anotar (con reintento), listar, contar, descartar, completar uno y completar varios en una transacción que borra los pendientes (criterios 3, 6, 7, 9 y 10).
-- [ ] T4 · `/nuevo/por-completar`, la tarjeta de Registrar y "Anotar sin monto" en la captura (criterios 2 y 3).
+- [x] T4 · (2026-10-22) `/nuevo/por-completar`, la tarjeta de Registrar y "Anotar sin monto" en la captura (criterios 2 y 3).
 - [ ] T5 · `/por-completar` con descartar, y el aviso en el inicio y en Registrar (criterios 4 y 5).
 - [ ] T6 · Completar uno: la captura de gasto con `?pendiente=` (criterios 6 y 7).
 - [ ] T7 · `/por-completar/varios` (criterios 8 a 10).
