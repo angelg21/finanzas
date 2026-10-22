@@ -91,6 +91,12 @@ const conSesion = [
   ["/movimientos?etiqueta=abc", 200],
   ["/movimientos?tipo=ingresos&etiqueta=-1", 200],
   ["/movimientos?etiqueta=1e3&etiqueta=2", 200],
+  // Spec 009: las pantallas nuevas, y un ?pendiente= que no existe es la captura de siempre.
+  ["/nuevo/por-completar", 200],
+  ["/por-completar", 200],
+  ["/por-completar/varios", 200],
+  ["/nuevo/gasto?pendiente=999999", 200],
+  ["/nuevo/gasto?pendiente=abc", 200],
   ["/sobres/999999", 404],
   ["/categorias/999999", 404],
   ["/deudas/999999", 404],

@@ -48,7 +48,7 @@ function camposDe(formulario: string) {
 }
 
 /** Entra con el usuario de prueba y devuelve cómo pedir páginas con esa sesión, ya sin los scripts de React. */
-async function abrirSesion(origen: string) {
+export async function abrirSesion(origen: string) {
   const frasco = new Map<string, string>();
   async function pedir(ruta: string, opciones: RequestInit = {}) {
     const cookie = [...frasco].map(([n, v]) => `${n}=${v}`).join("; ");
@@ -77,6 +77,12 @@ async function abrirSesion(origen: string) {
       // Sin los scripts: llevan el mismo contenido para React y contarían cada fila dos veces.
       const html = (await r.text()).replace(/<script[\s\S]*?<\/script>/g, "");
       return { estado: r.status, html };
+    },
+    /** Envía un formulario como un navegador sin JavaScript: el estado, la página que vuelve y a dónde redirige. */
+    async enviar(ruta: string, datos: FormData) {
+      const r = await pedir(ruta, { method: "POST", body: datos });
+      const html = (await r.text()).replace(/<script[\s\S]*?<\/script>/g, "");
+      return { estado: r.status, html, ubicacion: r.headers.get("location") };
     },
     async salir() {
       const salida = formularios(await (await pedir("/")).text()).find(

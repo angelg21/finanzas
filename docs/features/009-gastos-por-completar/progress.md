@@ -22,7 +22,7 @@ Rama: `feat/009-gastos-por-completar`. Spec: `spec.md`.
 - [x] Spec leída y corregida por el desarrollador (2026-10-22: una venta por gasto al completar uno, una sola al completar varios, y la pregunta por el resto)
 - [x] Construida (todas las tareas con commit, 2026-10-22)
 - [x] Validada en navegador (2026-10-22)
-- [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
+- [x] Verificada: `pnpm verify` en verde, cada ★ con su prueba (2026-10-22)
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
 - [x] Fusionada en `main` el 2026-10-22, antes de validar, verificar y revisar, como las anteriores (ver notas)
 
@@ -39,3 +39,14 @@ Rama: `feat/009-gastos-por-completar`. Spec: `spec.md`.
 - Recorrido de punta a punta (2026-10-22) en Edge sin ventana, con «Cuadra con los sobres» tras cada paso (28 de 28): anotar tres sin mover dinero; el aviso del inicio; completar uno en dólares desde la captura; completar dos con una sola venta de 20 USDT a 250 (5.000 Bs), con la pregunta por los 500 Bs que sobraban y el resto como gasto; Binance bajó 20 y Bolívares quedó igual; borrar uno de los gastos de la venta no la borró y sus 2.000 Bs volvieron a Bolívares; descartar. La base terminó igual.
 - **Producción, en este orden:** `pnpm db:respaldo:produccion`, `pnpm db:migrate:produccion` (aplica la 0007 y la 0008) con la app sin uso, y solo entonces `git push origin main`.
 - En cola para `/f-verify 009`: `scripts/comprobar-009.ts` con las carreras de completar contra descartar y completar dos veces, contra la base.
+- **/f-verify (2026-10-22), sobre `main`.** Una prueba por criterio ★, escrita desde su texto. `src/lib/por-completar.test.ts` de la construcción sigue cubriendo validar un pendiente, la venta única, la pregunta por el resto y las tres formas de pago (★ 8), y `sobreSugerido` en `src/lib/gastos.test.ts` el sobre de cada uno (★ 9). Lo nuevo es `scripts/comprobar-009.ts`, contra la base local con los datos de demostración, que deja como estaba, también los pendientes. Con `--url`, contra el servidor de desarrollo como un navegador sin JavaScript: 31 de 31 ✓.
+  - ★ 1 y 3: anotar tres (en Bs, en USD y sin monto) no cambia cuentas, sobres, movimientos, gastado del mes, gráfica mensual, anillo ni lista; el mismo id de captura no anota dos veces.
+  - ★ 6: completar el de USD registra el gasto y borra el pendiente juntos; el de Bs vendiendo USDT deja el gasto con su propia venta, editable; un reintento devuelve lo guardado; el id de una captura ya usada, con otro pendiente vigente, da "otra" sin escribir. Páginas: `/nuevo/gasto?pendiente=` abre "Completar gasto" con categoría, descripción, fecha, monto y "vendiendo" marcados; guardar uno vigente vuelve con 303 a `/por-completar?completado=1` y "Completado".
+  - ★ 7: completar uno descartado, o uno ya completado en otra captura, no escribe nada; cinco carreras de completar contra descartar y cinco de completar dos veces a la vez: siempre uno solo. Página: abrir el formulario, descartar y guardar responde "Este gasto ya se completó o se descartó" sin gasto.
+  - ★ 8: 4.000 Bs recibidos y 3.000 en gastos preguntan por 1.000 Bs; con el resto a Bolívares, una venta de 100 USDT y tres gastos, Binance baja 100 y Bolívares sube 1.000 Bs; como gasto, cuatro gastos con "Resto de la venta" en Familia y Bolívares igual; los pendientes desaparecen.
+  - ★ 9 y 10: si la última fila falla (categoría inexistente), no queda ni la venta ni los otros gastos y los pendientes siguen; si uno de los elegidos se descartó, no se guarda nada. El cuadre, después de cada paso.
+  - ★ 11: página, sin `?pendiente=` la captura de siempre ("Nuevo gasto", sin pendiente, en dólares). La sesión y `conFallas`: `src/app/sesion.criterios.test.ts`, `src/app/fallas.criterios.test.ts` y `comprobar-002-servidor`.
+  - Criterio 5: el inicio y Registrar dicen "3 gastos por completar".
+  - `pnpm humo` con sesión: `/nuevo/por-completar`, `/por-completar`, `/por-completar/varios`, `/nuevo/gasto?pendiente=999999` y `?pendiente=abc` → 200.
+  - `scripts/comprobar-003-paginas.ts` exporta `abrirSesion` y le suma `enviar`, para mandar un formulario sin JavaScript.
+  - `pnpm verify --forzar`: `Tests  947 passed (947)`, `✓ subida (8.7 s)`, `✓ verify:full en verde en 48.2 s. Árbol sellado.`
