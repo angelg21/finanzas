@@ -28,12 +28,12 @@ function Pie({ montoCentavos, filas }: { montoCentavos: number | null; filas: Fi
     const leido = leerExacto(f.valor);
     if (leido.ok && leido.valor >= 0) repartido += leido.valor;
     else if (leido.ok || leido.motivo !== "vacio") {
-      return <p className={`${clase} text-negativo`}>Revisa los montos marcados.</p>;
+      return <p className={`${clase} text-palida-negativo`}>Revisa los montos marcados.</p>;
     }
   }
   if (repartido > montoCentavos) {
     return (
-      <p className={`${clase} text-negativo`}>
+      <p className={`${clase} text-palida-negativo`}>
         Repartes {numero(repartido)} y hay {numero(montoCentavos)}
       </p>
     );
@@ -107,14 +107,14 @@ export function TarjetaReparto({
                   />
                 </span>
               </div>
-              <ErrorCampo>{f.error}</ErrorCampo>
+              <ErrorCampo palida>{f.error}</ErrorCampo>
             </div>
           ))}
         </div>
       )}
       <div className="mt-3 flex flex-col gap-1 border-t border-palida-pista pt-3">
         <Pie montoCentavos={montoCentavos} filas={filas} />
-        <ErrorCampo>{error}</ErrorCampo>
+        <ErrorCampo palida>{error}</ErrorCampo>
       </div>
     </TarjetaPalida>
   );

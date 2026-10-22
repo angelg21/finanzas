@@ -47,9 +47,7 @@ export function EncabezadoTarjeta({
   );
 }
 
-type Tono = "texto" | "texto-2" | "texto-3" | "positivo" | "negativo" | "blanco" | "palido" | "palida" | "palida-2";
-
-const tonos: Record<Tono, string> = {
+const tonos = {
   texto: "text-texto",
   "texto-2": "text-texto-2",
   "texto-3": "text-texto-3",
@@ -59,7 +57,11 @@ const tonos: Record<Tono, string> = {
   palido: "text-enlace",
   palida: "text-palida-texto",
   "palida-2": "text-palida-texto-2",
-};
+  // Sobre la tarjeta pálida, "negativo" no llega a 3:1 (docs/diseno.md).
+  "palida-negativo": "text-palida-negativo",
+} satisfies Record<string, string>;
+
+type Tono = keyof typeof tonos;
 
 /**
  * Cantidad de dinero en centavos enteros. En `hero` los centavos van en azul pálido, como en la referencia.

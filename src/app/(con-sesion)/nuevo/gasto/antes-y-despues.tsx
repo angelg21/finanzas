@@ -106,11 +106,11 @@ function Fila({ nombre, moneda, antesCentavos, despuesCentavos, topeCentavos }: 
       </p>
       <p className="flex items-baseline justify-between gap-3 text-[12px] font-semibold text-palida-texto-2">
         Después del gasto
-        <Cifra centavos={despuesCentavos} moneda={moneda} tamano="lg" tono={negativo ? "negativo" : "palida"} />
+        <Cifra centavos={despuesCentavos} moneda={moneda} tamano="lg" tono={negativo ? "palida-negativo" : "palida"} />
       </p>
       {topeCentavos ? <Progreso valor={despuesCentavos / topeCentavos} palida /> : null}
       {negativo ? (
-        <p className="flex items-center gap-1.5 text-[12px] font-semibold text-negativo">
+        <p className="flex items-center gap-1.5 text-[12px] font-semibold text-palida-negativo">
           <CircleAlert size={14} aria-hidden />
           Queda en negativo
         </p>
