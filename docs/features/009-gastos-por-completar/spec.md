@@ -1,6 +1,6 @@
 # 009 · Gastos por completar
 
-Fecha: 2026-10-22. Estado: borrador.
+Fecha: 2026-10-22. Estado: aprobada con las correcciones del desarrollador (2026-10-22).
 
 ## Para qué
 
@@ -14,7 +14,8 @@ Decisiones del desarrollador, 2026-10-22:
 
 - se anota desde Registrar → "Por completar", y desde la captura de gasto con "Anotar sin monto";
 - el monto es opcional, en Bs o en USD;
-- se completa uno por uno y también varios a la vez con la misma tasa.
+- se completa uno por uno, cada uno con su propia venta si se paga vendiendo USDT, y también varios a la vez con una sola venta para todos;
+- si en la venta única sobran bolívares, la app pregunta: a la cuenta de Bolívares, o no es suyo y se registra como un gasto más (Familia por defecto), para que Binance quede exacto.
 
 ## Criterios de aceptación
 
@@ -38,7 +39,8 @@ Decisiones del desarrollador, 2026-10-22:
 
 8. ★ En `/por-completar/varios` se eligen los pendientes (todos marcados al entrar) y, para todos, la forma de pago:
    - **Dólares**: la cuenta; cada uno con su monto en esa moneda y su sobre;
-   - **Bolívares vendiendo USDT**: la cuenta de donde salen los dólares, los USDT vendidos y la tasa; cada uno con su monto en Bs y su sobre. Se registra **una sola venta** (la transferencia de USDT a Bolívares por lo vendido, a esa tasa) y un gasto en Bs por cada pendiente, a la misma tasa. Lo que sobre de la venta queda en Bolívares como vuelto; si los gastos pasan de lo recibido, se avisa antes de guardar ("Bolívares quedará en −X");
+   - **Bolívares vendiendo USDT**: la cuenta de donde salen los dólares, los USDT vendidos y la tasa; cada uno con su monto en Bs y su sobre. Se registra **una sola venta** (la transferencia de USDT a Bolívares por lo vendido, a esa tasa) y un gasto en Bs por cada pendiente, a la misma tasa. Si los gastos pasan de lo recibido, se avisa antes de guardar ("Bolívares quedará en −X");
+   - ★ **si sobran bolívares de la venta**, antes de guardar la app pregunta qué hacer con el resto ("Sobran 300,00 Bs de la venta"): "A mi cuenta de Bolívares" (queda como vuelto) o "No es mío: registrarlo como gasto", con su categoría y su sobre (Familia por defecto) y la descripción "Resto de la venta". Sin elegir no se guarda. Así Binance siempre baja exactamente lo vendido y el cuadre se mantiene;
    - **Bolívares del saldo**: la tasa; cada uno con su monto en Bs y su sobre.
 9. ★ El sobre de cada uno viene sugerido por su categoría, como en la captura. Todo va en una transacción: los gastos, la venta si la hay y el borrado de los pendientes; si uno falla, no se guarda ninguno. El cuadre se mantiene.
 10. ★ Si alguno de los elegidos ya no existe, no se guarda nada y lo dice.

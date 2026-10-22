@@ -19,7 +19,7 @@ Rama: `feat/009-gastos-por-completar`. Spec: `spec.md`.
 
 ## Etapas
 
-- [ ] Spec leída y corregida por el desarrollador
+- [x] Spec leída y corregida por el desarrollador (2026-10-22: una venta por gasto al completar uno, una sola al completar varios, y la pregunta por el resto)
 - [ ] Construida (todas las tareas con commit)
 - [ ] Validada en navegador
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
