@@ -41,6 +41,18 @@ export function mensajeDeFalla(causa: CausaFalla | "sesion", queNoSeGuardo = "el
   }
 }
 
+/** Al entrar no se guarda nada: el mensaje dice que no se pudo entrar. La sesión vencida no aplica. */
+export function mensajeDeFallaAlEntrar(causa: CausaFalla): string {
+  switch (causa) {
+    case "sin-red":
+      return "Sin conexión: no se pudo entrar. Vuelve a intentarlo cuando tengas red.";
+    case "version":
+      return "La app se actualizó: recarga y vuelve a entrar.";
+    default:
+      return "No se pudo entrar. Intenta de nuevo.";
+  }
+}
+
 type Accion<E> = (previo: E, datos: FormData) => Promise<E>;
 
 /**

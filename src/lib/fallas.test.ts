@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { causaDeFalla, conFallas, mensajeDeFalla } from "./fallas";
+import { causaDeFalla, conFallas, mensajeDeFalla, mensajeDeFallaAlEntrar } from "./fallas";
 
 const redireccion = Object.assign(new Error("NEXT_REDIRECT"), { digest: "NEXT_REDIRECT;push;/entrar;303;" });
 const noEncontrado = Object.assign(new Error("NEXT_HTTP_ERROR_FALLBACK;404"), {
@@ -54,6 +54,16 @@ describe("mensajeDeFalla: un mensaje por causa (criterio 19)", () => {
 
   it("una falla desconocida pide intentarlo otra vez", () => {
     expect(mensajeDeFalla("otra")).toBe("No se pudo guardar. Intenta de nuevo.");
+  });
+});
+
+describe("mensajeDeFallaAlEntrar: entrar no guarda nada, así que no habla de guardar", () => {
+  it("dice qué pasó al entrar, por causa", () => {
+    expect(mensajeDeFallaAlEntrar("sin-red")).toBe(
+      "Sin conexión: no se pudo entrar. Vuelve a intentarlo cuando tengas red.",
+    );
+    expect(mensajeDeFallaAlEntrar("version")).toBe("La app se actualizó: recarga y vuelve a entrar.");
+    expect(mensajeDeFallaAlEntrar("otra")).toBe("No se pudo entrar. Intenta de nuevo.");
   });
 });
 

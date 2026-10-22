@@ -2,15 +2,16 @@
  * Criterio ★ 19 de la spec 002, escrito desde su texto: "Los formularios de categorías y sobres muestran el mismo
  * mensaje y no pierden la pantalla". Una acción del servidor puesta directo en un `<form>` lanza cuando falla la red o
  * la versión, y Next cambia la pantalla entera por su error; solo `conFallas` vuelve la falla un mensaje junto al
- * botón, sin reintentar (lo prueba src/lib/fallas.test.ts). Aquí se pasa por cada archivo de src/app/(con-sesion),
- * también los de rutas futuras: una acción importada de un acciones.ts solo se usa dentro de `conFallas(...)`. Que la
- * sesión vencida responda con el mismo mensaje lo comprueba scripts/comprobar-002-servidor.ts contra el build.
+ * botón, sin reintentar (lo prueba src/lib/fallas.test.ts). Aquí se pasa por cada archivo de src/app, con sesión o
+ * sin ella y también los de rutas futuras: una acción importada de un acciones.ts, con nombre, por defecto o como
+ * `* as`, solo se usa dentro de `conFallas(...)`. Que la sesión vencida responda con el mismo mensaje lo comprueba
+ * scripts/comprobar-002-servidor.ts contra el build.
  */
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-const raiz = path.join("src", "app", "(con-sesion)");
+const raiz = path.join("src", "app");
 
 /** Salir no guarda nada: sin red no hay nada que perder ni que decir que no se guardó. */
 const noGuardan = new Set(["salir"]);
@@ -24,15 +25,27 @@ function archivos(dir: string): string[] {
   });
 }
 
-/** Las acciones del servidor que la fuente importa de un acciones.ts; los tipos no cuentan. */
+/**
+ * Las acciones del servidor que la fuente importa de un acciones.ts; los tipos no cuentan. Importadas como
+ * `* as acciones`, cada `acciones.algo` que la fuente usa cuenta como una acción.
+ */
 function accionesImportadas(fuente: string): string[] {
   const nombres: string[] = [];
-  for (const m of fuente.matchAll(/^import\s+(?!type\b)\{([^}]*)\}\s*from\s*["'][^"']*\/acciones["']/gm)) {
-    for (const parte of m[1].split(",").map((p) => p.trim())) {
+  for (const m of fuente.matchAll(/^import\s+(?!type\b)([^;]*?)\s*from\s*["'][^"']*\/acciones["']/gm)) {
+    const clausula = m[1];
+    const porDefecto = /^([\w$]+)\s*(?:,|$)/.exec(clausula);
+    if (porDefecto) nombres.push(porDefecto[1]);
+    const espacio = /\*\s*as\s+([\w$]+)/.exec(clausula);
+    if (espacio) {
+      for (const uso of fuente.matchAll(new RegExp(String.raw`\b${espacio[1]}\.([\w$]+)`, "g"))) {
+        nombres.push(`${espacio[1]}.${uso[1]}`);
+      }
+    }
+    for (const parte of (/\{([^}]*)\}/.exec(clausula)?.[1] ?? "").split(",").map((p) => p.trim())) {
       if (parte && !parte.startsWith("type ")) nombres.push(parte.split(/\s+as\s+/).at(-1) ?? parte);
     }
   }
-  return nombres;
+  return [...new Set(nombres)];
 }
 
 /** Cuántas veces la fuente usa la acción y cuántas de ellas fuera de `conFallas(...)`, sin contar imports ni notas. */
@@ -41,7 +54,7 @@ function usosDe(fuente: string, accion: string) {
     .replace(/^import\s[^;]*;/gm, "")
     .replace(/\/\*[\s\S]*?\*\//g, "")
     .replace(/\/\/[^\n]*/g, "");
-  const usos = [...codigo.matchAll(new RegExp(`\\b${accion}\\b`, "g"))];
+  const usos = [...codigo.matchAll(new RegExp(String.raw`\b${accion.replace(".", String.raw`\.`)}\b`, "g"))];
   const sueltos = usos.filter((m) => !/\bconFallas(?:<[^>()]*>)?\(\s*$/.test(codigo.slice(0, m.index)));
   return { usos: usos.length, sueltos: sueltos.length };
 }
@@ -72,8 +85,27 @@ const accion = conFallas(agregar.bind(null, 3), alFallar);`;
     expect(sinFallas("a.tsx", ligada)).toEqual([]);
   });
 
-  it("ninguna acción de (con-sesion) llega a un formulario sin conFallas", () => {
+  it("también ve las acciones importadas como `* as` o por defecto", () => {
+    const espacio = `import * as acciones from "./acciones";
+export function Boton() {
+  const [estado, enviar] = useActionState(acciones.eliminarPartida, {});
+  return <form action={enviar}><button>Quitar</button></form>;
+}`;
+    const espacioEnvuelta = `import * as acciones from "./acciones";
+const quitar = conFallas(acciones.eliminarPartida, alFallar);`;
+    const porDefecto = `import guardar, { type Estado } from "./acciones";
+export function Boton() {
+  return <form action={guardar}><button>Guardar</button></form>;
+}`;
+    expect(sinFallas("a.tsx", espacio)).toEqual(["a.tsx: acciones.eliminarPartida"]);
+    expect(sinFallas("a.tsx", espacioEnvuelta)).toEqual([]);
+    expect(sinFallas("a.tsx", porDefecto)).toEqual(["a.tsx: guardar"]);
+  });
+
+  it("ninguna acción de src/app llega a un formulario sin conFallas, con sesión o sin ella", () => {
     const fuentes = archivos(raiz).map((ruta) => ({ ruta, fuente: fs.readFileSync(ruta, "utf8") }));
+    // Entrar está fuera de (con-sesion): si la revisión no lo viera, tampoco vería las rutas sin sesión.
+    expect(fuentes.some(({ ruta }) => ruta.includes("(sin-sesion)"))).toBe(true);
     const usadas = fuentes.flatMap(({ fuente }) =>
       accionesImportadas(fuente).filter((a) => !noGuardan.has(a) && usosDe(fuente, a).usos > 0),
     );
