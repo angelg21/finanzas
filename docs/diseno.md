@@ -189,6 +189,14 @@ Primer uso: el desglose del sobre Ocasiones en `/sobres/[id]`. La captura de gas
 - sin JavaScript, el campo a la vista y una píldora "Sin etiqueta";
 - va después del sobre en el gasto y de la categoría en el ingreso; las filas de movimientos la muestran al final del detalle.
 
+**Gastos por completar** (feature 009):
+
+- Registrar tiene una quinta tarjeta, "Por completar", con `ClipboardList`; si hay pendientes, una `Pildora` `navy` "N gastos por completar" arriba, igual que en el inicio. La captura de gasto ofrece "Anotar sin monto" bajo el selector de tipo.
+- `/nuevo/por-completar`: una `Tarjeta` de 6 columnas con la categoría (píldoras con círculo), "Descripción", `SelectorFecha`, "Monto, si lo sabes" y "En: Bs · USD". Al anotar, la `Pildora` `positiva` "Anotado · N por completar" y "Ver la lista".
+- `/por-completar`: "N gastos sin monto, cuenta o sobre.", "Anotar" (secundario) y "Completar varios" (primario); la lista en tarjetas por día con `CirculoCategoria`, descripción, "Categoría · monto" o "sin monto", "Completar" y una X que lleva a la confirmación en la página.
+- Completar uno: la captura de gasto con título "Completar gasto", lo anotado puesto y el botón "Completar gasto".
+- `/por-completar/varios`: forma de pago, cuenta, USDT vendidos y tasa; cada gasto con su casilla, su monto y su sobre en un `Selector`; al pie "Gastos: X · la venta da Y · sobran Z". Si sobran, un recuadro `tarjeta-hover` pregunta "A mi cuenta de Bolívares" o "No es mío: registrarlo como gasto", con categoría y sobre (Familia por defecto).
+
 **Deudas y préstamos** (feature 005):
 
 - `/deudas`: hero con lo que debo en `Cifra` hero, las píldoras "Apartado", "Cuota de octubre" y "Me deben", y los mosaicos "Nueva deuda", "Prestar" y "Apartar". Debajo, la regla de uso en una `TarjetaPalida`, y las tarjetas "Debo" y "Me deben". Cada deuda es una `FilaLista` con el `Avatar` de las iniciales de la persona; el subtítulo dice cuándo vence ("vence en 3 días", "para el 15 dic", "vencida hace 2 días", "sin fecha") y con qué cuenta se paga, y a la derecha va lo pendiente y "de X". El aviso de liquidez va debajo de la fila, en una `Pildora` `negativa`; las pagadas, en un `<details>`. En escritorio, hero 7 + regla 5, y Debo 7 + Me deben 5.

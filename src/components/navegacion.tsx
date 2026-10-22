@@ -53,6 +53,11 @@ function tituloDe(ruta: string) {
   if (ruta.startsWith("/deudas/prestar")) return "Prestar";
   if (ruta.startsWith("/deudas/apartar")) return "Apartar para deudas";
   if (/^\/deudas\/\d+\/editar/.test(ruta)) return "Editar deuda";
+  if (ruta.startsWith("/nuevo/mover")) return "Mover entre sobres";
+  if (ruta.startsWith("/nuevo/por-completar")) return "Anotar por completar";
+  if (ruta.startsWith("/por-completar/varios")) return "Completar varios";
+  if (ruta.startsWith("/por-completar")) return "Por completar";
+  if (/^\/movimientos\/\d+/.test(ruta)) return "Movimiento";
   if (esActiva(registrar.href, ruta)) return registrar.texto;
   return [...rutas, ...secundarias].find((r) => esActiva(r.href, ruta))?.texto ?? nombreApp;
 }
