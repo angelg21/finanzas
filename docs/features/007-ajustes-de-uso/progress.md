@@ -12,13 +12,13 @@ Rama: `feat/007-ajustes-de-uso`. Spec: `spec.md`.
 
 ## Validación en navegador
 
--
+- 2026-10-22, el desarrollador: recorrió la lista de pasos que el agente le dio para esta feature (lo que se ve en pantalla, sin carreras ni fallas de red, que van en `/f-verify`) y respondió "sí, está verificado". No dijo en qué ancho.
 
 ## Etapas
 
 - [x] Spec escrita a partir del pedido del desarrollador (2026-10-17)
 - [x] Construida (todas las tareas con commit, 2026-10-17)
-- [ ] Validada en navegador
+- [x] Validada en navegador (2026-10-22)
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
 - [x] Fusionada en `main` el 2026-10-17, por pedido del desarrollador antes de validar, verificar y revisar (ver notas)

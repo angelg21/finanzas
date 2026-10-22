@@ -89,6 +89,10 @@ const conSesion = [
   ["/deudas/999999", 404],
   ["/deudas/999999/editar", 404],
   ["/deudas/abc", 404],
+  // Spec 006, criterio 8: solo un gasto o un ingreso que existe abre su edición.
+  ["/movimientos/999999", 404],
+  ["/movimientos/abc", 404],
+  ["/movimientos/0", 404],
 ];
 /** Criterio 14. */
 const cabecerasEsperadas = {

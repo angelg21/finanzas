@@ -15,13 +15,13 @@ Rama: `feat/009-gastos-por-completar`. Spec: `spec.md`.
 
 ## Validación en navegador
 
--
+- 2026-10-22, el desarrollador: recorrió la lista de pasos que el agente le dio para esta feature (lo que se ve en pantalla, sin carreras ni fallas de red, que van en `/f-verify`) y respondió "sí, está verificado". No dijo en qué ancho.
 
 ## Etapas
 
 - [x] Spec leída y corregida por el desarrollador (2026-10-22: una venta por gasto al completar uno, una sola al completar varios, y la pregunta por el resto)
 - [x] Construida (todas las tareas con commit, 2026-10-22)
-- [ ] Validada en navegador
+- [x] Validada en navegador (2026-10-22)
 - [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
 - [x] Fusionada en `main` el 2026-10-22, antes de validar, verificar y revisar, como las anteriores (ver notas)
