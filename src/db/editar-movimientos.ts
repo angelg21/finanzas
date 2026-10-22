@@ -62,7 +62,12 @@ export async function movimientoParaEditar(id: number) {
   if (!movimiento) return null;
   const captura = movimiento.origen === "manual" ? idDeReferencia(movimiento.referenciaExterna) : null;
   const enlazadas = captura ? (await guardadasDeCaptura(captura)).filter((f) => f.id !== movimiento.id) : [];
-  const venta = movimiento.tipo === "gasto" ? (enlazadas.find((f) => f.tipo === "transferencia") ?? null) : null;
+  // Una venta que comparten varios gastos (completar varios, spec 009) no es de ninguno: no se muestra ni se toca.
+  const gastosDeLaCaptura = enlazadas.filter((f) => f.tipo === "gasto").length + 1;
+  const venta =
+    movimiento.tipo === "gasto" && gastosDeLaCaptura === 1
+      ? (enlazadas.find((f) => f.tipo === "transferencia") ?? null)
+      : null;
   const reparto =
     movimiento.tipo === "ingreso"
       ? enlazadas.filter((f) => f.tipo === "reasignacion" && f.sobreOrigenId === movimiento.sobreDestinoId)
@@ -83,9 +88,23 @@ async function filaBloqueada(tx: Ejecutor, id: number, tipo: (typeof soloEditabl
   return fila ?? null;
 }
 
-/** La venta enlazada a la captura de un gasto, bloqueada. */
+/**
+ * La venta de la captura de un gasto, bloqueada, y si es solo suya. Una venta que comparten varios gastos (completar
+ * varios, spec 009) no se actualiza, no se crea otra ni se borra al editar o borrar uno de ellos: lo vendido se vendió
+ * igual (guardian-datos, 0007, hallazgo 2).
+ */
 async function ventaBloqueada(tx: Ejecutor, captura: string | null) {
-  if (!captura) return null;
+  if (!captura) return { venta: null, compartida: false };
+  const [{ gastos }] = await tx
+    .select({ gastos: sql<number>`count(*)::int`.mapWith(Number) })
+    .from(movimientos)
+    .where(
+      and(
+        eq(movimientos.origen, "manual"),
+        eq(movimientos.tipo, "gasto"),
+        like(movimientos.referenciaExterna, `${prefijoDeCaptura(captura)}gasto%`),
+      ),
+    );
   const [venta] = await tx
     .select()
     .from(movimientos)
@@ -97,7 +116,8 @@ async function ventaBloqueada(tx: Ejecutor, captura: string | null) {
       ),
     )
     .for("update");
-  return venta ?? null;
+  if (!venta) return { venta: null, compartida: false };
+  return gastos === 1 ? { venta, compartida: false } : { venta: null, compartida: true };
 }
 
 export type ResultadoEdicion<E> = { ok: true } | { ok: false; errores: E } | { noExiste: true };
@@ -112,7 +132,7 @@ export async function editarGasto(
     const gasto = await filaBloqueada(tx, id, "gasto");
     if (!gasto) return { noExiste: true as const };
     const captura = gasto.origen === "manual" ? idDeReferencia(gasto.referenciaExterna) : null;
-    const venta = await ventaBloqueada(tx, captura);
+    const { venta, compartida } = await ventaBloqueada(tx, captura);
     const plan = planear({ gastoId: gasto.id, ventaId: venta?.id ?? null });
     if (!plan.ok) return plan;
     if (
@@ -120,6 +140,11 @@ export async function editarGasto(
       (plan.venta && plan.venta.accion !== "borrar" && plan.venta.fila.tipo !== "transferencia")
     ) {
       throw new Error("El plan de un gasto trae filas de otro tipo");
+    }
+    if (plan.venta?.accion === "crear" && compartida) {
+      const vendido =
+        "Este gasto se pagó con una venta compartida: para cambiarle la forma de pago, bórralo y regístralo de nuevo";
+      return { ok: false as const, errores: { vendido } };
     }
     if (plan.venta?.accion === "crear" && !captura) {
       // Sin captura, la venta nueva no quedaría enlazada al gasto (criterio 8).
@@ -153,7 +178,8 @@ export async function borrarGasto(id: number): Promise<{ ok: true; conVenta: boo
     const gasto = await filaBloqueada(tx, id, "gasto");
     if (!gasto) return { noExiste: true as const };
     const captura = gasto.origen === "manual" ? idDeReferencia(gasto.referenciaExterna) : null;
-    const venta = await ventaBloqueada(tx, captura);
+    // Una venta compartida se queda: lo vendido se vendió, y lo de este gasto vuelve a Bolívares como vuelto.
+    const { venta } = await ventaBloqueada(tx, captura);
     if (venta) await tx.delete(movimientos).where(eq(movimientos.id, venta.id));
     await tx.delete(movimientos).where(eq(movimientos.id, gasto.id));
     return { ok: true as const, conVenta: venta !== null };

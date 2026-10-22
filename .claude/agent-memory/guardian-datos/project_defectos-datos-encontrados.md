@@ -1,6 +1,6 @@
 ---
 name: defectos-datos-encontrados
-description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en 003, 004, 97437d7, 005 (cerrados de T6/T7/T13 y la fecha rara, 2026-10-16), T3 de 006 y la 0006 de 008 (2026-10-17)
+description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en 003, 004, 97437d7, 005 (cerrados de T6/T7/T13 y la fecha rara, 2026-10-16), T3 de 006, la 0006 de 008 (2026-10-17) y la 0007 de 009 (2026-10-22, check con NULL)
 metadata:
   type: project
 ---
@@ -110,12 +110,20 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
 
 **Abiertos, nuevos en la 0006 de 008 (2026-10-17). Ninguno bloquea** (ver [[revision-008-etiquetas]])
 
-- **Media, operativo.** `respaldo.ts`, con el código de una feature que añade una tabla, falla contra producción antes de migrar: 42P01, y el volcado queda `.sin-comprobar`. Hay que respaldar desde `main` antes de fusionar, o que `resumir` compare solo las tablas que existen en el origen.
+- ~~**Media, operativo.** `respaldo.ts`, con el código de una feature que añade una tabla, falla contra producción antes de migrar.~~ **Cerrado en a3d9bc4.** `resumir` usa `to_regclass` y escribe "todavía no existe". Medido con la 0007 el 2026-10-22: el respaldo pasa antes y después de migrar.
 - **Baja.** `etiquetas` sin marca demo: lo que cree una sonda o `comprobar-008` en la base local no lo borra `db:demo:limpiar`.
 - **Info.**
   - Checks evaluados por orden alfabético.
   - Nombre y clave de la etiqueta sin check en la base.
   - `etiquetaId = null` por defecto en `editarGasto` y `editarIngreso`.
+
+**Abiertos, nuevos en 009 (2026-10-22). El primero bloquea la 0007** (ver [[revision-009-por-completar]])
+
+- **Alta, bloquea.** El check `gastos_por_completar_monto` deja pasar el monto sin moneda y la moneda sin monto, porque NULL pasa un CHECK. Al revisar cualquier check nuevo, evaluar su expresión con filas a medias y buscar NULL.
+- **Alta.** La venta compartida de "completar varios" se rompe con borrar o editar un solo gasto (006), sin descuadrar.
+- **Media.** "Varios" no valida la categoría del pendiente: un gasto con categoría de ingreso o archivada. `actualizarCategoria` y `eliminarCategoria` no cuentan los pendientes (23503 y un mensaje genérico).
+- **Media.** Un id de captura reutilizado con otros pendientes da "completados" sin guardar nada.
+- **Info.** Anotar no compara contenido en un reintento. La base acepta fechas raras, una referencia vacía y un monto > 2^53.
 
 **Abiertos de antes**
 

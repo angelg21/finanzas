@@ -161,4 +161,14 @@ metadata:
   - **Bloqueos de una migración con la app en uso** (`bloqueos.mts`): A abre una transacción, lee y duerme 2 s; el migrador real entra a los 200 ms; B inserta un gasto a los 400 ms. Con `alter database <copia> set log_min_duration_statement=0` se ve la duración de cada DDL.
   - `drizzle-kit migrate` con `DATABASE_URL=<copia>` en la línea sigue funcionando para una base vacía.
 
+- **Métodos de la 0007 de 009 (2026-10-22)**, en `fff6d62f…/scratchpad/g009/`:
+  - **Auditar un CHECK:** evaluar su expresión en un `select` sobre filas a medias (`values (100, null), (null, 'VES')`). Si da NULL, el CHECK la deja pasar. Probar la redacción corregida con una tabla temporal dentro de begin/rollback.
+  - **Qué generaría drizzle-kit con un esquema corregido, sin tocar `drizzle/`:** copiar `schema.ts` al scratchpad, cambiar los imports `../lib/*` por rutas absolutas y aplicar el cambio con sed. Luego `alt/generar.cts <snap>`, con `NODE_PATH=<repo>/node_modules`.
+  - **Acción real de "varios":** `accion-varios.cts` y `accion-varios-cat.cts`, con sesión y `next/cache` falsos. El `redirect` real se reconoce por `e.digest` ("NEXT_REDIRECT;…;ruta").
+  - **Sonda del escritor:** `sonda-009.mts <fase|todo>`. El mutante sin candado está escrito dentro de la sonda, con `drizzle-orm` importado por `node_modules/drizzle-orm/index.js`.
+  - `bloqueos.mts gasto|categoria` y `huella-tablas.sql`, que da la huella de todas las tablas de public y sus secuencias.
+- **Ojo con `cd` dentro de una cadena `&&`:** si un paso anterior falla, el `cd` no ocurre y lo que sigue tras el `;` escribe en el repo. Me pasó: dejé `resp-main-filas.txt` en la raíz y lo borré. Usar `(cd X && ...)` en una subshell, o rutas absolutas en las redirecciones.
+- `docker exec` con heredoc necesita `-i`; sin él, psql no recibe nada y no da error.
+- Docker Desktop estaba apagado otra vez el 2026-10-22. Al arrancarlo se levantaron rielco, my-database y pgadmin4.
+
 Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].

@@ -262,11 +262,6 @@ export const movimientos = pgTable(
 ).enableRLS();
 
 /**
- * Cómo se reparte un ingreso entre sobres, en orden.
- * Primero las reglas fijas (gastos del mes, familia), luego las de porcentaje sobre lo que queda.
- * El tope del sobre (emergencia) corta la regla cuando se alcanza.
- */
-/**
  * Gastos por completar (spec 009): lo que se gastó y todavía no se puede registrar porque falta saber el monto en
  * dólares, la cuenta o el sobre. No es un movimiento: no mueve dinero ni entra en ningún saldo. Al completarlo se
  * vuelve un gasto y la fila se borra en la misma transacción. `referencia` es la de la captura que lo anotó: un
@@ -291,11 +286,18 @@ export const gastosPorCompletar = pgTable(
     uniqueIndex("gastos_por_completar_referencia_unica").on(t.referencia),
     check(
       "gastos_por_completar_monto",
-      sql`(${t.montoCentavos} is null and ${t.moneda} is null) or (${t.montoCentavos} > 0 and ${t.moneda}::text in ('VES', 'USD'))`,
+      // Los dos o ninguno. Con "or" a secas, una fila con monto y sin moneda daba NULL, y en un check NULL aprueba
+      // (guardian-datos, 0007): se registraría 1.500 Bs como 1.500 USD al completarla.
+      sql`(${t.montoCentavos} is null) = (${t.moneda} is null) and (${t.montoCentavos} is null or (${t.montoCentavos} > 0 and ${t.moneda}::text in ('VES', 'USD')))`,
     ),
   ],
 ).enableRLS();
 
+/**
+ * Cómo se reparte un ingreso entre sobres, en orden.
+ * Primero las reglas fijas (gastos del mes, familia), luego las de porcentaje sobre lo que queda.
+ * El tope del sobre (emergencia) corta la regla cuando se alcanza.
+ */
 export const reglasReparto = pgTable(
   "reglas_reparto",
   {

@@ -218,6 +218,10 @@ async function procesarGasto(formData: FormData): Promise<Resultado> {
       if ("faltan" in completado) {
         return { estado: "error", errores: { general: "Este gasto ya se completó o se descartó" }, valores };
       }
+      if ("otra" in completado) {
+        const general = "Esta captura ya se usó para otra cosa: vuelve a guardar.";
+        return { estado: "error", errores: { general }, valores: { ...valores, idCaptura: crypto.randomUUID() } };
+      }
       registro = completado;
     }
   } catch (error) {

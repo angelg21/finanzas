@@ -64,7 +64,7 @@ export async function descartarPorCompletar(id: number) {
   return borradas.length > 0;
 }
 
-type Resultado = { nueva: true } | { nueva: false; guardadas: Movimiento[] } | { faltan: true };
+type Resultado = { nueva: true } | { nueva: false; guardadas: Movimiento[] } | { faltan: true } | { otra: true };
 
 /**
  * Completa uno o varios pendientes: inserta sus movimientos (gastos, y la venta si la hay) y los borra, todo junto.
@@ -85,6 +85,9 @@ export async function completarPorCompletar(
         .where(inArray(gastosPorCompletar.id, ids))
         .for("update");
       const previas = await guardadasDeCaptura(idCaptura, tx);
+      // Lo guardado con este id es de otra cosa si los pendientes siguen ahí: un reintento de verdad ya los borró
+      // (guardian-datos, 0007, hallazgo 4).
+      if (previas.length > 0 && bloqueados.length > 0) return { otra: true as const };
       if (previas.length > 0) return { nueva: false as const, guardadas: previas };
       if (bloqueados.length !== new Set(ids).size) return { faltan: true as const };
       await registrarMovimientos(filas, tx);

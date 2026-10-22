@@ -1,0 +1,1348 @@
+{
+  "id": "b7073df0-4f36-4b48-a76b-0a77f618e056",
+  "prevId": "148209b6-5c8d-4eb7-8104-0557a9129508",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.categorias": {
+      "name": "categorias",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "categorias_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_categoria",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "padre_id": {
+          "name": "padre_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "icono": {
+          "name": "icono",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'etiqueta'"
+        },
+        "color": {
+          "name": "color",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pizarra'"
+        },
+        "activa": {
+          "name": "activa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "orden": {
+          "name": "orden",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "categorias_tipo_nombre_unico": {
+          "name": "categorias_tipo_nombre_unico",
+          "columns": [
+            {
+              "expression": "tipo",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "nombre",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "categorias_padre_id_categorias_id_fk": {
+          "name": "categorias_padre_id_categorias_id_fk",
+          "tableFrom": "categorias",
+          "tableTo": "categorias",
+          "columnsFrom": [
+            "padre_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.cuentas": {
+      "name": "cuentas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "cuentas_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "moneda": {
+          "name": "moneda",
+          "type": "moneda",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_cuenta",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "es_propia": {
+          "name": "es_propia",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "activa": {
+          "name": "activa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "orden": {
+          "name": "orden",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "nota": {
+          "name": "nota",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "cuentas_nombre_unico": {
+          "name": "cuentas_nombre_unico",
+          "columns": [
+            {
+              "expression": "nombre",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.deudas": {
+      "name": "deudas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "deudas_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "sentido": {
+          "name": "sentido",
+          "type": "sentido_deuda",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "persona": {
+          "name": "persona",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "monto_inicial_centavos": {
+          "name": "monto_inicial_centavos",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "fecha_prevista": {
+          "name": "fecha_prevista",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cuenta_prevista_id": {
+          "name": "cuenta_prevista_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nota": {
+          "name": "nota",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "referencia": {
+          "name": "referencia",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "deudas_referencia_unica": {
+          "name": "deudas_referencia_unica",
+          "columns": [
+            {
+              "expression": "referencia",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"deudas\".\"referencia\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "deudas_cuenta_prevista_id_cuentas_id_fk": {
+          "name": "deudas_cuenta_prevista_id_cuentas_id_fk",
+          "tableFrom": "deudas",
+          "tableTo": "cuentas",
+          "columnsFrom": [
+            "cuenta_prevista_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "deudas_monto_valido": {
+          "name": "deudas_monto_valido",
+          "value": "\"deudas\".\"monto_inicial_centavos\" > 0 or (\"deudas\".\"monto_inicial_centavos\" = 0 and \"deudas\".\"sentido\"::text = 'me_deben')"
+        },
+        "deudas_cuenta_prevista_solo_debo": {
+          "name": "deudas_cuenta_prevista_solo_debo",
+          "value": "\"deudas\".\"cuenta_prevista_id\" is null or \"deudas\".\"sentido\"::text = 'debo'"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.etiquetas": {
+      "name": "etiquetas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "etiquetas_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "clave": {
+          "name": "clave",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "etiquetas_clave_unica": {
+          "name": "etiquetas_clave_unica",
+          "columns": [
+            {
+              "expression": "clave",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.gastos_por_completar": {
+      "name": "gastos_por_completar",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "gastos_por_completar_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "categoria_id": {
+          "name": "categoria_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nota": {
+          "name": "nota",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "monto_centavos": {
+          "name": "monto_centavos",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "moneda": {
+          "name": "moneda",
+          "type": "moneda",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "referencia": {
+          "name": "referencia",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "gastos_por_completar_referencia_unica": {
+          "name": "gastos_por_completar_referencia_unica",
+          "columns": [
+            {
+              "expression": "referencia",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "gastos_por_completar_categoria_id_categorias_id_fk": {
+          "name": "gastos_por_completar_categoria_id_categorias_id_fk",
+          "tableFrom": "gastos_por_completar",
+          "tableTo": "categorias",
+          "columnsFrom": [
+            "categoria_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "gastos_por_completar_monto": {
+          "name": "gastos_por_completar_monto",
+          "value": "(\"gastos_por_completar\".\"monto_centavos\" is null) = (\"gastos_por_completar\".\"moneda\" is null) and (\"gastos_por_completar\".\"monto_centavos\" is null or (\"gastos_por_completar\".\"monto_centavos\" > 0 and \"gastos_por_completar\".\"moneda\"::text in ('VES', 'USD')))"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.movimientos": {
+      "name": "movimientos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "movimientos_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_movimiento",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "monto_centavos": {
+          "name": "monto_centavos",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "moneda": {
+          "name": "moneda",
+          "type": "moneda",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "monto_usd_centavos": {
+          "name": "monto_usd_centavos",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "monto_destino_centavos": {
+          "name": "monto_destino_centavos",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "moneda_destino": {
+          "name": "moneda_destino",
+          "type": "moneda",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tasa": {
+          "name": "tasa",
+          "type": "numeric(14, 4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cuenta_origen_id": {
+          "name": "cuenta_origen_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cuenta_destino_id": {
+          "name": "cuenta_destino_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sobre_origen_id": {
+          "name": "sobre_origen_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sobre_destino_id": {
+          "name": "sobre_destino_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "categoria_id": {
+          "name": "categoria_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deuda_id": {
+          "name": "deuda_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "etiqueta_id": {
+          "name": "etiqueta_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nota": {
+          "name": "nota",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "origen": {
+          "name": "origen",
+          "type": "origen_movimiento",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'manual'"
+        },
+        "referencia_externa": {
+          "name": "referencia_externa",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "movimientos_fecha_idx": {
+          "name": "movimientos_fecha_idx",
+          "columns": [
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "movimientos_cuenta_origen_idx": {
+          "name": "movimientos_cuenta_origen_idx",
+          "columns": [
+            {
+              "expression": "cuenta_origen_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "movimientos_cuenta_destino_idx": {
+          "name": "movimientos_cuenta_destino_idx",
+          "columns": [
+            {
+              "expression": "cuenta_destino_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "movimientos_sobre_origen_idx": {
+          "name": "movimientos_sobre_origen_idx",
+          "columns": [
+            {
+              "expression": "sobre_origen_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "movimientos_sobre_destino_idx": {
+          "name": "movimientos_sobre_destino_idx",
+          "columns": [
+            {
+              "expression": "sobre_destino_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "movimientos_categoria_idx": {
+          "name": "movimientos_categoria_idx",
+          "columns": [
+            {
+              "expression": "categoria_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "movimientos_deuda_idx": {
+          "name": "movimientos_deuda_idx",
+          "columns": [
+            {
+              "expression": "deuda_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "movimientos_etiqueta_idx": {
+          "name": "movimientos_etiqueta_idx",
+          "columns": [
+            {
+              "expression": "etiqueta_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "movimientos_origen_referencia_unico": {
+          "name": "movimientos_origen_referencia_unico",
+          "columns": [
+            {
+              "expression": "origen",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "referencia_externa",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"movimientos\".\"referencia_externa\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "movimientos_cuenta_origen_id_cuentas_id_fk": {
+          "name": "movimientos_cuenta_origen_id_cuentas_id_fk",
+          "tableFrom": "movimientos",
+          "tableTo": "cuentas",
+          "columnsFrom": [
+            "cuenta_origen_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "movimientos_cuenta_destino_id_cuentas_id_fk": {
+          "name": "movimientos_cuenta_destino_id_cuentas_id_fk",
+          "tableFrom": "movimientos",
+          "tableTo": "cuentas",
+          "columnsFrom": [
+            "cuenta_destino_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "movimientos_sobre_origen_id_sobres_id_fk": {
+          "name": "movimientos_sobre_origen_id_sobres_id_fk",
+          "tableFrom": "movimientos",
+          "tableTo": "sobres",
+          "columnsFrom": [
+            "sobre_origen_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "movimientos_sobre_destino_id_sobres_id_fk": {
+          "name": "movimientos_sobre_destino_id_sobres_id_fk",
+          "tableFrom": "movimientos",
+          "tableTo": "sobres",
+          "columnsFrom": [
+            "sobre_destino_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "movimientos_categoria_id_categorias_id_fk": {
+          "name": "movimientos_categoria_id_categorias_id_fk",
+          "tableFrom": "movimientos",
+          "tableTo": "categorias",
+          "columnsFrom": [
+            "categoria_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "movimientos_deuda_id_deudas_id_fk": {
+          "name": "movimientos_deuda_id_deudas_id_fk",
+          "tableFrom": "movimientos",
+          "tableTo": "deudas",
+          "columnsFrom": [
+            "deuda_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "movimientos_etiqueta_id_etiquetas_id_fk": {
+          "name": "movimientos_etiqueta_id_etiquetas_id_fk",
+          "tableFrom": "movimientos",
+          "tableTo": "etiquetas",
+          "columnsFrom": [
+            "etiqueta_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "movimientos_monto_positivo": {
+          "name": "movimientos_monto_positivo",
+          "value": "\"movimientos\".\"monto_centavos\" > 0 and \"movimientos\".\"monto_usd_centavos\" > 0"
+        },
+        "movimientos_etiqueta_solo_gasto_ingreso": {
+          "name": "movimientos_etiqueta_solo_gasto_ingreso",
+          "value": "\"movimientos\".\"etiqueta_id\" is null or \"movimientos\".\"tipo\"::text in ('gasto', 'ingreso')"
+        },
+        "movimientos_forma_por_tipo": {
+          "name": "movimientos_forma_por_tipo",
+          "value": "case \"movimientos\".\"tipo\"::text\n        when 'ingreso' then\n          \"movimientos\".\"cuenta_destino_id\" is not null and \"movimientos\".\"sobre_destino_id\" is not null and \"movimientos\".\"categoria_id\" is not null\n          and \"movimientos\".\"cuenta_origen_id\" is null and \"movimientos\".\"sobre_origen_id\" is null and \"movimientos\".\"deuda_id\" is null\n        when 'gasto' then\n          \"movimientos\".\"cuenta_origen_id\" is not null and \"movimientos\".\"sobre_origen_id\" is not null and \"movimientos\".\"categoria_id\" is not null\n          and \"movimientos\".\"cuenta_destino_id\" is null and \"movimientos\".\"sobre_destino_id\" is null and \"movimientos\".\"deuda_id\" is null\n        when 'transferencia' then\n          \"movimientos\".\"cuenta_origen_id\" is not null and \"movimientos\".\"cuenta_destino_id\" is not null\n          and \"movimientos\".\"cuenta_origen_id\" <> \"movimientos\".\"cuenta_destino_id\"\n          and \"movimientos\".\"sobre_origen_id\" is null and \"movimientos\".\"sobre_destino_id\" is null and \"movimientos\".\"deuda_id\" is null\n        when 'reasignacion' then\n          \"movimientos\".\"sobre_origen_id\" is not null and \"movimientos\".\"sobre_destino_id\" is not null\n          and \"movimientos\".\"sobre_origen_id\" <> \"movimientos\".\"sobre_destino_id\"\n          and \"movimientos\".\"cuenta_origen_id\" is null and \"movimientos\".\"cuenta_destino_id\" is null and \"movimientos\".\"deuda_id\" is null\n        when 'pago_deuda' then\n          \"movimientos\".\"cuenta_origen_id\" is not null and \"movimientos\".\"sobre_origen_id\" is not null and \"movimientos\".\"deuda_id\" is not null\n          and \"movimientos\".\"cuenta_destino_id\" is null and \"movimientos\".\"sobre_destino_id\" is null and \"movimientos\".\"categoria_id\" is null\n        when 'prestamo' then\n          \"movimientos\".\"cuenta_origen_id\" is not null and \"movimientos\".\"sobre_origen_id\" is not null and \"movimientos\".\"deuda_id\" is not null\n          and \"movimientos\".\"cuenta_destino_id\" is null and \"movimientos\".\"sobre_destino_id\" is null and \"movimientos\".\"categoria_id\" is null\n        when 'cobro_prestamo' then\n          \"movimientos\".\"cuenta_destino_id\" is not null and \"movimientos\".\"sobre_destino_id\" is not null and \"movimientos\".\"deuda_id\" is not null\n          and \"movimientos\".\"cuenta_origen_id\" is null and \"movimientos\".\"sobre_origen_id\" is null and \"movimientos\".\"categoria_id\" is null\n        else false\n      end"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.partidas_sobre": {
+      "name": "partidas_sobre",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "partidas_sobre_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "sobre_id": {
+          "name": "sobre_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "monto_centavos": {
+          "name": "monto_centavos",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "veces_por_anio": {
+          "name": "veces_por_anio",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "mes": {
+          "name": "mes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nota": {
+          "name": "nota",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "activa": {
+          "name": "activa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "orden": {
+          "name": "orden",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "partidas_sobre_sobre_idx": {
+          "name": "partidas_sobre_sobre_idx",
+          "columns": [
+            {
+              "expression": "sobre_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "partidas_sobre_sobre_id_sobres_id_fk": {
+          "name": "partidas_sobre_sobre_id_sobres_id_fk",
+          "tableFrom": "partidas_sobre",
+          "tableTo": "sobres",
+          "columnsFrom": [
+            "sobre_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "partidas_sobre_monto_positivo": {
+          "name": "partidas_sobre_monto_positivo",
+          "value": "\"partidas_sobre\".\"monto_centavos\" > 0 and \"partidas_sobre\".\"veces_por_anio\" > 0"
+        },
+        "partidas_sobre_mes_valido": {
+          "name": "partidas_sobre_mes_valido",
+          "value": "\"partidas_sobre\".\"mes\" is null or (\"partidas_sobre\".\"mes\" between 1 and 12)"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.reglas_reparto": {
+      "name": "reglas_reparto",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "reglas_reparto_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "orden": {
+          "name": "orden",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sobre_id": {
+          "name": "sobre_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_regla",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "valor": {
+          "name": "valor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activa": {
+          "name": "activa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "reglas_reparto_sobre_unico": {
+          "name": "reglas_reparto_sobre_unico",
+          "columns": [
+            {
+              "expression": "sobre_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "reglas_reparto_sobre_id_sobres_id_fk": {
+          "name": "reglas_reparto_sobre_id_sobres_id_fk",
+          "tableFrom": "reglas_reparto",
+          "tableTo": "sobres",
+          "columnsFrom": [
+            "sobre_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "reglas_reparto_valor_positivo": {
+          "name": "reglas_reparto_valor_positivo",
+          "value": "\"reglas_reparto\".\"valor\" > 0"
+        },
+        "reglas_reparto_porcentaje_maximo": {
+          "name": "reglas_reparto_porcentaje_maximo",
+          "value": "\"reglas_reparto\".\"tipo\" <> 'porcentaje' or \"reglas_reparto\".\"valor\" <= 10000"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.sobres": {
+      "name": "sobres",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "sobres_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_sobre",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tope_centavos": {
+          "name": "tope_centavos",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_objetivo": {
+          "name": "fecha_objetivo",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "orden": {
+          "name": "orden",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "nota": {
+          "name": "nota",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "sobres_nombre_unico": {
+          "name": "sobres_nombre_unico",
+          "columns": [
+            {
+              "expression": "nombre",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    }
+  },
+  "enums": {
+    "public.moneda": {
+      "name": "moneda",
+      "schema": "public",
+      "values": [
+        "USD",
+        "USDT",
+        "USDC",
+        "VES"
+      ]
+    },
+    "public.origen_movimiento": {
+      "name": "origen_movimiento",
+      "schema": "public",
+      "values": [
+        "manual",
+        "telegram",
+        "importado",
+        "binance"
+      ]
+    },
+    "public.sentido_deuda": {
+      "name": "sentido_deuda",
+      "schema": "public",
+      "values": [
+        "debo",
+        "me_deben"
+      ]
+    },
+    "public.tipo_categoria": {
+      "name": "tipo_categoria",
+      "schema": "public",
+      "values": [
+        "ingreso",
+        "gasto"
+      ]
+    },
+    "public.tipo_cuenta": {
+      "name": "tipo_cuenta",
+      "schema": "public",
+      "values": [
+        "exchange",
+        "billetera",
+        "efectivo",
+        "banco",
+        "transito"
+      ]
+    },
+    "public.tipo_movimiento": {
+      "name": "tipo_movimiento",
+      "schema": "public",
+      "values": [
+        "ingreso",
+        "gasto",
+        "transferencia",
+        "reasignacion",
+        "pago_deuda",
+        "prestamo",
+        "cobro_prestamo"
+      ]
+    },
+    "public.tipo_regla": {
+      "name": "tipo_regla",
+      "schema": "public",
+      "values": [
+        "fijo",
+        "porcentaje"
+      ]
+    },
+    "public.tipo_sobre": {
+      "name": "tipo_sobre",
+      "schema": "public",
+      "values": [
+        "por_asignar",
+        "gastos",
+        "familia",
+        "emergencia",
+        "meta",
+        "inversion",
+        "fondo",
+        "deudas"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

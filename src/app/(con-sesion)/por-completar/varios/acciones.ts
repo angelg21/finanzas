@@ -59,9 +59,12 @@ export async function completarVariosAccion(previo: EstadoVarios, datos: FormDat
   // Inversión no se ofrece aquí: sacar de ella pide una confirmación propia, la de la captura.
   const aptos = sobres.filter((s) => s.tipo !== "inversion");
   const porPendiente: Record<number, string> = {};
+  const deGasto = new Set(categorias.map((c) => c.id));
   const items: ItemVarios[] = elegidos.map((p) => {
     const sobre = aptos.find((s) => String(s.id) === valores.sobres[String(p.id)]);
     if (!sobre) porPendiente[p.id] = "Elige un sobre";
+    // Su categoría tiene que seguir siendo de gasto y estar activa (guardian-datos, 0007, hallazgo 3).
+    if (!deGasto.has(p.categoriaId)) porPendiente[p.id] = "Su categoría ya no se ofrece: complétalo uno por uno";
     return {
       pendienteId: p.id,
       monto: valores.montos[String(p.id)] ?? "",
@@ -113,6 +116,10 @@ export async function completarVariosAccion(previo: EstadoVarios, datos: FormDat
   } catch (error) {
     registrarFalla("No se pudieron completar los gastos", error);
     return { ronda, estado: "error", errores: { general: mensajeDeFalla("otra", queNoSeGuardo) }, valores };
+  }
+  if ("otra" in registro) {
+    const general = "Esta captura ya se usó para otra cosa: vuelve a tocar Registrar.";
+    return { ronda, estado: "error", errores: { general }, valores: { ...valores, idCaptura: crypto.randomUUID() } };
   }
   if ("faltan" in registro) {
     return {
