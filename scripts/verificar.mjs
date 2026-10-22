@@ -2,7 +2,7 @@
 /**
  * Gates del proyecto.
  *   node scripts/verificar.mjs fast     → tipos, lint, formato, estructura, unitarias (lo corre el hook Stop)
- *   node scripts/verificar.mjs          → lo anterior + build + humo de rutas (bloquea el merge)
+ *   node scripts/verificar.mjs          → lo anterior + tipos de lo que sube Vercel + build + humo (bloquea el merge)
  *   --forzar                            → repite aunque el sello esté vigente
  * Al pasar, sella el árbol para no repetir sobre el mismo código.
  */
@@ -26,6 +26,7 @@ const pasos = [
   ["unitarias", "pnpm", ["exec", "vitest", "run", "--passWithNoTests"]],
 ];
 if (modo === "full") {
+  pasos.push(["subida", "node", ["scripts/subida.mjs"]]);
   pasos.push(["build", "pnpm", ["exec", "next", "build"]]);
   pasos.push(["humo", "node", ["scripts/humo.mjs"]]);
 }

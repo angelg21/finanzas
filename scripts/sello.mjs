@@ -16,6 +16,7 @@ const RAICES = [
   "pnpm-lock.yaml",
   "tsconfig.json",
   "next.config.ts",
+  ".vercelignore",
   "eslint.config.mjs",
   "postcss.config.mjs",
   "vitest.config.mts",
