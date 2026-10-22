@@ -171,4 +171,13 @@ metadata:
 - `docker exec` con heredoc necesita `-i`; sin él, psql no recibe nada y no da error.
 - Docker Desktop estaba apagado otra vez el 2026-10-22. Al arrancarlo se levantaron rielco, my-database y pgadmin4.
 
+- **Métodos de la 2.ª vuelta de 009 (2026-10-22)**, en `fff6d62f…/scratchpad/g009v2/`:
+  - **"Igual que generarla de cero" sin `generate`:** `gen-sql.cts <NNNN_snapshot.json>` escribe en stdout, envuelto en begin/commit, lo que drizzle-kit generaría desde ese snapshot hasta `schema.ts`. Se aplica con psql a una copia y se compara `pg_dump -s -n public --no-owner --no-privileges`.
+  - PG 17.11 mete líneas `\restrict <clave>` y `\unrestrict` aleatorias en cada pg_dump. Filtrar con `grep -Ev '^--|^$|^.(un)?restrict '`; si no, nunca coinciden.
+  - **Base con una migración vieja ya aplicada:** aplicar el `.sql` con psql (quitando `--> statement-breakpoint`) e insertar a mano su fila en `drizzle.__drizzle_migrations` (sha256 del archivo y su `when`). Luego, el migrador real aplica solo las siguientes.
+  - `sonda-v2.mts`: grupos de varios con venta, `ultimo`, `carrera-borrar` (con orden forzado desde una segunda conexión que retiene la venta), `doble-envio` y `otra-carrera`. Solo en `finanzas_g009_*`.
+  - `docker exec finanzas-db mkdir /tmp/x` también necesita `MSYS_NO_PATHCONV=1`.
+  - La sonda T3 de 006 (`t3/sonda-t3.mts gastos|carreras|bordes`) sirve de regresión de 006: copia `finanzas_g006_*` desde una copia migrada. B3 (mayúsculas) sale MAL, y es el residual conocido.
+  - `pnpm verify:fast --forzar` solo escribe el sello en `node_modules/.cache/finanzas` (ignorado): se puede correr sin tocar el árbol.
+
 Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].

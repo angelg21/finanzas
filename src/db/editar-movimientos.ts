@@ -62,12 +62,11 @@ export async function movimientoParaEditar(id: number) {
   if (!movimiento) return null;
   const captura = movimiento.origen === "manual" ? idDeReferencia(movimiento.referenciaExterna) : null;
   const enlazadas = captura ? (await guardadasDeCaptura(captura)).filter((f) => f.id !== movimiento.id) : [];
-  // Una venta que comparten varios gastos (completar varios, spec 009) no es de ninguno: no se muestra ni se toca.
-  const gastosDeLaCaptura = enlazadas.filter((f) => f.tipo === "gasto").length + 1;
+  // Solo el gasto de una captura con venta propia ("captura-X-gasto") tiene la venta; los de "completar varios"
+  // ("captura-X-gasto-<n>", spec 009) la comparten y no es de ninguno (guardian-datos, 009, segunda vuelta).
+  const ventaPropia = captura !== null && movimiento.referenciaExterna === referenciaDeCaptura(captura, "gasto");
   const venta =
-    movimiento.tipo === "gasto" && gastosDeLaCaptura === 1
-      ? (enlazadas.find((f) => f.tipo === "transferencia") ?? null)
-      : null;
+    movimiento.tipo === "gasto" && ventaPropia ? (enlazadas.find((f) => f.tipo === "transferencia") ?? null) : null;
   const reparto =
     movimiento.tipo === "ingreso"
       ? enlazadas.filter((f) => f.tipo === "reasignacion" && f.sobreOrigenId === movimiento.sobreDestinoId)
@@ -89,22 +88,13 @@ async function filaBloqueada(tx: Ejecutor, id: number, tipo: (typeof soloEditabl
 }
 
 /**
- * La venta de la captura de un gasto, bloqueada, y si es solo suya. Una venta que comparten varios gastos (completar
- * varios, spec 009) no se actualiza, no se crea otra ni se borra al editar o borrar uno de ellos: lo vendido se vendió
- * igual (guardian-datos, 0007, hallazgo 2).
+ * La venta de la captura de un gasto, bloqueada, si es solo suya. Se decide por la referencia del gasto, no contando
+ * los que quedan: "captura-X-gasto" tiene venta propia; los de "completar varios" ("captura-X-gasto-<n>" y
+ * "captura-X-gasto-resto", spec 009) comparten una que no se actualiza, no se reemplaza ni se borra al editar o borrar
+ * uno de ellos: lo vendido se vendió (guardian-datos, 009, primera y segunda vuelta).
  */
-async function ventaBloqueada(tx: Ejecutor, captura: string | null) {
+async function ventaBloqueada(tx: Ejecutor, captura: string | null, referenciaDelGasto: string | null) {
   if (!captura) return { venta: null, compartida: false };
-  const [{ gastos }] = await tx
-    .select({ gastos: sql<number>`count(*)::int`.mapWith(Number) })
-    .from(movimientos)
-    .where(
-      and(
-        eq(movimientos.origen, "manual"),
-        eq(movimientos.tipo, "gasto"),
-        like(movimientos.referenciaExterna, `${prefijoDeCaptura(captura)}gasto%`),
-      ),
-    );
   const [venta] = await tx
     .select()
     .from(movimientos)
@@ -117,7 +107,9 @@ async function ventaBloqueada(tx: Ejecutor, captura: string | null) {
     )
     .for("update");
   if (!venta) return { venta: null, compartida: false };
-  return gastos === 1 ? { venta, compartida: false } : { venta: null, compartida: true };
+  return referenciaDelGasto === referenciaDeCaptura(captura, "gasto")
+    ? { venta, compartida: false }
+    : { venta: null, compartida: true };
 }
 
 export type ResultadoEdicion<E> = { ok: true } | { ok: false; errores: E } | { noExiste: true };
@@ -132,7 +124,7 @@ export async function editarGasto(
     const gasto = await filaBloqueada(tx, id, "gasto");
     if (!gasto) return { noExiste: true as const };
     const captura = gasto.origen === "manual" ? idDeReferencia(gasto.referenciaExterna) : null;
-    const { venta, compartida } = await ventaBloqueada(tx, captura);
+    const { venta, compartida } = await ventaBloqueada(tx, captura, gasto.referenciaExterna);
     const plan = planear({ gastoId: gasto.id, ventaId: venta?.id ?? null });
     if (!plan.ok) return plan;
     if (
@@ -179,7 +171,7 @@ export async function borrarGasto(id: number): Promise<{ ok: true; conVenta: boo
     if (!gasto) return { noExiste: true as const };
     const captura = gasto.origen === "manual" ? idDeReferencia(gasto.referenciaExterna) : null;
     // Una venta compartida se queda: lo vendido se vendió, y lo de este gasto vuelve a Bolívares como vuelto.
-    const { venta } = await ventaBloqueada(tx, captura);
+    const { venta } = await ventaBloqueada(tx, captura, gasto.referenciaExterna);
     if (venta) await tx.delete(movimientos).where(eq(movimientos.id, venta.id));
     await tx.delete(movimientos).where(eq(movimientos.id, gasto.id));
     return { ok: true as const, conVenta: venta !== null };

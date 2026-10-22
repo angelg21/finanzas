@@ -24,7 +24,11 @@ export async function categoriasConUso() {
       icono: categorias.icono,
       color: categorias.color,
       activa: categorias.activa,
-      movimientos: count(movimientos.id),
+      // Con los gastos por completar que la usan (spec 009): con alguno, se archiva en vez de borrarse.
+      movimientos:
+        sql<number>`(count(${movimientos.id}) + (select count(*) from ${gastosPorCompletar} where ${gastosPorCompletar.categoriaId} = ${categorias.id}))::int`.mapWith(
+          Number,
+        ),
       usos,
     })
     .from(categorias)
