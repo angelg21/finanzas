@@ -55,7 +55,18 @@ const soloAlVender = "hidden group-has-[[name=forma][value=vendiendo]:checked]/g
 const soloEnBolivares = "group-has-[[name=forma][value=dolares]:checked]/gasto:hidden";
 const soloDelSaldo = "hidden group-has-[[name=forma][value=saldo]:checked]/gasto:block";
 
-type Inicial = { forma: FormaPago; cuentaId: string; cuentaVentaId: string; categoriaId?: string; idCaptura: string };
+type Inicial = {
+  forma: FormaPago;
+  cuentaId: string;
+  cuentaVentaId: string;
+  categoriaId?: string;
+  idCaptura: string;
+  /** Al completar un gasto anotado (spec 009): lo que ya se sabía, y su id para borrarlo al guardar. */
+  pendienteId?: number;
+  monto?: string;
+  nota?: string;
+  fecha?: string;
+};
 
 /** Captura de gasto. "Registrar otro" la vuelve a montar con la misma forma de pago y las mismas cuentas. */
 export function FormularioGasto({ inicial, ...datos }: Datos & { inicial: Inicial }) {
@@ -108,7 +119,7 @@ function Captura({
     estado.estado === "inicial"
       ? {
           forma: inicial.forma,
-          monto: "",
+          monto: inicial.monto ?? "",
           tasa: "",
           vendido: "",
           cuentaId: inicial.cuentaId,
@@ -122,8 +133,8 @@ function Captura({
             ) ?? "",
           ),
           // "Hoy" como atajo, no como la fecha de hoy: se resuelve al guardar (criterio 11).
-          fecha: "hoy",
-          nota: "",
+          fecha: inicial.fecha ?? "hoy",
+          nota: inicial.nota ?? "",
           idCaptura: inicial.idCaptura,
           etiquetaId: "",
           etiquetaNueva: "",
@@ -143,6 +154,8 @@ function Captura({
       alTocarSobre={() => setSobreTocado(true)}
       enviar={enviar}
       pendiente={pendiente}
+      textoBoton={inicial.pendienteId ? "Completar gasto" : undefined}
+      ocultos={inicial.pendienteId ? <input type="hidden" name="pendienteId" value={inicial.pendienteId} /> : undefined}
     />
   );
 }

@@ -9,7 +9,7 @@ Rama: `feat/009-gastos-por-completar`. Spec: `spec.md`.
 - [x] T3 · (2026-10-22) `src/db/por-completar.ts`: anotar (con reintento), listar, contar, descartar, completar uno y completar varios en una transacción que borra los pendientes (criterios 3, 6, 7, 9 y 10).
 - [x] T4 · (2026-10-22) `/nuevo/por-completar`, la tarjeta de Registrar y "Anotar sin monto" en la captura (criterios 2 y 3).
 - [x] T5 · (2026-10-22) `/por-completar` con descartar, y el aviso en el inicio y en Registrar (criterios 4 y 5).
-- [ ] T6 · Completar uno: la captura de gasto con `?pendiente=` (criterios 6 y 7).
+- [x] T6 · (2026-10-22) Completar uno: la captura de gasto con `?pendiente=` (criterios 6 y 7).
 - [ ] T7 · `/por-completar/varios` (criterios 8 a 10).
 - [ ] T8 · Plan, diseño y observaciones.
 
