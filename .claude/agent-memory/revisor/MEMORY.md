@@ -1,2 +1,2 @@
-- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — "por defecto", key={ronda}, Enter, estado fuera de React, filtros, 1024 px, extractores "?", listas propias, reglas fuera de mi lista, observadores en el error global
-- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, con o sin JS, sin red, base caída en 3125, pestaña colgada, acción como endpoint, Edge por PID, scratchpad
+- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — "por defecto", key={ronda}, Enter, estado fuera de React, filtros, 1024 px, extractores "?", listas propias, reglas fuera de mi lista, tokens nuevos aplicados a medias
+- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, con o sin JS, sin red, base caída en 3125, commits a mitad, .mts no es endpoint, respaldos de producción, scratchpad compartido

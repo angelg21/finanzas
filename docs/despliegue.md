@@ -89,7 +89,7 @@ Nunca corras `vercel env pull`, `vercel pull` ni `vercel build`: escriben las va
 
 Cada `git push origin main` despliega producción. El primero, si `main` ya estaba publicada antes de cargar las variables: **Deployments → Redeploy** en el último. Las otras ramas solo generan vistas previas, sin las variables, que son solo de Production.
 
-Al terminar, en el despliegue, pestaña **Source**: deben estar solo `src/`, `public/` y los archivos de configuración del `.vercelignore`. Nada de `docs/`, `data/`, `capturas/`, CSV ni archivos de entorno.
+Al terminar, en el despliegue, pestaña **Source**: deben estar solo `src/`, `public/`, los archivos de configuración del `.vercelignore` y `scripts/estructura.mjs`, que importan las pruebas de la regla de sesión (sin él, el build de Vercel falla con TS2307). Nada de `docs/`, `data/`, `capturas/`, CSV ni archivos de entorno. Que lo que sube compile solo lo comprueba `pnpm verify`, en el paso `subida`.
 
 ### 6. Comprobar
 

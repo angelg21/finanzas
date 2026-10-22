@@ -45,4 +45,10 @@ metadata:
 - Pestaña colgada: `Runtime.evaluate` y `Debugger.enable` no responden; `Page.handleJavaScriptDialog` responde "No dialog is showing" y el CPU del PID del renderer (`Target.getTargetInfo`) sube. Para medir sin colgarse, reemplazar `Element.prototype.setAttribute` y cortar a las 2000 escrituras. Cerrar con `/json/close/<id>` y abrir otra con `curl -X PUT /json/new?about:blank`. Pon siempre un reloj de 25 s en el guion.
 - Demostrar que un "use server" es un endpoint: worktree, archivo + página que lo pase a un `<form>`, `next build`, id en `.next/server/server-reference-manifest.json` y POST sin cookies con `next-action: <id>` y multipart `--form-string '0=["$K1"]'`; corre aunque el POST vaya a `/entrar`.
 
+- (2026-10-22) Un commit puede caer en `main` a mitad de la revisión (a7c8a2f llegó 4 min después de empezar): mira `git log -1` al cerrar y corre verify también sobre el HEAD nuevo. El scratchpad lo comparte la sesión del autor (sus `e2e-00N.mjs`, `dev.log`) y el `next dev` del puerto 3000 es suyo: no tocarlo.
+- `.mts` con "use server" no es endpoint: Turbopack no lo resuelve ni con especificador `.mjs` ni sin extensión, y tsc tampoco sin extensión. Ya probado: no repetir. Un archivo fuera de `src` lo frena el paso `subida` de verify (tsc con solo lo que sube Vercel).
+- `comprobar-002-servidor.ts` desde un worktree falla el ★ 8 con "0 variables" (lee el archivo de entorno por ruta relativa): es del entorno, no del código. En su lugar, un guion del scratchpad que cargue el entorno por dentro y busque los valores en `.next/static` sin imprimirlos.
+- `data/respaldos/` tiene respaldos de producción del desarrollador (`AAAA-MM-DD.sql`); el ensayo local (`pnpm exec tsx src/db/respaldo.ts` bajo `con-entorno.mjs`) escribe `-ensayo-local` y nunca pisa. Borrar solo el propio al terminar.
+- El hook de comandos niega un heredoc que contenga `.env`, aunque sea concatenado: guiones que leen el entorno, siempre con Write. Para preguntas sobre el archivo de entorno, imprimir solo booleanos (host local, mismo ref que `SUPABASE_URL`).
+
 Ver [[donde-se-esconden-defectos]].

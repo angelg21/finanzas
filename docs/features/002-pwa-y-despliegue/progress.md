@@ -114,7 +114,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 - [ ] Construida (todas las tareas con commit)
 - [x] Validada en navegador (2026-10-14)
 - [x] Verificada (2026-10-17): `pnpm verify` en verde y cada ★ con su prueba, sobre `main`. Lo que solo se comprueba en producción quedó pendiente del desarrollador, en los ★ 3, 9, 11, 12 y 13 (ver notas, "/f-verify")
-- [ ] Revisada: veredicto APTO PARA FUSIONAR
+- [x] Revisada: veredicto APTO PARA FUSIONAR (2026-10-22, tercera vuelta, después de fusionar). En producción falla el ★ 13 (el usuario de prueba entra): pendiente del desarrollador, ver notas
 - [x] Fusionada en `main` el 2026-10-14, por decisión del desarrollador antes de verificar y revisar (ver notas)
 
 ## Notas
@@ -385,3 +385,19 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - **4**: cubierto por el mismo arreglo: fuera de un `acciones.ts` no puede haber acciones, así que la prueba de `conFallas` las ve todas.
   - **3**: token `palida-negativo` (`#8f1d17`, 5,05:1 o más en los cuatro tonos del degradado pálido, claro y oscuro), `ErrorCampo palida` y la variante de botón `peligro-palida`, en "Quitar" y en el aporte manual de `/sobres/[id]`. En Edge, a 390 px en oscuro, la papelera calcula `rgb(143, 29, 23)`.
   - `pnpm verify:fast` en verde.
+- Despliegue del 2026-10-17, fallido: el build de Vercel dio `TS2307` porque `src/app/sesion.criterios.test.ts` y `supabase.criterios.test.ts` importan `scripts/estructura.mjs`, que `.vercelignore` no subía. Arreglo (`350ce28`): `.vercelignore` sube ese archivo y nada más de `scripts/`. Para que no se repita, `pnpm verify` tiene desde `a7c8a2f` el paso `subida`: copia lo que deja pasar `.vercelignore` y corre `next typegen` y `tsc` ahí. Quitando la línea de `.vercelignore` da el mismo `TS2307`; con la de hoy, verde.
+- Revisión (2026-10-22), tercera vuelta: `revisor`, **APTO PARA FUSIONAR**, con `pnpm verify --forzar` en verde sobre `a749259` y sobre `a7c8a2f`. Comprobó en Edge y con un build los tres arreglos de la segunda vuelta. Hallazgos, ninguno bloqueante:
+  1. **Baja, ★ 19.** La prueba de `conFallas` solo reconocía `import { x } from ".../acciones"` y solo recorría `(con-sesion)`: un `import * as acciones` o una ruta nueva fuera de `(con-sesion)` pasaban.
+  2. **Baja, criterio 5.** "Entrar" sin red cambiaba la pantalla por el error de Next en inglés y se perdía el correo: `entrar` no pasaba por `conFallas`.
+  3. **Baja, documento dueño.** El rojo `palida-negativo` se aplicó solo donde lo nombró la segunda vuelta: "Después del gasto" y "Queda en negativo" de `/nuevo/gasto` seguían en `text-negativo` sobre la tarjeta pálida (1,43 a 1,75:1 en oscuro).
+  4. **Muy baja, documentos.** Este archivo no registraba el despliegue fallido ni el paso `subida`; la segunda vuelta cerró con `verify:fast`; `docs/despliegue.md` no decía que sube `scripts/estructura.mjs`.
+- Arreglos (2026-10-22):
+  - **1**: `src/app/fallas.criterios.test.ts` recorre todo `src/app` y reconoce las acciones importadas con nombre, por defecto y como `* as` (cada `acciones.algo` usado). Con el cambio, la prueba falló con `src/app/(sin-sesion)/entrar/formulario-entrar.tsx: entrar`, el hallazgo 2.
+  - **2**: `entrar-con-fallas.ts` envuelve `entrar` con `conFallas`; los mensajes son de `mensajeDeFallaAlEntrar` en `src/lib/fallas.ts` ("Sin conexión: no se pudo entrar. Vuelve a intentarlo cuando tengas red.", sin hablar de guardar), con su prueba, que falló antes. En Edge, contra el servidor de desarrollo: sin red, el mensaje junto al botón, el correo sigue y no aparece el error de Next; con red, "Correo o contraseña incorrectos."; sin JavaScript, el formulario va a la acción y responde lo mismo (7 de 7).
+  - **3**: además de los dos sitios del informe, `grep` encontró otros tres sobre la tarjeta pálida: el pie del reparto ("Revisa los montos marcados." y "Repartes … y hay …") y sus dos `ErrorCampo`, en `src/components/reparto.tsx`. Los cinco pasan a `palida-negativo` (tono nuevo de `Cifra`, y `ErrorCampo palida`). En Edge a 1440, midiendo todo texto rojo dentro de una tarjeta pálida en `/nuevo/gasto` (monto 99999) y `/nuevo/ingreso` (reparto de más): 5,05:1 en oscuro y 5,70:1 en claro en el peor tono del degradado, 18 de 18.
+  - **4**: estas notas, y `docs/despliegue.md`, paso 5, nombra `scripts/estructura.mjs` y el paso `subida`.
+  - `pnpm verify --forzar`: `✓ subida (6.7 s)`, `Tests  932 passed (932)`, `✓ verify:full en verde en 46.2 s. Árbol sellado.`
+- Producción (2026-10-22), lo del ★ 12 y el ★ 13 que el agente puede hacer:
+  - **★ 12, hecho por el desarrollador:** hay respaldos de producción en `data/respaldos/` (`2026-10-17.sql`, `2026-10-17-2.sql` y `2026-10-22.sql`; no se abrieron).
+  - **★ 13, humo:** `pnpm humo -- --url https://arca-ag.vercel.app --sin-sesion` termina en "✓ humo: todo responde como debe.".
+  - **★ 13, el usuario de prueba no entra: FALLA.** En Edge sin ventana, en `/entrar` de producción, con `HUMO_CORREO` y `HUMO_CLAVE` leídas dentro del guion: entró a `/`, quedó una cookie de sesión y `/movimientos` abrió. El guion solo imprimió rutas, ningún dato. La sesión se cerró: el perfil temporal se borró y `/cuentas` vuelve a mandar a `/entrar`. Lo más probable es que el usuario de prueba de "finanzas-dev" sea el correo real con la misma contraseña que producción: entonces el archivo de entorno de desarrollo guarda una contraseña que abre producción. **Pendiente del desarrollador:** en Supabase de producción, cambiar la contraseña de su usuario por una nueva generada por el gestor, distinta de la de "finanzas-dev"; o dar al usuario de prueba de "finanzas-dev" otro correo. Después el agente repite la prueba, que debe dar "Correo o contraseña incorrectos.".
