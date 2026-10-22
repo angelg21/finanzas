@@ -20,7 +20,7 @@ Rama: `feat/008-etiquetas`. Spec: `spec.md`.
 - [x] Spec escrita con la maqueta del desarrollador (2026-10-17)
 - [x] Construida (todas las tareas con commit, 2026-10-17)
 - [x] Validada en navegador (2026-10-22)
-- [ ] Verificada: `pnpm verify` en verde, cada ★ con su prueba
+- [x] Verificada: `pnpm verify` en verde, cada ★ con su prueba (2026-10-22)
 - [ ] Revisada: veredicto APTO PARA FUSIONAR
 - [x] Fusionada en `main` el 2026-10-17, por pedido del desarrollador antes de validar, verificar y revisar (ver notas)
 
@@ -36,3 +36,14 @@ Rama: `feat/008-etiquetas`. Spec: `spec.md`.
 - Recorrido de punta a punta (2026-10-17) en Edge sin ventana, base local migrada, con «Cuadra con los sobres» tras cada paso (19 de 19): ingreso con "demo-Cliente" escrita ("Se creará «demo-Cliente» al guardar.") y su reparto sin etiqueta; gasto escribiendo " DEMO-cliente " ("Se usará «demo-Cliente», que ya existe.") sin crear otra; la píldora "demo-Cliente 50" en una línea; el filtro "demo-Cliente · 50,00"; `?etiqueta=abc` no filtra; al editar viene elegida y tocarla la quita. Al final, los mismos movimientos y ninguna etiqueta de prueba.
 - **Producción, en este orden:** `pnpm db:respaldo:produccion`, `pnpm db:migrate:produccion` con la app sin uso, y solo entonces `git push origin main`.
 - **Fusión adelantada (2026-10-17)**, por pedido del desarrollador. En cola para `/f-verify 008`: `scripts/comprobar-008.ts` con dos grafías, dos pestañas a la vez y el check de tipo, con nombres `demo-` y borrado al final.
+- **/f-verify (2026-10-22), sobre `main`.** Una prueba por criterio ★, escrita desde su texto; `src/lib/etiquetas.test.ts` de la construcción sigue cubriendo el nombre, la clave, el filtro de las píldoras y `leerIdEtiqueta`. Lo nuevo:
+  - `src/app/(con-sesion)/etiqueta-del-formulario.criterios.test.ts` (7 pruebas, con la base simulada que cuenta lo que se le pide):
+    - ★ 7: sin etiqueta, con los campos vacíos o con un id que no es un entero positivo, ninguna consulta ni escritura;
+    - ★ 2: la píldora elegida queda si existe, y si se borró mientras tanto: "Esa etiqueta ya no existe";
+    - ★ 3: lo escrito se busca o se crea y queda puesto, manda sobre la píldora, y un nombre de más de 30 no toca la base.
+  - `scripts/comprobar-008.ts`, contra la base local con los datos de demostración, que deja como estaba, también las etiquetas (14 de 14 ✓):
+    - ★ 1: "SAX", "sax", " Sax " y "SÁX" dan la misma fila, con la grafía de la primera; seis grafías de "Rielco" creadas a la vez terminan en una sola fila; una segunda fila con la misma clave: 23505;
+    - ★ 4: el gasto vendiendo USDT lleva la etiqueta y su venta no, también al editarlo; el ingreso sí y su reparto no; la base rechaza una etiqueta en una transferencia o una reasignación al insertar y al actualizar: 23514;
+    - ★ 5 y 6: en el mes, Gastos muestra Rielco con 32,00 e Ingresos con 100,00; filtrar deja sus tres gastos y el total en 32,00; con la categoría, dos y 25,00; sin filtro vuelve el de sin etiqueta; el anillo no cambia; cada fila trae el nombre de su etiqueta.
+  - `pnpm humo` con sesión: `/movimientos?etiqueta=999999`, `=abc`, `tipo=ingresos&etiqueta=-1` y `etiqueta=1e3&etiqueta=2` → 200 (★ 5, la página no falla).
+  - `pnpm verify --forzar`: `Tests  947 passed (947)`, `✓ subida (6.8 s)`, `✓ verify:full en verde en 43.0 s. Árbol sellado.`

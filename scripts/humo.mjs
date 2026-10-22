@@ -86,6 +86,11 @@ const conSesion = [
   ["/deudas/apartar", 200],
   // Spec 007, criterio 7.
   ["/nuevo/mover", 200],
+  // Spec 008, criterio 5: un ?etiqueta= que no es una etiqueta no filtra y la página no falla.
+  ["/movimientos?etiqueta=999999", 200],
+  ["/movimientos?etiqueta=abc", 200],
+  ["/movimientos?tipo=ingresos&etiqueta=-1", 200],
+  ["/movimientos?etiqueta=1e3&etiqueta=2", 200],
   ["/sobres/999999", 404],
   ["/categorias/999999", 404],
   ["/deudas/999999", 404],
