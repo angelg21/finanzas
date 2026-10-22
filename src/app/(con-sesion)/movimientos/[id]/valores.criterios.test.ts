@@ -6,6 +6,8 @@
  *   11 · al guardar o borrar se vuelve a la lista de donde se vino, por defecto /movimientos, con su aviso.
  * Que la dirección de un tipo que no es gasto ni ingreso responda 404 lo comprueba scripts/comprobar-006.ts contra la
  * base, con movimientoParaEditar, que es lo que la página consulta antes de llamar a notFound.
+ * Y de la spec 007, ★ 1: la fila de un pago o un cobro, en Movimientos o en el historial de la deuda, abre
+ * /movimientos/[id] para deshacerlo, y al deshacer se vuelve a la deuda con "Deshecho".
  */
 import { describe, expect, it } from "vitest";
 import { avisoDeVuelta, conAviso, destinoDeVuelta, enlaceDeEdicion } from "./valores";
@@ -22,6 +24,21 @@ describe("★ 8 · solo gastos e ingresos abren la edición", () => {
     for (const tipo of ["transferencia", "reasignacion", "prestamo", "otro"]) {
       expect(enlaceDeEdicion({ id: 9, tipo }, "/movimientos")).toBeUndefined();
     }
+  });
+});
+
+describe("spec 007, ★ 1 · un pago o un cobro se abre para deshacerlo", () => {
+  it("su fila enlaza a /movimientos/[id], desde Movimientos o desde la deuda", () => {
+    expect(enlaceDeEdicion({ id: 11, tipo: "pago_deuda" }, "/deudas/4")).toBe("/movimientos/11?volver=%2Fdeudas%2F4");
+    expect(enlaceDeEdicion({ id: 12, tipo: "cobro_prestamo" }, "/movimientos")).toBe(
+      "/movimientos/12?volver=%2Fmovimientos",
+    );
+  });
+
+  it("al deshacer se vuelve a la deuda de donde se vino, con 'Deshecho'", () => {
+    expect(destinoDeVuelta("/deudas/4")).toBe("/deudas/4");
+    expect(avisoDeVuelta({ borrado: "deshecho" })).toBe("Deshecho");
+    expect(destinoDeVuelta("/deudas/4/editar")).toBe("/movimientos");
   });
 });
 
