@@ -10,7 +10,7 @@ Rama: `feat/009-gastos-por-completar`. Spec: `spec.md`.
 - [x] T4 · (2026-10-22) `/nuevo/por-completar`, la tarjeta de Registrar y "Anotar sin monto" en la captura (criterios 2 y 3).
 - [x] T5 · (2026-10-22) `/por-completar` con descartar, y el aviso en el inicio y en Registrar (criterios 4 y 5).
 - [x] T6 · (2026-10-22) Completar uno: la captura de gasto con `?pendiente=` (criterios 6 y 7).
-- [ ] T7 · `/por-completar/varios` (criterios 8 a 10).
+- [x] T7 · (2026-10-22) `/por-completar/varios` (criterios 8 a 10).
 - [ ] T8 · Plan, diseño y observaciones.
 
 ## Validación en navegador
