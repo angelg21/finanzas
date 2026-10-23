@@ -10,10 +10,11 @@ type Etiqueta = { id: number; nombre: string };
 /**
  * "Etiquetas" (spec 008): las que existen, en píldoras; tocar una la elige y tocar la elegida la quita. "+ Añadir
  * etiqueta" y la lupa abren el mismo campo: lo que se escribe filtra las píldoras y, si no hay una igual, se crea al
- * guardar. Envía `etiquetaId` (la elegida) o `etiquetaNueva` (lo escrito); nunca las dos con JavaScript: tocar una
- * píldora, también una filtrada, borra lo escrito y cierra la búsqueda, y escribir quita la píldora elegida hasta que
- * se cierre la búsqueda o se borre lo escrito, que la devuelven (revisión de la 008, hallazgos 1 y 5). Sin JavaScript,
- * el campo está siempre a la vista, hay una opción "Sin etiqueta", y si llegan las dos manda lo escrito.
+ * guardar. Tocar una píldora, también una filtrada, la elige, borra lo escrito y cierra la búsqueda. Escribir quita
+ * la píldora elegida hasta que se cierre la búsqueda o se borre lo escrito, que la devuelven: mientras tanto viaja en un
+ * `etiquetaId` oculto, así sobrevive a un error del servidor, y lo escrito manda (revisión de la 008, primera y segunda
+ * vuelta). Enter en la búsqueda solo busca: no guarda el formulario. Sin JavaScript, el campo está siempre a la vista,
+ * hay una opción "Sin etiqueta", la lupa y "+ Añadir" no se ven, y si llegan las dos manda lo escrito.
  */
 export function SelectorEtiqueta({
   etiquetas,
@@ -26,11 +27,13 @@ export function SelectorEtiqueta({
   nuevaInicial?: string;
   error?: string;
 }) {
-  const [elegida, setElegida] = useState(valorInicial);
+  // Si vuelve del servidor con algo escrito y una elegida, la elegida era la de antes de escribir.
+  const escribiendo = nuevaInicial.trim() !== "";
+  const [elegida, setElegida] = useState(escribiendo ? "" : valorInicial);
   const [abierto, setAbierto] = useState(nuevaInicial !== "");
   const [texto, setTexto] = useState(nuevaInicial);
   /** La píldora que estaba elegida antes de escribir: cerrar la búsqueda o borrar lo escrito la devuelve. */
-  const [previa, setPrevia] = useState<string | null>(null);
+  const [previa, setPrevia] = useState<string | null>(escribiendo && valorInicial !== "" ? valorInicial : null);
   const elegir = (id: string) => {
     setElegida(id);
     setPrevia(null);
@@ -51,7 +54,7 @@ export function SelectorEtiqueta({
           type="button"
           aria-label="Buscar o añadir etiqueta"
           onClick={() => setAbierto(true)}
-          className="grid size-8 place-items-center rounded-full text-enlace hover:bg-tarjeta-hover"
+          className="grid size-8 place-items-center rounded-full text-enlace hover:bg-tarjeta-hover noscript:hidden"
         >
           <Search size={18} aria-hidden />
         </button>
@@ -84,13 +87,14 @@ export function SelectorEtiqueta({
           <button
             type="button"
             onClick={() => setAbierto(true)}
-            className={`${pildoraOpcion} ${pildoraNormal} border-dashed text-enlace`}
+            className={`${pildoraOpcion} ${pildoraNormal} border-dashed text-enlace noscript:hidden`}
           >
             <Plus size={16} aria-hidden />
             Añadir etiqueta
           </button>
         )}
       </div>
+      {previa !== null ? <input type="hidden" name="etiquetaId" value={previa} /> : null}
       {abierto ? (
         <div className="mt-1 flex flex-col gap-1">
           <div className="flex items-center gap-2">
@@ -112,6 +116,10 @@ export function SelectorEtiqueta({
               placeholder="Nombre de la etiqueta"
               maxLength={30}
               autoComplete="off"
+              // Enter (o "Ir" en el celular) solo busca: no guarda el movimiento con lo escrito como etiqueta nueva.
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.preventDefault();
+              }}
               autoFocus={nuevaInicial === ""}
               aria-label="Nombre de la etiqueta"
               className="flex-1"
