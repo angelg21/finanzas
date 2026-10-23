@@ -20,9 +20,9 @@ Decisiones del desarrollador, 2026-10-17:
 
 1. ★ **Una etiqueta, sin duplicados por tipeo.** Una etiqueta tiene un nombre de 1 a 30 caracteres. "SAX", "sax" y " Sax " son la misma: al crear una con un nombre que ya existe sin importar mayúsculas, acentos ni espacios de más, se usa la existente. Lo garantiza un índice único de la base sobre su clave.
 2. ★ **Elegir en el formulario.** En la captura de gasto, en la de ingreso y al editar uno de los dos (006), el campo "Etiquetas" muestra las existentes como píldoras. Tocar una la elige; tocar la elegida la quita. Sin etiqueta es lo normal y no pide nada más.
-3. ★ **Crear ahí mismo.** "+ Añadir etiqueta" y la lupa abren un campo de texto. Lo que se escribe filtra las píldoras. Si no hay una igual, debajo se lee "Se creará «Rielco» al guardar", y al guardar se crea y queda puesta. Lo escrito en el resto del formulario no se pierde. Sin JavaScript, el campo de texto está siempre a la vista.
+3. ★ **Crear ahí mismo.** "+ Añadir etiqueta" y la lupa abren un campo de texto. Lo que se escribe filtra las píldoras. Si no hay una igual, debajo se lee "Se creará «Rielco» al guardar", y al guardar se crea y queda puesta. Lo escrito en el resto del formulario no se pierde. Sin JavaScript, el campo de texto está siempre a la vista. Tocar una píldora, también una que quedó al filtrar, la elige y borra lo escrito: se guarda la píldora, nunca lo escrito a la vez; cerrar la búsqueda con la X devuelve la píldora que estaba elegida. Sin JavaScript, si llegan las dos, manda lo escrito (revisión, 2026-10-22).
 4. ★ **Solo gastos e ingresos.** La base no admite una etiqueta en otro tipo de movimiento (check). La venta de USDT de un gasto y el reparto de un ingreso no llevan etiqueta: solo el gasto y el ingreso.
-5. ★ **Filtrar y acumular.** En `/movimientos`, en Gastos e Ingresos, las etiquetas con movimientos en el periodo salen como píldoras con su total ("SAX 1.200"). Tocar una filtra la lista y el total de arriba ("SAX · 1.200,00 USD"); tocarla otra vez lo quita. Se combina con la categoría. El anillo sigue siendo el del periodo. `?etiqueta=` es el id: uno que no es un entero positivo o que no existe no filtra, y la página no falla.
+5. ★ **Filtrar y acumular.** En `/movimientos`, en Gastos e Ingresos, las etiquetas con movimientos en el periodo salen como píldoras con su total ("SAX 1.200"). Tocar una filtra la lista y el total de arriba ("SAX · 1.200,00 USD"); tocarla otra vez lo quita. Se combina con la categoría. El anillo sigue siendo el del periodo. `?etiqueta=` es el id: uno que no es un entero positivo o que no existe no filtra, y la página no falla. La etiqueta activa conserva su píldora para quitarla aunque no tenga movimientos en el periodo o la categoría; viaja en las flechas, el calendario y el campo de fecha sin JavaScript; y no pasa a Mover, que no lleva etiquetas (revisión, 2026-10-22).
 6. Cada fila de Movimientos y del inicio muestra su etiqueta en el detalle ("Sueldo remoto · Binance · SAX").
 7. ★ La captura de gasto no se vuelve más lenta: sin etiqueta no hay ninguna consulta ni escritura nueva al guardar.
 
@@ -58,5 +58,5 @@ En cola, por pedido del desarrollador, para `/f-verify 008`: los ★ contra la b
 
 ## Riesgos y decisiones
 
-- Crear la etiqueta va antes de guardar el movimiento: si el movimiento falla, la etiqueta queda creada, vacía. No hace daño.
+- La etiqueta nueva se crea en la misma transacción que guarda el movimiento, después de lo que puede rechazarlo: si el movimiento no se guarda, la etiqueta tampoco queda (revisión de la 006, 2026-10-22).
 - Lo de la 007 con # en la nota se quita entero: sus pruebas se van con el código que probaban, por decisión del desarrollador.

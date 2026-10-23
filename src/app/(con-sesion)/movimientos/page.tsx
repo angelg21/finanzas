@@ -61,8 +61,8 @@ function cuando({ periodo, fecha }: Filtros, hoy: string) {
 /**
  * Movimientos (spec 003): Gastos, Ingresos y Mover; el periodo con sus flechas; en Gastos e Ingresos, el anillo por
  * categoría con su leyenda que filtra; y la lista por día. Todo son enlaces con parámetros que valida `leerFiltros`:
- * funciona sin JavaScript. Tres consultas: totales por categoría, lista y resumen por día; con filtro, una cuarta
- * busca la categoría por su tipo.
+ * funciona sin JavaScript. Dos tandas en paralelo: los totales por categoría y, con filtros, la categoría por su tipo
+ * y la etiqueta (spec 008); después la lista, el resumen por día y las etiquetas del periodo.
  */
 export default async function Movimientos({ searchParams }: PageProps<"/movimientos">) {
   await exigirSesion();
@@ -71,18 +71,18 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
   const pedidos = leerFiltros(parametros, hoy);
   const aviso = avisoDeVuelta(parametros);
   // Spec 008: la etiqueta se valida aparte, sin tocar los filtros de la 003, y viaja en los enlaces de la página. Una
-  // que no existe no filtra.
+  // que no existe no filtra, y en Mover no aplica: solo gastos e ingresos llevan etiqueta (revisión de la 008).
   const idEtiqueta = leerIdEtiqueta(parametros.etiqueta);
-  const etiqueta = idEtiqueta === null ? null : await etiquetaPorId(idEtiqueta);
   const rango = rangoDePeriodo(pedidos.periodo, pedidos.fecha);
   const conAnillo = pedidos.pestana !== "mover";
 
-  const [totales, pedida] =
+  const [totales, pedida, etiqueta] =
     pedidos.pestana === "mover"
-      ? [[], null]
+      ? [[], null, null]
       : await Promise.all([
           totalesPorCategoria(pedidos.pestana, rango),
           pedidos.categoria === null ? null : categoriaDeLaPestana(pedidos.pestana, pedidos.categoria),
+          idEtiqueta === null ? null : etiquetaPorId(idEtiqueta),
         ]);
   // Filtra cualquier categoría del tipo de la pestaña, aunque no tenga movimientos en el periodo: entonces lo dice y el
   // filtro sigue en las flechas, las píldoras y el calendario (criterio 6). Una de otro tipo, o que no existe, no filtra.
@@ -91,11 +91,17 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
     centavos: totales.find((t) => t.categoriaId === pedida.categoriaId)?.centavos ?? 0,
   };
   const filtros: Filtros = { ...pedidos, categoria: categoria?.categoriaId ?? null };
-  const [lista, dias, etiquetas] = await Promise.all([
+  const [lista, dias, delPeriodo] = await Promise.all([
     movimientosDelPeriodo(filtros.pestana, rango, filtros.categoria, LIMITE, etiqueta?.id ?? null),
     resumenPorDia(filtros.pestana, rango, filtros.categoria, etiqueta?.id ?? null),
     filtros.pestana === "mover" ? [] : etiquetasDelPeriodo(filtros.pestana, rango, filtros.categoria),
   ]);
+  // La activa siempre tiene su píldora, aunque no haya movimientos con ella en el periodo o la categoría: tocarla otra
+  // vez la quita (revisión de la 008, hallazgo 3).
+  const etiquetas =
+    etiqueta && !delPeriodo.some((e) => e.id === etiqueta.id)
+      ? [...delPeriodo, { id: etiqueta.id, nombre: etiqueta.nombre, centavos: 0 }]
+      : delPeriodo;
 
   const enlace = (cambios: Partial<Filtros> & { etiqueta?: number | null }) => {
     const { etiqueta: conEtiqueta = etiqueta?.id ?? null, ...resto } = cambios;
@@ -195,7 +201,8 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
             opciones={pestanasMovimientos.map((p) => ({
               clave: p,
               texto: textoPestana[p],
-              href: enlace({ pestana: p, categoria: null }),
+              // Mover no lleva etiquetas: ir ahí no se lleva el filtro (revisión de la 008, hallazgo 2).
+              href: enlace({ pestana: p, categoria: null, ...(p === "mover" ? { etiqueta: null } : {}) }),
             }))}
           />
         </div>
@@ -244,6 +251,7 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
             <form method="get" action="/movimientos" className="flex items-center gap-2">
               {filtros.pestana !== "gastos" ? <input type="hidden" name="tipo" value={filtros.pestana} /> : null}
               {filtros.categoria !== null ? <input type="hidden" name="categoria" value={filtros.categoria} /> : null}
+              {etiqueta ? <input type="hidden" name="etiqueta" value={etiqueta.id} /> : null}
               <input type="hidden" name="periodo" value="dia" />
               <Entrada
                 type="date"

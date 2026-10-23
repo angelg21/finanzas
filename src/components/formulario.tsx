@@ -104,6 +104,8 @@ export const pildoraOpcion =
 export const pildoraNormal = "border-tarjeta-borde bg-tarjeta-hover text-texto-2 hover:text-texto";
 /** La opción elegida: menta con texto verde pino. */
 export const pildoraElegida = "border-transparent bg-palido text-palido-texto";
+/** Una píldora que es un radio: normal, y en menta cuando su radio (dentro de un `label.group`) está marcado. */
+export const pildoraDeRadio = `${pildoraOpcion} ${pildoraNormal} group-hover:text-texto group-has-checked:border-transparent group-has-checked:bg-palido group-has-checked:text-palido-texto group-has-focus-visible:ring-2 group-has-focus-visible:ring-palido group-has-focus-visible:ring-offset-2 group-has-focus-visible:ring-offset-tarjeta`;
 
 /**
  * Grupo de radios accesible con forma de píldoras: en el celular, una fila desplazable en horizontal;
@@ -162,9 +164,7 @@ export function SelectorPildoras({
               onChange={onCambio ? () => onCambio(o.valor) : undefined}
               onClick={alTocar ? () => alTocar(o.valor) : undefined}
             />
-            <span
-              className={`${pildoraOpcion} ${pildoraNormal} group-hover:text-texto group-has-checked:border-transparent group-has-checked:bg-palido group-has-checked:text-palido-texto group-has-focus-visible:ring-2 group-has-focus-visible:ring-palido group-has-focus-visible:ring-offset-2 group-has-focus-visible:ring-offset-tarjeta`}
-            >
+            <span className={pildoraDeRadio}>
               {o.categoria ? (
                 <CirculoCategoria icono={o.categoria.icono} color={o.categoria.color} tamano="sm" className="-ml-1.5" />
               ) : o.avatar ? (

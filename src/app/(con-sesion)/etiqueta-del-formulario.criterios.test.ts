@@ -74,7 +74,8 @@ describe("★ 3 · crearla ahí mismo, al guardar", () => {
     expect(consultas()).toBe(0);
   });
 
-  it("lo escrito manda sobre la píldora elegida", async () => {
+  // Con JavaScript no llegan las dos (tocar una píldora borra lo escrito); sin él, sí, y la spec dice que manda lo escrito.
+  it("sin JavaScript, si llegan las dos, lo escrito manda sobre la píldora elegida", async () => {
     expect(await etiquetaDelFormulario(formulario({ etiquetaId: "7", etiquetaNueva: "KumIA" }))).toEqual({
       ok: true,
       etiqueta: { nueva: "KumIA" },

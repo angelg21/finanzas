@@ -77,7 +77,7 @@ No cambia el plan. Al cerrar, la línea de gráficas se marca como hecha en lo q
     - La página sigue empezando con `await exigirSesion()`.
     - Las consultas nuevas viven en `src/db/` y la aritmética en `src/lib/`.
     - La página no habla con Drizzle.
-16. **Sin coste para la captura.** La página hace a lo sumo tres consultas (totales por categoría, lista y resumen por día), y una cuarta con el filtro por categoría, que la busca por su tipo (revisión, 2026-10-17). No toca `/nuevo/gasto`.
+16. **Sin coste para la captura.** La página hace sus consultas en dos tandas en paralelo: los totales por categoría (con filtros, también la categoría por su tipo y la etiqueta de la 008), y después la lista, el resumen por día y las etiquetas del periodo (revisión, 2026-10-17; etiquetas, revisión de la 008, 2026-10-22). No toca `/nuevo/gasto`.
 17. **Calendario** (pedido del desarrollador al validar, 2026-10-14). Tocar el nombre del periodo abre el calendario propio de la captura de gasto:
     - se abre en el mes del periodo y los días futuros están apagados;
     - elegir un día lleva a ese día (Día) sin cambiar la pestaña ni la categoría;
