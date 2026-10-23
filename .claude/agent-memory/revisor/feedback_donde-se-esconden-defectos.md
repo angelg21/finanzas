@@ -57,6 +57,8 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 
 - 008, vuelta 2 (2026-10-22, sobre `1db2aa4`): NO APTO. Los arreglos cierran su camino (filtrar y tocar con clics y teclas reales en gasto, ingreso, editar los dos y completar un pendiente; /movimientos con calendario, fecha sin JS y Mover). Lo que falló: Enter en la búsqueda de etiquetas (que solo "filtra") guarda el gasto o el ingreso con lo escrito como etiqueta nueva, permanente: "r8b riel" con "Rielco" a la vista. El buscador de iconos de categorías ya bloquea Enter por eso mismo (001 v6). Y el `previa` que añadió el arreglo no viaja en `valores`: tras un error (key={ronda}) la X ya no devuelve la píldora; en la edición, guardar le quita la etiqueta al movimiento. Bajo: lupa y "+ Añadir etiqueta" muertas sin JS (el repo tiene `noscript:hidden`).
 
+- 008, vuelta 3 (2026-10-23, sobre `63cab23`): NO APTO. Con JS los cinco formularios cierran todo (error, Inversión, "Quedan X", sin red, Enter, teclado). Lo que falló fue SIN JS DESPUÉS DE UNA VUELTA AL SERVIDOR, que el autor nunca miró (sus pruebas sin JS son de la carga inicial): el estado inicial del selector sale de `valores` (`abierto = nuevaInicial !== ""`, lista filtrada por lo escrito) y el SSR lo congela. Solo se pintan las píldoras que coinciden, la elegida antes viaja en el oculto sin verse (y es la que se guarda al borrar lo escrito), la X se ve y no hace nada, y "Se creará «Rie»" sigue con el campo vacío. En el ingreso sin JS el primer envío siempre propone: es el camino normal. Lo pasé por alto en las vueltas 1 y 2.
+
 **Why:** la demo es toda `origen = importado`, así que la lógica que depende de historial `manual` no se ve. La validación en navegador sigue el camino feliz, en un solo momento, y no pasa por un error de validación ni por el paso del tiempo antes de guardar.
 
 **How to apply:**
@@ -113,6 +115,7 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 - Todo campo nuevo que "busca" o "filtra" dentro de un `<form>` (etiquetas, iconos): pulsa Enter con el foco ahí y el resto del formulario completo. Si guarda, compara con el precedente del repo (`onKeyDown` Enter `preventDefault` en el buscador de iconos). El autor valida filtrar con clics, nunca con Enter.
 - Cada `useState` que AÑADE un arreglo (aquí `previa`) es estado que no viaja en `valores`: provoca un error del servidor (monto vacío al editar) y repite el paso que el arreglo prometía (cerrar con la X). En la edición mira la fila tras guardar.
 - Botones `type=button` que solo sirven con JS (lupa, "Añadir"): míralos con `setScriptExecutionDisabled`; el repo esconde los suyos con `noscript:hidden`.
+- Toda pieza cliente cuyo `useState` inicial sale de `valores`: ábrela SIN JS después de una vuelta al servidor (un error; en el ingreso basta el primer envío, que solo propone) y compara lo que se ve marcado con `new FormData(form)`. Lo que el cliente cambiaría con JS (filtros, X, avisos de "Se creará") queda congelado, y un oculto lleva estado que no se ve. Cuando el autor arregla "botones muertos sin JS", busca los que solo aparecen tras la vuelta.
 - Los fijos de la demo están cubiertos en el mes real: para ver el efecto en un fijo hace falta otro mes (servidor con el reloj adelantado, ver [[entorno-revision-finanzas]]).
 
 Ver [[entorno-revision-finanzas]].
