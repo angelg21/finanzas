@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, Search, X } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { coincidenConEtiqueta, etiquetaIgual } from "@/lib/etiquetas";
 import { Entrada, ErrorCampo, pildoraDeRadio, pildoraNormal, pildoraOpcion } from "./formulario";
 
@@ -14,8 +14,12 @@ type Etiqueta = { id: number; nombre: string };
  * la píldora elegida hasta que se cierre la búsqueda o se borre lo escrito, que la devuelven: mientras tanto viaja en un
  * `etiquetaId` oculto, así sobrevive a un error del servidor, y lo escrito manda (revisión de la 008, primera y segunda
  * vuelta). Enter en la búsqueda solo busca: no guarda el formulario. Sin JavaScript, el campo está siempre a la vista,
- * hay una opción "Sin etiqueta", la lupa y "+ Añadir" no se ven, y si llegan las dos manda lo escrito.
+ * hay una opción "Sin etiqueta", la lupa, "+ Añadir", la X y el aviso no se ven, y si llegan las dos manda lo escrito.
+ * Lo que pinta el servidor es lo de sin JavaScript: todas las píldoras, con la elegida marcada aunque haya algo escrito;
+ * la búsqueda filtra y aparta la elegida solo ya en el navegador (tercera vuelta).
  */
+
+const sinSuscripcion = () => () => {};
 export function SelectorEtiqueta({
   etiquetas,
   valorInicial,
@@ -31,7 +35,16 @@ export function SelectorEtiqueta({
   const escribiendo = nuevaInicial.trim() !== "";
   const [elegida, setElegida] = useState(escribiendo ? "" : valorInicial);
   const [abierto, setAbierto] = useState(nuevaInicial !== "");
+  // Enfocar el campo solo cuando lo abre la persona, no cuando vuelve abierto del servidor (tercera vuelta, hallazgo 2).
+  const [enfocar, setEnfocar] = useState(false);
   const [texto, setTexto] = useState(nuevaInicial);
+  // En el servidor, y al hidratar, false: lo pintado sirve sin JavaScript. En el navegador, true desde el primer render.
+  const conJs = useSyncExternalStore(
+    sinSuscripcion,
+    () => true,
+    () => false,
+  );
+  const lupa = useRef<HTMLButtonElement>(null);
   /** La píldora que estaba elegida antes de escribir: cerrar la búsqueda o borrar lo escrito la devuelve. */
   const [previa, setPrevia] = useState<string | null>(escribiendo && valorInicial !== "" ? valorInicial : null);
   const elegir = (id: string) => {
@@ -40,7 +53,12 @@ export function SelectorEtiqueta({
     setTexto("");
     setAbierto(false);
   };
-  const visibles = abierto ? coincidenConEtiqueta(etiquetas, texto) : etiquetas;
+  const abrir = () => {
+    setAbierto(true);
+    setEnfocar(true);
+  };
+  const marcada = conJs ? elegida : valorInicial;
+  const visibles = abierto && conJs ? coincidenConEtiqueta(etiquetas, texto) : etiquetas;
   const igual = etiquetaIgual(etiquetas, texto);
   const titulo = "etiquetas-titulo";
 
@@ -51,9 +69,10 @@ export function SelectorEtiqueta({
           Etiquetas
         </span>
         <button
+          ref={lupa}
           type="button"
           aria-label="Buscar o añadir etiqueta"
-          onClick={() => setAbierto(true)}
+          onClick={abrir}
           className="grid size-8 place-items-center rounded-full text-enlace hover:bg-tarjeta-hover noscript:hidden"
         >
           <Search size={18} aria-hidden />
@@ -73,7 +92,7 @@ export function SelectorEtiqueta({
               name="etiquetaId"
               value={e.id}
               className="sr-only"
-              checked={elegida === String(e.id)}
+              checked={marcada === String(e.id)}
               onChange={() => elegir(String(e.id))}
               // Tocar la elegida la quita: un radio marcado no emite change, pero sí click.
               onClick={() => {
@@ -86,7 +105,7 @@ export function SelectorEtiqueta({
         {abierto ? null : (
           <button
             type="button"
-            onClick={() => setAbierto(true)}
+            onClick={abrir}
             className={`${pildoraOpcion} ${pildoraNormal} border-dashed text-enlace noscript:hidden`}
           >
             <Plus size={16} aria-hidden />
@@ -94,7 +113,7 @@ export function SelectorEtiqueta({
           </button>
         )}
       </div>
-      {previa !== null ? <input type="hidden" name="etiquetaId" value={previa} /> : null}
+      {previa !== null && conJs ? <input type="hidden" name="etiquetaId" value={previa} /> : null}
       {abierto ? (
         <div className="mt-1 flex flex-col gap-1">
           <div className="flex items-center gap-2">
@@ -120,7 +139,7 @@ export function SelectorEtiqueta({
               onKeyDown={(e) => {
                 if (e.key === "Enter") e.preventDefault();
               }}
-              autoFocus={nuevaInicial === ""}
+              autoFocus={enfocar}
               aria-label="Nombre de la etiqueta"
               className="flex-1"
             />
@@ -133,14 +152,16 @@ export function SelectorEtiqueta({
                 setPrevia(null);
                 setTexto("");
                 setAbierto(false);
+                // La X desaparece al cerrar: el foco pasa a la lupa, que abre otra vez (tercera vuelta, hallazgo 3).
+                lupa.current?.focus();
               }}
-              className="grid size-10 shrink-0 place-items-center rounded-full text-texto-3 hover:bg-tarjeta-hover"
+              className="grid size-10 shrink-0 place-items-center rounded-full text-texto-3 hover:bg-tarjeta-hover noscript:hidden"
             >
               <X size={18} aria-hidden />
             </button>
           </div>
           {texto.trim() !== "" ? (
-            <p aria-live="polite" className="text-[12px] text-texto-3">
+            <p aria-live="polite" className="text-[12px] text-texto-3 noscript:hidden">
               {igual ? `Se usará «${igual.nombre}», que ya existe.` : `Se creará «${texto.trim()}» al guardar.`}
             </p>
           ) : null}
@@ -150,6 +171,9 @@ export function SelectorEtiqueta({
           <Entrada name="etiquetaNueva" placeholder="Etiqueta nueva (opcional)" maxLength={30} autoComplete="off" />
         </noscript>
       )}
+      <p className="hidden text-[12px] text-texto-3 noscript:block">
+        Si escribes una, se guarda la escrita y no la marcada.
+      </p>
       <ErrorCampo>{error}</ErrorCampo>
     </div>
   );

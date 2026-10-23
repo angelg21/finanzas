@@ -186,7 +186,7 @@ Primer uso: el desglose del sobre Ocasiones en `/sobres/[id]`. La captura de gas
 - "Etiquetas" en `texto-3` y, a la derecha, la lupa (`Search`) como botón redondo en `enlace`;
 - las etiquetas en píldoras de contorno (`pildoraOpcion` y `pildoraNormal`; la elegida, menta), envueltas; tocar la elegida la quita;
 - "+ Añadir etiqueta" con borde punteado en `enlace`. Con la lupa abre un `Entrada` "Nombre de la etiqueta" con una X para cerrar; lo escrito filtra las píldoras y debajo dice "Se creará «X» al guardar" o "Se usará «SAX», que ya existe.";
-- sin JavaScript, el campo a la vista y una píldora "Sin etiqueta";
+- sin JavaScript, el campo a la vista, una píldora "Sin etiqueta" y debajo, en `texto-3`, "Si escribes una, se guarda la escrita y no la marcada."; la lupa, "+ Añadir", la X y el aviso no se ven, y las píldoras no se filtran;
 - va después del sobre en el gasto y de la categoría en el ingreso; las filas de movimientos la muestran al final del detalle.
 
 **Gastos por completar** (feature 009):
