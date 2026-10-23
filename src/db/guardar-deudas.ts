@@ -179,6 +179,11 @@ async function saldar(idCaptura: string, fila: NuevoMovimiento, cual: keyof type
   try {
     return await db.transaction(async (tx) => {
       await bloquearDeuda(tx, deudaId);
+      // Un pago saca de Deudas: con su candado (el del reparto, después del de la deuda, como al deshacer), Mover
+      // desde Deudas espera y ve el saldo ya pagado (guardian-datos, 007).
+      if (cual === "pago" && fila.sobreOrigenId != null) {
+        await tx.execute(sql`select pg_advisory_xact_lock(${claveReparto}, ${fila.sobreOrigenId})`);
+      }
       const previas = await guardadasDeCaptura(idCaptura, tx);
       if (previas.length > 0) return { nueva: false as const, guardadas: previas };
       const deuda = await deudaPorId(deudaId, tx);

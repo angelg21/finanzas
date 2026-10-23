@@ -402,6 +402,28 @@ async function main() {
       malPago === 0,
       `${malPago} mal`,
     );
+    // guardian-datos, 007: un pago de 30 y mover 50 desde Deudas a la vez, con 50 en Deudas. El pago toma el candado
+    // de Deudas: si entra primero, Mover lo ve y no saca de más. Si los dos quedan, Mover tuvo que ir antes.
+    let moverTrasPago = 0;
+    for (let ronda = 0; ronda < 6; ronda++) {
+      const d4 = await deuda("100");
+      await sobreEn(deudasSobre.id, 5000);
+      const capturaPago = idDePrueba();
+      const capturaMover = idDePrueba();
+      const [rPago, rMover] = await Promise.all([
+        pagarDeuda(capturaPago, await filaDePago(capturaPago, d4, "30")),
+        mover(deudasSobre.id, gastosDelMes.id, 5000, capturaMover),
+      ]);
+      const pagoId = await idDeReferencia(referenciaDeCaptura(capturaPago, "pago"));
+      const moverId = await idDeReferencia(referenciaDeReasignacion(capturaMover, gastosDelMes.id));
+      if (ganoUno(rPago) && ganoUno(rMover) && pagoId !== null && moverId !== null && pagoId < moverId) moverTrasPago++;
+    }
+    comprobar(
+      "7",
+      "seis carreras de un pago contra mover desde Deudas: Mover nunca saca lo que el pago ya usó",
+      moverTrasPago === 0,
+      `${moverTrasPago} mal`,
+    );
     await cuadra("tras las carreras de deshacer");
 
     // ★ 7 · mover entre sobres
@@ -517,11 +539,35 @@ async function main() {
       (await recibido(familia.id)) === familiaAntes + 1000,
     );
     const dePlanes = await recibido(planes.id);
-    await mover(planes.id, porAsignar.id, dePlanes + 1000);
+    // Que Planes tenga para devolver, desde un sobre que no es Por asignar: eso no cuenta como recibido.
+    const emergencia = inicial.sobres.find((s) => s.tipo === "emergencia");
+    if (!emergencia) throw new Error("Falta el sobre de Emergencia: corre pnpm db:seed");
+    const faltaEnPlanes = dePlanes + 1000 - enSobre(await estado(), planes.id);
+    if (faltaEnPlanes > 0) await sobreEn(emergencia.id, enSobre(await estado(), emergencia.id) + faltaEnPlanes);
+    if (faltaEnPlanes > 0) await mover(emergencia.id, planes.id, faltaEnPlanes);
+    const devolucion = await mover(planes.id, porAsignar.id, dePlanes + 1000);
     comprobar(
       "7",
       "devolver más de lo recibido en el mes deja lo recibido en cero, no en negativo",
-      (await recibido(planes.id)) === 0,
+      ganoUno(devolucion) && (await recibido(planes.id)) === 0,
+      `${dePlanes} recibidos, devolvió ${dePlanes + 1000}: ${await recibido(planes.id)}`,
+    );
+    // guardian-datos, 007: el piso va sobre la marcha. Lo devuelto de más no queda como deuda: lo que llega después
+    // cuenta entero, y un fijo no vuelve a pedir lo que se soltó de meses anteriores.
+    const familiaAhora = await recibido(familia.id);
+    // Lo que Familia tiene de sobra, desde Emergencia: no cuenta como recibido de Por asignar.
+    await sobreEn(emergencia.id, enSobre(await estado(), emergencia.id) + familiaAhora + 5000);
+    const pasos = [
+      await mover(emergencia.id, familia.id, familiaAhora + 5000),
+      await mover(familia.id, porAsignar.id, familiaAhora + 5000),
+      await mover(porAsignar.id, familia.id, 1000),
+    ];
+    if (!pasos.every(ganoUno)) throw new Error("Algún movimiento del piso sobre la marcha no se guardó");
+    comprobar(
+      "7",
+      "devolver de Familia 50 más de lo recibido y mandarle después 10: cuenta 10 recibidos, no 0 ni menos",
+      (await recibido(familia.id)) === 1000,
+      `${await recibido(familia.id)}`,
     );
     await cuadra("tras ir y volver con Por asignar");
 
