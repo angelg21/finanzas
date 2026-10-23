@@ -29,7 +29,7 @@ metadata:
 **How to apply:**
 
 - **T5:** que `repartirPorAsignar` tome `porAsignarId` de `sobrePorAsignar()` en el servidor y nunca del formulario. Que vuelva a leer el saldo dentro de la transacción con el candado; el borrador de las 22:17 ya lo hace. Que `guardarReglas` mantenga `tipo` y `valor` en una sola sentencia.
-- **Feature "Mover" (sobre → Por asignar):** decidir si lo recibido es bruto o neto.
+- **Feature "Mover" (sobre → Por asignar):** decidido en la 007: neto, con piso 0 al leer (fd89e34). Ver [[revision-007-ajustes]].
 - **Importador:** un ingreso directo a un sobre que no sea "Por asignar" no cuenta como fijo cubierto.
 
 **T5 de 004, APTO CON CAMBIOS el 2026-10-14** (sin commit; archivos de las 22:17). Medido en la copia `finanzas_t5r`:

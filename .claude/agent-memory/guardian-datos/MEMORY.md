@@ -1,6 +1,6 @@
 - [Auditoría T14 de 002](project_auditoria-t14-002.md): 1.ª vuelta NO APLICAR (TLS); 2.ª vuelta 790ee93 SEGURO DE APLICAR, H1-H7 medidos; qué mirar en T15
-- [Defectos de datos encontrados](project_defectos-datos-encontrados.md): abiertos (desglose, reloj UTC, tasa<=0, fecha prevista rara, residuales T15) y cerrados (H1-H7, T6/T7/T13 de 005)
-- [Prima en el cuadre](project_prima-en-cuadre.md): ADR 0006; desactivar con saldo descuadra; demo 524300 desde 7be2f91 (antes 539300); sonda prima; enDolares[0] quitado
+- [Defectos de datos encontrados](project_defectos-datos-encontrados.md): abiertos (desglose, reloj UTC, tasa<=0, fecha prevista rara, piso de 007, T15) y cerrados (H1-H7, 005, bruto→neto)
+- [Prima en el cuadre](project_prima-en-cuadre.md): ADR 0006; desactivar con saldo descuadra; demo 121 filas, 524300 desde 7be2f91 (antes 539300); enDolares[0] quitado
 - [Categorías: icono y color](project_categorias-icono-color.md): por nombre, sin check; T13, T14 y T15 aptos; for update en db; condiciones del importador
 - [Entorno de prueba](reference_entorno-de-prueba.md): hook niega nombrar archivos de entorno o la carpeta de producción en Bash; generate denegado; copias; sonda Supabase; scripts t14/v2-*
 - [RLS en Supabase](project_rls-supabase.md): 0003 apta; app dueña; en Supabase postgres tiene BYPASSRLS; anon/authenticated con GRANT pero 0 filas; FORCE prohibido; vistas
@@ -10,6 +10,7 @@
 - [Revisión de 004](project_revision-004-reparto.md): T4 SEGURO; T5 APTO (7dd832a); 97437d7 APTO; su corrección 789fbc6 APTO (la propuesta sigue lanzando); mirar git log -- src/db
 - [Revisión de 005](project_revision-005-deudas.md): 0005 APTA; T6/T7/T13 con cambios, arreglos medidos; /f-review SEGURO (2026-10-16); fecha prevista rara tumba reparto
 - [Revisión de 006](project_revision-006-editar.md): T3 SEGURO (2026-10-17); candado (3,PA) probado con mutante; el escritor confía en el plan; cuenta archivada; ids > int4
+- [Revisión de 007](project_revision-007-ajustes.md): main ad01eeb SEGURO (2026-10-22); recibido neto; el piso a 0 arrastra el déficit; Mover desde Deudas contra pagar
 - [Revisión de 008](project_revision-008-etiquetas.md): 0006 SEGURO (2026-10-17, sha 56bd5d69); respaldo antes de migrar falla con código nuevo; etiquetas sin marca demo
 - [Revisión de 009](project_revision-009-por-completar.md): 0007 NO APLICAR; 2.ª vuelta 0007+0008 SEGURO (0d8904e); residual: el último gasto hereda la venta compartida
 - [Captura idempotente](project_captura-idempotente.md): T12 de 002 NO APTO y luego APTO; 23505 + huella + 15 min; residuales: id reutilizado idéntico, sin editar movimientos, pruebas de base en f-verify

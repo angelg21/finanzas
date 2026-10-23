@@ -180,4 +180,12 @@ metadata:
   - La sonda T3 de 006 (`t3/sonda-t3.mts gastos|carreras|bordes`) sirve de regresión de 006: copia `finanzas_g006_*` desde una copia migrada. B3 (mayúsculas) sale MAL, y es el residual conocido.
   - `pnpm verify:fast --forzar` solo escribe el sello en `node_modules/.cache/finanzas` (ignorado): se puede correr sin tocar el árbol.
 
+- **Métodos de la auditoría de la 007 (2026-10-22)**, en `fff6d62f…/scratchpad/g007/`:
+  - `sonda-007.mts` trae el SQL viejo copiado (bruto) y un oráculo neto independiente.
+  - Las carreras con orden forzado usan dos triggers: `before insert ... when (new.nota=...)` y `before delete ... when (old.nota=...)`. Postgres no admite `tg_op` en WHEN.
+  - Para poner "Por asignar" en un monto exacto: una reasignación por SQL con Planes, fechada en enero, marcada `sonda-007-ajuste`.
+  - **Copiar una copia ya preparada en segundos:** `createdb -T finanzas_g007_a finanzas_g007_vol`. La plantilla no puede tener conexiones abiertas.
+  - En la demo, Familia está en 0 (gastó todo). Para medir devoluciones, primero dale un sobrante.
+- `comprobar-007 --url http://localhost:3000` usa el `next dev` de la sesión principal: no cerrarlo. Las cuatro comprobaciones (004, 005, 005-criterios, 007) dejan la base con la misma huella sin ids.
+
 Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].

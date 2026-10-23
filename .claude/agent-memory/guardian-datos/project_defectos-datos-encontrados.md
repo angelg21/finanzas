@@ -1,6 +1,6 @@
 ---
 name: defectos-datos-encontrados
-description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en 003, 004, 97437d7, 005 (cerrados de T6/T7/T13 y la fecha rara, 2026-10-16), T3 de 006, la 0006 de 008 (2026-10-17) y 009 (2026-10-22: cerrados en 0d8904e; abierto "el último hereda la venta")
+description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en 003, 004, 97437d7, 005, T3 de 006, la 0006 de 008, 009 y 007 (2026-10-22: bruto→neto cerrado; abierto el piso que arrastra el déficit)
 metadata:
   type: project
 ---
@@ -29,7 +29,7 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
 
 **Abiertos, nuevos en T4 de 004 (2026-10-14). Ninguno bloquea** (ver [[revision-004-reparto]])
 
-- **Baja / decisión.** `recibidoDesdePorAsignarPorMes` suma lo bruto: una devolución a "Por asignar" no descuenta lo que el fijo ya recibió. Hoy nada escribe esas devoluciones; llegarán con "Mover".
+- ~~**Baja / decisión.** `recibidoDesdePorAsignarPorMes` suma lo bruto.~~ **Cerrado en fd89e34 (007)**: neto, con piso 0 al leer. Abre su propio residual (ver 007, abajo).
 - **Baja.** `sobrePorAsignar` elige el de menor orden aunque esté inactivo, y entonces `datosDelReparto` le pone saldo 0, porque `saldosPorSobre` filtra `activo`.
 - **Info.** `datosDelReparto` abre 4 conexiones a la vez (medido: 4 pids) y no comparte instantánea. Su saldo de "Por asignar" no sirve como guarda para escribir.
 
@@ -126,6 +126,17 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
   - Mismo id con otros pendientes a la vez: el catch de 23505 da "ya" (vendiendo) o entran los dos grupos (dólares).
   - `categoriasConUso` no cuenta pendientes: la página promete borrar y el escritor archiva.
   - Anotar no compara contenido en un reintento. La base acepta fechas raras, una referencia vacía y un monto > 2^53.
+
+**007, auditada en main ad01eeb (2026-10-22). Ninguno bloquea** (ver [[revision-007-ajustes]])
+
+- **Baja.** El piso de 0 de lo recibido se aplica a la suma del mes, así que el déficit se arrastra. Devolver 150 a PA con un fijo de 100 (50 eran de septiembre) hace que los dos ingresos siguientes propongan 100 y 50. Diverge de "nunca baja de cero" (criterio 10).
+- **Info.**
+  - Mover desde Deudas a la vez que un pago: Deudas en negativo (10 de 10), porque `saldar` no toma `(3, Deudas)`.
+  - Deudas → un sobre que no es PA sube la cuota dentro del mes.
+  - Mismo id de captura con otro origen y otro destino a la vez: 2 filas.
+  - Deshacer y luego reintentar la captura del pago lo vuelve a meter.
+  - Deshacer un cobro ya gastado deja la cuenta en negativo.
+  - Lo recibido tarda 215 ms con 300 mil filas (antes 67).
 
 **Abiertos de antes**
 
