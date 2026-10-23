@@ -60,4 +60,6 @@ metadata:
 - Un `notFound()` en este Next 16 sale en blanco sin JS (el contenido va solo en los `<script>` del stream), con o sin `not-found.tsx`: comprobado con un build sin el archivo. No repetirlo.
 - La sesión principal puede empezar a cambiar el árbol de trabajo a mitad de la revisión (avisa): revisa con `git show <commit>:ruta` y anota que el build y verify se hicieron antes, sobre el commit limpio (comparar `.next/BUILD_ID`).
 
+- (2026-10-22, 007) Guiones nuevos: `r7-forms.js` (forms, submits, alertas y foco de la página actual, con `r006-eval.mjs <archivo> -`), `r7-clic-fila.mjs` (ruta, trozo de href, js|sinjs: toca la fila visible), `r7-anchos.mjs` (ruta y anchos: desborde y captura), `r7-confirmar-foto.mjs` (paso de confirmar Inversión). En la demo, pago 2653 (Andrés) y cobro 2655 (Luis) son demo: registra los propios desde `/deudas/96` (cobro) y `/deudas/94` (pago) en vez de deshacer los demo. La pista de Deudas se lee en `/sobres/repartir` y la cuota en `/deudas`.
+
 Ver [[donde-se-esconden-defectos]].

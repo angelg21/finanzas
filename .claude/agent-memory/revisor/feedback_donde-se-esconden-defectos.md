@@ -43,6 +43,8 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 
 - 006, vuelta 2 (2026-10-22): APTO. Los seis arreglos cierran, también fuera de mi lista: la etiqueta se crea dentro de la transacción en editar, captura de gasto e ingreso y completar (009); ninguna otra acción escribe antes de su transacción; categoría archivada en gasto e ingreso con JS; borrar sin JS desde el inicio con clics reales (Cancelar y vuelta a `/?borrado=1`). Lo que quedó, bajo: el autor midió el "+" solo "al fondo de la página" y solo la primera ruta de cada tipo (el primer sobre no es un fondo); con mi métrica de la vuelta 1 (botón llevado al borde de abajo) sigue tapando "Registrar pago/cobro" en `/deudas/[id]` y "Agregar al desglose" en `/sobres/18`.
 
+- 007, vuelta 1 (2026-10-22, revisión después de fusionar, sobre `main` con 008-010): NO APTO. Deshacer y mover, impecables en la base (comprobar-007 33/33) y en Edge con y sin JS. Lo que falló vivía en otra feature: Mover es la primera escritura que devuelve dinero a Por asignar (y que saca de Deudas lo recibido en el mes), y los contadores de la 004/005 (`recibidoDesdePorAsignarPorMes`, `sobreDeudas().recibidoEnElMesCentavos`) suman lo que sale de Por asignar sin restar lo que vuelve. Un viaje PA→Deudas→PA de 10, con todos los saldos iguales, cambió "Cuota de octubre" 310→315 y "faltan" 310→305; borrar las dos filas lo devolvió a 310. La spec misma (Riesgos) manda "devolver el reparto a mano con Mover". Bajos: origen "Por asignar" por defecto sin spec; `?borrado=deshecho` convive con el error de un pago nuevo.
+
 **Why:** la demo es toda `origen = importado`, así que la lógica que depende de historial `manual` no se ve. La validación en navegador sigue el camino feliz, en un solo momento, y no pasa por un error de validación ni por el paso del tiempo antes de guardar.
 
 **How to apply:**
@@ -84,5 +86,7 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 - Una pantalla de edición que reusa el formulario de captura: comprueba que lo que la captura esconde (el "+" flotante, "Nueva") también se esconda, y edita un registro cuyo valor ya no se ofrece (categoría archivada): ¿obliga a cambiarlo para corregir otra cosa?
 
 - Cuando el autor "mide" un arreglo de pantalla con su propio guion (en el scratchpad compartido, p. ej. `edge-flotante.mjs`), léelo: compara su métrica y su lista de rutas con la mía de la vuelta anterior. Toma la primera ruta de cada tipo (`find`), así que las variantes (sobre fondo, deuda pendiente) quedan fuera.
+
+- Cuando una feature escribe una forma de fila que antes no existía (una reasignación hacia Por asignar, una salida de Deudas), busca con `grep` cada consulta que agrega esa forma en otras features (`recibido`, `cuota`, "en el mes") y haz un viaje de ida y vuelta neto cero por la interfaz: si una cifra derivada cambia sin que cambie ningún saldo, es un defecto. Compruébalo borrando las dos filas y viendo volver la cifra.
 
 Ver [[entorno-revision-finanzas]].

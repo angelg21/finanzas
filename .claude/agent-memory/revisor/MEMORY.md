@@ -1,2 +1,2 @@
-- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — "por defecto", key={ronda}, Enter, estado fuera de React, filtros, 1024 px, extractores "?", listas propias, tokens a medias, escrituras antes de la transacción
-- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, con o sin JS, sin red, base caída en 3125, commits a mitad, .mts no es endpoint, pnpm sin MSYS_NO_PATHCONV, 404 sin JS en blanco, árbol que cambia a mitad
+- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — "por defecto", key={ronda}, Enter, URL, filtros, 1024 px, extractores "?", escrituras antes de la transacción, contadores de otra feature
+- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, con o sin JS, base caída en 3125, pnpm sin MSYS_NO_PATHCONV, guiones r006/r2/r7 del scratchpad
