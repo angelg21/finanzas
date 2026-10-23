@@ -10,6 +10,8 @@
  *   ★ 9  · todo en una transacción: si una fila falla, no se guarda ninguna y los pendientes siguen; el cuadre;
  *   ★ 10 · si alguno de los elegidos ya no existe, no se guarda nada;
  *   ★ 11 · sin ?pendiente=, la captura no cambia.
+ * Y, de la revisión de la 006 (hallazgo 1): completar uno que ya no está, o pasar a vendiendo un gasto de una venta
+ * compartida, con una etiqueta nueva, no deja la etiqueta; completar uno vigente con ella la crea en su gasto.
  * Con --url, además, contra un servidor en marcha con esta misma base y el usuario de prueba, como un navegador sin
  * JavaScript: "Completar" abre la captura llena (★ 6), sin ?pendiente= es la de siempre (★ 11), el inicio y
  * Registrar cuentan los pendientes (5), y guardar uno ya descartado dice "Este gasto ya se completó o se descartó"
@@ -27,6 +29,8 @@ import { count, eq, isNull, like, not, or } from "drizzle-orm";
 import { prefijoDeCaptura, referenciaDeCaptura } from "../src/lib/captura";
 import { exigirBaseLocal } from "../src/lib/destino-base";
 import { centavosATexto } from "../src/lib/dinero";
+import { planDeEdicionDeGasto } from "../src/lib/editar-gasto";
+import { nombreDeEtiqueta } from "../src/lib/etiquetas";
 import { fechaDesdeAtajo, hoyEnCaracas } from "../src/lib/fechas";
 import { type EntradaGasto, type FilaMovimiento, prepararGasto } from "../src/lib/gastos";
 import { rangoDePeriodo } from "../src/lib/periodos";
@@ -54,17 +58,31 @@ async function main() {
   exigirBaseLocal(process.env.DATABASE_URL, "comprobar-009");
   const posicionUrl = process.argv.indexOf("--url");
   const origen = posicionUrl >= 0 ? process.argv[posicionUrl + 1] : null;
-  const { db, gastosPorCompletar, movimientos } = await import("../src/db/index");
+  const { db, etiquetas, gastosPorCompletar, movimientos } = await import("../src/db/index");
   const { categoriasDeGastoPorUso, gastadoEsteMes, resumenMensual, saldosPorCuenta, saldosPorSobre } =
     await import("../src/db/consultas");
   const { movimientosDelPeriodo, totalesPorCategoria } = await import("../src/db/movimientos-del-periodo");
   const { anotarPorCompletar, completarPorCompletar, contarPorCompletar, descartarPorCompletar, porCompletarPorId } =
     await import("../src/db/por-completar");
-  const { movimientoParaEditar } = await import("../src/db/editar-movimientos");
+  const { editarGasto, movimientoParaEditar } = await import("../src/db/editar-movimientos");
+  const clave = (nombre: string) => {
+    const n = nombreDeEtiqueta(nombre);
+    if (!n.ok) throw new Error(`Nombre de etiqueta inválido: ${nombre}`);
+    return n.clave;
+  };
+  /** La etiqueta con ese nombre, sin importar la grafía, o null si no se creó. */
+  const etiquetaLlamada = async (nombre: string) =>
+    (
+      await db
+        .select()
+        .from(etiquetas)
+        .where(eq(etiquetas.clave, clave(nombre)))
+    )[0] ?? null;
 
   async function limpiar() {
     await db.delete(movimientos).where(like(movimientos.referenciaExterna, `captura-${MARCA}-%`));
     await db.delete(gastosPorCompletar).where(like(gastosPorCompletar.referencia, `captura-${MARCA}-%`));
+    await db.delete(etiquetas).where(like(etiquetas.clave, `${clave("demo-c009")}%`));
   }
   await limpiar();
   const [{ reales }] = await db
@@ -291,11 +309,30 @@ async function main() {
       capturaTarde,
       [descartado.id],
       filasDeCaptura(capturaTarde, { monto: "8" }),
+      { nueva: "demo-c009 tarde" },
     );
     comprobar(
       "7",
-      "completar uno descartado no registra nada",
-      "faltan" in tarde && (await deCaptura(capturaTarde)).length === 0,
+      "completar uno descartado no registra nada, tampoco la etiqueta nueva que traía",
+      "faltan" in tarde &&
+        (await deCaptura(capturaTarde)).length === 0 &&
+        (await etiquetaLlamada("demo-c009 tarde")) === null,
+    );
+    const conEtiqueta = await anotar({ nota: "comprobar-009 con etiqueta", monto: "6", moneda: "USD" });
+    const capturaConEtiqueta = idDePrueba();
+    await completarPorCompletar(
+      capturaConEtiqueta,
+      [conEtiqueta.id],
+      filasDeCaptura(capturaConEtiqueta, { monto: "6" }),
+      {
+        nueva: "demo-c009 SAX",
+      },
+    );
+    const sax = await etiquetaLlamada("demo-c009 sax");
+    comprobar(
+      "6",
+      "completar uno vigente con una etiqueta nueva la crea y la pone en su gasto",
+      sax !== null && (await deCaptura(capturaConEtiqueta))[0]?.etiquetaId === sax.id,
     );
     const capturaSegunda = idDePrueba();
     const segunda = await completarPorCompletar(
@@ -418,6 +455,45 @@ async function main() {
         !(await Promise.all(v.pendientes.map((p) => existe(p.id)))).some(Boolean),
       );
       await cuadra(`tras completar varios con el resto a ${destino}`);
+      if (destino === "gasto") {
+        // Uno de los gastos de la venta compartida no se pasa a vendiendo (venta propia): no se guarda, y tampoco
+        // la etiqueta nueva que traía (revisión de la 006, hallazgo 1).
+        const uno = gastos.find(
+          (g) => g.referenciaExterna?.includes("-gasto-") && !g.referenciaExterna.endsWith("resto"),
+        );
+        const rCompartida = uno
+          ? await editarGasto(
+              uno.id,
+              (g) =>
+                planDeEdicionDeGasto(
+                  g,
+                  {
+                    forma: "vendiendo",
+                    monto: "1000",
+                    tasa: "40",
+                    vendido: "25",
+                    cuentaOrigen: { id: binance.id, moneda: binance.moneda },
+                    cuentaBolivares: { id: bolivares.id, moneda: "VES" },
+                    sobreId: gastosDelMes.id,
+                    categoriaId: catA.id,
+                    fecha: hoy,
+                    nota: "comprobar-009",
+                  },
+                  hoy,
+                ),
+              { nueva: "demo-c009 compartida" },
+            )
+          : null;
+        comprobar(
+          "9",
+          "pasar a vendiendo un gasto de la venta compartida lo rechaza, sin dejar la etiqueta nueva",
+          rCompartida !== null &&
+            "ok" in rCompartida &&
+            !rCompartida.ok &&
+            /venta compartida/.test(rCompartida.errores.vendido ?? "") &&
+            (await etiquetaLlamada("demo-c009 compartida")) === null,
+        );
+      }
     }
 
     // ★ 9 y 10 · todo o nada

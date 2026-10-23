@@ -39,6 +39,19 @@ export async function categoriasConUso() {
 
 export type CategoriaConUso = Awaited<ReturnType<typeof categoriasConUso>>[number];
 
+/**
+ * Una categoría de ese tipo aunque esté archivada, con lo que pinta su píldora, o null. Al editar un gasto o un
+ * ingreso se puede dejar la que ya tiene: corregir otra cosa no obliga a recategorizarlo (revisión de la 006).
+ */
+export async function categoriaDelMovimiento(id: number, tipo: TipoCategoria) {
+  if (!Number.isSafeInteger(id) || id <= 0 || id > 2_147_483_647) return null;
+  const [c] = await db
+    .select({ id: categorias.id, nombre: categorias.nombre, icono: categorias.icono, color: categorias.color })
+    .from(categorias)
+    .where(and(eq(categorias.id, id), eq(categorias.tipo, tipo)));
+  return c ?? null;
+}
+
 /** Una categoría con su número de movimientos, o null si no existe. */
 export async function categoriaPorId(id: number): Promise<CategoriaConUso | null> {
   if (!Number.isInteger(id)) return null;

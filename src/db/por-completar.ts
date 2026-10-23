@@ -1,5 +1,7 @@
 import { asc, count, eq, inArray } from "drizzle-orm";
+import { type EtiquetaPedida, conEtiqueta } from "../lib/etiquetas";
 import type { FilaPorCompletar } from "../lib/por-completar";
+import { resolverEtiqueta } from "./etiquetas";
 import { db } from "./index";
 import { esReferenciaRepetida, guardadasDeCaptura, registrarMovimientos } from "./movimientos";
 import { type Movimiento, type NuevoMovimiento, categorias, gastosPorCompletar } from "./schema";
@@ -69,12 +71,14 @@ type Resultado = { nueva: true } | { nueva: false; guardadas: Movimiento[] } | {
 /**
  * Completa uno o varios pendientes: inserta sus movimientos (gastos, y la venta si la hay) y los borra, todo junto.
  * Un reintento de la misma captura se reconoce antes de mirar los pendientes, que el primer intento ya borró. Si
- * alguno ya no está (se completó en otra pestaña o se descartó), no se escribe nada.
+ * alguno ya no está (se completó en otra pestaña o se descartó), no se escribe nada, tampoco la etiqueta pedida: se
+ * crea al final, cuando ya no hay nada que rechace (spec 008).
  */
 export async function completarPorCompletar(
   idCaptura: string,
   ids: number[],
   filas: NuevoMovimiento[],
+  etiqueta: EtiquetaPedida = null,
 ): Promise<Resultado> {
   if (ids.length === 0 || filas.length === 0) throw new Error("Completar pide pendientes y movimientos");
   try {
@@ -90,7 +94,7 @@ export async function completarPorCompletar(
       if (previas.length > 0 && bloqueados.length > 0) return { otra: true as const };
       if (previas.length > 0) return { nueva: false as const, guardadas: previas };
       if (bloqueados.length !== new Set(ids).size) return { faltan: true as const };
-      await registrarMovimientos(filas, tx);
+      await registrarMovimientos(conEtiqueta(filas, await resolverEtiqueta(tx, etiqueta)), tx);
       await tx.delete(gastosPorCompletar).where(inArray(gastosPorCompletar.id, ids));
       return { nueva: true as const };
     });

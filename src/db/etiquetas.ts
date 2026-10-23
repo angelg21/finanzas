@@ -1,5 +1,5 @@
 import { asc, eq, sql } from "drizzle-orm";
-import { nombreDeEtiqueta } from "../lib/etiquetas";
+import { type EtiquetaPedida, nombreDeEtiqueta } from "../lib/etiquetas";
 import { db } from "./index";
 import type { Ejecutor } from "./movimientos";
 import { etiquetas } from "./schema";
@@ -44,4 +44,14 @@ export async function buscarOCrearEtiqueta(texto: string, ejecutor: Ejecutor = d
     .where(eq(etiquetas.clave, nombre.clave));
   if (!e) throw new Error("La etiqueta no quedó guardada");
   return e;
+}
+
+/**
+ * El id de la etiqueta pedida, creándola si hace falta con el ejecutor dado. Se llama dentro de la transacción que
+ * guarda el movimiento y después de todo lo que puede rechazarlo: si no se guarda, la etiqueta tampoco queda.
+ */
+export async function resolverEtiqueta(ejecutor: Ejecutor, pedida: EtiquetaPedida): Promise<number | null> {
+  if (pedida === null) return null;
+  if ("id" in pedida) return pedida.id;
+  return (await buscarOCrearEtiqueta(pedida.nueva, ejecutor)).id;
 }

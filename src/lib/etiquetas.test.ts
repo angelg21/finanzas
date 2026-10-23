@@ -1,6 +1,6 @@
 /** Spec 008, criterios 1, 3 y 5: el nombre de una etiqueta, su clave sin duplicados por tipeo, y el id del filtro. */
 import { describe, expect, it } from "vitest";
-import { coincidenConEtiqueta, etiquetaIgual, leerIdEtiqueta, nombreDeEtiqueta } from "./etiquetas";
+import { conEtiqueta, coincidenConEtiqueta, etiquetaIgual, leerIdEtiqueta, nombreDeEtiqueta } from "./etiquetas";
 
 describe("★ 1 · nombreDeEtiqueta: el nombre limpio y su clave", () => {
   it("sin espacios de más, con su grafía; la clave sin mayúsculas, acentos ni espacios de más", () => {
@@ -40,6 +40,23 @@ describe("★ 3 · lo que se escribe en el campo", () => {
   it("encuentra la que es igual para no crear otra", () => {
     expect(etiquetaIgual(etiquetas, " sax ")?.id).toBe(1);
     expect(etiquetaIgual(etiquetas, "sa")).toBeUndefined();
+  });
+});
+
+describe("★ 4 · conEtiqueta: solo el gasto o el ingreso la llevan", () => {
+  const filas = [
+    { tipo: "gasto", etiquetaId: null },
+    { tipo: "transferencia", etiquetaId: null },
+    { tipo: "ingreso", etiquetaId: null },
+    { tipo: "reasignacion", etiquetaId: null },
+  ];
+
+  it("la pone en el gasto y el ingreso, y deja sin ella la venta y el reparto", () => {
+    expect(conEtiqueta(filas, 9).map((f) => f.etiquetaId)).toEqual([9, null, 9, null]);
+  });
+
+  it("sin etiqueta, las filas quedan como venían", () => {
+    expect(conEtiqueta(filas, null)).toBe(filas);
   });
 });
 

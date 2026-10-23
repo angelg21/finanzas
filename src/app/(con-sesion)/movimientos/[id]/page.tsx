@@ -10,6 +10,7 @@ import {
   saldosPorCuenta,
   sobresParaGasto,
 } from "@/db/consultas";
+import { categoriaDelMovimiento } from "@/db/categorias";
 import {
   type MovimientoParaEditar,
   type PagoOCobro,
@@ -121,6 +122,13 @@ function DeshacerPagoOCobro({ p, volver, confirmar }: { p: PagoOCobro; volver: s
 
 type Props = { m: MovimientoParaEditar; volver: string; hoy: string; confirmar: boolean };
 
+/** Las categorías activas y, si la suya está archivada, también la suya: se puede dejar como está (revisión, 3). */
+async function conLaSuya<C extends { id: number }>(activas: C[], suya: number | null, tipo: "gasto" | "ingreso") {
+  if (suya === null || activas.some((c) => c.id === suya)) return activas;
+  const archivada = await categoriaDelMovimiento(suya, tipo);
+  return archivada ? [...activas, { ...archivada, usos: 0 }] : activas;
+}
+
 async function EdicionDeGasto({ m, volver, hoy, confirmar }: Props) {
   const [categorias, sobres, cuentas, cuentaPorDefecto, cuentaVentaPorDefecto, etiquetas] = await Promise.all([
     categoriasDeGastoPorUso(),
@@ -131,6 +139,7 @@ async function EdicionDeGasto({ m, volver, hoy, confirmar }: Props) {
     todasLasEtiquetas(),
   ]);
   const g = m.movimiento;
+  const opciones = await conLaSuya(categorias, g.categoriaId, "gasto");
   const forma: FormaPago = m.venta ? "vendiendo" : g.moneda === "VES" ? "saldo" : "dolares";
   const borrado = {
     id: g.id,
@@ -151,7 +160,7 @@ async function EdicionDeGasto({ m, volver, hoy, confirmar }: Props) {
       <FormularioEditarGasto
         id={g.id}
         volver={volver}
-        categorias={categorias.map(({ id, nombre, icono, color }) => ({ id, nombre, icono, color }))}
+        categorias={opciones.map(({ id, nombre, icono, color }) => ({ id, nombre, icono, color }))}
         etiquetas={etiquetas}
         sobres={sobres.map(({ id, nombre, tipo, saldoCentavos, topeCentavos }) => ({
           id,
@@ -199,6 +208,7 @@ async function EdicionDeIngreso({ m, volver, hoy, confirmar }: Props) {
     todasLasEtiquetas(),
   ]);
   const i = m.movimiento;
+  const opciones = await conLaSuya(categorias, i.categoriaId, "ingreso");
   const reparto = previa?.reparto ?? [];
   const repartido = reparto.length
     ? `Se repartió: ${reparto.map((r) => `${r.nombre} ${formatearCifra(r.montoUsdCentavos)}`).join(" · ")}. El reparto no cambia al editar.`
@@ -234,7 +244,7 @@ async function EdicionDeIngreso({ m, volver, hoy, confirmar }: Props) {
             etiquetaNueva: "",
           }}
           cuentas={cuentas.filter((c) => c.moneda !== "VES").map(({ id, nombre, moneda }) => ({ id, nombre, moneda }))}
-          categorias={categorias.map(({ id, nombre, icono, color }) => ({ id, nombre, icono, color }))}
+          categorias={opciones.map(({ id, nombre, icono, color }) => ({ id, nombre, icono, color }))}
           etiquetas={etiquetas}
           reparto={repartido}
           hoy={hoy}

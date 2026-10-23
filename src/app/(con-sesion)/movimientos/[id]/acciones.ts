@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { categoriasDeGastoPorUso, saldosPorCuenta, sobresParaGasto } from "@/db/consultas";
-import { borrarGasto, borrarIngreso, editarGasto, editarIngreso } from "@/db/editar-movimientos";
+import { borrarGasto, borrarIngreso, editarGasto, editarIngreso, movimientoParaEditar } from "@/db/editar-movimientos";
 import { deshacerPagoOCobro } from "@/db/guardar-deudas";
 import { categoriasDeIngresoPorUso } from "@/db/reparto";
 import { planDeEdicionDeGasto } from "@/lib/editar-gasto";
@@ -71,6 +71,18 @@ function revalidar() {
   revalidatePath("/deudas/[id]", "page");
 }
 
+/**
+ * La categoría elegida entre las activas, o la que el movimiento ya tiene aunque esté archivada: corregir el monto o
+ * la nota no obliga a recategorizar (revisión de la 006, hallazgo 3). Solo en ese caso se lee el movimiento.
+ */
+async function categoriaElegida(activas: { id: number }[], elegida: string, id: number, tipo: "gasto" | "ingreso") {
+  const activa = activas.find((c) => String(c.id) === elegida);
+  if (activa) return activa.id;
+  const actual = await movimientoParaEditar(id);
+  const suya = actual?.movimiento.tipo === tipo ? actual.movimiento.categoriaId : null;
+  return suya !== null && String(suya) === elegida ? suya : null;
+}
+
 const nota = z.string().trim().max(200, "La nota admite hasta 200 caracteres");
 const cifra = z.string().trim().max(30, "Ese número es demasiado largo");
 
@@ -96,7 +108,7 @@ export async function editarGastoAccion(previo: EstadoEdicionGasto, datos: FormD
     sobresParaGasto(),
     saldosPorCuenta(),
   ]);
-  const categoria = categorias.find((c) => String(c.id) === valores.categoriaId);
+  const categoriaId = await categoriaElegida(categorias, valores.categoriaId, id, "gasto");
   const sobre = sobres.find((s) => String(s.id) === valores.sobreId);
   const elegida = valores.forma === "vendiendo" ? valores.cuentaVentaId : valores.cuentaId;
   const cuentaOrigen = cuentas.find((c) => String(c.id) === elegida && c.moneda !== "VES");
@@ -108,23 +120,23 @@ export async function editarGastoAccion(previo: EstadoEdicionGasto, datos: FormD
     cuentaOrigen: cuentaOrigen ?? { id: 0, moneda: "VES" as const },
     cuentaBolivares: bolivares,
     sobreId: sobre?.id ?? 0,
-    categoriaId: categoria?.id ?? 0,
+    categoriaId: categoriaId ?? 0,
   };
   const preparado = prepararGasto(entrada, hoy);
   const errores: ErroresFormularioGasto = preparado.ok ? {} : { ...preparado.errores };
-  if (!categoria) errores.categoria = "Elige una categoría";
+  if (categoriaId === null) errores.categoria = "Elige una categoría";
   if (!sobre) errores.sobre = "Elige un sobre";
-  if (!preparado.ok || !categoria || !sobre) return { ronda, estado: "error", errores, valores };
+  if (!preparado.ok || categoriaId === null || !sobre) return { ronda, estado: "error", errores, valores };
   if (sobre.tipo === "inversion" && texto(datos, "confirmarSobre") !== String(sobre.id)) {
     return { ronda, estado: "confirmar", valores };
   }
-  // La etiqueta al final, cuando lo demás ya es válido (spec 008).
+  // La etiqueta pedida, sin escribir: la transacción la crea solo si la edición se guarda (spec 008).
   const etiqueta = await etiquetaDelFormulario(datos);
   if (!etiqueta.ok) return { ronda, estado: "error", errores: { etiqueta: etiqueta.error }, valores };
 
   let resultado: Awaited<ReturnType<typeof editarGasto>>;
   try {
-    resultado = await editarGasto(id, (guardado) => planDeEdicionDeGasto(guardado, entrada, hoy), etiqueta.etiquetaId);
+    resultado = await editarGasto(id, (guardado) => planDeEdicionDeGasto(guardado, entrada, hoy), etiqueta.etiqueta);
   } catch (error) {
     registrarFalla("No se pudo editar el gasto", error);
     return { ronda, estado: "error", errores: { general: mensajeDeFalla("otra") }, valores };
@@ -173,12 +185,12 @@ export async function editarIngresoAccion(
   }
 
   const [categorias, cuentas] = await Promise.all([categoriasDeIngresoPorUso(), saldosPorCuenta()]);
-  const categoria = categorias.find((c) => String(c.id) === valores.categoriaId);
+  const categoriaId = await categoriaElegida(categorias, valores.categoriaId, id, "ingreso");
   const cuenta = cuentas.find((c) => String(c.id) === valores.cuentaId && c.moneda !== "VES") ?? null;
-  if (!categoria) return { ronda, estado: "error", errores: { categoria: "Elige una categoría" }, valores };
+  if (categoriaId === null) return { ronda, estado: "error", errores: { categoria: "Elige una categoría" }, valores };
   const hoy = hoyEnCaracas(new Date());
-  const nueva = { ...valores, fecha: fechaDesdeAtajo(valores.fecha, hoy), categoriaId: categoria.id };
-  // La etiqueta al final, cuando lo demás ya es válido (spec 008).
+  const nueva = { ...valores, fecha: fechaDesdeAtajo(valores.fecha, hoy), categoriaId };
+  // La etiqueta pedida, sin escribir: la transacción la crea solo si la edición se guarda (spec 008).
   const etiqueta = await etiquetaDelFormulario(datos);
   if (!etiqueta.ok) return { ronda, estado: "error", errores: { etiqueta: etiqueta.error }, valores };
 
@@ -188,7 +200,7 @@ export async function editarIngresoAccion(
       id,
       (guardado, saldo) =>
         planDeEdicionDeIngreso(guardado, nueva, cuenta && { id: cuenta.id, moneda: cuenta.moneda }, saldo, hoy),
-      etiqueta.etiquetaId,
+      etiqueta.etiqueta,
     );
   } catch (error) {
     registrarFalla("No se pudo editar el ingreso", error);

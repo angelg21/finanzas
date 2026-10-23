@@ -17,11 +17,11 @@
  */
 import { config } from "dotenv";
 import { randomUUID } from "node:crypto";
-import { count, eq, inArray, isNull, like, not, or } from "drizzle-orm";
+import { count, eq, isNull, like, not, or } from "drizzle-orm";
 import { referenciaDeCaptura, referenciaDeReasignacion } from "../src/lib/captura";
 import { exigirBaseLocal } from "../src/lib/destino-base";
 import { planDeEdicionDeGasto } from "../src/lib/editar-gasto";
-import { nombreDeEtiqueta } from "../src/lib/etiquetas";
+import { type EtiquetaPedida, nombreDeEtiqueta } from "../src/lib/etiquetas";
 import { hoyEnCaracas } from "../src/lib/fechas";
 import { type EntradaGasto, prepararGasto } from "../src/lib/gastos";
 import { prepararIngreso } from "../src/lib/ingresos";
@@ -118,23 +118,22 @@ async function main() {
       ...cambios,
     };
   }
-  /** Un gasto como lo guarda la captura: solo el gasto lleva la etiqueta, la venta no. */
-  async function gasto(etiquetaId: number | null, cambios: Partial<EntradaGasto> = {}) {
-    const captura = idDePrueba();
+  /** Un gasto como lo guarda la captura: la etiqueta pedida va a registrarCaptura, que la pone solo en el gasto. */
+  async function gasto(etiqueta: EtiquetaPedida, cambios: Partial<EntradaGasto> = {}, captura = idDePrueba()) {
     const p = prepararGasto(entradaGasto(cambios), hoy);
     if (!p.ok) throw new Error(`prepararGasto rechazó: ${JSON.stringify(p.errores)}`);
-    await registrarCaptura(
+    const r = await registrarCaptura(
       captura,
       p.filas.map((f) => ({
         ...f,
         referenciaExterna: referenciaDeCaptura(captura, f.tipo === "transferencia" ? "transferencia" : "gasto"),
-        etiquetaId: f.tipo === "gasto" ? etiquetaId : null,
       })),
+      etiqueta,
     );
-    return captura;
+    return { captura, nueva: r.nueva };
   }
-  /** Un ingreso como lo guarda su captura: solo el ingreso lleva la etiqueta, el reparto no. */
-  async function ingreso(etiquetaId: number | null, monto: string, aPlanes: string) {
+  /** Un ingreso como lo guarda su captura: la etiqueta pedida va en el ingreso, no en el reparto. */
+  async function ingreso(etiqueta: EtiquetaPedida, monto: string, aPlanes: string) {
     const captura = idDePrueba();
     const p = prepararIngreso(
       {
@@ -158,8 +157,8 @@ async function main() {
           f.tipo === "ingreso"
             ? referenciaDeCaptura(captura, "ingreso")
             : referenciaDeReasignacion(captura, f.sobreDestinoId),
-        etiquetaId: f.tipo === "ingreso" ? etiquetaId : null,
       })),
+      etiqueta,
     );
     return captura;
   }
@@ -199,13 +198,16 @@ async function main() {
     comprobar("1", "una segunda fila con la misma clave la rechaza el índice único", duplicada === "23505", duplicada);
 
     // ★ 4 · solo gastos e ingresos llevan etiqueta
-    const conVenta = await gasto(sax.id, {
-      forma: "vendiendo",
-      monto: "4000",
-      tasa: "40",
-      vendido: "100",
-      cuentaOrigen: { id: binance.id, moneda: binance.moneda },
-    });
+    const { captura: conVenta } = await gasto(
+      { id: sax.id },
+      {
+        forma: "vendiendo",
+        monto: "4000",
+        tasa: "40",
+        vendido: "100",
+        cuentaOrigen: { id: binance.id, moneda: binance.moneda },
+      },
+    );
     const filasVenta = await deCaptura(conVenta);
     comprobar(
       "4",
@@ -228,7 +230,7 @@ async function main() {
           }),
           hoy,
         ),
-      sax.id,
+      { id: sax.id },
     );
     const trasEditar = await deCaptura(conVenta);
     comprobar(
@@ -237,7 +239,7 @@ async function main() {
       trasEditar.find((f) => f.tipo === "transferencia")?.etiquetaId === null &&
         trasEditar.find((f) => f.tipo === "gasto")?.etiquetaId === sax.id,
     );
-    const conReparto = await ingreso(sax.id, "100", "30");
+    const conReparto = await ingreso({ id: sax.id }, "100", "30");
     const filasReparto = await deCaptura(conReparto);
     comprobar(
       "4",
@@ -247,7 +249,13 @@ async function main() {
     );
     const venta = filasVenta.find((f) => f.tipo === "transferencia")!;
     const reasignacion = filasReparto.find((f) => f.tipo === "reasignacion")!;
-    const sinId = ({ id: _id, creadoEn: _c, ...resto }: typeof venta) => resto;
+    /** La fila como para insertarla de nuevo: sin su id ni su fecha de creación. */
+    const sinId = (f: typeof venta) => {
+      const copia: Partial<typeof venta> = { ...f };
+      delete copia.id;
+      delete copia.creadoEn;
+      return copia as Omit<typeof venta, "id" | "creadoEn">;
+    };
     const codigos = [
       await codigoDe(() =>
         registrarMovimientos([
@@ -272,13 +280,37 @@ async function main() {
       codigos.join(", "),
     );
 
+    // Revisión de la 006, hallazgo 1: la etiqueta nueva se crea al guardar, en la misma transacción que la captura.
+    const conNueva = await gasto({ nueva: `${PREFIJO} Nueva` }, { monto: "9" });
+    const nueva = (
+      await db
+        .select()
+        .from(etiquetas)
+        .where(eq(etiquetas.clave, `${clavePrefijo.ok ? clavePrefijo.clave : ""} nueva`))
+    )[0];
+    comprobar(
+      "3",
+      "guardar un gasto con una etiqueta nueva la crea y la pone en el gasto",
+      conNueva.nueva && nueva !== undefined && (await deCaptura(conNueva.captura))[0]?.etiquetaId === nueva.id,
+    );
+    const otraVez = await gasto({ nueva: `${PREFIJO} Repetida` }, { monto: "11" }, conNueva.captura);
+    const repetida = await db
+      .select()
+      .from(etiquetas)
+      .where(eq(etiquetas.clave, `${clavePrefijo.ok ? clavePrefijo.clave : ""} repetida`));
+    comprobar(
+      "3",
+      "si la captura ya estaba (otro gasto con el mismo id), no se guarda y la etiqueta nueva tampoco queda",
+      !otraVez.nueva && repetida.length === 0 && (await deCaptura(conNueva.captura)).length === 1,
+    );
+
     // ★ 5 y 6 · filtrar y acumular
     const rielco = aLaVez[0];
-    await gasto(rielco.id, { monto: "10" });
-    await gasto(rielco.id, { monto: "15" });
-    await gasto(rielco.id, { monto: "7", categoriaId: catB.id });
+    await gasto({ id: rielco.id }, { monto: "10" });
+    await gasto({ id: rielco.id }, { monto: "15" });
+    await gasto({ id: rielco.id }, { monto: "7", categoriaId: catB.id });
     await gasto(null, { monto: "20" });
-    await ingreso(rielco.id, "100", "0");
+    await ingreso({ id: rielco.id }, "100", "0");
     const anilloAntes = JSON.stringify(await totalesPorCategoria("gastos", mes));
     const deGastos = await etiquetasDelPeriodo("gastos", mes, null);
     const deIngresos = await etiquetasDelPeriodo("ingresos", mes, null);

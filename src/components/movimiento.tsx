@@ -108,15 +108,17 @@ export function FilaMovimiento({ m, href }: { m: MovimientoReciente; href?: stri
       </span>
     </div>
   );
-  // Un gasto o un ingreso se edita tocando su fila (spec 006, criterio 11): la fila entera es el enlace.
+  // Un gasto o un ingreso se edita tocando su fila (spec 006, criterio 11): la fila entera es el enlace. Un pago o un
+  // cobro no se edita, se deshace (spec 007), y así lo oye el lector de pantalla.
   if (!href) return fila;
+  const accion = m.tipo === "pago_deuda" || m.tipo === "cobro_prestamo" ? "deshacer" : "editar";
   return (
     <Link
       href={href}
       className="-mx-2 block rounded-[14px] px-2 hover:bg-tarjeta-hover focus-visible:outline-2 focus-visible:outline-offset-2"
     >
       {fila}
-      <span className="sr-only">, editar</span>
+      <span className="sr-only">, {accion}</span>
     </Link>
   );
 }

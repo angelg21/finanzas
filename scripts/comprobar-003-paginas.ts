@@ -78,6 +78,11 @@ export async function abrirSesion(origen: string) {
       const html = (await r.text()).replace(/<script[\s\S]*?<\/script>/g, "");
       return { estado: r.status, html };
     },
+    /** La respuesta entera, con los scripts: lo que Next manda por el stream de React también está ahí. */
+    async crudo(ruta: string) {
+      const r = await pedir(ruta);
+      return { estado: r.status, html: await r.text() };
+    },
     /** Envía un formulario como un navegador sin JavaScript: el estado, la página que vuelve y a dónde redirige. */
     async enviar(ruta: string, datos: FormData) {
       const r = await pedir(ruta, { method: "POST", body: datos });

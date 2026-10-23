@@ -2,9 +2,11 @@
  * Criterios de la spec 008 que decide etiquetaDelFormulario, escritos desde su texto, con la base simulada para contar
  * qué se le pide:
  *   ★ 2 · se elige una de las existentes; sin etiqueta es lo normal y no pide nada más;
- *   ★ 3 · lo escrito en el campo se busca o se crea al guardar y queda puesto;
+ *   ★ 3 · lo escrito en el campo se pide para crearla al guardar;
  *   ★ 7 · la captura de gasto no se vuelve más lenta: sin etiqueta no hay ninguna consulta ni escritura nueva.
- * Que "SAX" y "sax" terminen en la misma fila, también a la vez, lo comprueba scripts/comprobar-008.ts contra la base.
+ * Y nunca escribe: la etiqueta nueva la crea la transacción que guarda el movimiento, para que un formulario que no se
+ * guarda no deje etiquetas (revisión de la 006, hallazgo 1). Que se cree al guardar, que no quede si no se guarda y
+ * que "SAX" y "sax" terminen en la misma fila lo comprueban scripts/comprobar-006.ts y comprobar-008.ts contra la base.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -36,24 +38,23 @@ describe("★ 7 · sin etiqueta, ni una consulta ni una escritura", () => {
       { etiquetaId: "", etiquetaNueva: "   " },
     ];
     for (const campos of casos) {
-      expect(await etiquetaDelFormulario(formulario(campos))).toEqual({ ok: true, etiquetaId: null });
+      expect(await etiquetaDelFormulario(formulario(campos))).toEqual({ ok: true, etiqueta: null });
     }
     expect(consultas()).toBe(0);
   });
 
   it("un id que no es un entero positivo tampoco consulta: es como no elegir ninguna", async () => {
     for (const etiquetaId of ["abc", "-3", "0", "1.5", "99999999999"]) {
-      expect(await etiquetaDelFormulario(formulario({ etiquetaId }))).toEqual({ ok: true, etiquetaId: null });
+      expect(await etiquetaDelFormulario(formulario({ etiquetaId }))).toEqual({ ok: true, etiqueta: null });
     }
     expect(consultas()).toBe(0);
   });
 });
 
 describe("★ 2 · elegir una de las existentes", () => {
-  it("la píldora elegida queda puesta si existe", async () => {
-    expect(await etiquetaDelFormulario(formulario({ etiquetaId: "7" }))).toEqual({ ok: true, etiquetaId: 7 });
+  it("la píldora elegida se pide si existe", async () => {
+    expect(await etiquetaDelFormulario(formulario({ etiquetaId: "7" }))).toEqual({ ok: true, etiqueta: { id: 7 } });
     expect(base.etiquetaPorId).toHaveBeenCalledWith(7);
-    expect(base.buscarOCrearEtiqueta).not.toHaveBeenCalled();
   });
 
   it("si se borró mientras tanto, no se guarda con una etiqueta que no existe y lo dice", async () => {
@@ -64,26 +65,40 @@ describe("★ 2 · elegir una de las existentes", () => {
   });
 });
 
-describe("★ 3 · crearla ahí mismo", () => {
-  it("lo escrito se busca o se crea al guardar, y queda puesto", async () => {
-    expect(await etiquetaDelFormulario(formulario({ etiquetaNueva: " Rielco " }))).toEqual({
+describe("★ 3 · crearla ahí mismo, al guardar", () => {
+  it("lo escrito se pide como nueva, con los espacios de más quitados, sin crearla todavía", async () => {
+    expect(await etiquetaDelFormulario(formulario({ etiquetaNueva: "  Rielco   G " }))).toEqual({
       ok: true,
-      etiquetaId: 41,
+      etiqueta: { nueva: "Rielco G" },
     });
-    expect(base.buscarOCrearEtiqueta).toHaveBeenCalledTimes(1);
+    expect(consultas()).toBe(0);
   });
 
   it("lo escrito manda sobre la píldora elegida", async () => {
     expect(await etiquetaDelFormulario(formulario({ etiquetaId: "7", etiquetaNueva: "KumIA" }))).toEqual({
       ok: true,
-      etiquetaId: 41,
+      etiqueta: { nueva: "KumIA" },
     });
-    expect(base.etiquetaPorId).not.toHaveBeenCalled();
+    expect(consultas()).toBe(0);
   });
 
-  it("un nombre de más de 30 no se crea: el error del campo, sin tocar la base", async () => {
+  it("un nombre de más de 30 no se pide: el error del campo, sin tocar la base", async () => {
     const r = await etiquetaDelFormulario(formulario({ etiquetaNueva: "x".repeat(31) }));
-    expect(r.ok).toBe(false);
+    expect(r).toEqual({ ok: false, error: "Hasta 30 caracteres" });
     expect(consultas()).toBe(0);
+  });
+});
+
+describe("nunca escribe: la etiqueta nueva la crea quien guarda", () => {
+  it("en ningún caso llama a buscarOCrearEtiqueta", async () => {
+    const casos: Record<string, string>[] = [
+      { etiquetaNueva: "SAX" },
+      { etiquetaId: "7" },
+      { etiquetaId: "8" },
+      { etiquetaId: "7", etiquetaNueva: "Nueva" },
+      {},
+    ];
+    for (const campos of casos) await etiquetaDelFormulario(formulario(campos));
+    expect(base.buscarOCrearEtiqueta).not.toHaveBeenCalled();
   });
 });

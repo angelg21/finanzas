@@ -1,5 +1,7 @@
 import { and, eq, inArray, like, ne, sql } from "drizzle-orm";
 import { prefijoDeCaptura } from "../lib/captura";
+import { type EtiquetaPedida, conEtiqueta } from "../lib/etiquetas";
+import { resolverEtiqueta } from "./etiquetas";
 import { db } from "./index";
 import { type Movimiento, type NuevoMovimiento, movimientos, sobres } from "./schema";
 import { efectoEnSobre } from "./sumas-de-saldo";
@@ -50,10 +52,23 @@ type ResultadoCaptura = { nueva: true } | { nueva: false; guardadas: Movimiento[
  * Registra las filas de una captura (spec 002, criterio 19; spec 004, criterio 7). Si sus referencias ya estaban,
  * porque el primer intento llegó y la respuesta se perdió, la sentencia no inserta nada y devuelve todo lo guardado
  * con el id de esa captura, sea cual sea su forma, para que la acción compare antes de decir "ya estaba".
+ *
+ * La etiqueta pedida va en el gasto o el ingreso (spec 008). Una por crear se crea en la misma transacción que las
+ * filas: si la captura ya estaba, tampoco queda. Sin etiqueta nueva no hay transacción aparte, como siempre.
  */
-export async function registrarCaptura(idCaptura: string, filas: NuevoMovimiento[]): Promise<ResultadoCaptura> {
+export async function registrarCaptura(
+  idCaptura: string,
+  filas: NuevoMovimiento[],
+  etiqueta: EtiquetaPedida = null,
+): Promise<ResultadoCaptura> {
   try {
-    await registrarMovimientos(filas);
+    if (etiqueta !== null && "nueva" in etiqueta) {
+      await db.transaction(async (tx) => {
+        await registrarMovimientos(conEtiqueta(filas, await resolverEtiqueta(tx, etiqueta)), tx);
+      });
+    } else {
+      await registrarMovimientos(conEtiqueta(filas, etiqueta?.id ?? null));
+    }
     return { nueva: true };
   } catch (error) {
     if (!esReferenciaRepetida(error)) throw error;

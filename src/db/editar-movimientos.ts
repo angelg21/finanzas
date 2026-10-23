@@ -8,7 +8,9 @@ import {
   type RepartoGuardado,
   planDeBorradoDeIngreso,
 } from "../lib/editar-ingreso";
+import type { EtiquetaPedida } from "../lib/etiquetas";
 import type { ErroresGasto, FilaMovimiento } from "../lib/gastos";
+import { resolverEtiqueta } from "./etiquetas";
 import { db } from "./index";
 import { type Ejecutor, claveReparto, guardadasDeCaptura, saldoDeSobre } from "./movimientos";
 import { cuentas, deudas, movimientos, sobres } from "./schema";
@@ -118,7 +120,7 @@ export type ResultadoEdicion<E> = { ok: true } | { ok: false; errores: E } | { n
 export async function editarGasto(
   id: number,
   planear: (guardado: GastoGuardado) => PlanDeGasto,
-  etiquetaId: number | null,
+  etiqueta: EtiquetaPedida,
 ): Promise<ResultadoEdicion<ErroresGasto>> {
   return db.transaction(async (tx) => {
     const gasto = await filaBloqueada(tx, id, "gasto");
@@ -143,6 +145,8 @@ export async function editarGasto(
       const vendido = "Este gasto no se registró en la app: para pagarlo vendiendo USDT, bórralo y regístralo de nuevo";
       return { ok: false as const, errores: { vendido } };
     }
+    // La etiqueta, después de todo lo que rechaza: una edición que no se guarda no deja etiquetas (spec 008).
+    const etiquetaId = await resolverEtiqueta(tx, etiqueta);
     await tx
       .update(movimientos)
       .set({ ...valoresDeGasto(plan.gasto.fila), etiquetaId })
@@ -182,7 +186,7 @@ export async function borrarGasto(id: number): Promise<{ ok: true; conVenta: boo
 export async function editarIngreso(
   id: number,
   planear: (guardado: IngresoGuardado, saldoDestinoCentavos: number) => PlanDeIngreso,
-  etiquetaId: number | null,
+  etiqueta: EtiquetaPedida,
 ): Promise<ResultadoEdicion<Extract<PlanDeIngreso, { ok: false }>["errores"]>> {
   return db.transaction(async (tx) => {
     const ingreso = await filaBloqueada(tx, id, "ingreso");
@@ -201,6 +205,7 @@ export async function editarIngreso(
     }
     // Campo por campo: ni el tipo, ni el sobre que lo recibió, ni el origen o la referencia cambian.
     const f = plan.fila;
+    const etiquetaId = await resolverEtiqueta(tx, etiqueta);
     await tx
       .update(movimientos)
       .set({

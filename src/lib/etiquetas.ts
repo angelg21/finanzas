@@ -31,6 +31,18 @@ export function etiquetaIgual<E extends { nombre: string }>(etiquetas: E[], text
   return buscada === "" ? undefined : etiquetas.find((e) => claveDeNombre(e.nombre) === buscada);
 }
 
+/**
+ * Lo que el formulario pide, sin haber escrito nada todavía: una etiqueta que existe, una por crear o ninguna. Se
+ * resuelve dentro de la transacción que guarda el movimiento, así un formulario que no se guarda no deja etiquetas.
+ */
+export type EtiquetaPedida = { id: number } | { nueva: string } | null;
+
+/** Las filas con la etiqueta en el gasto o el ingreso; la venta, el reparto y lo demás no la llevan (criterio 4). */
+export function conEtiqueta<F extends { tipo: string }>(filas: F[], etiquetaId: number | null): F[] {
+  if (etiquetaId === null) return filas;
+  return filas.map((f) => (f.tipo === "gasto" || f.tipo === "ingreso" ? { ...f, etiquetaId } : f));
+}
+
 /** El id de `?etiqueta=` o de la píldora elegida: un entero positivo dentro de un integer, o null. */
 export function leerIdEtiqueta(valor: unknown): number | null {
   if (typeof valor !== "string" || !/^\d{1,10}$/.test(valor)) return null;

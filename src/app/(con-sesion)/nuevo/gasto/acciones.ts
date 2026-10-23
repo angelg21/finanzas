@@ -196,7 +196,7 @@ async function procesarGasto(formData: FormData): Promise<Resultado> {
 
   if (sobre.tipo === "inversion" && confirmarSobre !== String(sobre.id)) return { estado: "confirmar", valores };
 
-  // La etiqueta al final, cuando lo demás ya es válido: así no se crea una de un gasto que no se guarda (spec 008).
+  // La etiqueta pedida, al final y sin escribir: una nueva la crea registrarCaptura junto con el gasto (spec 008).
   const etiqueta = await etiquetaDelFormulario(formData);
   if (!etiqueta.ok) return { estado: "error", errores: { etiqueta: etiqueta.error }, valores };
 
@@ -204,17 +204,15 @@ async function procesarGasto(formData: FormData): Promise<Resultado> {
   const filas = preparado.filas.map((f) => ({
     ...f,
     referenciaExterna: referenciaDeCaptura(valores.idCaptura, f.tipo),
-    // Solo el gasto lleva la etiqueta; la venta de USDT no (spec 008, criterio 4).
-    etiquetaId: f.tipo === "gasto" ? etiqueta.etiquetaId : null,
   }));
   // Spec 009: completar un pendiente es registrar el gasto y borrarlo en la misma transacción. Sin él, como siempre.
   const pendiente = Number(formData.get("pendienteId"));
   const pendienteId = Number.isSafeInteger(pendiente) && pendiente > 0 && pendiente <= 2_147_483_647 ? pendiente : null;
   let registro: Awaited<ReturnType<typeof registrarCaptura>>;
   try {
-    if (pendienteId === null) registro = await registrarCaptura(valores.idCaptura, filas);
+    if (pendienteId === null) registro = await registrarCaptura(valores.idCaptura, filas, etiqueta.etiqueta);
     else {
-      const completado = await completarPorCompletar(valores.idCaptura, [pendienteId], filas);
+      const completado = await completarPorCompletar(valores.idCaptura, [pendienteId], filas, etiqueta.etiqueta);
       if ("faltan" in completado) {
         return { estado: "error", errores: { general: "Este gasto ya se completó o se descartó" }, valores };
       }

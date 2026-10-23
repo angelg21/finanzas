@@ -17,6 +17,10 @@ type Datos = {
   impedido?: string;
 };
 
+/** La misma página con `?borrar=1`, sin perder a dónde volver: un `?borrar=1` suelto borraría el `?volver=`. */
+const conVuelta = (volver: string, borrar: boolean) =>
+  `?volver=${encodeURIComponent(volver)}${borrar ? "&borrar=1" : ""}`;
+
 const etiquetaDe = {
   gasto: "Borrar gasto",
   ingreso: "Borrar ingreso",
@@ -24,7 +28,10 @@ const etiquetaDe = {
   cobro: "Deshacer cobro",
 } as const;
 
-/** La confirmación con su formulario: en el `<dialog>` con JavaScript, o en la página con `?borrar=1` sin él. */
+/**
+ * La confirmación con su formulario: en el `<dialog>` con JavaScript, o en la página con `?borrar=1` sin él. En la
+ * página, "Cancelar" vuelve a la misma pantalla sin la confirmación (revisión de la 006, hallazgo 2).
+ */
 export function ConfirmarBorrado({
   id,
   tipo,
@@ -57,7 +64,11 @@ export function ConfirmarBorrado({
           <Boton type="button" variante="secundario" onClick={alCancelar} className="flex-1">
             Cancelar
           </Boton>
-        ) : null}
+        ) : (
+          <EnlaceBoton href={conVuelta(volver, false)} variante="secundario" className="flex-1">
+            Cancelar
+          </EnlaceBoton>
+        )}
       </div>
     </form>
   );
@@ -72,7 +83,7 @@ export function BotonBorrar(datos: Datos) {
   return (
     <>
       <EnlaceBoton
-        href="?borrar=1"
+        href={conVuelta(datos.volver, true)}
         variante="peligro"
         onClick={(e) => {
           e.preventDefault();

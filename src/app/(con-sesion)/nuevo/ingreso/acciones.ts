@@ -120,7 +120,7 @@ async function procesarIngreso(formData: FormData): Promise<ResultadoIngreso> {
     return { estado: "confirmar", valores, sinAsignarCentavos: preparado.sinAsignar };
   }
 
-  // La etiqueta al final, cuando lo demás ya es válido: así no se crea una de un ingreso que no se guarda (spec 008).
+  // La etiqueta pedida, al final y sin escribir: una nueva la crea registrarCaptura junto con el ingreso (spec 008).
   const etiqueta = await etiquetaDelFormulario(formData);
   if (!etiqueta.ok) return { estado: "error", errores: { etiqueta: etiqueta.error }, valores };
 
@@ -129,15 +129,11 @@ async function procesarIngreso(formData: FormData): Promise<ResultadoIngreso> {
     f.tipo === "ingreso"
       ? referenciaDeCaptura(valores.idCaptura, "ingreso")
       : referenciaDeReasignacion(valores.idCaptura, f.sobreDestinoId);
-  // Solo el ingreso lleva la etiqueta; su reparto no (spec 008, criterio 4).
-  const filas = preparado.filas.map((f) => ({
-    ...f,
-    referenciaExterna: referencia(f),
-    etiquetaId: f.tipo === "ingreso" ? etiqueta.etiquetaId : null,
-  }));
+  const filas = preparado.filas.map((f) => ({ ...f, referenciaExterna: referencia(f) }));
   let registro: Awaited<ReturnType<typeof registrarCaptura>>;
   try {
-    registro = await registrarCaptura(valores.idCaptura, filas);
+    // La etiqueta va solo en el ingreso, no en su reparto (spec 008, criterio 4); registrarCaptura la pone.
+    registro = await registrarCaptura(valores.idCaptura, filas, etiqueta.etiqueta);
   } catch (error) {
     registrarFalla("No se pudo registrar el ingreso", error);
     return { estado: "error", errores: { general: "No se pudo guardar. Intenta de nuevo." }, valores };

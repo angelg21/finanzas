@@ -224,14 +224,24 @@ export function MenuMovil({ salir }: ConSalir) {
   );
 }
 
+/** Las pantallas que son un formulario, además de registrar: editar, crear, repartir, las reglas, completar varios. */
+const formularios = [
+  /^\/movimientos\/\d+/,
+  /^\/categorias\/(nueva|\d+)/,
+  /^\/deudas\/(nueva|prestar|apartar|\d+\/editar)/,
+  /^\/sobres\/(repartir|reglas)/,
+  /^\/por-completar\/varios/,
+];
+
 /**
  * El "+" flotante del celular, abajo a la derecha: registrar un gasto queda a un toque y al alcance del pulgar.
  * Reemplaza a la barra inferior (pedido del desarrollador, 2026-10-14); lo demás está en el menú. No sale en las
- * pantallas de registrar, donde taparía el botón de guardar.
+ * pantallas de registrar ni en las que son un formulario: taparía su botón, y tocarlo abandonaría lo escrito
+ * (revisión de la 006, hallazgo 4).
  */
 export function BotonFlotanteRegistrar() {
   const ruta = usePathname();
-  if (esActiva(registrar.href, ruta)) return null;
+  if (esActiva(registrar.href, ruta) || formularios.some((f) => f.test(ruta))) return null;
   return (
     <Link
       href={registrar.href}
