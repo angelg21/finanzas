@@ -188,4 +188,10 @@ metadata:
   - En la demo, Familia está en 0 (gastó todo). Para medir devoluciones, primero dale un sobrante.
 - `comprobar-007 --url http://localhost:3000` usa el `next dev` de la sesión principal: no cerrarlo. Las cuatro comprobaciones (004, 005, 005-criterios, 007) dejan la base con la misma huella sin ids.
 
+- **Métodos del criterio 11 de la 007 (2026-10-23)**, en `fff6d62f…/scratchpad/gretiro/` (esa carpeta la comparte la sesión del autor: no borrar sus archivos):
+  - `sonda-retiro.mts <fase|todo>`: solo en `finanzas_gret_*`. Los ajustes de saldo van con referencia `sonda-ret-ajuste-mover-<uuid>`, para que ni el retiro ni lo recibido los cuenten. Entre subfases usa `limpiarParcial`, que conserva el préstamo; si no, el cobro da `noExiste`.
+  - `propiedades.mts`: propiedades de `planDeRetiro`. Usar `Math.random`: el LCG casero daba casi todo "no alcanza".
+  - **`/cuentas` sin navegador:** `cuentas-pagina.mts` hace `process.loadEnvFile` dentro del archivo, entra con `abrirSesion` de `scripts/comprobar-003-paginas.ts` y busca "Cuadra con los sobres".
+  - `comprobar-006`, `-007` y `-007-revision --url` corren contra la base real y la dejan con las mismas md5 por tabla; solo avanzan las secuencias (+142 movimientos, +16 deudas).
+
 Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].

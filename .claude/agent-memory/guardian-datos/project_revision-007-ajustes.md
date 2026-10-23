@@ -1,9 +1,20 @@
 ---
 name: revision-007-ajustes
-description: Spec 007 (deshacer pago/cobro, Mover entre sobres, recibido neto): auditada en main ad01eeb el 2026-10-22, SEGURO DE APLICAR; fusionada sin pasar por mí; el piso a cero del neto solo aplaza; Mover desde Deudas contra pagar queda en negativo
+description: Spec 007 (deshacer, Mover, recibido): ad01eeb SEGURO (2026-10-22); criterio 11 (retiro con vista previa y firma, 4460c75) APTO el 2026-10-23 con H1 media (el retiro se come el reparto de otro ingreso y el mensaje culpa a Mover); el neto con piso ya no existe, ahora "Mover no cuenta"
 metadata:
   type: project
 ---
+
+**Criterio 11, 4460c75 (2026-10-23): APTO para datos.** Retirar lo repartido al deshacer un cobro o borrar un ingreso (`src/lib/retiro.ts`, `src/db/retiro.ts`, `deshacer-pago.ts`, `borrar-ingreso.ts`). Sin migración. Medido en `finanzas_gret_a` (ya borrada) con `fff6d62f…/scratchpad/gretiro/sonda-retiro.mts <basico|otroingreso|otroingresonov|carreras|forzado|tormenta|filas|firma|volumen>` y `propiedades.mts`:
+
+- Bien: cuadre en todo; PA nunca < 0; ninguna fila ≤ 0 (200 mil casos de `planDeRetiro`); orden de candados (5,d) → fila → (3,PA) → filas FOR UPDATE sin ciclos, tormenta 0 interbloqueos; repartir y borrar esperan ~460 ms detrás de deshacer y al revés da `cambio`; cuota igual al retirar un apartado; 20 mil posteriores, deshacer 138 ms.
+- **H1 media:** newest-first se lleva el reparto propio de OTRO ingreso B. Luego borrar B queda impedido con "salió con Mover o con un préstamo" sin que haya ninguno, y el remedio (Mover) deja el fijo contado: propuesta de noviembre sin Familia 100, Familia en 0. Igual con borrar un ingreso viejo en vez de deshacer.
+- **H2 baja:** la firma es `id:centavos`, no cubre los saldos de "Así queda", y el retiro no toma (3, sobre) de los sobres de los que retira. Mover o apartar desde Gastos o Deudas, un pago o un gasto en medio: el sobre queda en −100 (10 de 10) con la vista previa diciendo 0, sin "Algo cambió".
+- Info (solo SQL o futuro): no filtra `sobres.activo` (descuadra 2000 con un archivado); un ingreso fuera de PA retira apartados de ese sobre; monto ≠ USD da 23514; PA negativo previo retira de más; filas de meses pasados y demo-* entran.
+
+**How to apply:** en la próxima vuelta de la 007 o de 006, comprobar si se decidió H1 (política de qué retirar, o el mensaje con la causa real) y H2 (saldos en la firma o (3, sobre) tras (3, PA) en orden de id). Cuando llegue archivar sobres o el importador, exigir el filtro `activo` y que el retiro solo use PA.
+
+**Contexto:** desde el 2026-10-22 lo recibido ya no es neto con piso: cuenta solo las reasignaciones desde PA sin la marca `-mover-` (criterio 10 redecidido). Lo de abajo sobre el piso es historia.
 
 **Auditoría de la 007 sobre `main` ad01eeb (2026-10-22): SEGURO DE APLICAR.** Se fusionó el 2026-10-17 antes de verify y review, por pedido del desarrollador. Sin migración: ni 611ba73 ni fd89e34 tocan `schema.ts` ni `drizzle/`. Lo de `src/db`: `mover.ts`, `deshacer-pago.ts` (lo movió fd89e34 desde `guardar-deudas.ts` y `editar-movimientos.ts`), y lo recibido **neto** en `recibidoDesdePorAsignarPorMes` (con piso 0 al leer) y `sobreDeudas().recibidoEnElMesCentavos` (sin piso). Las etiquetas con # de la T3 ya no existen: las reemplazó la 008.
 

@@ -1,6 +1,6 @@
 ---
 name: defectos-datos-encontrados
-description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en 003, 004, 97437d7, 005, T3 de 006, la 0006 de 008, 009 y 007 (2026-10-22: bruto→neto cerrado; abierto el piso que arrastra el déficit)
+description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en 003, 004, 97437d7, 005, T3 de 006, la 0006 de 008, 009, 007 y su criterio 11 (2026-10-23: retiro que se come el reparto de otro ingreso, firma sin saldos)
 metadata:
   type: project
 ---
@@ -127,9 +127,15 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
   - `categoriasConUso` no cuenta pendientes: la página promete borrar y el escritor archiva.
   - Anotar no compara contenido en un reintento. La base acepta fechas raras, una referencia vacía y un monto > 2^53.
 
+**Criterio 11 de la 007, 4460c75 (2026-10-23). APTO; abiertos** (ver [[revision-007-ajustes]])
+
+- **Media.** El retiro (del más reciente) se lleva el reparto propio de otro ingreso. Ese ingreso ya no se puede borrar, y el mensaje culpa a Mover o a un préstamo inexistentes. Seguir el remedio (Mover) deja un fijo contado con el sobre en 0: la propuesta pierde Familia 100. Es la misma clase que el hallazgo 1 de la quinta vuelta.
+- **Baja.** La firma no cubre los saldos de la vista previa, y el retiro no toma (3, sobre) de los sobres de los que saca. Un Mover, apartar, pago o gasto en medio deja un sobre en negativo aunque la vista mostraba ≥ 0.
+- **Info.** Sin filtro de sobre activo (descuadra al archivar); un ingreso fuera de PA retira apartados; monto ≠ USD da 23514; PA negativo previo retira de más; meses pasados y demo-* entran.
+
 **007, auditada en main ad01eeb (2026-10-22). Ninguno bloquea** (ver [[revision-007-ajustes]])
 
-- **Baja.** El piso de 0 de lo recibido se aplica a la suma del mes, así que el déficit se arrastra. Devolver 150 a PA con un fijo de 100 (50 eran de septiembre) hace que los dos ingresos siguientes propongan 100 y 50. Diverge de "nunca baja de cero" (criterio 10).
+- ~~**Baja.** El piso de 0 de lo recibido arrastra el déficit.~~ **Superado el 2026-10-22:** ya no hay neto ni piso; lo recibido excluye Mover por la marca `-mover-` (criterio 10 redecidido).
 - **Info.**
   - Mover desde Deudas a la vez que un pago: Deudas en negativo (10 de 10), porque `saldar` no toma `(3, Deudas)`.
   - Deudas → un sobre que no es PA sube la cuota dentro del mes.
