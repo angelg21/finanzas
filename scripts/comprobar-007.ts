@@ -2,9 +2,11 @@
  * Los criterios ★ de la spec 007 contra la base, escritos desde su texto al verificar:
  *   ★ 1 · un pago o un cobro se abre para deshacerlo, con lo que fue; nada más se abre así;
  *   ★ 2 · deshacer un pago devuelve el dinero a su cuenta y al sobre Deudas, y la deuda recupera ese pendiente; deshacer
- *         un cobro lo saca de la cuenta y de Por asignar; si Por asignar ya lo repartió, no se deshace y lo dice; con
- *         el candado de la deuda y el de Por asignar, deshacer y pagar, o deshacer y repartir, a la vez, nunca
- *         dejan nada en negativo;
+ *         un cobro lo saca de la cuenta y de Por asignar; con el candado de la deuda y el de Por asignar, deshacer y
+ *         pagar, o deshacer y repartir, a la vez, nunca dejan nada en negativo;
+ *   ★ 11 · si Por asignar ya lo repartió, la vista previa dice qué se retira del reparto de después y cómo queda todo,
+ *         y solo se aplica con su firma: sin ella o si algo cambió, no se toca nada; si lo que falta salió con Mover,
+ *         no se deshace y dice cuánto devolver;
  *   ★ 3 · el cuadre se mantiene, y una deuda pagada o un préstamo cobrado vuelve a abierta;
  *   ★ 7 · mover guarda una reasignación de hoy entre dos sobres, de 0,01 al saldo del origen, y nunca lo deja en
  *         negativo, tampoco con dos movimientos a la vez ni con un reparto a la vez;
@@ -326,22 +328,65 @@ async function main() {
       "noExiste" in (await deshacerPagoOCobro(cobroId)),
     );
 
-    // ★ 2 · un cobro ya repartido no se deshace
+    // ★ 11 · un cobro ya repartido: se ve antes lo que se retira, y solo se aplica con la firma de esa vista previa
     const cobro2 = await cobrar(p, "20");
     await sobreEn(porAsignar.id, 1500);
-    const antesDeNegar = (await estado()).huella;
-    const rNo = await deshacerPagoOCobro(cobro2);
+    const antesDeRetirar = await estado();
+    const rSinFirma = await deshacerPagoOCobro(cobro2);
     comprobar(
-      "2",
-      'si Por asignar ya lo repartió, no se deshace y lo dice: "Por asignar tiene 15,00; le faltan 5,00"',
-      "ok" in rNo && !rNo.ok && rNo.error === "Por asignar tiene 15,00; le faltan 5,00",
+      "11",
+      "sin la firma de la vista previa no se deshace: pide volver a mirarla, y no toca nada",
+      "cambio" in rSinFirma && (await estado()).huella === antesDeRetirar.huella,
+    );
+    const previa2 = (await pagoOCobroParaDeshacer(cobro2))?.previa;
+    const despuesEn = (nombre: string) => previa2?.saldos.find((x) => x.nombre === nombre)?.despues;
+    comprobar(
+      "11",
+      "la vista previa retira 5,00 de Planes, lo último repartido, y deja Por asignar en 0,00",
+      previa2?.retirado.length === 1 &&
+        previa2.retirado[0].sobreId === planes.id &&
+        previa2.retirado[0].centavos === 500 &&
+        despuesEn(porAsignar.nombre) === 0 &&
+        despuesEn(planes.nombre) === enSobre(antesDeRetirar, planes.id) - 500,
+      JSON.stringify(previa2?.saldos),
+    );
+    // Algo cambia entre mirar y confirmar: un reparto nuevo es ahora lo último repartido.
+    await repartir(100, gastosDelMes.id);
+    const antesDeCambio = (await estado()).huella;
+    const rViejo = await deshacerPagoOCobro(cobro2, previa2?.firma ?? "");
+    comprobar(
+      "11",
+      "con la firma de una vista previa que ya no vale, no se aplica",
+      "cambio" in rViejo && (await estado()).huella === antesDeCambio,
+    );
+    const previa3 = (await pagoOCobroParaDeshacer(cobro2))?.previa;
+    const rSi = await deshacerPagoOCobro(cobro2, previa3?.firma ?? "");
+    const trasRetirar = await cuadra("tras deshacer un cobro ya repartido");
+    const comoSeVio = (previa3?.saldos ?? []).every(
+      (x) =>
+        [...trasRetirar.cuentas, ...trasRetirar.sobres].find((y) => y.nombre === x.nombre)?.saldoCentavos === x.despues,
+    );
+    comprobar(
+      "11",
+      "con la firma de la vista previa de ahora se deshace, y todo queda como ella mostró",
+      "ok" in rSi && rSi.ok && enSobre(trasRetirar, porAsignar.id) === 0 && comoSeVio,
+      JSON.stringify(previa3?.saldos),
+    );
+    // Lo que falta salió con Mover, que no es reparto: no hay qué retirar.
+    const cobro3 = await cobrar(p, "20");
+    await mover(porAsignar.id, planes.id, 500);
+    const antesDeNegar = (await estado()).huella;
+    const rNo = await deshacerPagoOCobro(cobro3);
+    const sinRetiro =
+      "Por asignar tiene 15,00; le faltan 5,00, y lo repartido después solo cubre 0,00: lo demás salió con Mover o con un préstamo. Devuelve 5,00 a Por asignar con Mover y vuelve a intentarlo.";
+    const visto3 = await pagoOCobroParaDeshacer(cobro3);
+    comprobar(
+      "11",
+      "si lo que falta salió con Mover, no se deshace, lo dice antes y dice cuánto devolver",
+      "ok" in rNo && !rNo.ok && rNo.error === sinRetiro && visto3?.impedido === sinRetiro && visto3.previa === null,
       "error" in rNo ? rNo.error : "",
     );
-    comprobar(
-      "2",
-      "y el cobro sigue ahí, sin cambios",
-      (await pagoOCobroParaDeshacer(cobro2)) !== null && (await estado()).huella === antesDeNegar,
-    );
+    comprobar("11", "y el cobro sigue ahí, sin cambios", visto3 !== null && (await estado()).huella === antesDeNegar);
 
     // ★ 3 · pagada o cobrada vuelve a abierta
     const d2 = await deuda("100");

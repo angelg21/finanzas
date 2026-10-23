@@ -8,7 +8,8 @@
  *   7  · un pago toma el candado de Deudas: Mover desde Deudas a la vez no saca lo que el pago ya usó.
  * Con --url, además, contra un servidor en marcha con esta misma base y el usuario de prueba, como un navegador sin
  * JavaScript: Mover no trae origen elegido; desde Inversión, sin confirmar no guarda, la confirmación vale para ese
- * monto y no otro, y el reintento no duplica; deshacer un cobro ya repartido lo dice antes.
+ * monto y no otro, y el reintento no duplica; deshacer un cobro ya repartido muestra antes qué se retira y cómo queda
+ * todo, se aplica al confirmar esa vista previa y no otra, y si lo que falta salió con Mover lo dice (criterio 11).
  *   pnpm exec tsx scripts/comprobar-007-revision.ts [--url http://localhost:3000]
  * Corre sobre la base local con los datos de demostración y la deja como estaba. Lo suyo son capturas cuyo id empieza
  * por 0c070017, que se borran al terminar y, si una corrida se cortó, al empezar la siguiente. Se niega ante
@@ -51,6 +52,7 @@ async function main() {
   const { deudaPorId, sobreDeudas } = await import("../src/db/deudas");
   const { cobrarPrestamo, pagarDeuda, prestar, registrarDeuda } = await import("../src/db/guardar-deudas");
   const { cuotaDelMes, recibidoDesdePorAsignarPorMes } = await import("../src/db/reparto");
+  const { pagoOCobroParaDeshacer } = await import("../src/db/deshacer-pago");
 
   const movimientosNuestros = like(movimientos.referenciaExterna, `captura-${MARCA}-%`);
   const deudasNuestras = like(deudas.referencia, `captura-${MARCA}-%`);
@@ -477,17 +479,60 @@ async function main() {
           `${confirmado.estado} ${confirmado.ubicacion} · ${reintento.estado}`,
         );
 
-        // Hallazgo 4: deshacer un cobro ya repartido lo dice antes, y no ofrece "Sí, deshacer"
+        // Criterio 11: deshacer un cobro ya repartido muestra antes qué se retira y cómo queda todo
         const p5 = await prestamo("50");
         const cobroRepartido = await cobrar(p5, "20");
         await sobreEn(porAsignar.id, 1500);
-        const vista = await sesion.pagina(`/movimientos/${cobroRepartido}?borrar=1`);
+        const ruta = `/movimientos/${cobroRepartido}?borrar=1`;
+        const confirmacionDe = (html: string) =>
+          [...html.matchAll(/<form[\s\S]*?<\/form>/g)].map((m) => m[0]).find((f) => f.includes('name="firma"')) ?? "";
+        const firmaDe = (form: string) => ocultos(form).get("firma");
+        const vista = await sesion.pagina(ruta);
+        const visto = texto(vista.html);
+        const form1 = confirmacionDe(vista.html);
         comprobar(
-          "2",
-          'deshacer un cobro ya repartido lo dice antes, con el remedio, y no ofrece "Sí, deshacer"',
-          texto(vista.html).includes(
-            "Por asignar tiene 15,00; le faltan 5,00. Devuelve lo que falta a Por asignar con Mover",
-          ) && !texto(vista.html).includes("Sí, deshacer"),
+          "11",
+          "deshacer un cobro ya repartido dice antes qué se retira y cómo queda, y ofrece confirmarlo con su firma",
+          visto.includes("se retiran 5,00 de lo repartido después (Planes 5,00)") &&
+            visto.includes("Así queda") &&
+            visto.includes("Sí, deshacer") &&
+            firmaDe(form1) !== "" &&
+            firmaDe(form1) !== null,
+          `${firmaDe(form1)}`,
+        );
+        // Algo cambia entre mirar y confirmar: la confirmación vieja no se aplica y la página trae la de ahora.
+        await repartir(100, gastosDelMes.id);
+        const vieja = await sesion.enviar(ruta, ocultos(form1));
+        const form2 = confirmacionDe(vieja.html);
+        comprobar(
+          "11",
+          "confirmar una vista previa que ya no vale no deshace, lo dice y muestra la de ahora",
+          vieja.estado === 200 &&
+            texto(vieja.html).includes("Algo cambió desde la vista previa") &&
+            texto(vieja.html).includes("se retiran 6,00 de lo repartido después (Gastos del mes 1,00 · Planes 5,00)") &&
+            firmaDe(form2) !== firmaDe(form1) &&
+            (await pagoOCobroParaDeshacer(cobroRepartido)) !== null,
+          `${vieja.estado} · ${firmaDe(form2)}`,
+        );
+        const confirmada = await sesion.enviar(ruta, ocultos(form2));
+        comprobar(
+          "11",
+          "confirmar la vista previa de ahora deshace el cobro, retira lo que mostró y vuelve con el aviso",
+          confirmada.estado === 303 &&
+            (confirmada.ubicacion ?? "").includes("borrado=deshecho") &&
+            (await pagoOCobroParaDeshacer(cobroRepartido)) === null &&
+            enSobre(await estado(), porAsignar.id) === 0,
+          `${confirmada.estado} ${confirmada.ubicacion}`,
+        );
+        // Si lo que falta salió con Mover, no hay qué retirar: lo dice antes y no ofrece "Sí, deshacer"
+        const cobroMovido = await cobrar(p5, "20");
+        await mover(porAsignar.id, planes.id, 500);
+        const sinRetiro = texto((await sesion.pagina(`/movimientos/${cobroMovido}?borrar=1`)).html);
+        comprobar(
+          "11",
+          'si lo que falta salió con Mover, lo dice antes, con cuánto devolver, y no ofrece "Sí, deshacer"',
+          sinRetiro.includes("lo demás salió con Mover o con un préstamo. Devuelve 5,00 a Por asignar con Mover") &&
+            !sinRetiro.includes("Sí, deshacer"),
         );
       } finally {
         await sesion.salir();

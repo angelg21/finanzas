@@ -104,7 +104,7 @@ Montos de ejemplo en USD. "Cuentas en dólares" son las de USD, USDT y USDC, que
     - La app lo encuentra por su tipo, como "Por asignar". Si no existe o está inactivo, `/deudas` lo dice y no deja pagar ni apartar. Registrar deudas sí se puede.
 11. ★ **La cuota del mes.** `cuotaDeDeudas({ deudas, apartado, hoy })` calcula cuánto debe recibir Deudas este mes para tener cada deuda lista al empezar el mes de su fecha.
     - Entran las deudas abiertas que debo y que tienen fecha. Las que no tienen fecha no piden cuota: se apartan a mano.
-    - `apartado` es el saldo de Deudas al empezar el mes: el saldo de hoy menos lo recibido desde "Por asignar" en el mes (día de Caracas). Así la cuota no cambia dentro del mes, aunque lleguen dos cobros.
+    - `apartado` es el saldo de Deudas al empezar el mes: el saldo de hoy menos lo que el reparto le dio desde "Por asignar" en el mes (día de Caracas). Así el reparto del mes no cambia la cuota, aunque lleguen dos ingresos; meter o sacar dinero a mano con Mover sí la cambia, porque cambia lo apartado (criterio 10 de la 007). Si lo que el reparto le dio este mes salió después con Mover, lo apartado queda bajo cero y la cuota pasa de lo que se debe justo por eso: es lo que Deudas tiene que recibir en el mes contando lo ya recibido, y lo que salió se vuelve a pedir. La pista ("faltan 670") dice lo que falta recibir (quinta revisión de la 007, hallazgo 2).
     - Para cada mes con vencimientos, M:
       - S(M) es el pendiente de las deudas que vencen hasta M;
       - k(M) es el número de meses entre el mes de hoy y M, y como mínimo 1. Una deuda vencida o de este mes pide todo ahora;

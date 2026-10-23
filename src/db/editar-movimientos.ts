@@ -1,13 +1,7 @@
 import { and, eq, inArray, like, sql } from "drizzle-orm";
 import { idDeReferencia, prefijoDeCaptura, referenciaDeCaptura } from "../lib/captura";
 import type { GastoGuardado, PlanDeGasto } from "../lib/editar-gasto";
-import {
-  type IngresoGuardado,
-  type PlanDeBorrado,
-  type PlanDeIngreso,
-  type RepartoGuardado,
-  planDeBorradoDeIngreso,
-} from "../lib/editar-ingreso";
+import { type IngresoGuardado, type PlanDeIngreso, type RepartoGuardado } from "../lib/editar-ingreso";
 import type { EtiquetaPedida } from "../lib/etiquetas";
 import type { ErroresGasto, FilaMovimiento } from "../lib/gastos";
 import { resolverEtiqueta } from "./etiquetas";
@@ -79,7 +73,7 @@ export async function movimientoParaEditar(id: number) {
 export type MovimientoParaEditar = NonNullable<Awaited<ReturnType<typeof movimientoParaEditar>>>;
 
 /** La fila, bloqueada hasta el final de la transacción, si es del tipo pedido. */
-async function filaBloqueada(tx: Ejecutor, id: number, tipo: (typeof soloEditables)[number]) {
+export async function filaBloqueada(tx: Ejecutor, id: number, tipo: (typeof soloEditables)[number]) {
   if (!idValido(id)) return null;
   const [fila] = await tx
     .select()
@@ -253,50 +247,4 @@ export async function repartoConSaldos(
     });
   }
   return { ids: filas.map((f) => f.id), reparto };
-}
-
-/**
- * Lo que pasaría al borrar un ingreso, para la confirmación (criterio 7), y su reparto con el nombre de cada sobre.
- * Sin candado: la acción vuelve a mirar.
- */
-export async function vistaPreviaDeBorrado(
-  m: MovimientoParaEditar,
-): Promise<{ plan: PlanDeBorrado; reparto: RepartoGuardado[] } | null> {
-  const destinoId = m.movimiento.sobreDestinoId;
-  if (m.movimiento.tipo !== "ingreso" || destinoId === null) return null;
-  const { reparto } = await repartoConSaldos(db, m.captura, destinoId);
-  const [destino] = await db.select({ nombre: sobres.nombre }).from(sobres).where(eq(sobres.id, destinoId));
-  const plan = planDeBorradoDeIngreso({
-    montoUsdCentavos: m.movimiento.montoUsdCentavos,
-    destino: { nombre: destino?.nombre ?? "Por asignar", saldoCentavos: await saldoDeSobre(db, destinoId) },
-    reparto,
-  });
-  return { plan, reparto };
-}
-
-/** Criterio 7: el ingreso y su reparto, con el candado de "Por asignar"; no deja "Por asignar" en negativo. */
-export async function borrarIngreso(id: number): Promise<PlanDeBorrado | { noExiste: true }> {
-  return db.transaction(async (tx) => {
-    const ingreso = await filaBloqueada(tx, id, "ingreso");
-    if (!ingreso?.sobreDestinoId) return { noExiste: true as const };
-    await tx.execute(sql`select pg_advisory_xact_lock(${claveReparto}, ${ingreso.sobreDestinoId})`);
-    const captura = ingreso.origen === "manual" ? idDeReferencia(ingreso.referenciaExterna) : null;
-    const { ids, reparto } = await repartoConSaldos(tx, captura, ingreso.sobreDestinoId);
-    const [destino] = await tx
-      .select({ nombre: sobres.nombre })
-      .from(sobres)
-      .where(eq(sobres.id, ingreso.sobreDestinoId));
-    const plan = planDeBorradoDeIngreso({
-      montoUsdCentavos: ingreso.montoUsdCentavos,
-      destino: {
-        nombre: destino?.nombre ?? "Por asignar",
-        saldoCentavos: await saldoDeSobre(tx, ingreso.sobreDestinoId),
-      },
-      reparto,
-    });
-    if (!plan.ok) return plan;
-    if (ids.length > 0) await tx.delete(movimientos).where(inArray(movimientos.id, ids));
-    await tx.delete(movimientos).where(eq(movimientos.id, ingreso.id));
-    return plan;
-  });
 }

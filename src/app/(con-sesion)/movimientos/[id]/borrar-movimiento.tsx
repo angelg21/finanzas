@@ -1,7 +1,11 @@
 "use client";
 
+import { ArrowRight } from "lucide-react";
 import { useActionState, useRef } from "react";
 import { Boton, EnlaceBoton, ErrorCampo } from "@/components/formulario";
+import { Cifra } from "@/components/ui";
+import { formatearCifra } from "@/lib/dinero";
+import type { VistaPrevia } from "@/lib/retiro";
 import { borrarConFallas } from "./editar-con-fallas";
 import type { EstadoBorrar } from "./valores";
 
@@ -15,6 +19,8 @@ type Datos = {
   avisos: string[];
   /** Por qué no se puede borrar ("Por asignar tiene 30,00; le faltan 770,00"): entonces no se ofrece. */
   impedido?: string;
+  /** Cómo queda todo, y lo que se retira del reparto posterior (spec 007, criterio 11); su firma va con la confirmación. */
+  previa?: VistaPrevia;
 };
 
 /** La misma página con `?borrar=1`, sin perder a dónde volver: un `?borrar=1` suelto borraría el `?volver=`. */
@@ -39,6 +45,7 @@ export function ConfirmarBorrado({
   queSeBorra,
   avisos,
   impedido,
+  previa,
   alCancelar,
 }: Datos & { alCancelar?: () => void }) {
   const [estado, enviar, pendiente] = useActionState<EstadoBorrar, FormData>(borrarConFallas, {});
@@ -47,7 +54,9 @@ export function ConfirmarBorrado({
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="tipo" value={tipo} />
       <input type="hidden" name="volver" value={volver} />
+      <input type="hidden" name="firma" value={previa?.firma ?? ""} />
       <p className="text-[15px] font-bold">{queSeBorra}</p>
+      {previa && !impedido ? <ComoQueda previa={previa} /> : null}
       {avisos.map((a) => (
         <p key={a} className="text-[13px] font-semibold text-negativo">
           {a}
@@ -71,6 +80,47 @@ export function ConfirmarBorrado({
         )}
       </div>
     </form>
+  );
+}
+
+/**
+ * Lo que se retira del reparto posterior, si hace falta, y cada saldo que cambia, antes y después: lo que se ve es lo
+ * que se aplica, porque la acción solo lo hace con esta misma firma (spec 007, criterio 11).
+ */
+function ComoQueda({ previa }: { previa: VistaPrevia }) {
+  const retirado = previa.retirado.reduce((a, r) => a + r.centavos, 0);
+  return (
+    <div className="flex flex-col gap-2">
+      {retirado > 0 ? (
+        <p className="text-[13px] font-semibold text-texto-2">
+          Ya se repartió: se retiran {formatearCifra(retirado)} de lo repartido después (
+          {previa.retirado.map((r) => `${r.nombre} ${formatearCifra(r.centavos)}`).join(" · ")}), y el reparto los
+          volverá a pedir.
+        </p>
+      ) : null}
+      <p className="text-[12px] font-extrabold uppercase tracking-wide text-texto-2">Así queda</p>
+      <ul className="flex flex-col gap-1.5">
+        {previa.saldos.map((s) => (
+          <li
+            key={s.nombre}
+            className="flex flex-wrap items-baseline justify-between gap-x-3 text-[13px] font-semibold"
+          >
+            <span className="min-w-0">{s.nombre}</span>
+            <span className="flex items-center gap-1.5">
+              <Cifra centavos={s.antes} moneda={s.moneda ?? "USD"} tamano="sm" tono="texto-2" />
+              <ArrowRight size={12} aria-hidden className="text-texto-3" />
+              <span className="sr-only">queda en</span>
+              <Cifra
+                centavos={s.despues}
+                moneda={s.moneda ?? "USD"}
+                tamano="sm"
+                tono={s.despues < 0 ? "negativo" : "texto"}
+              />
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

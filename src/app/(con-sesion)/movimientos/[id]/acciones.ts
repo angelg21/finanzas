@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { categoriasDeGastoPorUso, saldosPorCuenta, sobresParaGasto } from "@/db/consultas";
-import { borrarGasto, borrarIngreso, editarGasto, editarIngreso, movimientoParaEditar } from "@/db/editar-movimientos";
+import { borrarIngreso } from "@/db/borrar-ingreso";
+import { borrarGasto, editarGasto, editarIngreso, movimientoParaEditar } from "@/db/editar-movimientos";
 import { deshacerPagoOCobro } from "@/db/deshacer-pago";
 import { categoriasDeIngresoPorUso } from "@/db/reparto";
 import { planDeEdicionDeGasto } from "@/lib/editar-gasto";
@@ -215,7 +216,11 @@ export async function editarIngresoAccion(
   redirect(conAviso(destinoDeVuelta(texto(datos, "volver")), "editado=ingreso"));
 }
 
-/** Criterios 6, 7, 9 y 10: el gasto con su venta, o el ingreso con su reparto. */
+/**
+ * Criterios 6, 7, 9 y 10: el gasto con su venta, o el ingreso con su reparto. Un cobro o un ingreso ya repartidos se
+ * aplican con la firma de la vista previa que se confirmó (spec 007, criterio 11): si algo cambió desde entonces, no
+ * se aplica y la página vuelve con la vista previa de ahora.
+ */
 export async function borrarMovimientoAccion(_previo: EstadoBorrar, datos: FormData): Promise<EstadoBorrar> {
   const sesion = await leerSesion();
   if (!sesion) return { error: mensajeDeFalla("sesion", "no se borró") };
@@ -223,6 +228,7 @@ export async function borrarMovimientoAccion(_previo: EstadoBorrar, datos: FormD
   if (id === null) redirect("/movimientos");
   const tipo = texto(datos, "tipo");
   const deshacer = tipo === "pago" || tipo === "cobro";
+  const firma = texto(datos, "firma");
   let resultado:
     | Awaited<ReturnType<typeof borrarGasto>>
     | Awaited<ReturnType<typeof borrarIngreso>>
@@ -230,15 +236,19 @@ export async function borrarMovimientoAccion(_previo: EstadoBorrar, datos: FormD
   try {
     // Spec 007: un pago o un cobro se deshace; un gasto o un ingreso se borra con lo enlazado (spec 006).
     resultado = deshacer
-      ? await deshacerPagoOCobro(id)
+      ? await deshacerPagoOCobro(id, firma)
       : tipo === "ingreso"
-        ? await borrarIngreso(id)
+        ? await borrarIngreso(id, firma)
         : await borrarGasto(id);
   } catch (error) {
     registrarFalla("No se pudo borrar el movimiento", error);
     return { error: mensajeDeFalla("otra", "no se borró") };
   }
   if ("noExiste" in resultado) redirect(conAviso("/movimientos", "borrado=ya"));
+  if ("cambio" in resultado) {
+    revalidar();
+    return { error: "Algo cambió desde la vista previa. Mira cómo queda ahora y confirma otra vez." };
+  }
   if (!resultado.ok) return { error: resultado.error };
   revalidar();
   redirect(conAviso(destinoDeVuelta(texto(datos, "volver")), deshacer ? "borrado=deshecho" : "borrado=1"));

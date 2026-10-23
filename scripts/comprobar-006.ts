@@ -9,7 +9,8 @@
  *   ★ 5  · bajarlo más de lo que tiene Por asignar no guarda nada y lo dice; una baja y un reparto a la vez, con el
  *          mismo candado, nunca dejan Por asignar en negativo;
  *   ★ 6  · borrar un gasto se lleva su venta, y la cuenta y el sobre recuperan lo que tenían;
- *   ★ 7  · borrar un ingreso se lleva su reparto; si Por asignar quedaría en negativo no se borra y lo dice; la
+ *   ★ 7  · borrar un ingreso se lleva su reparto; si Por asignar ya repartió lo que falta, se retira de lo repartido
+ *          después con la firma de la vista previa (spec 007, criterio 11); si salió con Mover, no se borra y lo dice; la
  *          confirmación avisa del sobre que quedará en negativo;
  *   ★ 8  · nada que no sea gasto o ingreso se abre para editar (la página da 404 cuando movimientoParaEditar da null)
  *          ni se edita o borra por su id; un gasto sin captura se edita solo él;
@@ -27,7 +28,7 @@
 import { config } from "dotenv";
 import { randomUUID } from "node:crypto";
 import { count, eq, isNull, like, not, or } from "drizzle-orm";
-import { referenciaDeCaptura, referenciaDeReasignacion } from "../src/lib/captura";
+import { referenciaDeCaptura, referenciaDeMover, referenciaDeReasignacion } from "../src/lib/captura";
 import { exigirBaseLocal } from "../src/lib/destino-base";
 import { centavosATexto } from "../src/lib/dinero";
 import { planDeEdicionDeGasto } from "../src/lib/editar-gasto";
@@ -62,8 +63,9 @@ async function main() {
     await import("../src/db/consultas");
   const { categoriasDeIngresoPorUso } = await import("../src/db/reparto");
   const { registrarCaptura, registrarMovimientos, repartirPorAsignar } = await import("../src/db/movimientos");
-  const { borrarGasto, borrarIngreso, editarGasto, editarIngreso, movimientoParaEditar, vistaPreviaDeBorrado } =
+  const { borrarGasto, editarGasto, editarIngreso, movimientoParaEditar } =
     await import("../src/db/editar-movimientos");
+  const { borrarIngreso, vistaPreviaDeBorrado } = await import("../src/db/borrar-ingreso");
 
   const nuestros = or(
     like(movimientos.referenciaExterna, `captura-${MARCA}-%`),
@@ -218,6 +220,15 @@ async function main() {
       (f) => f.tipo === "reasignacion",
     );
     return repartirPorAsignar(captura, porAsignar!.id, filas);
+  }
+  /** Saca de Por asignar con Mover, que no es reparto (spec 007, criterio 10). */
+  async function moverDesdePorAsignar(centavos: number, destino: number) {
+    const captura = idDePrueba();
+    const monto = centavosATexto(centavos);
+    const filas = filasDeIngreso(captura, monto, [{ sobreId: destino, monto }]).filter(
+      (f) => f.tipo === "reasignacion",
+    );
+    await registrarMovimientos(filas.map((f) => ({ ...f, referenciaExterna: referenciaDeMover(captura, destino) })));
   }
   /** Deja Por asignar con exactamente `centavos`: reparte lo que sobra a Planes o registra un ingreso por lo que falta. */
   async function porAsignarEn(centavos: number) {
@@ -553,20 +564,45 @@ async function main() {
       "borrar un ingreso ya borrado responde que no existe, sin error",
       noExiste(await borrarIngreso(k.ingresoId)),
     );
+    // Spec 007, criterio 11: si Por asignar ya repartió lo que falta, se retira de lo repartido después, con la firma
+    // de la vista previa; si salió con Mover, no se borra y lo dice.
     const m = await ingreso("100");
     await porAsignarEn(3000);
     const antesDeM = (await estado()).huella;
     const rM = await borrarIngreso(m.ingresoId);
     comprobar(
       "7",
-      "si Por asignar quedaría en negativo, no se borra y lo dice",
-      "ok" in rM && !rM.ok && rM.error === "Por asignar tiene 30,00; le faltan 70,00",
-      "error" in rM ? rM.error : "",
+      "si Por asignar ya lo repartió, sin la firma de la vista previa no se borra y no toca nada",
+      "cambio" in rM && (await fila(m.ingresoId)) !== null && (await estado()).huella === antesDeM,
+    );
+    const previaM = (await vistaPreviaDeBorrado((await movimientoParaEditar(m.ingresoId))!))?.previa;
+    const rM2 = await borrarIngreso(m.ingresoId, previaM?.firma ?? "");
+    comprobar(
+      "7",
+      "con su firma se borra, retirando 70,00 de lo repartido después: Por asignar en 0,00",
+      "ok" in rM2 &&
+        rM2.ok &&
+        previaM?.retirado.reduce((a, r) => a + r.centavos, 0) === 7000 &&
+        enSobre(await estado(), porAsignar.id) === 0,
+      JSON.stringify(previaM?.retirado),
+    );
+    const m3 = await ingreso("100");
+    await moverDesdePorAsignar(enSobre(await estado(), porAsignar.id) - 3000, planes.id);
+    const antesDeM3 = (await estado()).huella;
+    const rM3 = await borrarIngreso(m3.ingresoId);
+    comprobar(
+      "7",
+      "si lo que falta salió con Mover, no se borra y lo dice",
+      "ok" in rM3 &&
+        !rM3.ok &&
+        rM3.error ===
+          "Por asignar tiene 30,00; le faltan 70,00, y lo repartido después solo cubre 0,00: lo demás salió con Mover o con un préstamo. Devuelve 70,00 a Por asignar con Mover y vuelve a intentarlo.",
+      "error" in rM3 ? rM3.error : "",
     );
     comprobar(
       "7",
       "y el ingreso sigue ahí, sin cambios",
-      (await fila(m.ingresoId)) !== null && (await estado()).huella === antesDeM,
+      (await fila(m3.ingresoId)) !== null && (await estado()).huella === antesDeM3,
     );
     // Un sobre que ya gastó lo recibido: la confirmación lo avisa antes, y borrar lo deja en negativo.
     const n = await ingreso("100", [{ sobreId: planes.id, monto: "40" }]);

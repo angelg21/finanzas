@@ -185,7 +185,7 @@ Contra la base local, con referencia `demo-comprobar-004-*` y dejando la base co
 
 ## Riesgos y decisiones
 
-- **"Una vez al mes" se mide por lo recibido desde "Por asignar".** Una reasignación manual desde "Por asignar" también cuenta como cubierta del fijo. Es lo esperado: ya llegó dinero a ese sobre ese mes.
+- **"Una vez al mes" se mide por lo recibido desde "Por asignar".** Cuenta lo que dio el reparto: el de un ingreso, "Repartir" y "Apartar". Lo que se mueve a mano con Mover no lo cubre ni hace que lo pida otra vez (criterio 10 de la 007, decidido por el desarrollador el 2026-10-22).
 - **La propuesta en el cliente y en el servidor** sale de la misma función pura. Si los saldos cambian entre que se abre la pantalla y se guarda, el servidor guarda lo confirmado: los montos son decisión del usuario, y el tope es una regla para proponer, no un candado.
 - **Por asignar se identifica por su tipo.** No hay índice único. La semilla crea uno; si hubiera dos, se usa el de menor `orden` y se registra en las notas.
 - **Las reglas sembradas no dan la tabla del plan** (187,50 y 187,50 frente a 175 y 200). Se acepta: la pantalla de reglas existe para eso.

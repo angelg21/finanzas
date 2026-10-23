@@ -23,7 +23,7 @@ Fase 1, "Cuentas, categorías, movimientos con nota" y "Sobres con reglas de rep
 **Deshacer un pago o un cobro**
 
 1. ★ Dado un pago o un cobro de una deuda, cuando toco su fila (en el historial de la deuda o en Movimientos), entonces veo `/movimientos/[id]` con lo que fue y "Deshacer pago" o "Deshacer cobro", que pide confirmación.
-2. ★ Deshacer borra el movimiento en una transacción con el candado de la deuda. Un pago devuelve el dinero a su cuenta y al sobre Deudas, y la deuda vuelve a tener ese pendiente. Un cobro saca el dinero de la cuenta y de "Por asignar", con su candado; si "Por asignar" no alcanza porque ya se repartió, no se deshace y lo dice: "Por asignar tiene X; le faltan Y".
+2. ★ Deshacer borra el movimiento en una transacción con el candado de la deuda. Un pago devuelve el dinero a su cuenta y al sobre Deudas, y la deuda vuelve a tener ese pendiente. Un cobro saca el dinero de la cuenta y de "Por asignar", con su candado; si "Por asignar" ya no lo tiene, sigue el criterio 11.
 3. ★ El cuadre entre sobres y cuentas se mantiene, y una deuda "pagada" o "cobrada" vuelve a abierta si le queda pendiente.
 
 **Etiquetas con #**
@@ -44,15 +44,20 @@ Fase 1, "Cuentas, categorías, movimientos con nota" y "Sobres con reglas de rep
 
     Los Mover se guardan con su propia marca en la referencia (`captura-<id>-mover-<sobre>`). Los que se hicieron antes de este cambio (del 17 al 22 de octubre de 2026) tienen la del reparto: si salieron de "Por asignar", cuentan como reparto hasta que termine octubre. Ni el origen ni el destino de Mover vienen elegidos, y la confirmación de sacar de Inversión vale para ese origen y ese monto.
 
+11. ★ **Deshacer lo hace todo, con vista previa** (decidido por el desarrollador el 2026-10-22, tras la quinta vuelta de revisión). Si "Por asignar" ya repartió lo que un cobro trajo, deshacerlo retira lo que falta de lo que se repartió desde "Por asignar" después del cobro (el reparto de un ingreso, "Repartir" y "Apartar"; nunca Mover), del más reciente al más viejo: las reasignaciones que caben enteras se borran y la última se achica. Lo retirado cuenta como reparto deshecho, así el reparto siguiente lo vuelve a pedir. Lo mismo al borrar un ingreso (criterio 7 de la 006), sin contar su propio reparto, que se va con él. Antes de aplicarlo:
+    - la confirmación muestra lo que se retira de cada sobre ("se retiran 6,00 de lo repartido después (Gastos del mes 1,00 · Planes 5,00)") y, en "Así queda", el saldo de la cuenta, de "Por asignar" y de cada sobre tocado, antes y después; un saldo que queda en negativo va en `negativo`;
+    - solo se aplica con la firma de esa misma vista previa (qué filas y cuánto de cada una), dentro de la transacción y con los candados. Sin ella, o si algo cambió desde que se vio, no se toca nada y la página vuelve con la vista previa de ahora: "Algo cambió desde la vista previa. Mira cómo queda ahora y confirma otra vez.";
+    - si lo repartido después no cubre lo que falta, porque salió con Mover o con un préstamo, no se ofrece y lo dice: "Por asignar tiene 15,00; le faltan 5,00, y lo repartido después solo cubre 0,00: lo demás salió con Mover o con un préstamo. Devuelve 5,00 a Por asignar con Mover y vuelve a intentarlo."
+
 ## Pantallas
 
-- **Deshacer**: `/movimientos/[id]` de un pago o un cobro: el título ("Pago a Papás"), el monto, la cuenta y la fecha, y "Deshacer pago" con `EnlaceBoton` `peligro`, con la misma confirmación de borrar de la 006.
+- **Deshacer**: `/movimientos/[id]` de un pago o un cobro: el título ("Pago a Papás"), el monto, la cuenta y la fecha, y "Deshacer pago" con `EnlaceBoton` `peligro`, con la misma confirmación de borrar de la 006. La de un cobro, y la de borrar un ingreso, llevan la vista previa del criterio 11: lo retirado en `texto-2` y "Así queda" con cada saldo en `Cifra` `sm`, antes → después.
 - **Etiquetas**: una fila de `Pildora` enlazadas bajo los controles de periodo; la elegida en `palida`.
 - **Mover**: una `Tarjeta` de 6 columnas centradas, como `/deudas/apartar`: "De" y "A" en `SelectorPildoras` con el saldo de cada sobre, `CampoMonto`, nota, el aviso de Inversión en `negativo` y el botón "Mover".
 
 ## Datos
 
-Sin tablas, columnas ni migración. Las etiquetas se leen de `nota` con una expresión regular sobre el texto validado. Mover es una `reasignacion` con `captura-<id>-reasignacion-<destino>`.
+Sin tablas, columnas ni migración. Las etiquetas se leen de `nota` con una expresión regular sobre el texto validado. Mover es una `reasignacion` con `captura-<id>-mover-<destino>` (criterio 10). Retirar lo repartido (criterio 11) borra o achica reasignaciones que ya existen; no agrega filas.
 
 ## Fuera de alcance
 
@@ -62,9 +67,9 @@ Deshacer préstamos, editar pagos y cobros, mover entre cuentas, etiquetas como 
 
 Solo las mínimas de dinero: `src/lib/mover.ts` (origen distinto del destino, monto hasta el saldo, la confirmación de Inversión) y `src/lib/etiquetas.ts` (leer y validar etiquetas).
 
-En cola, por pedido del desarrollador, para `/f-verify 007`: los ★ 1 a 3, 6, 7 y 9 contra la base (`scripts/comprobar-007.ts`), con carreras de deshacer un cobro contra repartir y de mover contra repartir.
+En cola, por pedido del desarrollador, para `/f-verify 007`: los ★ 1 a 3, 6, 7, 9 y 11 contra la base (`scripts/comprobar-007.ts`; las páginas del 11, en `scripts/comprobar-007-revision.ts --url`), con carreras de deshacer un cobro contra repartir y de mover contra repartir.
 
 ## Riesgos y decisiones
 
-- Deshacer un cobro ya repartido no se permite: devolver el reparto a mano llega con Mover, que esta misma feature trae.
+- Deshacer un cobro ya repartido retira lo repartido después (criterio 11). Al principio no se permitía y el remedio era devolverlo con Mover; con el criterio 10 Mover dejó de contar como reparto, así que devolverlo a mano no deshacía lo que el reparto pide, y el desarrollador decidió que deshacer lo haga todo, mostrándolo antes.
 - Construida y publicada antes de verificar y revisar, por pedido del desarrollador.

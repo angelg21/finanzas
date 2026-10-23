@@ -12,7 +12,8 @@ import {
 } from "@/db/consultas";
 import { categoriaDelMovimiento } from "@/db/categorias";
 import { type PagoOCobro, pagoOCobroParaDeshacer } from "@/db/deshacer-pago";
-import { type MovimientoParaEditar, movimientoParaEditar, vistaPreviaDeBorrado } from "@/db/editar-movimientos";
+import { vistaPreviaDeBorrado } from "@/db/borrar-ingreso";
+import { type MovimientoParaEditar, movimientoParaEditar } from "@/db/editar-movimientos";
 import { todasLasEtiquetas } from "@/db/etiquetas";
 import { categoriasDeIngresoPorUso } from "@/db/reparto";
 import { centavosATexto, formatearCentavos, formatearCifra, formatearTasaGuardada } from "@/lib/dinero";
@@ -85,8 +86,10 @@ function DeshacerPagoOCobro({ p, volver, confirmar }: { p: PagoOCobro; volver: s
       ? `Se deshace el pago de ${monto} a ${p.persona}: vuelve a la cuenta y al sobre Deudas, y la deuda vuelve a deberse.`
       : `Se deshace el cobro de ${monto} de ${p.persona}: sale de la cuenta y de Por asignar, y vuelve a deberte.`,
     avisos: [],
-    // Revisión de la 007, hallazgo 4: si Por asignar ya lo repartió, se dice antes y no se ofrece "Sí, deshacer".
+    // Spec 007, criterio 11: si ya se repartió, se ve antes cómo queda todo y lo que se retira; si ni así alcanza, se
+    // dice antes y no se ofrece "Sí, deshacer" (revisión de la 007, hallazgo 4).
     impedido: p.impedido ?? undefined,
+    previa: p.previa ?? undefined,
   };
   return (
     <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">
@@ -219,6 +222,7 @@ async function EdicionDeIngreso({ m, volver, hoy, confirmar }: Props) {
       : `Se borra el ingreso de ${formatearCentavos(i.montoCentavos, i.moneda)}.`,
     avisos: previa?.plan.ok ? previa.plan.avisos : [],
     impedido: previa && !previa.plan.ok ? previa.plan.error : undefined,
+    previa: previa?.previa ?? undefined,
   };
   return (
     <div className="flex flex-col gap-4 lg:col-span-6 lg:col-start-4">

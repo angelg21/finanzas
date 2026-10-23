@@ -2,7 +2,8 @@
  * Editar o borrar un ingreso (spec 006, criterios 4, 5 y 7). Editar vuelve a preparar la fila con las reglas de la
  * captura (monto, cuenta en dólares, fecha) y la diferencia de monto entra o sale del sobre que lo recibió, "Por
  * asignar"; su reparto no cambia. Bajarlo solo se puede si ese sobre alcanza: el reparto ya se llevó lo demás.
- * Borrarlo se lleva su reparto: el sobre destino pierde lo que quedó sin repartir y cada sobre devuelve lo suyo.
+ * Borrarlo se lleva su reparto: el sobre destino pierde lo que quedó sin repartir y cada sobre devuelve lo suyo. Si
+ * el destino ya no lo tiene, lo que falta se retira del reparto posterior (spec 007, criterio 11).
  */
 import { formatearCifra } from "./dinero";
 import { type CuentaIngreso, type ErroresIngreso, type FilaIngreso, prepararIngreso } from "./ingresos";
@@ -46,13 +47,24 @@ export type RepartoGuardado = { sobreId: number; nombre: string; montoUsdCentavo
 
 export type PlanDeBorrado = { ok: true; avisos: string[] } | { ok: false; error: string };
 
-export function planDeBorradoDeIngreso(e: {
+type EntradaBorrado = {
   montoUsdCentavos: number;
   destino: { nombre: string; saldoCentavos: number };
   reparto: RepartoGuardado[];
-}): PlanDeBorrado {
-  const repartido = e.reparto.reduce((a, r) => a + r.montoUsdCentavos, 0);
-  const quedaDestino = e.destino.saldoCentavos - e.montoUsdCentavos + repartido;
+  /** Lo que se retira del reparto posterior para cubrir lo que falta (spec 007, criterio 11), con el saldo de cada sobre. */
+  retirado?: RepartoGuardado[];
+};
+
+const suma = (filas: RepartoGuardado[]) => filas.reduce((a, r) => a + r.montoUsdCentavos, 0);
+
+/** Lo que le falta al sobre destino para borrar el ingreso con su reparto; 0 si lo tiene. */
+export function faltaParaBorrar(e: EntradaBorrado): number {
+  return Math.max(0, e.montoUsdCentavos - suma(e.reparto) - e.destino.saldoCentavos);
+}
+
+export function planDeBorradoDeIngreso(e: EntradaBorrado): PlanDeBorrado {
+  const retirado = e.retirado ?? [];
+  const quedaDestino = e.destino.saldoCentavos - e.montoUsdCentavos + suma(e.reparto) + suma(retirado);
   if (quedaDestino < 0) {
     return {
       ok: false,
@@ -61,7 +73,7 @@ export function planDeBorradoDeIngreso(e: {
   }
   // Un sobre que ya gastó lo recibido queda en negativo, como con un gasto: se avisa antes de confirmar.
   const porSobre = new Map<number, RepartoGuardado & { devuelve: number }>();
-  for (const r of e.reparto) {
+  for (const r of [...e.reparto, ...retirado]) {
     const previo = porSobre.get(r.sobreId);
     porSobre.set(r.sobreId, { ...r, devuelve: (previo?.devuelve ?? 0) + r.montoUsdCentavos });
   }
