@@ -3,7 +3,6 @@ import { puedeApartarDesde } from "../lib/apartado";
 import { puedePrestarDesde } from "../lib/prestamos";
 import { esIdCaptura, referenciaDeCaptura, referenciaDeReasignacion } from "../lib/captura";
 import { type FilaDeuda, montoInicialMinimo } from "../lib/deudas";
-import { formatearCifra } from "../lib/dinero";
 import { deudaPorId } from "./deudas";
 import { db } from "./index";
 import {
@@ -28,7 +27,7 @@ import { type Deuda, type Movimiento, type NuevoMovimiento, cuentas, deudas, mov
 /** Espacio de los candados de deudas: el desglose usa 2, el reparto 3 y las reglas 4. */
 const claveDeuda = 5;
 
-async function bloquearDeuda(ejecutor: Ejecutor, deudaId: number) {
+export async function bloquearDeuda(ejecutor: Ejecutor, deudaId: number) {
   await ejecutor.execute(sql`select pg_advisory_xact_lock(${claveDeuda}, ${deudaId})`);
 }
 
@@ -310,44 +309,4 @@ export async function apartarADeudas(
     if (!esReferenciaRepetida(error)) throw error;
     return { nueva: false, guardadas: await guardadasDeCaptura(idCaptura) };
   }
-}
-
-/**
- * Deshacer un pago o un cobro (spec 007, criterios 1 a 3): borra el movimiento con el candado de la deuda, que
- * serializa con pagar y cobrar. Un pago devuelve el dinero a su cuenta y a Deudas, siempre. Un cobro lo saca de la
- * cuenta y de "Por asignar": con su candado (el del reparto, tomado después del de la deuda, en el mismo orden que en
- * todas partes) y solo si "Por asignar" todavía lo tiene; si ya se repartió, lo dice.
- */
-export async function deshacerPagoOCobro(
-  id: number,
-): Promise<{ ok: true; deudaId: number } | { ok: false; error: string } | { noExiste: true }> {
-  if (!Number.isSafeInteger(id) || id <= 0 || id > 2_147_483_647) return { noExiste: true };
-  return db.transaction(async (tx) => {
-    const [visto] = await tx
-      .select({ deudaId: movimientos.deudaId })
-      .from(movimientos)
-      .where(and(eq(movimientos.id, id), sql`${movimientos.tipo}::text in ('pago_deuda', 'cobro_prestamo')`));
-    if (!visto?.deudaId) return { noExiste: true as const };
-    await bloquearDeuda(tx, visto.deudaId);
-    const [m] = await tx
-      .select()
-      .from(movimientos)
-      .where(and(eq(movimientos.id, id), sql`${movimientos.tipo}::text in ('pago_deuda', 'cobro_prestamo')`))
-      .for("update");
-    if (!m?.deudaId) return { noExiste: true as const };
-    if (m.tipo === "cobro_prestamo") {
-      if (m.sobreDestinoId === null) throw new Error("Un cobro sin sobre destino");
-      await tx.execute(sql`select pg_advisory_xact_lock(${claveReparto}, ${m.sobreDestinoId})`);
-      const saldo = await saldoDeSobre(tx, m.sobreDestinoId);
-      if (saldo < m.montoUsdCentavos) {
-        const [sobre] = await tx.select({ nombre: sobres.nombre }).from(sobres).where(eq(sobres.id, m.sobreDestinoId));
-        return {
-          ok: false as const,
-          error: `${sobre?.nombre ?? "Por asignar"} tiene ${formatearCifra(saldo)}; le faltan ${formatearCifra(m.montoUsdCentavos - saldo)}`,
-        };
-      }
-    }
-    await tx.delete(movimientos).where(eq(movimientos.id, m.id));
-    return { ok: true as const, deudaId: m.deudaId };
-  });
 }

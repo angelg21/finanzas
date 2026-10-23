@@ -74,6 +74,7 @@ export async function deudaConMovimientos(id: number) {
 }
 
 const sobreOrigen = alias(sobres, "sobre_origen");
+const sobreDestino = alias(sobres, "sobre_destino");
 
 /**
  * El sobre Deudas por su tipo, como "Por asignar": si hubiera dos, el de menor orden. Aunque esté inactivo, para que
@@ -92,15 +93,19 @@ export async function sobreDeudas() {
   const [fila] = await db
     .select({
       saldoCentavos: sql<number>`coalesce(sum(${efectoEnSobre(sobre.id)}), 0)::bigint`.mapWith(Number),
-      recibidoEnElMesCentavos: sql<number>`coalesce(sum(${movimientos.montoUsdCentavos}) filter (where ${and(
+      // Neto: lo que vuelve a "Por asignar" en el mes con Mover (spec 007) se resta, así ir y volver no mueve la
+      // cuota (revisión de la 007, hallazgo 1). Puede ser negativo: entonces lo apartado al empezar el mes era más.
+      recibidoEnElMesCentavos: sql<number>`coalesce(sum(case
+        when ${eq(movimientos.sobreDestinoId, sobre.id)} and ${sobreOrigen.tipo}::text = 'por_asignar' then ${movimientos.montoUsdCentavos}
+        when ${eq(movimientos.sobreOrigenId, sobre.id)} and ${sobreDestino.tipo}::text = 'por_asignar' then -${movimientos.montoUsdCentavos}
+      end) filter (where ${and(
         eq(movimientos.tipo, "reasignacion"),
-        eq(movimientos.sobreDestinoId, sobre.id),
-        eq(sobreOrigen.tipo, "por_asignar"),
         sql`to_char(${movimientos.fecha}, 'YYYY-MM') = ${mes}`,
       )}), 0)::bigint`.mapWith(Number),
     })
     .from(movimientos)
     .leftJoin(sobreOrigen, eq(movimientos.sobreOrigenId, sobreOrigen.id))
+    .leftJoin(sobreDestino, eq(movimientos.sobreDestinoId, sobreDestino.id))
     .where(or(eq(movimientos.sobreOrigenId, sobre.id), eq(movimientos.sobreDestinoId, sobre.id)));
   return {
     ...sobre,

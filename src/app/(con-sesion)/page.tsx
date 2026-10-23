@@ -14,6 +14,7 @@ import { GraficaMensual } from "@/components/grafica-mensual";
 import { IconoSobre } from "@/components/icono-sobre";
 import { FilaMovimiento } from "@/components/movimiento";
 import { Cifra, EncabezadoTarjeta, FilaLista, Mosaico, Pildora, Tarjeta, TarjetaPalida } from "@/components/ui";
+import { AvisoPasajero } from "@/components/aviso-pasajero";
 import { gastadoEsteMes, movimientosRecientes, resumenMensual, saldosPorCuenta } from "@/db/consultas";
 import type { Sobre } from "@/db/schema";
 import { contarPorCompletar } from "@/db/por-completar";
@@ -91,12 +92,12 @@ export default async function Inicio({ searchParams }: PageProps<"/">) {
         </Link>
       ) : null}
       {aviso ? (
-        <div role="status" className="lg:col-span-12">
+        <AvisoPasajero parametros={["editado", "borrado"]} className="lg:col-span-12">
           <Pildora tono="positiva">
             <CheckCircle2 size={13} aria-hidden />
             {aviso}
           </Pildora>
-        </div>
+        </AvisoPasajero>
       ) : null}
       {/* Tarjeta principal: lo único que se puede gastar es el sobre de gastos del mes. */}
       <section className="hero rounded-tarjeta p-5 lg:col-span-7 lg:p-6">

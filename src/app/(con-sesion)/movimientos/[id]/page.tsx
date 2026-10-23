@@ -11,13 +11,8 @@ import {
   sobresParaGasto,
 } from "@/db/consultas";
 import { categoriaDelMovimiento } from "@/db/categorias";
-import {
-  type MovimientoParaEditar,
-  type PagoOCobro,
-  movimientoParaEditar,
-  pagoOCobroParaDeshacer,
-  vistaPreviaDeBorrado,
-} from "@/db/editar-movimientos";
+import { type PagoOCobro, pagoOCobroParaDeshacer } from "@/db/deshacer-pago";
+import { type MovimientoParaEditar, movimientoParaEditar, vistaPreviaDeBorrado } from "@/db/editar-movimientos";
 import { todasLasEtiquetas } from "@/db/etiquetas";
 import { categoriasDeIngresoPorUso } from "@/db/reparto";
 import { centavosATexto, formatearCentavos, formatearCifra, formatearTasaGuardada } from "@/lib/dinero";
@@ -90,6 +85,8 @@ function DeshacerPagoOCobro({ p, volver, confirmar }: { p: PagoOCobro; volver: s
       ? `Se deshace el pago de ${monto} a ${p.persona}: vuelve a la cuenta y al sobre Deudas, y la deuda vuelve a deberse.`
       : `Se deshace el cobro de ${monto} de ${p.persona}: sale de la cuenta y de Por asignar, y vuelve a deberte.`,
     avisos: [],
+    // Revisión de la 007, hallazgo 4: si Por asignar ya lo repartió, se dice antes y no se ofrece "Sí, deshacer".
+    impedido: p.impedido ?? undefined,
   };
   return (
     <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">

@@ -3,6 +3,7 @@ import { CheckCircle2, CircleAlert, ListChecks, Pencil, Plus, X } from "lucide-r
 import Link from "next/link";
 import { EnlaceBoton } from "@/components/formulario";
 import { CirculoCategoria, Pildora, Tarjeta, TituloPagina } from "@/components/ui";
+import { AvisoPasajero } from "@/components/aviso-pasajero";
 import { type PorCompletar, listarPorCompletar } from "@/db/por-completar";
 import { formatearCentavos } from "@/lib/dinero";
 import { hoyEnCaracas } from "@/lib/fechas";
@@ -42,12 +43,12 @@ export default async function PorCompletarPagina({ searchParams }: PageProps<"/p
       <TituloPagina titulo="Por completar" />
       <div className="flex flex-wrap items-center justify-between gap-3 px-1 lg:px-0">
         {aviso ? (
-          <span role="status">
+          <AvisoPasajero parametros={Object.keys(avisos)}>
             <Pildora tono={aviso === "yano" ? "navy" : "positiva"}>
               {aviso === "yano" ? <CircleAlert size={13} aria-hidden /> : <CheckCircle2 size={13} aria-hidden />}
               {avisos[aviso]}
             </Pildora>
-          </span>
+          </AvisoPasajero>
         ) : (
           <span className="text-[13px] text-texto-2">
             {lista.length === 1

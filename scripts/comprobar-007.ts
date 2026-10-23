@@ -9,11 +9,16 @@
  *   ★ 7 · mover guarda una reasignación de hoy entre dos sobres, de 0,01 al saldo del origen, y nunca lo deja en
  *         negativo, tampoco con dos movimientos a la vez ni con un reparto a la vez;
  *   ★ 9 · un reintento con el mismo id no duplica, aunque el primero haya vaciado el origen.
+ * Y lo que encontró la revisión (hallazgo 1): ir y volver con Mover entre Por asignar y un sobre no cambia lo que el
+ * sobre "recibió de Por asignar" en el mes ni la cuota de Deudas; lo que vuelve se resta, y nunca queda menos de cero.
  * El ★ 6 (las etiquetas con # en la nota) lo reemplazó la spec 008; su ★ 5 lo verifica. El ★ 8 (la confirmación al
  * sacar de Inversión) lo prueba src/lib/mover.test.ts. La sesión y conFallas del ★ 9 los miran, sobre todas las
  * acciones, src/app/sesion.criterios.test.ts, src/app/fallas.criterios.test.ts y scripts/comprobar-002-servidor.ts.
  * Corre sobre la base local con los datos de demostración y la deja como estaba:
- *   pnpm exec tsx scripts/comprobar-007.ts
+ * Con --url, además, contra un servidor en marcha con esta misma base y el usuario de prueba, como un navegador sin
+ * JavaScript (revisión de la 007, hallazgos 2, 4 y 6): Mover no trae origen elegido; desde Inversión, sin confirmar
+ * no guarda y con la confirmación sí, y el reintento no duplica; deshacer un cobro ya repartido lo dice antes.
+ *   pnpm exec tsx scripts/comprobar-007.ts [--url http://localhost:3000]
  * Lo suyo son capturas cuyo id empieza por 0c070007, que se borran al terminar y, si una corrida se cortó, al
  * empezar la siguiente. Se niega ante movimientos o deudas que no sean de demostración.
  */
@@ -28,6 +33,7 @@ import { hoyEnCaracas } from "../src/lib/fechas";
 import { prepararIngreso } from "../src/lib/ingresos";
 import { prepararMover } from "../src/lib/mover";
 import { prepararCobro, prepararPrestamo } from "../src/lib/prestamos";
+import { abrirSesion, texto } from "./comprobar-003-paginas";
 
 const MARCA = "0c070007";
 let fallos = 0;
@@ -52,15 +58,17 @@ async function main() {
   config({ path: ".env.local" });
   // Escribe filas: solo en la base local (spec 002, criterio 10).
   exigirBaseLocal(process.env.DATABASE_URL, "comprobar-007");
+  const posicionUrl = process.argv.indexOf("--url");
+  const origen = posicionUrl >= 0 ? process.argv[posicionUrl + 1] : null;
   const { db, deudas, movimientos } = await import("../src/db/index");
   const { saldosPorCuenta, saldosPorSobre } = await import("../src/db/consultas");
   const { categoriasDeIngresoPorUso } = await import("../src/db/reparto");
   const { registrarCaptura, repartirPorAsignar } = await import("../src/db/movimientos");
   const { moverEntreSobres } = await import("../src/db/mover");
   const { deudaPorId, sobreDeudas } = await import("../src/db/deudas");
-  const { cobrarPrestamo, deshacerPagoOCobro, pagarDeuda, prestar, registrarDeuda } =
-    await import("../src/db/guardar-deudas");
-  const { pagoOCobroParaDeshacer } = await import("../src/db/editar-movimientos");
+  const { cobrarPrestamo, pagarDeuda, prestar, registrarDeuda } = await import("../src/db/guardar-deudas");
+  const { deshacerPagoOCobro, pagoOCobroParaDeshacer } = await import("../src/db/deshacer-pago");
+  const { cuotaDelMes, recibidoDesdePorAsignarPorMes } = await import("../src/db/reparto");
 
   const movimientosNuestros = like(movimientos.referenciaExterna, `captura-${MARCA}-%`);
   const deudasNuestras = like(deudas.referencia, `captura-${MARCA}-%`);
@@ -473,6 +481,50 @@ async function main() {
     );
     await cuadra("tras mover");
 
+    // Revisión, hallazgo 1: lo que vuelve a Por asignar se resta de lo recibido en el mes
+    const familia = inicial.sobres.find((s) => s.nombre === "Familia");
+    if (!familia) throw new Error("Falta el sobre Familia: corre pnpm db:seed");
+    const recibido = async (id: number) => (await recibidoDesdePorAsignarPorMes())[hoy.slice(0, 7)]?.[id] ?? 0;
+    const cuota = async () => (await cuotaDelMes())?.cuotaCentavos ?? NaN;
+    // Los pagos de arriba pudieron dejar Deudas sin saldo: que tenga para devolver.
+    await sobreEn(deudasSobre.id, 5000);
+    await sobreEn(porAsignar.id, 5000);
+    const [deudasAntes, familiaAntes, cuotaAntes] = [
+      await recibido(deudasSobre.id),
+      await recibido(familia.id),
+      await cuota(),
+    ];
+    const idaYVuelta = [
+      await mover(porAsignar.id, deudasSobre.id, 1000),
+      await mover(deudasSobre.id, porAsignar.id, 1000),
+      await mover(porAsignar.id, familia.id, 1000),
+      await mover(familia.id, porAsignar.id, 1000),
+    ];
+    if (!idaYVuelta.every(ganoUno)) throw new Error("Algún movimiento de ida y vuelta no se guardó");
+    comprobar(
+      "7",
+      "ir y volver 10 entre Por asignar y Deudas, y entre Por asignar y Familia, no cambia lo recibido ni la cuota",
+      (await recibido(deudasSobre.id)) === deudasAntes &&
+        (await recibido(familia.id)) === familiaAntes &&
+        (await cuota()) === cuotaAntes,
+      `Deudas ${deudasAntes}→${await recibido(deudasSobre.id)}, Familia ${familiaAntes}→${await recibido(familia.id)}, cuota ${cuotaAntes}→${await cuota()}`,
+    );
+    await mover(porAsignar.id, familia.id, 1500);
+    await mover(familia.id, porAsignar.id, 500);
+    comprobar(
+      "7",
+      "mandar 15 a Familia y devolver 5 cuenta 10 recibidos",
+      (await recibido(familia.id)) === familiaAntes + 1000,
+    );
+    const dePlanes = await recibido(planes.id);
+    await mover(planes.id, porAsignar.id, dePlanes + 1000);
+    comprobar(
+      "7",
+      "devolver más de lo recibido en el mes deja lo recibido en cero, no en negativo",
+      (await recibido(planes.id)) === 0,
+    );
+    await cuadra("tras ir y volver con Por asignar");
+
     // ★ 9 · el mismo id no duplica, aunque el primero haya vaciado el origen
     await sobreEn(planes.id, 5000);
     const repetida = idDePrueba();
@@ -489,6 +541,97 @@ async function main() {
       ganoUno(primera) && "nueva" in segunda && segunda.nueva === false && filasDeLaCaptura.length === 1,
     );
     await cuadra("tras el reintento");
+
+    if (origen) {
+      console.log(`— páginas, contra ${origen}`);
+      const sesion = await abrirSesion(origen);
+      try {
+        const formularioDe = (html: string) =>
+          [...html.matchAll(/<form[\s\S]*?<\/form>/g)].map((m) => m[0]).find((f) => f.includes('name="origenId"')) ??
+          "";
+        const ocultos = (form: string) => {
+          const datos = new FormData();
+          for (const m of form.matchAll(/<input[^>]*type="hidden"[^>]*>/g)) {
+            const nombre = /name="([^"]*)"/.exec(m[0])?.[1];
+            if (nombre) datos.set(nombre, texto(/value="([^"]*)"/.exec(m[0])?.[1] ?? ""));
+          }
+          return datos;
+        };
+        const filasDe = async (captura: string) =>
+          (
+            await db
+              .select({ id: movimientos.id })
+              .from(movimientos)
+              .where(like(movimientos.referenciaExterna, `captura-${captura}-%`))
+          ).length;
+
+        // Hallazgo 2: ni origen ni destino elegidos
+        const pagina = (await sesion.pagina("/nuevo/mover")).html;
+        const form = formularioDe(pagina);
+        const marcados = [...form.matchAll(/<input[^>]*name="(origenId|destinoId)"[^>]*>/g)].filter((m) =>
+          m[0].includes("checked"),
+        );
+        comprobar(
+          "7",
+          "Mover no trae ningún sobre elegido",
+          form !== "" && marcados.length === 0,
+          `${marcados.length} marcados`,
+        );
+
+        // Hallazgo 6, ★ 8 y 9 por la acción: Inversión pide confirmar, y el reintento no duplica
+        await sobreEn(inversion.id, 1000);
+        const captura = idDePrueba();
+        const campos = {
+          idCaptura: captura,
+          origenId: String(inversion.id),
+          destinoId: String(gastosDelMes.id),
+          monto: "3",
+          nota: "comprobar-007 página",
+        };
+        const llenar = (extra: Record<string, string> = {}) => {
+          const datos = ocultos(form);
+          for (const [k, v] of Object.entries({ ...campos, ...extra })) datos.set(k, v);
+          return datos;
+        };
+        const sinConfirmar = await sesion.enviar("/nuevo/mover", llenar());
+        comprobar(
+          "8",
+          "desde Inversión, sin confirmar: pide la confirmación y no guarda",
+          sinConfirmar.estado === 200 &&
+            texto(sinConfirmar.html).includes(
+              "Inversión es intocable: lo que sale de aquí deja de crecer. ¿Mover igual?",
+            ) &&
+            (await filasDe(captura)) === 0,
+          `${sinConfirmar.estado}`,
+        );
+        const confirmado = await sesion.enviar("/nuevo/mover", llenar({ confirmarInversion: String(inversion.id) }));
+        const reintento = await sesion.enviar("/nuevo/mover", llenar({ confirmarInversion: String(inversion.id) }));
+        comprobar(
+          "9",
+          "con la confirmación guarda y vuelve a Sobres; reenviar lo mismo no duplica",
+          confirmado.estado === 303 &&
+            confirmado.ubicacion === "/sobres?movido=1" &&
+            reintento.estado === 303 &&
+            (await filasDe(captura)) === 1,
+          `${confirmado.estado} ${confirmado.ubicacion} · ${reintento.estado}`,
+        );
+
+        // Hallazgo 4: deshacer un cobro ya repartido lo dice antes, y no ofrece "Sí, deshacer"
+        const p5 = await prestamo("50");
+        const cobroRepartido = await cobrar(p5, "20");
+        await sobreEn(porAsignar.id, 1500);
+        const vista = await sesion.pagina(`/movimientos/${cobroRepartido}?borrar=1`);
+        comprobar(
+          "2",
+          'deshacer un cobro ya repartido lo dice antes, con el remedio, y no ofrece "Sí, deshacer"',
+          texto(vista.html).includes(
+            "Por asignar tiene 15,00; le faltan 5,00. Devuelve lo que falta a Por asignar con Mover",
+          ) && !texto(vista.html).includes("Sí, deshacer"),
+        );
+      } finally {
+        await sesion.salir();
+      }
+    }
   } finally {
     await limpiar();
   }

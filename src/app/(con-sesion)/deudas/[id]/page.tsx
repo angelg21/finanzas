@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FilaMovimiento } from "@/components/movimiento";
 import { Cifra, EncabezadoTarjeta, Pildora, Progreso, Tarjeta } from "@/components/ui";
+import { AvisoPasajero } from "@/components/aviso-pasajero";
 import { saldosPorCuenta } from "@/db/consultas";
 import { deudaConMovimientos, deudasConPendiente, sobreDeudas } from "@/db/deudas";
 import { sobrePorAsignar } from "@/db/reparto";
@@ -61,12 +62,12 @@ export default async function DetalleDeuda({ params, searchParams }: PageProps<"
           Deudas
         </Link>
         {deshecho ? (
-          <span role="status">
+          <AvisoPasajero parametros={["borrado"]}>
             <Pildora tono="positiva">
               <CheckCircle2 size={13} aria-hidden />
               {deshecho}
             </Pildora>
-          </span>
+          </AvisoPasajero>
         ) : null}
         <Link
           href={`/deudas/${deuda.id}/editar`}

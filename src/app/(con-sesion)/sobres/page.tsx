@@ -5,6 +5,7 @@ import { EnlaceBoton } from "@/components/formulario";
 import { GraficaDona, type SegmentoDona } from "@/components/grafica-dona";
 import { IconoSobre } from "@/components/icono-sobre";
 import { Cifra, EncabezadoTarjeta, Pildora, Progreso, Tarjeta, TarjetaPalida, TituloPagina } from "@/components/ui";
+import { AvisoPasajero } from "@/components/aviso-pasajero";
 import type { Sobre } from "@/db/schema";
 import { sobresConNivel } from "@/db/sobres";
 import { formatearCentavos, formatearEnteros } from "@/lib/dinero";
@@ -49,12 +50,12 @@ export default async function Sobres({ searchParams }: PageProps<"/sobres">) {
       <TituloPagina titulo="Sobres" detalle={<Cifra centavos={total} tamano="sm" tono="texto-2" />} />
       <div className="-mt-2 flex items-center justify-end gap-4 px-1 lg:col-span-12 lg:mt-0 lg:px-0">
         {(await searchParams).movido === "1" ? (
-          <span role="status" className="mr-auto">
+          <AvisoPasajero parametros={["movido"]} className="mr-auto">
             <Pildora tono="positiva">
               <CheckCircle2 size={13} aria-hidden />
               Movido
             </Pildora>
-          </span>
+          </AvisoPasajero>
         ) : null}
         <Link
           href="/nuevo/mover"

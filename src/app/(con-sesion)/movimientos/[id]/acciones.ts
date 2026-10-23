@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { categoriasDeGastoPorUso, saldosPorCuenta, sobresParaGasto } from "@/db/consultas";
 import { borrarGasto, borrarIngreso, editarGasto, editarIngreso, movimientoParaEditar } from "@/db/editar-movimientos";
-import { deshacerPagoOCobro } from "@/db/guardar-deudas";
+import { deshacerPagoOCobro } from "@/db/deshacer-pago";
 import { categoriasDeIngresoPorUso } from "@/db/reparto";
 import { planDeEdicionDeGasto } from "@/lib/editar-gasto";
 import { planDeEdicionDeIngreso } from "@/lib/editar-ingreso";

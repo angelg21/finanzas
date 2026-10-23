@@ -37,6 +37,7 @@ Fase 1, "Cuentas, categorías, movimientos con nota" y "Sobres con reglas de rep
 7. ★ En `/nuevo/mover` (Registrar → Mover, y "Mover" en `/sobres`): de qué sobre, a qué sobre, monto y nota. Se guarda una reasignación de hoy. El monto va de 0,01 al saldo del origen: nunca lo deja en negativo. Se escribe con el candado del origen (el del reparto) y dentro se vuelve a mirar el saldo.
 8. ★ Desde Inversión, antes de guardar: "Inversión es intocable: lo que sale de aquí deja de crecer. ¿Mover igual?" y un segundo botón "Sí, mover de Inversión". Sin confirmar no se guarda.
 9. ★ Un reintento con el mismo id no duplica (la referencia de la captura, como al repartir). La acción empieza con la sesión y pasa por `conFallas`.
+10. Lo que vuelve a "Por asignar" con Mover se resta de lo que el sobre recibió de él en el mes: ir y volver no cambia lo que un fijo pide en el reparto ni la cuota de Deudas (specs 004, criterio 2, y 005, criterio 11). Lo recibido nunca baja de cero para los fijos. Ni el origen ni el destino vienen elegidos. Añadido tras la revisión del 2026-10-22.
 
 ## Pantallas
 

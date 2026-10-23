@@ -56,28 +56,41 @@ export async function reglasActivas() {
 }
 
 const sobreOrigen = alias(sobres, "sobre_origen");
+const sobreDestino = alias(sobres, "sobre_destino");
 
 /**
- * Lo que cada sobre recibió desde "Por asignar", por mes ("AAAA-MM") de la fecha de la reasignación: un fijo pide su
- * valor menos esto (criterio 2). Todos los meses, porque el ingreso puede llevar cualquier fecha pasada y el cliente
- * recalcula la propuesta al cambiarla; son pocas filas, una por sobre y mes con reparto.
+ * Lo que cada sobre recibió desde "Por asignar", neto, por mes ("AAAA-MM") de la fecha de la reasignación: un fijo
+ * pide su valor menos esto (criterio 2). Neto porque Mover (spec 007) devuelve dinero a "Por asignar": lo que vuelve
+ * en el mes se resta, y mandar 10 y devolverlos deja el fijo como estaba (revisión de la 007, hallazgo 1). Nunca
+ * menos de cero: devolver más de lo recibido no hace que el fijo pida más que su valor. Todos los meses, porque el
+ * ingreso puede llevar cualquier fecha pasada y el cliente recalcula la propuesta al cambiarla; son pocas filas.
  */
 export async function recibidoDesdePorAsignarPorMes(): Promise<Record<string, Record<number, number>>> {
+  const desdePorAsignar = sql`${sobreOrigen.tipo}::text = 'por_asignar'`;
   const filas = await db
     .select({
       mes: sql<string>`to_char(${movimientos.fecha}, 'YYYY-MM')`,
-      sobreId: movimientos.sobreDestinoId,
-      centavos: sql<number>`sum(${movimientos.montoUsdCentavos})::bigint`.mapWith(Number),
+      sobreId: sql<number>`case when ${desdePorAsignar} then ${movimientos.sobreDestinoId} else ${movimientos.sobreOrigenId} end`,
+      centavos:
+        sql<number>`sum(case when ${desdePorAsignar} then ${movimientos.montoUsdCentavos} else -${movimientos.montoUsdCentavos} end)::bigint`.mapWith(
+          Number,
+        ),
     })
     .from(movimientos)
     .innerJoin(sobreOrigen, eq(movimientos.sobreOrigenId, sobreOrigen.id))
-    .where(and(eq(movimientos.tipo, "reasignacion"), eq(sobreOrigen.tipo, "por_asignar")))
-    .groupBy(sql`1`, movimientos.sobreDestinoId);
+    .innerJoin(sobreDestino, eq(movimientos.sobreDestinoId, sobreDestino.id))
+    .where(
+      and(
+        eq(movimientos.tipo, "reasignacion"),
+        sql`(${desdePorAsignar} or ${sobreDestino.tipo}::text = 'por_asignar')`,
+      ),
+    )
+    .groupBy(sql`1`, sql`2`);
 
   const porMes: Record<string, Record<number, number>> = {};
   for (const f of filas) {
     if (f.sobreId === null) continue;
-    porMes[f.mes] = { ...porMes[f.mes], [f.sobreId]: f.centavos };
+    porMes[f.mes] = { ...porMes[f.mes], [Number(f.sobreId)]: Math.max(0, f.centavos) };
   }
   return porMes;
 }

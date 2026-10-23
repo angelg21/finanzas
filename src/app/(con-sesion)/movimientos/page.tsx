@@ -8,6 +8,7 @@ import { FilaMovimiento } from "@/components/movimiento";
 import { Pestanas } from "@/components/pestanas";
 import { CheckCircle2 } from "lucide-react";
 import { Cifra, Pildora, Tarjeta, TituloPagina } from "@/components/ui";
+import { AvisoPasajero } from "@/components/aviso-pasajero";
 import {
   type MovimientoDelPeriodo,
   categoriaDeLaPestana,
@@ -176,12 +177,12 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
     <main className="flex flex-col gap-4 lg:gap-5">
       <TituloPagina titulo="Movimientos" />
       {aviso ? (
-        <div role="status">
+        <AvisoPasajero parametros={["editado", "borrado"]}>
           <Pildora tono="positiva">
             <CheckCircle2 size={13} aria-hidden />
             {aviso}
           </Pildora>
-        </div>
+        </AvisoPasajero>
       ) : null}
 
       {/* En fila solo desde 1280 px: entre 1024 y 1279 los tres controles no caben junto a la barra lateral. */}
