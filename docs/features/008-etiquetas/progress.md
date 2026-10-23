@@ -48,3 +48,17 @@ Rama: `feat/008-etiquetas`. Spec: `spec.md`.
   - `pnpm humo` con sesión: `/movimientos?etiqueta=999999`, `=abc`, `tipo=ingresos&etiqueta=-1` y `etiqueta=1e3&etiqueta=2` → 200 (★ 5, la página no falla).
   - `pnpm verify --forzar`: `Tests  947 passed (947)`, `✓ subida (6.8 s)`, `✓ verify:full en verde en 43.0 s. Árbol sellado.`
 - **Arreglo desde la revisión de la 006 (2026-10-22).** Una captura o una edición que no se guarda creaba igual la etiqueta nueva. Ahora `etiquetaDelFormulario` solo dice qué se pidió y la etiqueta se crea en la misma transacción que guarda el movimiento (`registrarCaptura` con su tercer argumento, `completarPorCompletar`, `editarGasto`, `editarIngreso`). Sin etiqueta nueva, la captura sigue sin transacción aparte (★ 7). `comprobar-008`: guardar con una nueva la crea en el gasto; repetir la captura con otro gasto no la deja (16 de 16).
+- **Revisión (2026-10-22), primera vuelta:** `revisor`, **NO APTO**, sobre `075ac19`, con `pnpm verify --forzar` en verde y `comprobar-008` 16 de 16. Hallazgos:
+  1. **Alta, datos.** Escribir para filtrar y tocar la píldora que quedaba la marcaba, pero se guardaba lo escrito como etiqueta nueva ("riel" en vez de Rielco): el radio no borraba lo escrito y en el servidor manda lo escrito. Al editar, igual.
+  2. **Media.** El filtro de etiqueta pasaba a la pestaña Mover y ahí no se podía quitar.
+  3. **Media.** La píldora activa desaparecía si no había movimientos con esa etiqueta en el periodo o la categoría.
+  4. **Baja.** El campo de fecha sin JavaScript perdía la etiqueta.
+  5. **Baja.** En la edición, escribir y cerrar con la X quitaba la etiqueta guardada.
+  6. **Baja, documentos.** El criterio 16 de la 003 ya no cuenta bien las consultas; los "Riesgos" de esta spec decían que la etiqueta se crea antes de guardar.
+  7. **Menor.** `selector-etiqueta.tsx` copiaba la clase de las píldoras de `formulario.tsx`.
+- Arreglos (2026-10-22):
+  - **1 y 5**: tocar una píldora, también una filtrada, la elige, borra lo escrito y cierra la búsqueda; escribir quita la elegida y borrar lo escrito o cerrar con la X la devuelve. En Edge con JavaScript, a 390 px: filtrar "riel" y tocar Rielco envía `etiquetaId=127` sin `etiquetaNueva` ni "Se creará"; escribir "S" y cerrar devuelve `etiquetaId=127`. La spec (criterio 3) dice ahora la regla, y que sin JavaScript, si llegan las dos, manda lo escrito (la prueba de `etiqueta-del-formulario` lo nombra así).
+  - **2, 3 y 4**: en Mover la etiqueta no se consulta ni filtra y el enlace a Mover no la lleva; la activa siempre tiene su píldora (con 0 si no hay movimientos); el campo de fecha sin JavaScript la lleva. Además, la etiqueta se busca en paralelo con los totales y la categoría. `scripts/comprobar-008-revision.ts --url`: 5 de 5 ✓; con la página anterior, 4 ✗.
+  - **6**: la spec 003, criterio 16, cuenta las consultas en dos tandas; los Riesgos de esta spec dicen que la etiqueta nueva se crea en la transacción que guarda; la 008, criterio 5, dice lo de Mover y la píldora activa.
+  - **7**: `pildoraDeRadio` en `formulario.tsx`, usada por `SelectorPildoras` y por el selector de etiquetas.
+  - `pnpm verify --forzar`: `Tests  957 passed (957)`, `✓ verify:full en verde en 51.2 s. Árbol sellado.`
