@@ -46,6 +46,18 @@ export function referenciaDeReasignacion(id: string, sobreId: number): string {
   return `captura-${id.toLowerCase()}-reasignacion-${sobreId}`;
 }
 
+/** Lo que distingue en la referencia lo que se mueve a mano de lo que se reparte. */
+export const marcaDeMover = "-mover-";
+
+/**
+ * "captura-<id>-mover-<sobre>": lo que se mueve a mano entre sobres (spec 007). Es una reasignación como las del
+ * reparto, pero el reparto no la cuenta como recibido de "Por asignar": Mover no cuenta (spec 007, criterio 10).
+ */
+export function referenciaDeMover(id: string, sobreId: number): string {
+  if (!Number.isSafeInteger(sobreId) || sobreId <= 0) throw new RangeError(`Sobre inválido: ${sobreId}`);
+  return `captura-${id.toLowerCase()}${marcaDeMover}${sobreId}`;
+}
+
 /** Lo que define una fila del gasto: si algo de esto cambió entre intentos, ya no es la misma captura. */
 const camposQueCuentan = [
   "tipo",

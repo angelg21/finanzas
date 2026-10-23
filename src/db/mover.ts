@@ -1,5 +1,5 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { referenciaDeReasignacion } from "../lib/captura";
+import { referenciaDeMover } from "../lib/captura";
 import { db } from "./index";
 import {
   claveReparto,
@@ -30,7 +30,7 @@ export async function moverEntreSobres(idCaptura: string, fila: NuevoMovimiento)
     fila.cuentaDestinoId == null &&
     fila.moneda === "USD" &&
     fila.montoCentavos === fila.montoUsdCentavos &&
-    fila.referenciaExterna === referenciaDeReasignacion(idCaptura, destino);
+    fila.referenciaExterna === referenciaDeMover(idCaptura, destino);
   if (!forma) throw new Error("Mover solo admite una reasignación entre dos sobres con la referencia de la captura");
   try {
     return await db.transaction(async (tx) => {

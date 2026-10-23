@@ -6,7 +6,7 @@ import { z } from "zod";
 import { saldosPorSobre } from "@/db/consultas";
 import { guardadasDeCaptura } from "@/db/movimientos";
 import { moverEntreSobres } from "@/db/mover";
-import { esIdCaptura, referenciaDeReasignacion, resolverReintento } from "@/lib/captura";
+import { esIdCaptura, referenciaDeMover, resolverReintento } from "@/lib/captura";
 import { formatearCifra } from "@/lib/dinero";
 import { mensajeDeFalla } from "@/lib/fallas";
 import { hoyEnCaracas } from "@/lib/fechas";
@@ -89,7 +89,8 @@ async function procesar(datos: FormData): Promise<Resultado> {
   if (preparado.estado === "confirmar") return { estado: "confirmar", valores };
   const fila = {
     ...preparado.fila,
-    referenciaExterna: referenciaDeReasignacion(valores.idCaptura, preparado.fila.sobreDestinoId),
+    // Con la marca de Mover: el reparto no lo cuenta como recibido de Por asignar (criterio 10).
+    referenciaExterna: referenciaDeMover(valores.idCaptura, preparado.fila.sobreDestinoId),
   };
   let registro: Awaited<ReturnType<typeof moverEntreSobres>>;
   try {

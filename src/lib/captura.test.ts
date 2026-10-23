@@ -3,6 +3,8 @@ import {
   esIdCaptura,
   prefijoDeCaptura,
   referenciaDeCaptura,
+  marcaDeMover,
+  referenciaDeMover,
   referenciaDeReasignacion,
   resolverReintento,
   resolverReintentoDeDeuda,
@@ -297,5 +299,20 @@ describe("idDeReferencia: el id de la captura que guardó una fila (spec 006)", 
     for (const referencia of [null, "demo-001", "gestor-123", `captura-${id}`, `captura-no-es-un-uuid-gasto`]) {
       expect(idDeReferencia(referencia)).toBeNull();
     }
+  });
+});
+
+describe("referenciaDeMover: Mover se distingue del reparto (spec 007, criterio 10)", () => {
+  const id = "0c070007-aaaa-4bbb-8ccc-000000000001";
+  it("lleva su propia marca, distinta de la del reparto al mismo sobre", () => {
+    expect(referenciaDeMover(id, 7)).toBe(`captura-${id}-mover-7`);
+    expect(referenciaDeMover(id, 7)).not.toBe(referenciaDeReasignacion(id, 7));
+    expect(referenciaDeMover(id, 7)).toContain(marcaDeMover);
+    expect(referenciaDeReasignacion(id, 7)).not.toContain(marcaDeMover);
+  });
+
+  it("sigue siendo de su captura: el reintento la encuentra por el mismo prefijo", () => {
+    expect(referenciaDeMover(id, 7).startsWith(prefijoDeCaptura(id))).toBe(true);
+    expect(idDeReferencia(referenciaDeMover(id, 7))).toBe(id);
   });
 });

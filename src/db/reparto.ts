@@ -1,5 +1,6 @@
 import { and, desc, eq, gte, ne, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
+import { marcaDeMover } from "@/lib/captura";
 import { cuotaDeDeudas, proximoVencimiento, reglaDeDeudas } from "@/lib/cuota-deudas";
 import { hoyEnCaracas } from "@/lib/fechas";
 import type { ReglaParaRepartir } from "@/lib/reparto";
@@ -56,43 +57,36 @@ export async function reglasActivas() {
 }
 
 const sobreOrigen = alias(sobres, "sobre_origen");
-const sobreDestino = alias(sobres, "sobre_destino");
 
 /**
- * Lo que cada sobre recibió desde "Por asignar" en un mes ("AAAA-MM" de la fecha de la reasignación): un fijo pide su
- * valor menos esto (criterio 2), y Deudas, su cuota menos esto. Es el neto del mes, con el piso de cero solo al final
- * (spec 007, criterio 10): lo que vuelve a "Por asignar" con Mover se resta, así que ir y volver, en cualquier orden,
- * no cambia nada (revisión de la 007, primera y segunda vuelta). Lo que un sobre suelta de más a "Por asignar" (lo que
- * le sobraba de otros meses) se vuelve a pedir: para soltar un sobrante sin que se reponga, se mueve directo al sobre
- * que lo necesita. La cuota de Deudas lee esta misma cifra (src/db/deudas.ts). Todos los meses, porque el ingreso
- * puede llevar cualquier fecha pasada y el cliente recalcula la propuesta al cambiarla; son pocas filas.
+ * Una reasignación desde "Por asignar" que es reparto (el de un ingreso, Repartir o Apartar), no Mover: Mover no cuenta
+ * (spec 007, criterio 10, decidido por el desarrollador). Las de Mover llevan su marca en la referencia.
+ */
+const esRepartoDesdePorAsignar = sql`(${eq(movimientos.tipo, "reasignacion")} and ${sobreOrigen.tipo}::text = 'por_asignar' and coalesce(${movimientos.referenciaExterna}, '') not like ${`%${marcaDeMover}%`})`;
+
+/**
+ * Lo que el reparto le dio a cada sobre desde "Por asignar" en un mes ("AAAA-MM" de la fecha de la reasignación): un
+ * fijo pide su valor menos esto (criterio 2), y Deudas, su cuota menos esto. Solo el reparto: lo que se mueve a mano
+ * con Mover, también hacia o desde "Por asignar", no cuenta (spec 007, criterio 10). Así ir y volver no cambia nada, y
+ * devolver a "Por asignar" no hace que el fijo pida otra vez. Todos los meses, porque el ingreso puede llevar cualquier
+ * fecha pasada y el cliente recalcula la propuesta al cambiarla; son pocas filas, una por sobre y mes con reparto.
  */
 export async function recibidoDesdePorAsignarPorMes(): Promise<Record<string, Record<number, number>>> {
-  const desdePorAsignar = sql`${sobreOrigen.tipo}::text = 'por_asignar'`;
   const filas = await db
     .select({
       mes: sql<string>`to_char(${movimientos.fecha}, 'YYYY-MM')`,
-      sobreId: sql<number>`case when ${desdePorAsignar} then ${movimientos.sobreDestinoId} else ${movimientos.sobreOrigenId} end`,
-      centavos:
-        sql<number>`greatest(0, sum(case when ${desdePorAsignar} then ${movimientos.montoUsdCentavos} else -${movimientos.montoUsdCentavos} end))::bigint`.mapWith(
-          Number,
-        ),
+      sobreId: movimientos.sobreDestinoId,
+      centavos: sql<number>`sum(${movimientos.montoUsdCentavos})::bigint`.mapWith(Number),
     })
     .from(movimientos)
     .innerJoin(sobreOrigen, eq(movimientos.sobreOrigenId, sobreOrigen.id))
-    .innerJoin(sobreDestino, eq(movimientos.sobreDestinoId, sobreDestino.id))
-    .where(
-      and(
-        eq(movimientos.tipo, "reasignacion"),
-        sql`(${desdePorAsignar} or ${sobreDestino.tipo}::text = 'por_asignar')`,
-      ),
-    )
-    .groupBy(sql`1`, sql`2`);
+    .where(esRepartoDesdePorAsignar)
+    .groupBy(sql`1`, movimientos.sobreDestinoId);
 
   const porMes: Record<string, Record<number, number>> = {};
   for (const f of filas) {
     if (f.sobreId === null) continue;
-    porMes[f.mes] = { ...porMes[f.mes], [Number(f.sobreId)]: f.centavos };
+    porMes[f.mes] = { ...porMes[f.mes], [f.sobreId]: f.centavos };
   }
   return porMes;
 }

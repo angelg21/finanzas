@@ -22,7 +22,7 @@
 import { config } from "dotenv";
 import { randomUUID } from "node:crypto";
 import { count, eq, inArray, isNull, like, not, or } from "drizzle-orm";
-import { referenciaDeCaptura, referenciaDeReasignacion } from "../src/lib/captura";
+import { referenciaDeCaptura, referenciaDeMover, referenciaDeReasignacion } from "../src/lib/captura";
 import { exigirBaseLocal } from "../src/lib/destino-base";
 import { centavosATexto } from "../src/lib/dinero";
 import { type DeudaParaSaldar, prepararPago, validarDeuda } from "../src/lib/deudas";
@@ -219,7 +219,8 @@ async function main() {
     );
   }
   /** La fila de mover, preparada como en /nuevo/mover contra un saldo sin tope: la base es la que vuelve a mirar. */
-  function filaDeMover(captura: string, origen: number, destino: number, centavos: number) {
+  /** La reasignación como la prepara Mover; con la referencia de Mover, o con la del reparto para Repartir. */
+  function filaDeMover(captura: string, origen: number, destino: number, centavos: number, comoReparto = false) {
     const sinTope = inicial.sobres.map((s) => ({ ...s, saldoCentavos: Number.MAX_SAFE_INTEGER }));
     const p = prepararMover(
       {
@@ -233,14 +234,17 @@ async function main() {
       hoy,
     );
     if (p.estado !== "ok") throw new Error(`prepararMover no dio una fila: ${JSON.stringify(p)}`);
-    return { ...p.fila, referenciaExterna: referenciaDeReasignacion(captura, destino) };
+    const referenciaExterna = comoReparto
+      ? referenciaDeReasignacion(captura, destino)
+      : referenciaDeMover(captura, destino);
+    return { ...p.fila, referenciaExterna };
   }
   const mover = (origen: number, destino: number, centavos: number, captura = idDePrueba()) =>
     moverEntreSobres(captura, filaDeMover(captura, origen, destino, centavos));
   const repartir = (centavos: number, destino: number) => {
     const captura = idDePrueba();
     return repartirPorAsignar(captura, porAsignar!.id, [
-      { ...filaDeMover(captura, porAsignar!.id, destino, centavos) },
+      { ...filaDeMover(captura, porAsignar!.id, destino, centavos, true) },
     ]);
   };
   /** Deja un sobre con exactamente `centavos`, moviendo desde o hacia Por asignar (con un ingreso si hace falta). */
@@ -405,7 +409,7 @@ async function main() {
     const [movida] = await db
       .select()
       .from(movimientos)
-      .where(eq(movimientos.referenciaExterna, referenciaDeReasignacion(captura, gastosDelMes.id)));
+      .where(eq(movimientos.referenciaExterna, referenciaDeMover(captura, gastosDelMes.id)));
     const trasMover = await cuadra("tras mover 10 de Planes a Gastos del mes");
     comprobar(
       "7",

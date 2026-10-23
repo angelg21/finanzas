@@ -1,5 +1,6 @@
 import { type SQL, and, count, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
+import { marcaDeMover } from "../lib/captura";
 import { estadoDe, pendienteDe } from "../lib/deudas";
 import { hoyEnCaracas } from "../lib/fechas";
 import { baseMovimientos } from "./consultas";
@@ -74,7 +75,6 @@ export async function deudaConMovimientos(id: number) {
 }
 
 const sobreOrigen = alias(sobres, "sobre_origen");
-const sobreDestino = alias(sobres, "sobre_destino");
 
 /**
  * El sobre Deudas por su tipo, como "Por asignar": si hubiera dos, el de menor orden. Aunque esté inactivo, para que
@@ -93,20 +93,19 @@ export async function sobreDeudas() {
   const [fila] = await db
     .select({
       saldoCentavos: sql<number>`coalesce(sum(${efectoEnSobre(sobre.id)}), 0)::bigint`.mapWith(Number),
-      // La misma cifra que lee el reparto (recibidoDesdePorAsignarPorMes): el neto del mes, con el piso de cero al final
-      // (spec 007, criterio 10). Ir y volver con Mover no mueve la cuota; soltar a "Por asignar" lo apartado de antes sí,
-      // como soltarlo a cualquier otro sobre (revisión de la 007, segunda vuelta).
-      recibidoEnElMesCentavos: sql<number>`greatest(0, coalesce(sum(case
-        when ${eq(movimientos.sobreDestinoId, sobre.id)} and ${sobreOrigen.tipo}::text = 'por_asignar' then ${movimientos.montoUsdCentavos}
-        when ${eq(movimientos.sobreOrigenId, sobre.id)} and ${sobreDestino.tipo}::text = 'por_asignar' then -${movimientos.montoUsdCentavos}
-      end) filter (where ${and(
+      // Lo que el reparto le dio en el mes, la misma cifra que lee el reparto (recibidoDesdePorAsignarPorMes): solo
+      // reasignaciones desde "Por asignar" que no son de Mover. Mover no cuenta (spec 007, criterio 10): lo que se mueve
+      // a mano a Deudas sube lo apartado y baja la cuota; lo que se saca, a donde sea, la sube. Ir y volver no cambia nada.
+      recibidoEnElMesCentavos: sql<number>`coalesce(sum(${movimientos.montoUsdCentavos}) filter (where ${and(
         eq(movimientos.tipo, "reasignacion"),
+        eq(movimientos.sobreDestinoId, sobre.id),
+        sql`${sobreOrigen.tipo}::text = 'por_asignar'`,
+        sql`coalesce(${movimientos.referenciaExterna}, '') not like ${`%${marcaDeMover}%`}`,
         sql`to_char(${movimientos.fecha}, 'YYYY-MM') = ${mes}`,
-      )}), 0))::bigint`.mapWith(Number),
+      )}), 0)::bigint`.mapWith(Number),
     })
     .from(movimientos)
     .leftJoin(sobreOrigen, eq(movimientos.sobreOrigenId, sobreOrigen.id))
-    .leftJoin(sobreDestino, eq(movimientos.sobreDestinoId, sobreDestino.id))
     .where(or(eq(movimientos.sobreOrigenId, sobre.id), eq(movimientos.sobreDestinoId, sobre.id)));
   return {
     ...sobre,

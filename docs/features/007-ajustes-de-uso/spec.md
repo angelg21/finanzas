@@ -37,12 +37,12 @@ Fase 1, "Cuentas, categorías, movimientos con nota" y "Sobres con reglas de rep
 7. ★ En `/nuevo/mover` (Registrar → Mover, y "Mover" en `/sobres`): de qué sobre, a qué sobre, monto y nota. Se guarda una reasignación de hoy. El monto va de 0,01 al saldo del origen: nunca lo deja en negativo. Se escribe con el candado del origen (el del reparto) y dentro se vuelve a mirar el saldo.
 8. ★ Desde Inversión, antes de guardar: "Inversión es intocable: lo que sale de aquí deja de crecer. ¿Mover igual?" y un segundo botón "Sí, mover de Inversión". Sin confirmar no se guarda.
 9. ★ Un reintento con el mismo id no duplica (la referencia de la captura, como al repartir). La acción empieza con la sesión y pasa por `conFallas`.
-10. Lo que un sobre recibió de "Por asignar" en el mes es el neto: lo que va de "Por asignar" al sobre menos lo que vuelve del sobre a "Por asignar", con el piso de cero solo al final del mes. El reparto (lo que pide un fijo y lo que falta de la cuota) y la cuota de Deudas leen esa misma cifra. Por eso:
-    - ir y volver entre "Por asignar" y un sobre, en cualquier orden, no cambia nada (specs 004, criterio 2, y 005, criterio 11);
-    - devolver a "Por asignar" deshace primero lo que el sobre recibió en el mes: el reparto lo vuelve a pedir este mes, y la cuota de Deudas no cambia;
-    - lo que se devuelve de más (lo que le sobraba de otros meses), o lo que se manda de Deudas a otro sobre, deja de estar apartado: en Deudas sube la cuota, repartida hasta el vencimiento; en un fijo, el fijo lo vuelve a pedir. Para soltar un sobrante sin que se reponga, se mueve directo al sobre que lo necesita.
+10. **Mover no cuenta como reparto** (decidido por el desarrollador el 2026-10-22, tras cuatro vueltas de revisión). Lo que pide un fijo en el reparto y la cuota de Deudas solo miran lo que el reparto le dio a cada sobre desde "Por asignar" en el mes: el de un ingreso, "Repartir" y "Apartar". Lo que se mueve a mano con Mover, también hacia o desde "Por asignar", no cuenta. Por eso:
+    - ir y volver, en cualquier orden y aunque cruce de mes, no cambia nada;
+    - mover dinero a un fijo no lo da por cubierto, y sacarlo no hace que lo pida otra vez;
+    - en Deudas, lo apartado es su saldo menos lo que el reparto le dio en el mes: meter dinero a mano baja la cuota, y sacarlo, a "Por asignar" o a otro sobre, la sube igual, antes o después del reparto del mes; y repartir lo que falta la deja cubierta.
 
-    Así, mandar 50 de Deudas a "Por asignar" y de ahí a Familia no da la misma cuota que mandarlos directo a Familia cuando Deudas ya recibió su parte del mes: el primero deshace el reparto (se vuelve a pedir este mes), el segundo suelta lo apartado (sube la cuota de los meses que quedan). Es intencional. Ni el origen ni el destino de Mover vienen elegidos, y la confirmación de sacar de Inversión vale para ese origen y ese monto. Añadido tras las revisiones y la auditoría de datos del 2026-10-22.
+    Los Mover se guardan con su propia marca en la referencia (`captura-<id>-mover-<sobre>`). Los que se hicieron antes de este cambio (del 17 al 22 de octubre de 2026) tienen la del reparto: si salieron de "Por asignar", cuentan como reparto hasta que termine octubre. Ni el origen ni el destino de Mover vienen elegidos, y la confirmación de sacar de Inversión vale para ese origen y ese monto.
 
 ## Pantallas
 
