@@ -1,9 +1,10 @@
 /**
  * Lo que encontraron las revisiones de la spec 007 (2026-10-22) y la auditoría de guardian-datos, contra la base:
  *   10 · lo recibido de Por asignar en el mes es neto, con el piso de cero al final, y la cuota de Deudas lee esa misma
- *        cifra: ir y volver, en cualquier orden, no cambia lo recibido ni la cuota; soltar de Deudas a Por asignar sube
- *        la cuota igual que soltarlo a otro sobre; devolver de más deja lo recibido en cero, y lo soltado de más se
- *        vuelve a pedir;
+ *        cifra: ir y volver, en cualquier orden, no cambia lo recibido ni la cuota; devolver a Por asignar deshace
+ *        primero lo recibido en el mes (se vuelve a pedir, la cuota no cambia); lo de más, o lo que va de Deudas a otro
+ *        sobre, suelta lo apartado (sube la cuota); lo soltado de más se vuelve a pedir. Con lo recibido en 0 y con un
+ *        reparto del mes ya dentro;
  *   7  · un pago toma el candado de Deudas: Mover desde Deudas a la vez no saca lo que el pago ya usó.
  * Con --url, además, contra un servidor en marcha con esta misma base y el usuario de prueba, como un navegador sin
  * JavaScript: Mover no trae origen elegido; desde Inversión, sin confirmar no guarda, la confirmación vale para ese
@@ -288,10 +289,43 @@ async function main() {
     hecho(await mover(familia.id, deudasSobre.id, 3000));
     comprobar(
       "10",
-      "soltar 30 de Deudas a Por asignar sube la cuota igual que soltarlos a Familia (segunda vuelta, hallazgo 2)",
+      "sin nada recibido este mes, soltar 30 de lo apartado a Por asignar sube la cuota igual que soltarlos a Familia (segunda vuelta, hallazgo 2)",
       porPorAsignar === porOtroSobre && porPorAsignar > c0 && (await cuota()) === c0,
       `${c0} → ${porPorAsignar} y ${porOtroSobre}`,
     );
+
+    // Con lo recibido del mes > 0, el estado normal tras el sueldo (tercera vuelta, hallazgo 1)
+    hecho(await mover(porAsignar.id, deudasSobre.id, 2000));
+    const [cConSueldo, rConSueldo] = [await cuota(), await recibido(deudasSobre.id)];
+    comprobar(
+      "10",
+      "el reparto del mes le da 20 a Deudas: cuentan como recibidos y la cuota no cambia",
+      rConSueldo === 2000 && cConSueldo === c0,
+    );
+    hecho(await mover(deudasSobre.id, porAsignar.id, 500));
+    comprobar(
+      "10",
+      "devolver 5 de Deudas a Por asignar deshace ese reparto: lo recibido baja a 15, se vuelve a pedir este mes, y la cuota no cambia",
+      (await recibido(deudasSobre.id)) === 1500 && (await cuota()) === c0,
+      `${await recibido(deudasSobre.id)} · ${await cuota()}`,
+    );
+    hecho(await mover(porAsignar.id, deudasSobre.id, 500));
+    hecho(await mover(deudasSobre.id, familia.id, 500));
+    comprobar(
+      "10",
+      "mandar 5 de Deudas a Familia suelta lo apartado: lo recibido no cambia y la cuota sube",
+      (await recibido(deudasSobre.id)) === 2000 && (await cuota()) > c0,
+      `${await recibido(deudasSobre.id)} · ${await cuota()}`,
+    );
+    hecho(await mover(familia.id, deudasSobre.id, 500));
+    hecho(await mover(deudasSobre.id, porAsignar.id, 2000 + 3000));
+    comprobar(
+      "10",
+      "devolver a Por asignar 30 más de lo recibido deshace el reparto y suelta 30 de lo apartado: la cuota queda como al soltar 30 a otro sobre",
+      (await recibido(deudasSobre.id)) === 0 && (await cuota()) === porOtroSobre,
+      `${await cuota()} y ${porOtroSobre}`,
+    );
+    hecho(await mover(porAsignar.id, deudasSobre.id, 3000));
 
     // Familia y Planes: lo que un fijo pide
     const familiaAntes = await recibido(familia.id);
