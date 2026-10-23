@@ -55,4 +55,9 @@ metadata:
 - Sesión vencida con la pantalla abierta: `Network.clearBrowserCookies` y luego enviar; después `entrar.mjs` para volver a entrar.
 - Categoría archivada sin pantalla: `update categorias set activa=false where id=N` y restaurar al terminar (en la demo, Ropa id 6 tiene un solo gasto, 2649). La demo deja Por asignar en 30,00: ningún ingreso de demo se puede borrar ni bajar más de 30.
 
+- (2026-10-22, 006 v2) `MSYS_NO_PATHCONV=1` rompe el `pnpm` de Git Bash (busca corepack en `C:\c\nvm4w`): ponlo solo delante de `node`, y para tsx usa `node node_modules/tsx/dist/cli.mjs <guion> /ruta`. Guiones nuevos: `r2-fab.mjs` (el "+" al fondo y con cada submit al borde), `r2-borrar-sinjs.mjs` (borrar sin JS desde el inicio con clics), `r2-estados.mjs` (estado HTTP con sesión por fetch), `r2-foto.mjs`.
+- Los "Últimos movimientos" del inicio son `hidden lg:block`: para tocar sus filas, `setDeviceMetricsOverride` a 1280.
+- Un `notFound()` en este Next 16 sale en blanco sin JS (el contenido va solo en los `<script>` del stream), con o sin `not-found.tsx`: comprobado con un build sin el archivo. No repetirlo.
+- La sesión principal puede empezar a cambiar el árbol de trabajo a mitad de la revisión (avisa): revisa con `git show <commit>:ruta` y anota que el build y verify se hicieron antes, sobre el commit limpio (comparar `.next/BUILD_ID`).
+
 Ver [[donde-se-esconden-defectos]].

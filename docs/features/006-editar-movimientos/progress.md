@@ -26,7 +26,7 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
 - [x] Construida (todas las tareas con commit, 2026-10-17)
 - [x] Validada en navegador (2026-10-22)
 - [x] Verificada: `pnpm verify` en verde, cada ★ con su prueba (2026-10-22)
-- [ ] Revisada: veredicto APTO PARA FUSIONAR
+- [x] Revisada: veredicto APTO PARA FUSIONAR (2026-10-22, segunda vuelta, después de fusionar)
 - [x] Fusionada en `main` el 2026-10-17, por decisión del desarrollador antes de validar, verificar y revisar (ver notas)
 
 ## Notas
@@ -81,3 +81,6 @@ El desarrollador anota aquí, con fecha, qué pantallas miró y en qué ancho. S
   - **6**: la fila dice ", deshacer" en un pago o un cobro. Con `--url`, en la deuda.
   - **7**: `comprobar-006-revision.ts` pasa por la acción con `--url`. `scripts/comprobar-003-paginas.ts` suma `crudo` para leer la respuesta con el stream.
   - Las comprobaciones, de nuevo: `comprobar-006` 63, `-007` 33, `-008` 16, `-009` 34 (con `--url`) y `-006-revision` 13 (con `--url`), todas en verde. `pnpm verify --forzar`: `Tests  950 passed (950)`, `✓ verify:full en verde en 42.0 s. Árbol sellado.`
+- **Revisión (2026-10-22), segunda vuelta:** `revisor`, **APTO PARA FUSIONAR**, sobre `5b267a9`, con `pnpm verify --forzar` en verde y `comprobar-006-revision --url` 13 de 13. Confirmó los seis arreglos, también fuera de la lista: ninguna acción escribe antes de su transacción, el camino sin JavaScript de borrar con clics reales, la categoría archivada en gasto e ingreso, y formularios forjados sin JavaScript rechazados. Hallazgos:
+  1. **Baja:** el "+" seguía en `/deudas/[id]` ("Registrar pago" o "Registrar cobro") y en el detalle de un sobre fondo ("Agregar al desglose"): mi guion medía solo al fondo y con la primera ruta de cada tipo. **Arreglado** en la feature 010: el "+" no sale en el detalle de una deuda ni de un sobre.
+  2. **Información:** sin JavaScript, un `notFound()` sale en blanco; el revisor lo comprobó con un build sin `not-found.tsx`: ya pasaba con el 404 de Next.
