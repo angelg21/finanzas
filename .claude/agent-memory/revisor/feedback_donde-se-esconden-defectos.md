@@ -41,6 +41,8 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 
 - 006, vuelta 1 (2026-10-22, revisión después de fusionar, sobre `main` con 007-009): NO APTO. El dinero, impecable (comprobar-006 63/63, cuadre en /cuentas tras cada paso, base idéntica al terminar). Lo que falló vivía en la capa de la acción, que `comprobar-006.ts` no toca (arma el plan a mano y llama a `src/db`): la 008 metió `etiquetaDelFormulario` (que crea la etiqueta) antes de la transacción, así que una edición que la transacción rechaza (★ 5 "Por asignar no alcanza", "venta compartida", "no se registró en la app", ya borrado) deja una etiqueta huérfana, permanente (no hay pantalla de etiquetas) y visible en todos los formularios. Bajos: `href="?borrar=1"` relativo borra `?volver=` sin JS; la confirmación en página sin "Cancelar"; categoría archivada obliga a recategorizar para corregir una nota; el "+" flotante tapa "Guardar cambios" en la edición; atrás tras borrar da el 404 de Next en inglés; las filas de pago/cobro (007) dicen ", editar".
 
+- 006, vuelta 2 (2026-10-22): APTO. Los seis arreglos cierran, también fuera de mi lista: la etiqueta se crea dentro de la transacción en editar, captura de gasto e ingreso y completar (009); ninguna otra acción escribe antes de su transacción; categoría archivada en gasto e ingreso con JS; borrar sin JS desde el inicio con clics reales (Cancelar y vuelta a `/?borrado=1`). Lo que quedó, bajo: el autor midió el "+" solo "al fondo de la página" y solo la primera ruta de cada tipo (el primer sobre no es un fondo); con mi métrica de la vuelta 1 (botón llevado al borde de abajo) sigue tapando "Registrar pago/cobro" en `/deudas/[id]` y "Agregar al desglose" en `/sobres/18`.
+
 **Why:** la demo es toda `origen = importado`, así que la lógica que depende de historial `manual` no se ve. La validación en navegador sigue el camino feliz, en un solo momento, y no pasa por un error de validación ni por el paso del tiempo antes de guardar.
 
 **How to apply:**
@@ -80,5 +82,7 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 - Revisión de una feature vieja sobre `main`: las features posteriores meten pasos en sus acciones (la 008 en la 006). Lee `git log` de cada `acciones.ts` de la feature desde la fusión.
 - Un `href="?algo=1"` relativo reemplaza toda la consulta: si la pantalla vive de `?volver=`, sigue el camino sin JS hasta el destino final.
 - Una pantalla de edición que reusa el formulario de captura: comprueba que lo que la captura esconde (el "+" flotante, "Nueva") también se esconda, y edita un registro cuyo valor ya no se ofrece (categoría archivada): ¿obliga a cambiarlo para corregir otra cosa?
+
+- Cuando el autor "mide" un arreglo de pantalla con su propio guion (en el scratchpad compartido, p. ej. `edge-flotante.mjs`), léelo: compara su métrica y su lista de rutas con la mía de la vuelta anterior. Toma la primera ruta de cada tipo (`find`), así que las variantes (sobre fondo, deuda pendiente) quedan fuera.
 
 Ver [[entorno-revision-finanzas]].

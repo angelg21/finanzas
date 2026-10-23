@@ -97,6 +97,9 @@ const conSesion = [
   ["/por-completar/varios", 200],
   ["/nuevo/gasto?pendiente=999999", 200],
   ["/nuevo/gasto?pendiente=abc", 200],
+  // Spec 010: corregir un pendiente que no existe.
+  ["/por-completar/999999", 404],
+  ["/por-completar/abc", 404],
   ["/sobres/999999", 404],
   ["/categorias/999999", 404],
   ["/deudas/999999", 404],

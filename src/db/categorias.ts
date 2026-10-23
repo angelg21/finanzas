@@ -40,8 +40,9 @@ export async function categoriasConUso() {
 export type CategoriaConUso = Awaited<ReturnType<typeof categoriasConUso>>[number];
 
 /**
- * Una categoría de ese tipo aunque esté archivada, con lo que pinta su píldora, o null. Al editar un gasto o un
- * ingreso se puede dejar la que ya tiene: corregir otra cosa no obliga a recategorizarlo (revisión de la 006).
+ * Una categoría de ese tipo aunque esté archivada, con lo que pinta su píldora, o null. Al editar un gasto, un
+ * ingreso o un gasto por completar se puede dejar la que ya tiene: corregir otra cosa no obliga a recategorizarlo
+ * (revisión de la 006; spec 010, criterio 3).
  */
 export async function categoriaDelMovimiento(id: number, tipo: TipoCategoria) {
   if (!Number.isSafeInteger(id) || id <= 0 || id > 2_147_483_647) return null;

@@ -57,10 +57,15 @@ export default async function NuevoGasto({ searchParams }: PageProps<"/nuevo/gas
           {pendiente ? "Completar gasto" : "Nuevo gasto"}
         </h1>
         <SelectorTipo actual="gasto" />
-        {/* Spec 009: si todavía no se sabe el monto en dólares, la cuenta o el sobre. */}
-        <Link href="/nuevo/por-completar" className="self-start text-[13px] font-semibold text-enlace hover:text-texto">
-          Anotar sin monto
-        </Link>
+        {/* Spec 009: si todavía no se sabe el monto en dólares, la cuenta o el sobre; spec 010: y la lista, sin consultar. */}
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
+          <Link href="/nuevo/por-completar" className="text-[13px] font-semibold text-enlace hover:text-texto">
+            Anotar sin monto
+          </Link>
+          <Link href="/por-completar" className="text-[13px] font-semibold text-enlace hover:text-texto">
+            Ver por completar
+          </Link>
+        </div>
       </header>
 
       <FormularioGasto
