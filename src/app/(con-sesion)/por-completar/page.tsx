@@ -57,7 +57,7 @@ export default async function PorCompletarPagina({ searchParams }: PageProps<"/p
           </span>
         )}
         <div className="flex gap-2">
-          <EnlaceBoton href="/nuevo/por-completar" variante="secundario" className="h-10">
+          <EnlaceBoton href="/nuevo/por-completar?desde=lista" variante="secundario" className="h-10">
             <Plus size={16} aria-hidden />
             Anotar
           </EnlaceBoton>
