@@ -493,7 +493,7 @@ async function main() {
         comprobar(
           "11",
           "deshacer un cobro ya repartido dice antes qué se retira y cómo queda, y ofrece confirmarlo con su firma",
-          visto.includes("se retiran 5,00 de lo repartido después (Planes 5,00)") &&
+          visto.includes("se retiran 5,00 de lo que se repartió con este dinero (Planes 5,00)") &&
             visto.includes("Así queda") &&
             visto.includes("Sí, deshacer") &&
             firmaDe(form1) !== "" &&
@@ -509,7 +509,9 @@ async function main() {
           "confirmar una vista previa que ya no vale no deshace, lo dice y muestra la de ahora",
           vieja.estado === 200 &&
             texto(vieja.html).includes("Algo cambió desde la vista previa") &&
-            texto(vieja.html).includes("se retiran 6,00 de lo repartido después (Gastos del mes 1,00 · Planes 5,00)") &&
+            texto(vieja.html).includes(
+              "se retiran 6,00 de lo que se repartió con este dinero (Planes 5,00 · Gastos del mes 1,00)",
+            ) &&
             firmaDe(form2) !== firmaDe(form1) &&
             (await pagoOCobroParaDeshacer(cobroRepartido)) !== null,
           `${vieja.estado} · ${firmaDe(form2)}`,
@@ -532,7 +534,7 @@ async function main() {
           "11",
           'si lo que falta salió con Mover, lo dice antes, con cuánto devolver, y no ofrece "Sí, deshacer"',
           sinRetiro.includes(
-            "lo demás ya salió de Por asignar de otra forma (con Mover, con un préstamo, o al bajar o borrar otro ingreso o deshacer otro cobro). Devuelve 5,00 a Por asignar con Mover",
+            "De este dinero salieron 5,00 con Mover a Planes, y Por asignar no tiene con qué cubrirlo: faltan 5,00. Devuelve 5,00 a Por asignar con Mover desde Planes",
           ) && !sinRetiro.includes("Sí, deshacer"),
         );
       } finally {

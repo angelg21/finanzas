@@ -4,9 +4,6 @@
  *   ★ 2 · deshacer un pago devuelve el dinero a su cuenta y al sobre Deudas, y la deuda recupera ese pendiente; deshacer
  *         un cobro lo saca de la cuenta y de Por asignar; con el candado de la deuda y el de Por asignar, deshacer y
  *         pagar, o deshacer y repartir, a la vez, nunca dejan nada en negativo;
- *   ★ 11 · si Por asignar ya lo repartió, la vista previa dice qué se retira del reparto de después y cómo queda todo,
- *         y solo se aplica con su firma: sin ella o si algo cambió, no se toca nada; si lo que falta salió con Mover,
- *         no se deshace y dice cuánto devolver;
  *   ★ 3 · el cuadre se mantiene, y una deuda pagada o un préstamo cobrado vuelve a abierta;
  *   ★ 7 · mover guarda una reasignación de hoy entre dos sobres, de 0,01 al saldo del origen, y nunca lo deja en
  *         negativo, tampoco con dos movimientos a la vez ni con un reparto a la vez;
@@ -17,7 +14,7 @@
  * Corre sobre la base local con los datos de demostración y la deja como estaba:
  *   pnpm exec tsx scripts/comprobar-007.ts
  * Lo de las revisiones (lo recibido neto, el candado del pago y las páginas sin JavaScript) está en
- * scripts/comprobar-007-revision.ts.
+ * scripts/comprobar-007-revision.ts; el ★ 11 (deshacer lo ya repartido), en scripts/comprobar-007-retiro.ts.
  * Lo suyo son capturas cuyo id empieza por 0c070007, que se borran al terminar y, si una corrida se cortó, al
  * empezar la siguiente. Se niega ante movimientos o deudas que no sean de demostración.
  */
@@ -64,7 +61,6 @@ async function main() {
   const { deudaPorId, sobreDeudas } = await import("../src/db/deudas");
   const { cobrarPrestamo, pagarDeuda, prestar, registrarDeuda } = await import("../src/db/guardar-deudas");
   const { deshacerPagoOCobro, pagoOCobroParaDeshacer } = await import("../src/db/deshacer-pago");
-  const { borrarIngreso } = await import("../src/db/borrar-ingreso");
 
   const movimientosNuestros = like(movimientos.referenciaExterna, `captura-${MARCA}-%`);
   const deudasNuestras = like(deudas.referencia, `captura-${MARCA}-%`);
@@ -341,123 +337,7 @@ async function main() {
       "noExiste" in (await deshacerPagoOCobro(cobroId)),
     );
 
-    // ★ 11 · un cobro ya repartido: se ve antes lo que se retira, y solo se aplica con la firma de esa vista previa
-    const cobro2 = await cobrar(p, "20");
-    await sobreEn(porAsignar.id, 1500);
-    const antesDeRetirar = await estado();
-    const rSinFirma = await deshacerPagoOCobro(cobro2);
-    comprobar(
-      "11",
-      "sin la firma de la vista previa no se deshace: pide volver a mirarla, y no toca nada",
-      "cambio" in rSinFirma && (await estado()).huella === antesDeRetirar.huella,
-    );
-    const previa2 = (await pagoOCobroParaDeshacer(cobro2))?.previa;
-    const despuesEn = (nombre: string) => previa2?.saldos.find((x) => x.nombre === nombre)?.despues;
-    comprobar(
-      "11",
-      "la vista previa retira 5,00 de Planes, lo último repartido, y deja Por asignar en 0,00",
-      previa2?.retirado.length === 1 &&
-        previa2.retirado[0].sobreId === planes.id &&
-        previa2.retirado[0].centavos === 500 &&
-        despuesEn(porAsignar.nombre) === 0 &&
-        despuesEn(planes.nombre) === enSobre(antesDeRetirar, planes.id) - 500,
-      JSON.stringify(previa2?.saldos),
-    );
-    // Algo cambia entre mirar y confirmar: un reparto nuevo es ahora lo último repartido.
-    await repartir(100, gastosDelMes.id);
-    const antesDeCambio = (await estado()).huella;
-    const rViejo = await deshacerPagoOCobro(cobro2, previa2?.firma ?? "");
-    comprobar(
-      "11",
-      "con la firma de una vista previa que ya no vale, no se aplica",
-      "cambio" in rViejo && (await estado()).huella === antesDeCambio,
-    );
-    const previa3 = (await pagoOCobroParaDeshacer(cobro2))?.previa;
-    const rSi = await deshacerPagoOCobro(cobro2, previa3?.firma ?? "");
-    const trasRetirar = await cuadra("tras deshacer un cobro ya repartido");
-    const comoSeVio = (previa3?.saldos ?? []).every(
-      (x) =>
-        [...trasRetirar.cuentas, ...trasRetirar.sobres].find((y) => y.nombre === x.nombre)?.saldoCentavos === x.despues,
-    );
-    comprobar(
-      "11",
-      "con la firma de la vista previa de ahora se deshace, y todo queda como ella mostró",
-      "ok" in rSi && rSi.ok && enSobre(trasRetirar, porAsignar.id) === 0 && comoSeVio,
-      JSON.stringify(previa3?.saldos),
-    );
-    // Lo que falta salió con Mover, que no es reparto: no hay qué retirar.
-    const cobro3 = await cobrar(p, "20");
-    await mover(porAsignar.id, planes.id, 500);
-    const antesDeNegar = (await estado()).huella;
-    const rNo = await deshacerPagoOCobro(cobro3);
-    const sinRetiro =
-      "Por asignar tiene 15,00; le faltan 5,00, y lo repartido después solo cubre 0,00: lo demás ya salió de Por asignar de otra forma (con Mover, con un préstamo, o al bajar o borrar otro ingreso o deshacer otro cobro). Devuelve 5,00 a Por asignar con Mover y vuelve a intentarlo.";
-    const visto3 = await pagoOCobroParaDeshacer(cobro3);
-    comprobar(
-      "11",
-      "si lo que falta salió con Mover, no se deshace, lo dice antes y dice cuánto devolver",
-      "ok" in rNo && !rNo.ok && rNo.error === sinRetiro && visto3?.impedido === sinRetiro && visto3.previa === null,
-      "error" in rNo ? rNo.error : "",
-    );
-    comprobar("11", "y el cobro sigue ahí, sin cambios", visto3 !== null && (await estado()).huella === antesDeNegar);
-
-    // Guardian, hallazgo 1: el reparto propio de otro ingreso es de su dinero; se retira el Repartir que usó el del cobro
-    const p6 = await prestamo("50");
-    await sobreEn(porAsignar.id, 0);
-    const cobro4 = await cobrar(p6, "10");
-    await repartir(1000, planes.id);
-    const sueldoB = await ingreso(4500, [{ sobreId: gastosDelMes.id, monto: "45" }]);
-    const previa4 = (await pagoOCobroParaDeshacer(cobro4))?.previa;
-    comprobar(
-      "11",
-      "deshacer un cobro retira el Repartir de después, no el reparto propio del ingreso que llegó luego",
-      previa4?.retirado.length === 1 && previa4.retirado[0].sobreId === planes.id,
-      JSON.stringify(previa4?.retirado),
-    );
-    const r4 = await deshacerPagoOCobro(cobro4, previa4?.firma ?? "");
-    const rB = await borrarIngreso(sueldoB);
-    comprobar(
-      "11",
-      "y ese ingreso se sigue borrando entero con su reparto, sin retiro ni mensaje de Mover",
-      "ok" in r4 && r4.ok && "ok" in rB && rB.ok && enSobre(await estado(), porAsignar.id) === 0,
-      "error" in rB ? rB.error : "",
-    );
-    await cuadra("tras deshacer un cobro con un ingreso repartido después");
-
-    // Guardian, hallazgo 2: un Mover desde el sobre del que se retira, entre la vista previa y la confirmación
-    const cobro5 = await cobrar(p6, "10");
-    await repartir(1000, planes.id);
-    const previa5 = (await pagoOCobroParaDeshacer(cobro5))?.previa;
-    await mover(planes.id, gastosDelMes.id, 100);
-    const antesDeR5 = (await estado()).huella;
-    const r5 = await deshacerPagoOCobro(cobro5, previa5?.firma ?? "");
-    comprobar(
-      "11",
-      "si un saldo que mostraba la vista previa cambió, no se aplica aunque el retiro sea el mismo",
-      "cambio" in r5 && (await estado()).huella === antesDeR5,
-    );
-    const r5b = await deshacerPagoOCobro(cobro5, (await pagoOCobroParaDeshacer(cobro5))?.previa?.firma ?? "");
-    comprobar("11", "con la vista previa de ahora, sí", "ok" in r5b && r5b.ok);
-    // Y a la vez: el retiro toma el candado del sobre, así que un Mover desde él lee el saldo ya con el retiro.
-    const ocasiones = inicial.sobres.find((s) => s.nombre === "Ocasiones");
-    if (!ocasiones) throw new Error("Falta el sobre Ocasiones: corre pnpm db:seed");
-    let malCandado = 0;
-    for (let ronda = 0; ronda < 4; ronda++) {
-      await sobreEn(ocasiones.id, 0);
-      await sobreEn(porAsignar.id, 0);
-      const c = await cobrar(p6, "10");
-      await repartir(1000, ocasiones.id);
-      const firma = (await pagoOCobroParaDeshacer(c))?.previa?.firma ?? "";
-      const [rD, rM] = await Promise.all([deshacerPagoOCobro(c, firma), mover(ocasiones.id, gastosDelMes.id, 1000)]);
-      if (ganoUno(rD) === ganoUno(rM) || enSobre(await estado(), ocasiones.id) < 0) malCandado++;
-    }
-    comprobar(
-      "11",
-      "cuatro carreras de deshacer con retiro contra Mover desde el sobre retirado: gana uno y nunca queda en negativo",
-      malCandado === 0,
-      `${malCandado} mal`,
-    );
-    await cuadra("tras las carreras del retiro");
+    // ★ 11 · deshacer un cobro ya repartido: lo prueba scripts/comprobar-007-retiro.ts
 
     // ★ 3 · pagada o cobrada vuelve a abierta
     const d2 = await deuda("100");

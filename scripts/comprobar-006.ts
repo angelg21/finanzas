@@ -9,8 +9,8 @@
  *   ★ 5  · bajarlo más de lo que tiene Por asignar no guarda nada y lo dice; una baja y un reparto a la vez, con el
  *          mismo candado, nunca dejan Por asignar en negativo;
  *   ★ 6  · borrar un gasto se lleva su venta, y la cuenta y el sobre recuperan lo que tenían;
- *   ★ 7  · borrar un ingreso se lleva su reparto; si Por asignar ya repartió lo que falta, se retira de lo repartido
- *          después con la firma de la vista previa (spec 007, criterio 11); si salió con Mover, no se borra y lo dice; la
+ *   ★ 7  · borrar un ingreso se lleva su reparto; si lo que falta salió con Mover, no se borra y lo dice (retirar lo
+ *          repartido con su dinero, criterio 11 de la 007, lo prueba scripts/comprobar-007-retiro.ts); la
  *          confirmación avisa del sobre que quedará en negativo;
  *   ★ 8  · nada que no sea gasto o ingreso se abre para editar (la página da 404 cuando movimientoParaEditar da null)
  *          ni se edita o borra por su id; un gasto sin captura se edita solo él;
@@ -564,28 +564,8 @@ async function main() {
       "borrar un ingreso ya borrado responde que no existe, sin error",
       noExiste(await borrarIngreso(k.ingresoId)),
     );
-    // Spec 007, criterio 11: si Por asignar ya repartió lo que falta, se retira de lo repartido después, con la firma
-    // de la vista previa; si salió con Mover, no se borra y lo dice.
-    const m = await ingreso("100");
-    await porAsignarEn(3000);
-    const antesDeM = (await estado()).huella;
-    const rM = await borrarIngreso(m.ingresoId);
-    comprobar(
-      "7",
-      "si Por asignar ya lo repartió, sin la firma de la vista previa no se borra y no toca nada",
-      "cambio" in rM && (await fila(m.ingresoId)) !== null && (await estado()).huella === antesDeM,
-    );
-    const previaM = (await vistaPreviaDeBorrado((await movimientoParaEditar(m.ingresoId))!))?.previa;
-    const rM2 = await borrarIngreso(m.ingresoId, previaM?.firma ?? "");
-    comprobar(
-      "7",
-      "con su firma se borra, retirando 70,00 de lo repartido después: Por asignar en 0,00",
-      "ok" in rM2 &&
-        rM2.ok &&
-        previaM?.retirado.reduce((a, r) => a + r.centavos, 0) === 7000 &&
-        enSobre(await estado(), porAsignar.id) === 0,
-      JSON.stringify(previaM?.retirado),
-    );
+    // Si lo que falta salió con Mover, no se borra y lo dice. Retirar lo que se repartió con su dinero (criterio 11 de
+    // la 007) lo prueba scripts/comprobar-007-retiro.ts.
     const m3 = await ingreso("100");
     await moverDesdePorAsignar(enSobre(await estado(), porAsignar.id) - 3000, planes.id);
     const antesDeM3 = (await estado()).huella;
@@ -596,7 +576,7 @@ async function main() {
       "ok" in rM3 &&
         !rM3.ok &&
         rM3.error ===
-          "Por asignar tiene 30,00; le faltan 70,00, y lo repartido después solo cubre 0,00: lo demás ya salió de Por asignar de otra forma (con Mover, con un préstamo, o al bajar o borrar otro ingreso o deshacer otro cobro). Devuelve 70,00 a Por asignar con Mover y vuelve a intentarlo.",
+          "De este dinero salieron 70,00 con Mover a Planes, y Por asignar no tiene con qué cubrirlo: faltan 70,00. Devuelve 70,00 a Por asignar con Mover desde Planes y vuelve a intentarlo.",
       "error" in rM3 ? rM3.error : "",
     );
     comprobar(

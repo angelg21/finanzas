@@ -3,7 +3,7 @@
  * captura (monto, cuenta en dólares, fecha) y la diferencia de monto entra o sale del sobre que lo recibió, "Por
  * asignar"; su reparto no cambia. Bajarlo solo se puede si ese sobre alcanza: el reparto ya se llevó lo demás.
  * Borrarlo se lleva su reparto: el sobre destino pierde lo que quedó sin repartir y cada sobre devuelve lo suyo. Si
- * el destino ya no lo tiene, lo que falta se retira del reparto posterior (spec 007, criterio 11).
+ * lo que quedó sin repartir ya se repartió después, se retira lo que se repartió con ese dinero (spec 007, criterio 11).
  */
 import { formatearCifra } from "./dinero";
 import { type CuentaIngreso, type ErroresIngreso, type FilaIngreso, prepararIngreso } from "./ingresos";
@@ -51,20 +51,11 @@ type EntradaBorrado = {
   montoUsdCentavos: number;
   destino: { nombre: string; saldoCentavos: number };
   reparto: RepartoGuardado[];
-  /** Lo que se retira del reparto posterior para cubrir lo que falta (spec 007, criterio 11), con el saldo de cada sobre. */
+  /** Lo que se retira de lo que se repartió con su dinero (spec 007, criterio 11), con el saldo de cada sobre. */
   retirado?: RepartoGuardado[];
 };
 
 const suma = (filas: RepartoGuardado[]) => filas.reduce((a, r) => a + r.montoUsdCentavos, 0);
-
-/**
- * Lo que le falta al sobre destino para borrar el ingreso con su reparto; 0 si lo tiene. Nunca más de lo que el
- * ingreso dejó sin repartir: si el destino ya estaba en negativo, eso no es de este ingreso (guardian-datos).
- */
-export function faltaParaBorrar(e: EntradaBorrado): number {
-  const sinRepartir = e.montoUsdCentavos - suma(e.reparto);
-  return Math.max(0, Math.min(sinRepartir, sinRepartir - e.destino.saldoCentavos));
-}
 
 export function planDeBorradoDeIngreso(e: EntradaBorrado): PlanDeBorrado {
   const retirado = e.retirado ?? [];

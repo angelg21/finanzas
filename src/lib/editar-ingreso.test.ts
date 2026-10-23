@@ -4,7 +4,7 @@
  * destino pierde lo que quedó sin repartir y cada sobre devuelve lo suyo.
  */
 import { describe, expect, it } from "vitest";
-import { faltaParaBorrar, planDeBorradoDeIngreso, planDeEdicionDeIngreso } from "./editar-ingreso";
+import { planDeBorradoDeIngreso, planDeEdicionDeIngreso } from "./editar-ingreso";
 import { saldosTras } from "./saldos";
 
 const hoy = "2026-10-17";
@@ -111,18 +111,6 @@ describe("planDeBorradoDeIngreso: el ingreso se va con su reparto", () => {
       reparto,
     });
     expect(plan).toEqual({ ok: false, error: "Por asignar tiene 500,00; le faltan 425,00" });
-  });
-
-  it("lo que falta es lo que el ingreso no repartió y el destino ya no tiene", () => {
-    const entrada = { montoUsdCentavos: 120_000, reparto };
-    expect(faltaParaBorrar({ ...entrada, destino: { nombre: "Por asignar", saldoCentavos: 50_000 } })).toBe(42_500);
-    expect(faltaParaBorrar({ ...entrada, destino: { nombre: "Por asignar", saldoCentavos: 92_500 } })).toBe(0);
-    expect(faltaParaBorrar({ ...entrada, destino: { nombre: "Por asignar", saldoCentavos: 100_000 } })).toBe(0);
-  });
-
-  it("nunca más de lo que el ingreso dejó sin repartir, aunque Por asignar ya estuviera en negativo", () => {
-    const entrada = { montoUsdCentavos: 120_000, reparto };
-    expect(faltaParaBorrar({ ...entrada, destino: { nombre: "Por asignar", saldoCentavos: -3_000 } })).toBe(92_500);
   });
 
   it("★ 11 de la 007 · con lo retirado del reparto posterior se puede, y el aviso cuenta lo retirado del mismo sobre", () => {

@@ -1,10 +1,10 @@
-import { and, desc, eq, gt, notExists, or, sql } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
+import { eq, inArray, or, sql } from "drizzle-orm";
 import { marcaDeMover } from "../lib/captura";
 import {
   type Cambio,
+  type Clase,
+  type MovimientoDePorAsignar,
   type PlanDeRetiro,
-  type RepartoPosterior,
   type Retiro,
   type SaldoQueQueda,
   type VistaPrevia,
@@ -14,82 +14,102 @@ import {
 } from "../lib/retiro";
 import { claveReparto, type Ejecutor, saldoDeSobre } from "./movimientos";
 import { cuentas, movimientos, sobres } from "./schema";
-import { efectoEnCuenta } from "./sumas-de-saldo";
+import { efectoEnCuenta, efectoEnSobre } from "./sumas-de-saldo";
 
 /*
-  Retirar lo repartido (spec 007, criterio 11): leer lo que se repartió desde "Por asignar" después de lo que se
-  deshace, armar la vista previa con los saldos, y aplicarlo. Las reglas viven en src/lib/retiro.ts; quien deshace
-  toma antes el candado de "Por asignar", vuelve a calcular el plan y la vista previa dentro de su transacción y solo
-  aplica si su firma es la que se confirmó.
+  Retirar lo repartido (spec 007, criterio 11): leer la cuenta de lotes de "Por asignar", armar la vista previa con
+  los saldos, y aplicarla. Las reglas viven en src/lib/retiro.ts; quien deshace toma antes el candado de "Por
+  asignar", vuelve a calcular el plan y la vista previa dentro de su transacción y solo aplica si su firma es la que
+  se confirmó.
 */
 
-const ingresoPropio = alias(movimientos, "ingreso_propio");
+/** "captura-<id>-reasignacion-<sobre>": de una reasignación, el comienzo que comparte con el ingreso de su captura. */
+const deUnaCaptura = /^(captura-.+)-reasignacion-\d+$/;
 
 /**
- * Lo que se repartió desde "Por asignar" después de la fila `despuesDeId` con Repartir o Apartar, del más reciente al
- * más viejo. Quedan fuera Mover, el reparto propio de un ingreso (la reasignación cuya captura tiene un ingreso: es de
- * ese ingreso, que se lleva el suyo al borrarse), los sobres archivados y una fila cuyo monto no es su monto en
- * dólares (guardian-datos, hallazgos 1 y 3). Con `bloquear`, las filas quedan bloqueadas hasta el final de la
- * transacción.
+ * Las filas que mueven dinero de "Por asignar", en orden de id, con su clase. Una salida es reparto (se puede retirar)
+ * si es una reasignación que no es Mover ni el reparto propio de un ingreso (la reasignación cuya captura tiene un
+ * ingreso), a un sobre activo y con su monto igual a su monto en dólares (guardian-datos, hallazgos 1 y 3).
  */
-export async function repartoPosterior(
+export async function movimientosDePorAsignar(
   ejecutor: Ejecutor,
   porAsignarId: number,
-  despuesDeId: number,
-  bloquear: boolean,
-): Promise<RepartoPosterior[]> {
-  const consulta = ejecutor
+): Promise<MovimientoDePorAsignar[]> {
+  const filas = await ejecutor
     .select({
       id: movimientos.id,
+      tipo: movimientos.tipo,
+      centavos: sql<number>`${efectoEnSobre(porAsignarId)}`.mapWith(Number),
+      montoCentavos: movimientos.montoCentavos,
+      montoUsdCentavos: movimientos.montoUsdCentavos,
+      referencia: movimientos.referenciaExterna,
       sobreId: movimientos.sobreDestinoId,
       nombre: sobres.nombre,
-      montoCentavos: movimientos.montoUsdCentavos,
+      activo: sobres.activo,
     })
     .from(movimientos)
-    .innerJoin(sobres, eq(sobres.id, movimientos.sobreDestinoId))
-    .where(
-      and(
-        eq(movimientos.tipo, "reasignacion"),
-        eq(movimientos.sobreOrigenId, porAsignarId),
-        gt(movimientos.id, despuesDeId),
-        eq(sobres.activo, true),
-        eq(movimientos.montoCentavos, movimientos.montoUsdCentavos),
-        sql`coalesce(${movimientos.referenciaExterna}, '') not like ${`%${marcaDeMover}%`}`,
-        notExists(
-          ejecutor
-            .select({ uno: sql`1` })
-            .from(ingresoPropio)
-            .where(
-              and(
-                eq(ingresoPropio.tipo, "ingreso"),
-                eq(
-                  ingresoPropio.referenciaExterna,
-                  sql`regexp_replace(${movimientos.referenciaExterna}, '-reasignacion-[0-9]+$', '-ingreso')`,
-                ),
-              ),
-            ),
-        ),
-      ),
-    )
-    .orderBy(desc(movimientos.id));
-  const filas = bloquear ? await consulta.for("update", { of: movimientos }) : await consulta;
-  return filas.flatMap((f) => (f.sobreId === null ? [] : [{ ...f, sobreId: f.sobreId }]));
+    .leftJoin(sobres, eq(sobres.id, movimientos.sobreDestinoId))
+    .where(or(eq(movimientos.sobreOrigenId, porAsignarId), eq(movimientos.sobreDestinoId, porAsignarId)))
+    .orderBy(movimientos.id);
+  const ingresos = new Map<string, number>();
+  for (const f of filas) if (f.tipo === "ingreso" && f.referencia) ingresos.set(f.referencia, f.id);
+  return filas.flatMap((f): MovimientoDePorAsignar[] => {
+    if (f.centavos === 0) return [];
+    if (f.centavos > 0) {
+      return [
+        {
+          id: f.id,
+          centavos: f.centavos,
+          clase: "entrada",
+          sobreId: null,
+          nombre: null,
+          ingresoId: null,
+        },
+      ];
+    }
+    const referencia = f.referencia ?? "";
+    const captura = deUnaCaptura.exec(referencia)?.[1];
+    const ingresoId = captura ? (ingresos.get(`${captura}-ingreso`) ?? null) : null;
+    let clase: Clase = "otra";
+    if (f.tipo === "reasignacion") {
+      if (referencia.includes(marcaDeMover)) clase = "mover";
+      else if (ingresoId !== null) clase = "propio";
+      else if (f.activo && f.montoCentavos === f.montoUsdCentavos) clase = "reparto";
+    }
+    return [
+      {
+        id: f.id,
+        centavos: f.centavos,
+        clase,
+        sobreId: f.sobreId,
+        nombre: f.nombre,
+        ingresoId: clase === "propio" ? ingresoId : null,
+      },
+    ];
+  });
 }
 
-/** El plan de retiro de lo que falta en "Por asignar", leído con el ejecutor dado. Solo se retira desde "Por asignar". */
+/**
+ * El plan de quitar el lote de un cobro o un ingreso, con el saldo del sobre que lo recibió. Solo hay lotes en "Por
+ * asignar": en otro sobre no se retira nada, y quien deshace comprueba que alcance. Con \`bloquear\`, bloquea las filas
+ * que retira y toma el candado de sus sobres.
+ */
 export async function planDeRetiroDesde(
   ejecutor: Ejecutor,
-  faltan: number,
-  porAsignarId: number,
-  despuesDeId: number,
+  lote: { id: number; sobreId: number },
   bloquear: boolean,
-): Promise<PlanDeRetiro> {
-  if (faltan <= 0) return { alcanza: true, retiros: [] };
-  const [origen] = await ejecutor.select({ tipo: sobres.tipo }).from(sobres).where(eq(sobres.id, porAsignarId));
-  if (origen?.tipo !== "por_asignar") return { alcanza: false, faltan, alcanzaHasta: 0 };
-  return planDeRetiro(faltan, await repartoPosterior(ejecutor, porAsignarId, despuesDeId, bloquear));
+): Promise<{ plan: PlanDeRetiro; saldo: number }> {
+  const saldo = await saldoDeSobre(ejecutor, lote.sobreId);
+  const [destino] = await ejecutor.select({ tipo: sobres.tipo }).from(sobres).where(eq(sobres.id, lote.sobreId));
+  if (destino?.tipo !== "por_asignar") return { plan: { alcanza: true, retiros: [] }, saldo };
+  const plan = planDeRetiro(await movimientosDePorAsignar(ejecutor, lote.sobreId), lote.id, saldo);
+  if (bloquear && plan.alcanza && plan.retiros.length > 0) {
+    const ids = plan.retiros.map((r) => r.id);
+    await ejecutor.select({ id: movimientos.id }).from(movimientos).where(inArray(movimientos.id, ids)).for("update");
+    await bloquearSobresDelRetiro(ejecutor, plan.retiros);
+  }
+  return { plan, saldo };
 }
-
 /**
  * Los candados de los sobres de los que se retira, después del de "Por asignar" y en orden de id: un Mover, un pago o
  * un Apartar desde uno de ellos espera, y lee el saldo ya con el retiro (guardian-datos, hallazgo 2). Ninguna otra

@@ -1,9 +1,10 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
+import { formatearCifra } from "../lib/dinero";
 import { type Retiro, type VistaPrevia, cambiosPorSobre, noAlcanzaElRetiro } from "../lib/retiro";
 import { bloquearDeuda } from "./guardar-deudas";
 import { db } from "./index";
-import { type Ejecutor, claveReparto, saldoDeSobre } from "./movimientos";
-import { aplicarRetiros, bloquearSobresDelRetiro, planDeRetiroDesde, vistaPrevia } from "./retiro";
+import { type Ejecutor, claveReparto } from "./movimientos";
+import { aplicarRetiros, planDeRetiroDesde, vistaPrevia } from "./retiro";
 import { cuentas, deudas, movimientos, sobres } from "./schema";
 
 /*
@@ -31,14 +32,15 @@ async function alDeshacerElCobro(
   c: CobroLeido,
   bloquear: boolean,
 ): Promise<{ error: string } | { previa: VistaPrevia; retiros: Retiro[] }> {
-  const saldo = await saldoDeSobre(ejecutor, c.sobreDestinoId);
   const [sobre] = await ejecutor.select({ nombre: sobres.nombre }).from(sobres).where(eq(sobres.id, c.sobreDestinoId));
   const porAsignar = { sobreId: c.sobreDestinoId, nombre: sobre?.nombre ?? "Por asignar" };
-  // Nunca más de lo que trajo el cobro: si "Por asignar" ya estaba en negativo, eso no es de este cobro (guardian).
-  const faltan = Math.min(c.montoUsdCentavos, c.montoUsdCentavos - saldo);
-  const plan = await planDeRetiroDesde(ejecutor, faltan, c.sobreDestinoId, c.id, bloquear);
-  if (!plan.alcanza) return { error: noAlcanzaElRetiro(porAsignar.nombre, saldo, plan) };
-  if (bloquear) await bloquearSobresDelRetiro(ejecutor, plan.retiros);
+  const { plan, saldo } = await planDeRetiroDesde(ejecutor, { id: c.id, sobreId: c.sobreDestinoId }, bloquear);
+  if (!plan.alcanza) return { error: noAlcanzaElRetiro(porAsignar.nombre, plan) };
+  // Con "Por asignar" ya en negativo (o un cobro que no cayó en él), no se lo deja más abajo.
+  const queda = saldo - c.montoUsdCentavos + plan.retiros.reduce((a, r) => a + r.centavos, 0);
+  if (queda < 0) {
+    return { error: `${porAsignar.nombre} tiene ${formatearCifra(saldo)}; le faltan ${formatearCifra(-queda)}` };
+  }
   const cuenta = c.cuentaId === null ? null : { id: c.cuentaId, centavos: c.montoDestinoCentavos ?? c.montoCentavos };
   const cambios = cambiosPorSobre(porAsignar, c.montoUsdCentavos, [], plan.retiros);
   return { previa: await vistaPrevia(ejecutor, cuenta, cambios, plan.retiros), retiros: plan.retiros };
@@ -46,8 +48,8 @@ async function alDeshacerElCobro(
 
 /**
  * Un pago o un cobro de una deuda, con la persona y la cuenta, para deshacerlo (spec 007, criterio 1); null si no. De
- * un cobro, la vista previa: cómo quedan la cuenta y "Por asignar" y, si ya lo repartió, lo que se retira del reparto
- * posterior (criterio 11); o por qué no se puede, para no ofrecer "Sí, deshacer" en vano. Sin candado: la acción
+ * un cobro, la vista previa: cómo quedan la cuenta y "Por asignar" y, si ya lo repartió, lo que se retira de lo que se
+ * repartió con su dinero (criterio 11); o por qué no se puede, para no ofrecer "Sí, deshacer" en vano. Sin candado: la acción
  * vuelve a mirar y compara la firma.
  */
 export async function pagoOCobroParaDeshacer(id: number) {
@@ -90,9 +92,9 @@ export type PagoOCobro = NonNullable<Awaited<ReturnType<typeof pagoOCobroParaDes
  * Deshacer un pago o un cobro (spec 007, criterios 1 a 3): borra el movimiento con el candado de la deuda, que
  * serializa con pagar y cobrar. Un pago devuelve el dinero a su cuenta y a Deudas, siempre. Un cobro lo saca de la
  * cuenta y de "Por asignar": con su candado (el del reparto, tomado después del de la deuda, en el mismo orden que en
- * todas partes). Si "Por asignar" ya no lo tiene, retira lo que falta del reparto posterior (criterio 11), solo si es
- * la misma vista previa que se vio y confirmó (`firma`: filas, montos y saldos); si cambió, responde `cambio` para
- * volver a mostrarla.
+ * todas partes). Con él se retira lo que se repartió con su dinero (criterio 11), solo si es la misma vista previa
+ * que se vio y confirmó (`firma`: filas, montos y saldos); si cambió, responde `cambio` para volver a mostrarla.
+ * Quien llama sin haber visto una (`firma` vacía) solo deshace si no hay nada que retirar, como antes del criterio.
  */
 export async function deshacerPagoOCobro(
   id: number,
@@ -121,7 +123,7 @@ export async function deshacerPagoOCobro(
         true,
       );
       if ("error" in r) return { ok: false as const, error: r.error };
-      if (r.previa.firma !== firma) return { cambio: true as const };
+      if (r.previa.firma !== firma && !(firma === "" && r.retiros.length === 0)) return { cambio: true as const };
       await aplicarRetiros(tx, r.retiros);
     } else if (firma !== "") {
       return { cambio: true as const };

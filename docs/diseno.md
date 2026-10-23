@@ -172,12 +172,13 @@ Primer uso: el desglose del sobre Ocasiones en `/sobres/[id]`. La captura de gas
 
 - `/movimientos/[id]`, un gasto: los campos de la captura de gasto (`CamposGasto`) con sus valores, el botón "Guardar cambios", sin "Antes y después" ni la píldora "Nueva"; debajo, "Borrar gasto" con `EnlaceBoton` `peligro`.
 - Un ingreso: una `Tarjeta` de 6 columnas centradas con monto, cuenta, categoría, fecha y nota, la línea en `texto-3` "Se repartió: Gastos del mes 175,00 · … El reparto no cambia al editar." y "Borrar ingreso".
-- Borrar confirma en un `<dialog>` como el del calendario, con lo que se borra y los sobres que quedarían en negativo en `negativo`; sin JavaScript, la misma confirmación en la página con `?borrar=1`. Si no se puede borrar, solo el motivo.
+- Borrar confirma en un `<dialog>` como el del calendario, con lo que se borra y los sobres que quedarían en negativo en `negativo`; sin JavaScript, la misma confirmación en la página con `?borrar=1`. Si no se puede borrar, solo el motivo. Al borrar un ingreso, debajo, la vista previa de la feature 007 (criterio 11).
 - Al volver, en `/movimientos` o en el inicio, una `Pildora` `positiva` con "Gasto actualizado", "Ingreso actualizado" o "Borrado".
 
 **Ajustes de uso diario** (feature 007):
 
 - `/movimientos/[id]` de un pago o un cobro: el título ("Pago a Papás"), el monto a 28 px en una `Tarjeta`, la cuenta, la fecha y la nota, y "Deshacer pago" o "Deshacer cobro" con la confirmación de borrar de la 006 ("Sí, deshacer").
+- La confirmación de deshacer un cobro o de borrar un ingreso lleva la vista previa: si ya se repartió, una línea en `texto-2` con lo que se retira ("Ya se repartió: se retiran 6,00 de lo que se repartió con este dinero (Planes 5,00 · Gastos del mes 1,00), y el reparto los volverá a pedir."); luego "Así queda" en mayúsculas pequeñas `texto-2` y una fila por la cuenta, Por asignar y cada sobre tocado: el nombre a la izquierda y, a la derecha, `Cifra` `sm` antes en `texto-2`, `ArrowRight` en `texto-3` y `Cifra` `sm` después, en `negativo` si queda bajo cero. Si no se puede, solo el motivo, sin "Sí, deshacer".
 - En `/movimientos`, bajo los controles de periodo, una fila de `Pildora` enlazadas con las etiquetas del periodo y su total ("SAX 1.200"); la elegida en `palida`, con `aria-current`. Con etiqueta, encima de la lista "SAX · 1.200,00 USD" (feature 008).
 - `/nuevo/mover`: el selector de Registrar con Mover en menta y una `Tarjeta` de 6 columnas centradas con "De" y "A" en `SelectorPildoras` (con el saldo de cada sobre), `CampoMonto`, nota y "Mover". Desde Inversión, la línea en `negativo` con `CircleAlert` y el botón "Sí, mover de Inversión". En `/sobres`, el enlace "Mover entre sobres" junto a "Reglas de reparto" y, al volver, la `Pildora` `positiva` "Movido".
 
