@@ -59,13 +59,13 @@ const sobreOrigen = alias(sobres, "sobre_origen");
 const sobreDestino = alias(sobres, "sobre_destino");
 
 /**
- * Lo que cada sobre recibió desde "Por asignar", neto, por mes ("AAAA-MM") de la fecha de la reasignación: un fijo
- * pide su valor menos esto (criterio 2). Neto porque Mover (spec 007) devuelve dinero a "Por asignar": lo que vuelve
- * en el mes se resta, y mandar 10 y devolverlos deja el fijo como estaba (revisión de la 007, hallazgo 1). El piso de
- * cero va sobre la marcha, en el orden en que se movió: devolver más de lo recibido hasta ese momento (lo que sobraba
- * de otros meses) no queda como deuda, y lo que llega después cuenta entero; así un fijo nunca pide en el mes más que
- * su valor (guardian-datos, 007). Todos los meses, porque el ingreso puede llevar cualquier fecha pasada y el cliente
- * recalcula la propuesta al cambiarla; son pocas filas.
+ * Lo que cada sobre recibió desde "Por asignar" en un mes ("AAAA-MM" de la fecha de la reasignación): un fijo pide su
+ * valor menos esto (criterio 2), y Deudas, su cuota menos esto. Es el neto del mes, con el piso de cero solo al final
+ * (spec 007, criterio 10): lo que vuelve a "Por asignar" con Mover se resta, así que ir y volver, en cualquier orden,
+ * no cambia nada (revisión de la 007, primera y segunda vuelta). Lo que un sobre suelta de más a "Por asignar" (lo que
+ * le sobraba de otros meses) se vuelve a pedir: para soltar un sobrante sin que se reponga, se mueve directo al sobre
+ * que lo necesita. La cuota de Deudas lee esta misma cifra (src/db/deudas.ts). Todos los meses, porque el ingreso
+ * puede llevar cualquier fecha pasada y el cliente recalcula la propuesta al cambiarla; son pocas filas.
  */
 export async function recibidoDesdePorAsignarPorMes(): Promise<Record<string, Record<number, number>>> {
   const desdePorAsignar = sql`${sobreOrigen.tipo}::text = 'por_asignar'`;
@@ -74,7 +74,7 @@ export async function recibidoDesdePorAsignarPorMes(): Promise<Record<string, Re
       mes: sql<string>`to_char(${movimientos.fecha}, 'YYYY-MM')`,
       sobreId: sql<number>`case when ${desdePorAsignar} then ${movimientos.sobreDestinoId} else ${movimientos.sobreOrigenId} end`,
       centavos:
-        sql<number>`case when ${desdePorAsignar} then ${movimientos.montoUsdCentavos} else -${movimientos.montoUsdCentavos} end`.mapWith(
+        sql<number>`greatest(0, sum(case when ${desdePorAsignar} then ${movimientos.montoUsdCentavos} else -${movimientos.montoUsdCentavos} end))::bigint`.mapWith(
           Number,
         ),
     })
@@ -87,14 +87,12 @@ export async function recibidoDesdePorAsignarPorMes(): Promise<Record<string, Re
         sql`(${desdePorAsignar} or ${sobreDestino.tipo}::text = 'por_asignar')`,
       ),
     )
-    .orderBy(movimientos.fecha, movimientos.id);
+    .groupBy(sql`1`, sql`2`);
 
   const porMes: Record<string, Record<number, number>> = {};
   for (const f of filas) {
     if (f.sobreId === null) continue;
-    const delMes = (porMes[f.mes] ??= {});
-    const sobreId = Number(f.sobreId);
-    delMes[sobreId] = Math.max(0, (delMes[sobreId] ?? 0) + f.centavos);
+    porMes[f.mes] = { ...porMes[f.mes], [Number(f.sobreId)]: f.centavos };
   }
   return porMes;
 }

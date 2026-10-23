@@ -32,6 +32,14 @@ export type FilaMover = {
 export type MoverPreparado =
   { estado: "ok"; fila: FilaMover } | { estado: "confirmar" } | { estado: "error"; errores: ErroresMover };
 
+/**
+ * Lo que lleva la confirmación de sacar de Inversión: el origen y el monto que se vieron en el aviso. Si después se
+ * cambia uno de los dos, ya no coincide y se vuelve a pedir (revisión de la 007, segunda vuelta, hallazgo 3).
+ */
+export function confirmacionDeInversion(origenId: string, monto: string): string {
+  return `${origenId}:${monto.trim()}`;
+}
+
 function leerMonto(texto: string, origen: SobreParaMover | undefined): number | string {
   if (texto.trim() === "") return "Escribe el monto";
   try {

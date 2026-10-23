@@ -1,6 +1,6 @@
 /** Spec 007, criterios 7 y 8: mover entre sobres nunca deja el origen en negativo, y desde Inversión pide confirmar. */
 import { describe, expect, it } from "vitest";
-import { type SobreParaMover, prepararMover } from "./mover";
+import { type SobreParaMover, confirmacionDeInversion, prepararMover } from "./mover";
 import { saldosTras } from "./saldos";
 
 const hoy = "2026-10-17";
@@ -66,5 +66,15 @@ describe("prepararMover", () => {
     expect(prepararMover(entrada({ origenId: 6, confirmaInversion: true }), sobres, hoy).estado).toBe("ok");
     // Un error de monto se dice antes que la confirmación: no tiene sentido confirmar algo que no se puede guardar.
     expect(prepararMover(entrada({ origenId: 6, monto: "900" }), sobres, hoy).estado).toBe("error");
+  });
+});
+
+describe("★ 8 · la confirmación vale para ese origen y ese monto (revisión de la 007, segunda vuelta)", () => {
+  it("cambiar el monto, o el origen, después de ver el aviso pide confirmar otra vez", () => {
+    const vista = confirmacionDeInversion("6", "3");
+    expect(confirmacionDeInversion("6", "3")).toBe(vista);
+    expect(confirmacionDeInversion("6", " 3 ")).toBe(vista);
+    expect(confirmacionDeInversion("6", "7")).not.toBe(vista);
+    expect(confirmacionDeInversion("2", "3")).not.toBe(vista);
   });
 });

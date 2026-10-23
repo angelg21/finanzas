@@ -4,6 +4,7 @@ import { CheckCircle2 } from "lucide-react";
 import { useActionState, useState } from "react";
 import { SelectorFecha } from "@/components/calendario";
 import { Boton, Campo, CampoMonto, EnlaceBoton, Entrada, ErrorCampo, SelectorPildoras } from "@/components/formulario";
+import { AvisoPasajero } from "@/components/aviso-pasajero";
 import { Pildora } from "@/components/ui";
 import { avisoDelSobreDeudas } from "@/lib/deudas";
 import { montoPositivo, unidadDe } from "@/lib/dinero";
@@ -15,10 +16,13 @@ export type Guardado = "pago" | "cobro" | "prestamo";
 
 const textoGuardado = { pago: "Pago guardado", cobro: "Cobro guardado", prestamo: "Préstamo guardado" };
 
-/** "Pago guardado", o "Cobro guardado" con la oferta de repartir lo cobrado, que entró a "Por asignar" (criterio 5). */
+/**
+ * "Pago guardado", o "Cobro guardado" con la oferta de repartir lo cobrado, que entró a "Por asignar" (criterio 5). Se
+ * va de la dirección al mostrarse y al enviar otro formulario (revisión de la 007, segunda vuelta, hallazgo 4).
+ */
 export function AvisoGuardado({ guardado }: { guardado: Guardado }) {
   return (
-    <div role="status" className="flex flex-col gap-3">
+    <AvisoPasajero parametros={["guardado"]} className="flex flex-col gap-3">
       <div>
         <Pildora tono="positiva">
           <CheckCircle2 size={13} aria-hidden />
@@ -33,7 +37,7 @@ export function AvisoGuardado({ guardado }: { guardado: Guardado }) {
           </EnlaceBoton>
         </div>
       ) : null}
-    </div>
+    </AvisoPasajero>
   );
 }
 

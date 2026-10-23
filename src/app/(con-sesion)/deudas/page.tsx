@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CheckCircle2, CircleAlert, HandHelping, PiggyBank, Plus } from "lucide-react";
 import { Cifra, EncabezadoTarjeta, Mosaico, Pildora, Tarjeta, TarjetaPalida, TituloPagina } from "@/components/ui";
+import { AvisoPasajero } from "@/components/aviso-pasajero";
 import { saldosPorCuenta } from "@/db/consultas";
 import { deudasConPendiente, sobreDeudas } from "@/db/deudas";
 import { cuotaDelMes } from "@/db/reparto";
@@ -55,10 +56,12 @@ export default async function Deudas({ searchParams }: PageProps<"/deudas">) {
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           {guardado === "apartado" ? (
-            <Pildora tono="positiva">
-              <CheckCircle2 size={13} aria-hidden />
-              Apartado guardado
-            </Pildora>
+            <AvisoPasajero parametros={["guardado"]}>
+              <Pildora tono="positiva">
+                <CheckCircle2 size={13} aria-hidden />
+                Apartado guardado
+              </Pildora>
+            </AvisoPasajero>
           ) : null}
           {deudasActivo ? (
             <>

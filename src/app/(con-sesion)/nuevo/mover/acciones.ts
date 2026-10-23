@@ -10,7 +10,7 @@ import { esIdCaptura, referenciaDeReasignacion, resolverReintento } from "@/lib/
 import { formatearCifra } from "@/lib/dinero";
 import { mensajeDeFalla } from "@/lib/fallas";
 import { hoyEnCaracas } from "@/lib/fechas";
-import { prepararMover } from "@/lib/mover";
+import { confirmacionDeInversion, prepararMover } from "@/lib/mover";
 import { registrarFalla } from "@/app/registro-de-fallas";
 import { leerSesion } from "@/app/sesion";
 import { type ErroresFormularioMover, type EstadoMover, type ValoresMover, tecleadoDe } from "./valores";
@@ -69,8 +69,8 @@ async function procesar(datos: FormData): Promise<Resultado> {
     origenId: valores.origenId ? Number(valores.origenId) : null,
     destinoId: valores.destinoId ? Number(valores.destinoId) : null,
     nota: valores.nota,
-    // La confirmación lleva el id del origen: si se cambió de origen después de confirmar, se vuelve a pedir.
-    confirmaInversion: datos.get("confirmarInversion") === valores.origenId,
+    // La confirmación lleva el origen y el monto del aviso: si se cambió uno de los dos, se vuelve a pedir.
+    confirmaInversion: datos.get("confirmarInversion") === confirmacionDeInversion(valores.origenId, valores.monto),
   };
   const destino = "/sobres?movido=1";
   const otraVez = { ...valores, idCaptura: crypto.randomUUID() };

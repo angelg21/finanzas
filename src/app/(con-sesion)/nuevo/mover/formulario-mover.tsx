@@ -4,6 +4,7 @@ import { CircleAlert } from "lucide-react";
 import { useActionState, useState } from "react";
 import { Boton, Campo, CampoMonto, Entrada, ErrorCampo, SelectorPildoras } from "@/components/formulario";
 import { formatearCifra } from "@/lib/dinero";
+import { confirmacionDeInversion } from "@/lib/mover";
 import { moverConFallas } from "./mover-con-fallas";
 import type { ErroresFormularioMover, EstadoMover, ValoresMover } from "./valores";
 
@@ -86,7 +87,11 @@ function Campos({
         <p role="alert" className="flex items-start gap-2 text-[13px] font-semibold text-negativo">
           <CircleAlert size={16} className="mt-0.5 shrink-0" aria-hidden />
           Inversión es intocable: lo que sale de aquí deja de crecer. ¿Mover igual?
-          <input type="hidden" name="confirmarInversion" value={inversion.id} />
+          <input
+            type="hidden"
+            name="confirmarInversion"
+            value={confirmacionDeInversion(String(inversion.id), valores.monto)}
+          />
         </p>
       ) : null}
       <ErrorCampo>{errores.general}</ErrorCampo>
