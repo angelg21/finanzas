@@ -1,2 +1,2 @@
-- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — "por defecto", key={ronda}, Enter, URL, filtros, 1024 px, extractores "?", escrituras antes de la transacción, contadores de otra feature
-- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, con o sin JS, base caída en 3125, pnpm sin MSYS_NO_PATHCONV, guiones r006/r2/r7 del scratchpad
+- [Dónde se esconden los defectos](feedback_donde-se-esconden-defectos.md) — "por defecto", key={ronda}, Enter, URL, filtros, 1024 px, escrituras antes de la transacción, contadores de otra feature, ida y vuelta en los dos sentidos
+- [Entorno de revisión](reference_entorno-revision-finanzas.md) — psql en finanzas-db, build en 3124, con o sin JS, base caída en 3125, pnpm sin MSYS_NO_PATHCONV, guiones tsx contra src/db desde el scratchpad
