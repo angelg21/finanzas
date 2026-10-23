@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ClipboardList,
   HandCoins,
   History,
   House,
@@ -32,8 +33,14 @@ const rutas: Ruta[] = [
 
 // El "+" y "Registrar movimiento" abren la captura de gasto, lo más frecuente (spec 001, criterio 15).
 // Ingreso tiene su pantalla (spec 004) y Mover sigue en el selector /nuevo; todas cuentan como "Registrar".
-/** En la barra lateral y el menú, después de las principales. */
-const secundarias: Ruta[] = [{ href: "/categorias", texto: "Categorías", Icono: Tags }];
+/**
+ * En la barra lateral y el menú, después de las principales. "Por completar" está siempre a mano: Registrar abre
+ * directo la captura y su aviso solo salía en el inicio (spec 010, criterio 4).
+ */
+const secundarias: Ruta[] = [
+  { href: "/por-completar", texto: "Por completar", Icono: ClipboardList },
+  { href: "/categorias", texto: "Categorías", Icono: Tags },
+];
 
 const registrar: Ruta = { href: "/nuevo/gasto", texto: "Registrar", Icono: Plus };
 const prefijoRegistrar = "/nuevo";
@@ -56,6 +63,7 @@ function tituloDe(ruta: string) {
   if (ruta.startsWith("/nuevo/mover")) return "Mover entre sobres";
   if (ruta.startsWith("/nuevo/por-completar")) return "Anotar por completar";
   if (ruta.startsWith("/por-completar/varios")) return "Completar varios";
+  if (/^\/por-completar\/\d+/.test(ruta)) return "Editar por completar";
   if (ruta.startsWith("/por-completar")) return "Por completar";
   if (/^\/movimientos\/\d+/.test(ruta)) return "Movimiento";
   if (esActiva(registrar.href, ruta)) return registrar.texto;
@@ -228,9 +236,10 @@ export function MenuMovil({ salir }: ConSalir) {
 const formularios = [
   /^\/movimientos\/\d+/,
   /^\/categorias\/(nueva|\d+)/,
-  /^\/deudas\/(nueva|prestar|apartar|\d+\/editar)/,
-  /^\/sobres\/(repartir|reglas)/,
-  /^\/por-completar\/varios/,
+  // El detalle de una deuda (registrar un pago o un cobro) y el de un sobre (el desglose de un fondo) también.
+  /^\/deudas\/(nueva|prestar|apartar|\d+)/,
+  /^\/sobres\/(repartir|reglas|\d+)/,
+  /^\/por-completar\/(varios|\d+)/,
 ];
 
 /**

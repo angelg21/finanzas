@@ -2,7 +2,7 @@
 
 import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { type ReactNode, useActionState, useState } from "react";
 import { SelectorFecha } from "@/components/calendario";
 import { Boton, Campo, CampoMonto, Entrada, ErrorCampo, SelectorPildoras } from "@/components/formulario";
 import { Pildora } from "@/components/ui";
@@ -50,36 +50,44 @@ export function FormularioPorCompletar({ idCaptura, ...datos }: Datos & { idCapt
           </Link>
         </div>
       ) : null}
-      <Campos
+      <CamposPorCompletar
         key={estado.ronda}
         {...datos}
         valores={valores}
         errores={estado.estado === "error" ? estado.errores : {}}
         enviar={enviar}
         pendiente={pendiente}
+        ocultos={<input type="hidden" name="idCaptura" value={valores.idCaptura} />}
+        textoBoton={["Anotar", "Anotando…"]}
       />
     </div>
   );
 }
 
-function Campos({
+/** Los campos de un pendiente, para anotarlo y para corregirlo (spec 010): lo oculto y el botón, de quien los usa. */
+export function CamposPorCompletar({
   categorias,
   hoy,
   valores,
   errores,
   enviar,
   pendiente,
+  ocultos,
+  textoBoton,
 }: Datos & {
   valores: ValoresPorCompletar;
   errores: ErroresFormularioPorCompletar;
   enviar: (datos: FormData) => void;
   pendiente: boolean;
+  ocultos: ReactNode;
+  /** El texto del botón, y el de mientras guarda. */
+  textoBoton: [string, string];
 }) {
   const [fecha, setFecha] = useState(valores.fecha);
   const [moneda, setMoneda] = useState(valores.moneda || "VES");
   return (
     <form action={enviar} className="flex flex-col gap-5">
-      <input type="hidden" name="idCaptura" value={valores.idCaptura} />
+      {ocultos}
       <SelectorPildoras
         etiqueta="Categoría"
         name="categoriaId"
@@ -112,7 +120,7 @@ function Campos({
       />
       <ErrorCampo>{errores.general}</ErrorCampo>
       <Boton type="submit" disabled={pendiente} className="w-full">
-        {pendiente ? "Anotando…" : "Anotar"}
+        {pendiente ? textoBoton[1] : textoBoton[0]}
       </Boton>
     </form>
   );

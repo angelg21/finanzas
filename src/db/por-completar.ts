@@ -56,6 +56,26 @@ export async function porCompletarPorId(id: number) {
   return p ?? null;
 }
 
+/**
+ * Corrige un pendiente (spec 010): lo mismo que se anota, campo por campo; nunca la referencia ni la fecha de
+ * creación. false si ya no estaba (se completó o se descartó en otra pestaña).
+ */
+export async function editarPorCompletar(id: number, fila: FilaPorCompletar) {
+  if (!Number.isSafeInteger(id) || id <= 0 || id > 2_147_483_647) return false;
+  const editadas = await db
+    .update(gastosPorCompletar)
+    .set({
+      fecha: fila.fecha,
+      categoriaId: fila.categoriaId,
+      nota: fila.nota,
+      montoCentavos: fila.montoCentavos,
+      moneda: fila.moneda,
+    })
+    .where(eq(gastosPorCompletar.id, id))
+    .returning({ id: gastosPorCompletar.id });
+  return editadas.length > 0;
+}
+
 /** Descarta un pendiente; false si ya no estaba. */
 export async function descartarPorCompletar(id: number) {
   if (!Number.isSafeInteger(id) || id <= 0 || id > 2_147_483_647) return false;
