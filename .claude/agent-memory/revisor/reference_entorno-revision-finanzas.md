@@ -51,4 +51,8 @@ metadata:
 - `data/respaldos/` tiene respaldos de producción del desarrollador (`AAAA-MM-DD.sql`); el ensayo local (`pnpm exec tsx src/db/respaldo.ts` bajo `con-entorno.mjs`) escribe `-ensayo-local` y nunca pisa. Borrar solo el propio al terminar.
 - El hook de comandos niega un heredoc que contenga `.env`, aunque sea concatenado: guiones que leen el entorno, siempre con Write. Para preguntas sobre el archivo de entorno, imprimir solo booleanos (host local, mismo ref que `SUPABASE_URL`).
 
+- (2026-10-22, 006) Guiones reutilizables en el scratchpad: `r006.mjs` (abrir, poner, radio, clicReal con `scrollIntoView`), `r006-flujo.mjs` (ruta, js|sinjs, json de campos, radios, botón, `enter`), `r006-mirar.mjs` (FormData de cada form y submits en orden), `r006-eval.mjs` (evalúa un .js), `r006-borrar.mjs` (diálogo), `r006-forjar.mjs` (cambia el value de un radio sin JS para forjar ids). Un clic por coordenadas fuera del viewport no hace nada y no avisa: haz `scrollIntoView` antes de medir.
+- Sesión vencida con la pantalla abierta: `Network.clearBrowserCookies` y luego enviar; después `entrar.mjs` para volver a entrar.
+- Categoría archivada sin pantalla: `update categorias set activa=false where id=N` y restaurar al terminar (en la demo, Ropa id 6 tiene un solo gasto, 2649). La demo deja Por asignar en 30,00: ningún ingreso de demo se puede borrar ni bajar más de 30.
+
 Ver [[donde-se-esconden-defectos]].

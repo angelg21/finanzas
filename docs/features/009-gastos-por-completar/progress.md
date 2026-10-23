@@ -50,3 +50,4 @@ Rama: `feat/009-gastos-por-completar`. Spec: `spec.md`.
   - `pnpm humo` con sesión: `/nuevo/por-completar`, `/por-completar`, `/por-completar/varios`, `/nuevo/gasto?pendiente=999999` y `?pendiente=abc` → 200.
   - `scripts/comprobar-003-paginas.ts` exporta `abrirSesion` y le suma `enviar`, para mandar un formulario sin JavaScript.
   - `pnpm verify --forzar`: `Tests  947 passed (947)`, `✓ subida (8.7 s)`, `✓ verify:full en verde en 48.2 s. Árbol sellado.`
+- **Arreglo desde la revisión de la 006 (2026-10-22).** Completar uno ya descartado con una etiqueta nueva dejaba la etiqueta creada. `completarPorCompletar` la crea dentro de su transacción, después de comprobar los pendientes. `comprobar-009`: completar uno descartado o pasar a vendiendo un gasto de la venta compartida, con una etiqueta nueva, no la deja; completar uno vigente la crea en su gasto (34 de 34 con `--url`).

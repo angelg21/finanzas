@@ -39,6 +39,8 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 
 - 002, vuelta 3 (2026-10-22, sobre `main` con 003-009): APTO. Los tres arreglos cierran en Edge (0 escrituras del vigilante en el error global; la regla ve raíz de `src`, carpeta nueva y `.js`; papelera en `rgb(143,29,23)`). Lo que quedó, bajo: (a) la prueba de `conFallas` reconoce las acciones por la forma del import (`{ x } from ".../acciones"`): `import * as acciones` y una ruta fuera de `(con-sesion)` pasan; el autor había dado por "cubierto" ese hallazgo. (b) El token `palida-negativo` se aplicó solo a los dos sitios que nombré; `docs/diseno.md` lo exige para "avisos sobre la tarjeta pálida" y "Queda en negativo" de la captura (escritorio) sigue en 1,43:1. (c) `Entrar` sin red cae en el error global en inglés: la lista de `conFallas` solo mira `(con-sesion)`.
 
+- 006, vuelta 1 (2026-10-22, revisión después de fusionar, sobre `main` con 007-009): NO APTO. El dinero, impecable (comprobar-006 63/63, cuadre en /cuentas tras cada paso, base idéntica al terminar). Lo que falló vivía en la capa de la acción, que `comprobar-006.ts` no toca (arma el plan a mano y llama a `src/db`): la 008 metió `etiquetaDelFormulario` (que crea la etiqueta) antes de la transacción, así que una edición que la transacción rechaza (★ 5 "Por asignar no alcanza", "venta compartida", "no se registró en la app", ya borrado) deja una etiqueta huérfana, permanente (no hay pantalla de etiquetas) y visible en todos los formularios. Bajos: `href="?borrar=1"` relativo borra `?volver=` sin JS; la confirmación en página sin "Cancelar"; categoría archivada obliga a recategorizar para corregir una nota; el "+" flotante tapa "Guardar cambios" en la edición; atrás tras borrar da el 404 de Next en inglés; las filas de pago/cobro (007) dicen ", editar".
+
 **Why:** la demo es toda `origen = importado`, así que la lógica que depende de historial `manual` no se ve. La validación en navegador sigue el camino feliz, en un solo momento, y no pasa por un error de validación ni por el paso del tiempo antes de guardar.
 
 **How to apply:**
@@ -73,5 +75,10 @@ El autor prueba los criterios ★ a fondo (funciones puras, un script contra la 
 - Toda prueba "también las futuras" que reconoce código con expresiones regulares: dale otras formas de importar (`import * as`, reexportar desde otro archivo) y una carpeta fuera de su raíz. Si pasa en verde con un caso inventado, el hallazgo anterior no está cerrado.
 - Tras arreglar los formularios de `(con-sesion)`, mira los de `(sin-sesion)` (Entrar) sin red: fuera de la lista del autor.
 - Tras un `revert` con "se conservan los demás arreglos": cada pieza conservada se diseñó para el contexto que se fue. Mira si su condición sigue teniendo sentido (un handler que antes servía al dato precargado ahora corre siempre) y ejercítala con un toque real, no con `autoFocus`.
+
+- Cuando un ★ dice "no se guarda nada" o "no cambia nada": lista toda escritura que la acción hace ANTES de la transacción que puede rechazar (crear etiqueta, categoría, lo que sea "buscar o crear") y provoca el rechazo con un valor nuevo en ese campo. Mira la tabla de lo creado, no solo los saldos: los scripts del autor comparan saldos y la fila, y llaman a `src/db` saltándose la acción.
+- Revisión de una feature vieja sobre `main`: las features posteriores meten pasos en sus acciones (la 008 en la 006). Lee `git log` de cada `acciones.ts` de la feature desde la fusión.
+- Un `href="?algo=1"` relativo reemplaza toda la consulta: si la pantalla vive de `?volver=`, sigue el camino sin JS hasta el destino final.
+- Una pantalla de edición que reusa el formulario de captura: comprueba que lo que la captura esconde (el "+" flotante, "Nueva") también se esconda, y edita un registro cuyo valor ya no se ofrece (categoría archivada): ¿obliga a cambiarlo para corregir otra cosa?
 
 Ver [[entorno-revision-finanzas]].
