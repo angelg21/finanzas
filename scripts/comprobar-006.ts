@@ -596,7 +596,7 @@ async function main() {
       "ok" in rM3 &&
         !rM3.ok &&
         rM3.error ===
-          "Por asignar tiene 30,00; le faltan 70,00, y lo repartido después solo cubre 0,00: lo demás salió con Mover o con un préstamo. Devuelve 70,00 a Por asignar con Mover y vuelve a intentarlo.",
+          "Por asignar tiene 30,00; le faltan 70,00, y lo repartido después solo cubre 0,00: lo demás ya salió de Por asignar de otra forma (con Mover, con un préstamo, o al bajar o borrar otro ingreso o deshacer otro cobro). Devuelve 70,00 a Por asignar con Mover y vuelve a intentarlo.",
       "error" in rM3 ? rM3.error : "",
     );
     comprobar(

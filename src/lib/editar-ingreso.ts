@@ -57,9 +57,13 @@ type EntradaBorrado = {
 
 const suma = (filas: RepartoGuardado[]) => filas.reduce((a, r) => a + r.montoUsdCentavos, 0);
 
-/** Lo que le falta al sobre destino para borrar el ingreso con su reparto; 0 si lo tiene. */
+/**
+ * Lo que le falta al sobre destino para borrar el ingreso con su reparto; 0 si lo tiene. Nunca más de lo que el
+ * ingreso dejó sin repartir: si el destino ya estaba en negativo, eso no es de este ingreso (guardian-datos).
+ */
 export function faltaParaBorrar(e: EntradaBorrado): number {
-  return Math.max(0, e.montoUsdCentavos - suma(e.reparto) - e.destino.saldoCentavos);
+  const sinRepartir = e.montoUsdCentavos - suma(e.reparto);
+  return Math.max(0, Math.min(sinRepartir, sinRepartir - e.destino.saldoCentavos));
 }
 
 export function planDeBorradoDeIngreso(e: EntradaBorrado): PlanDeBorrado {

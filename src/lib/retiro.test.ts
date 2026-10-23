@@ -3,7 +3,14 @@
  * que se repartió después, del más reciente al más viejo, y lo muestra antes de aplicarlo.
  */
 import { describe, expect, it } from "vitest";
-import { cambiosPorSobre, firmaDeRetiro, juntarPorSobre, noAlcanzaElRetiro, planDeRetiro } from "./retiro";
+import {
+  cambiosPorSobre,
+  firmaDeRetiro,
+  firmaDeVista,
+  juntarPorSobre,
+  noAlcanzaElRetiro,
+  planDeRetiro,
+} from "./retiro";
 
 // Del más reciente al más viejo, como los lee la base.
 const posteriores = [
@@ -52,11 +59,11 @@ describe("planDeRetiro", () => {
 });
 
 describe("noAlcanzaElRetiro", () => {
-  it("dice cuánto falta, cuánto cubre lo repartido y cuánto devolver con Mover", () => {
+  it("dice cuánto falta, cuánto cubre lo repartido y cuánto devolver con Mover, sin culpar a uno solo", () => {
     const plan = planDeRetiro(120_000, posteriores);
     if (plan.alcanza) throw new Error("no debía alcanzar");
     expect(noAlcanzaElRetiro("Por asignar", 2_000, plan)).toBe(
-      "Por asignar tiene 20,00; le faltan 1.200,00, y lo repartido después solo cubre 1.050,00: lo demás salió con Mover o con un préstamo. Devuelve 150,00 a Por asignar con Mover y vuelve a intentarlo.",
+      "Por asignar tiene 20,00; le faltan 1.200,00, y lo repartido después solo cubre 1.050,00: lo demás ya salió de Por asignar de otra forma (con Mover, con un préstamo, o al bajar o borrar otro ingreso o deshacer otro cobro). Devuelve 150,00 a Por asignar con Mover y vuelve a intentarlo.",
     );
   });
 });
@@ -105,5 +112,39 @@ describe("juntarPorSobre y firmaDeRetiro", () => {
     expect(firmaDeRetiro(a.retiros)).toBe(firmaDeRetiro(planDeRetiro(50_000, posteriores).alcanza ? a.retiros : []));
     expect(firmaDeRetiro(a.retiros)).not.toBe(firmaDeRetiro(b.retiros));
     expect(firmaDeRetiro([])).toBe("");
+  });
+});
+
+describe("firmaDeVista: la confirmación vale para esa vista previa, saldos incluidos", () => {
+  const plan = planDeRetiro(50_000, posteriores);
+  if (!plan.alcanza) throw new Error("debía alcanzar");
+  const saldos = [
+    { nombre: "Binance", antes: 500_000, despues: 440_000, moneda: "USDT" },
+    { nombre: "Por asignar", antes: 10_000, despues: 0, moneda: null },
+    { nombre: "Gastos del mes", antes: 41_000, despues: 0, moneda: null },
+  ];
+
+  it("sin retiro no hace falta firma", () => {
+    expect(firmaDeVista([], saldos)).toBe("");
+  });
+
+  it("con retiro cambia si cambia una fila o un saldo que se vio (guardian-datos, hallazgo 2)", () => {
+    const firma = firmaDeVista(plan.retiros, saldos);
+    expect(firma).toBe(
+      firmaDeVista(
+        plan.retiros,
+        saldos.map((x) => ({ ...x })),
+      ),
+    );
+    // Un gasto de 7 en medio: la cuenta y Gastos del mes ya no son los que se vieron.
+    const conGasto = saldos.map((x) => (x.nombre === "Por asignar" ? x : { ...x, antes: x.antes - 700 }));
+    expect(firmaDeVista(plan.retiros, conGasto)).not.toBe(firma);
+    // La misma fila achicada antes por otra vista previa: mismo retiro, otro saldo.
+    const otraVista = saldos.map((x) => (x.nombre === "Gastos del mes" ? { ...x, antes: 11_000 } : x));
+    expect(firmaDeVista(plan.retiros, otraVista)).not.toBe(firma);
+    // Un centavo más que retirar, con los mismos saldos: otra firma.
+    const otro = planDeRetiro(50_001, posteriores);
+    if (!otro.alcanza) throw new Error("debía alcanzar");
+    expect(firmaDeVista(otro.retiros, saldos)).not.toBe(firma);
   });
 });

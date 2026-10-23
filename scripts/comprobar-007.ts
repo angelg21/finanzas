@@ -64,6 +64,7 @@ async function main() {
   const { deudaPorId, sobreDeudas } = await import("../src/db/deudas");
   const { cobrarPrestamo, pagarDeuda, prestar, registrarDeuda } = await import("../src/db/guardar-deudas");
   const { deshacerPagoOCobro, pagoOCobroParaDeshacer } = await import("../src/db/deshacer-pago");
+  const { borrarIngreso } = await import("../src/db/borrar-ingreso");
 
   const movimientosNuestros = like(movimientos.referenciaExterna, `captura-${MARCA}-%`);
   const deudasNuestras = like(deudas.referencia, `captura-${MARCA}-%`);
@@ -198,8 +199,11 @@ async function main() {
     if (!id) throw new Error("El cobro no se registró");
     return id;
   }
-  /** Un ingreso a Por asignar sin reparto, con su captura: así entra dinero para las pruebas. */
-  async function ingreso(centavos: number) {
+  /**
+   * Un ingreso a Por asignar con su captura: así entra dinero para las pruebas. Con `asignaciones`, también su reparto,
+   * con las referencias que les pone /nuevo/ingreso. Devuelve el id del ingreso.
+   */
+  async function ingreso(centavos: number, asignaciones: { sobreId: number; monto: string }[] = []) {
     const captura = idDePrueba();
     const p = prepararIngreso(
       {
@@ -209,7 +213,7 @@ async function main() {
         categoriaId: sueldo.id,
         porAsignarId: porAsignar!.id,
         sobresValidos: validos,
-        asignaciones: [],
+        asignaciones,
       },
       hoy,
       { id: prima!.id, moneda: prima!.moneda },
@@ -217,8 +221,17 @@ async function main() {
     if (!p.ok) throw new Error(`prepararIngreso rechazó: ${JSON.stringify(p.errores)}`);
     await registrarCaptura(
       captura,
-      p.filas.map((f) => ({ ...f, referenciaExterna: referenciaDeCaptura(captura, "ingreso") })),
+      p.filas.map((f) => ({
+        ...f,
+        referenciaExterna:
+          f.tipo === "ingreso"
+            ? referenciaDeCaptura(captura, "ingreso")
+            : referenciaDeReasignacion(captura, f.sobreDestinoId!),
+      })),
     );
+    const id = await idDeReferencia(referenciaDeCaptura(captura, "ingreso"));
+    if (!id) throw new Error("El ingreso no se registró");
+    return id;
   }
   /** La fila de mover, preparada como en /nuevo/mover contra un saldo sin tope: la base es la que vuelve a mirar. */
   /** La reasignación como la prepara Mover; con la referencia de Mover, o con la del reparto para Repartir. */
@@ -378,7 +391,7 @@ async function main() {
     const antesDeNegar = (await estado()).huella;
     const rNo = await deshacerPagoOCobro(cobro3);
     const sinRetiro =
-      "Por asignar tiene 15,00; le faltan 5,00, y lo repartido después solo cubre 0,00: lo demás salió con Mover o con un préstamo. Devuelve 5,00 a Por asignar con Mover y vuelve a intentarlo.";
+      "Por asignar tiene 15,00; le faltan 5,00, y lo repartido después solo cubre 0,00: lo demás ya salió de Por asignar de otra forma (con Mover, con un préstamo, o al bajar o borrar otro ingreso o deshacer otro cobro). Devuelve 5,00 a Por asignar con Mover y vuelve a intentarlo.";
     const visto3 = await pagoOCobroParaDeshacer(cobro3);
     comprobar(
       "11",
@@ -387,6 +400,64 @@ async function main() {
       "error" in rNo ? rNo.error : "",
     );
     comprobar("11", "y el cobro sigue ahí, sin cambios", visto3 !== null && (await estado()).huella === antesDeNegar);
+
+    // Guardian, hallazgo 1: el reparto propio de otro ingreso es de su dinero; se retira el Repartir que usó el del cobro
+    const p6 = await prestamo("50");
+    await sobreEn(porAsignar.id, 0);
+    const cobro4 = await cobrar(p6, "10");
+    await repartir(1000, planes.id);
+    const sueldoB = await ingreso(4500, [{ sobreId: gastosDelMes.id, monto: "45" }]);
+    const previa4 = (await pagoOCobroParaDeshacer(cobro4))?.previa;
+    comprobar(
+      "11",
+      "deshacer un cobro retira el Repartir de después, no el reparto propio del ingreso que llegó luego",
+      previa4?.retirado.length === 1 && previa4.retirado[0].sobreId === planes.id,
+      JSON.stringify(previa4?.retirado),
+    );
+    const r4 = await deshacerPagoOCobro(cobro4, previa4?.firma ?? "");
+    const rB = await borrarIngreso(sueldoB);
+    comprobar(
+      "11",
+      "y ese ingreso se sigue borrando entero con su reparto, sin retiro ni mensaje de Mover",
+      "ok" in r4 && r4.ok && "ok" in rB && rB.ok && enSobre(await estado(), porAsignar.id) === 0,
+      "error" in rB ? rB.error : "",
+    );
+    await cuadra("tras deshacer un cobro con un ingreso repartido después");
+
+    // Guardian, hallazgo 2: un Mover desde el sobre del que se retira, entre la vista previa y la confirmación
+    const cobro5 = await cobrar(p6, "10");
+    await repartir(1000, planes.id);
+    const previa5 = (await pagoOCobroParaDeshacer(cobro5))?.previa;
+    await mover(planes.id, gastosDelMes.id, 100);
+    const antesDeR5 = (await estado()).huella;
+    const r5 = await deshacerPagoOCobro(cobro5, previa5?.firma ?? "");
+    comprobar(
+      "11",
+      "si un saldo que mostraba la vista previa cambió, no se aplica aunque el retiro sea el mismo",
+      "cambio" in r5 && (await estado()).huella === antesDeR5,
+    );
+    const r5b = await deshacerPagoOCobro(cobro5, (await pagoOCobroParaDeshacer(cobro5))?.previa?.firma ?? "");
+    comprobar("11", "con la vista previa de ahora, sí", "ok" in r5b && r5b.ok);
+    // Y a la vez: el retiro toma el candado del sobre, así que un Mover desde él lee el saldo ya con el retiro.
+    const ocasiones = inicial.sobres.find((s) => s.nombre === "Ocasiones");
+    if (!ocasiones) throw new Error("Falta el sobre Ocasiones: corre pnpm db:seed");
+    let malCandado = 0;
+    for (let ronda = 0; ronda < 4; ronda++) {
+      await sobreEn(ocasiones.id, 0);
+      await sobreEn(porAsignar.id, 0);
+      const c = await cobrar(p6, "10");
+      await repartir(1000, ocasiones.id);
+      const firma = (await pagoOCobroParaDeshacer(c))?.previa?.firma ?? "";
+      const [rD, rM] = await Promise.all([deshacerPagoOCobro(c, firma), mover(ocasiones.id, gastosDelMes.id, 1000)]);
+      if (ganoUno(rD) === ganoUno(rM) || enSobre(await estado(), ocasiones.id) < 0) malCandado++;
+    }
+    comprobar(
+      "11",
+      "cuatro carreras de deshacer con retiro contra Mover desde el sobre retirado: gana uno y nunca queda en negativo",
+      malCandado === 0,
+      `${malCandado} mal`,
+    );
+    await cuadra("tras las carreras del retiro");
 
     // ★ 3 · pagada o cobrada vuelve a abierta
     const d2 = await deuda("100");

@@ -64,7 +64,7 @@ async function main() {
   exigirBaseLocal(process.env.DATABASE_URL, "comprobar-005");
   const { db, deudas, movimientos } = await import("../src/db/index");
   const { saldosPorCuenta, saldosPorSobre } = await import("../src/db/consultas");
-  const { deudaPorId, sobreDeudas } = await import("../src/db/deudas");
+  const { deudaPorId, deudasConPendiente, sobreDeudas } = await import("../src/db/deudas");
   const { cuotaDelMes, datosDelReparto } = await import("../src/db/reparto");
   const { apartarADeudas, borrarDeuda, cobrarPrestamo, editarDeuda, pagarDeuda, prestar, registrarDeuda } =
     await import("../src/db/guardar-deudas");
@@ -421,6 +421,11 @@ async function main() {
     const cuota = await cuotaDelMes();
     const reparto = await datosDelReparto();
     const [primera, ...resto] = reparto.reglas;
+    // La pista lleva el vencimiento más cercano de lo que debo: el de hoy, o uno anterior de la demo que ya venció.
+    const masCercano =
+      (await deudasConPendiente())
+        .flatMap((d) => (d.sentido === "debo" && d.pendienteCentavos > 0 && d.fechaPrevista ? [d.fechaPrevista] : []))
+        .sort()[0] ?? null;
     comprobar(
       "12",
       "la regla de Deudas va primero, fija, con la cuota del mes y su pista",
@@ -429,7 +434,9 @@ async function main() {
         primera?.sobreId === deudasSobre.id &&
         primera.tipo === "fijo" &&
         primera.valor === cuota.cuotaCentavos &&
-        primera.cuota?.vencimiento === hoy &&
+        masCercano !== null &&
+        masCercano <= hoy &&
+        primera.cuota?.vencimiento === masCercano &&
         resto.every((r) => r.orden > primera.orden),
       `cuota ${cuota?.cuotaCentavos}`,
     );

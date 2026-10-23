@@ -3,9 +3,10 @@ import { formatearCifra } from "./dinero";
 /**
  * Retirar lo repartido (spec 007, criterio 11, decidido por el desarrollador). Deshacer un cobro o borrar un ingreso
  * saca dinero de "Por asignar"; si ya se repartió, lo que falta se retira de lo que se repartió después desde "Por
- * asignar" (Repartir, el reparto de un ingreso posterior y Apartar), del más reciente al más viejo: los que caben
- * enteros se borran y el último se achica. Lo retirado cuenta como reparto deshecho, así el reparto siguiente lo
- * vuelve a pedir. La pantalla lo muestra antes y solo se aplica al confirmar esa misma vista previa (la firma).
+ * asignar" con Repartir y Apartar, del más reciente al más viejo: los que caben enteros se borran y el último se
+ * achica. Nunca Mover, ni el reparto propio de otro ingreso, que nunca pasa de su monto: es de su propio dinero, no
+ * del que se deshace (guardian-datos, hallazgo 1). Lo retirado cuenta como reparto deshecho, así el reparto siguiente
+ * lo vuelve a pedir. La pantalla lo muestra antes y solo se aplica al confirmar esa misma vista previa (la firma).
  */
 
 /** Una reasignación desde "Por asignar" que es reparto, posterior a lo que se deshace, con su monto en centavos. */
@@ -15,7 +16,7 @@ export type Retiro = { id: number; sobreId: number; nombre: string; centavos: nu
 
 export type PlanDeRetiro =
   | { alcanza: true; retiros: Retiro[] }
-  /** Lo repartido después no cubre lo que falta: el resto salió de "Por asignar" de otra forma (Mover, un préstamo). */
+  /** Lo repartido después no cubre lo que falta: el resto salió de "Por asignar" de otra forma. */
   | { alcanza: false; faltan: number; alcanzaHasta: number };
 
 /** `posteriores`, del más reciente al más viejo. */
@@ -34,8 +35,9 @@ export function planDeRetiro(faltan: number, posteriores: RepartoPosterior[]): P
 }
 
 /**
- * Por qué no se puede ni retirando lo repartido: lo que falta salió de "Por asignar" con Mover o con un préstamo, que
- * no son reparto. Dice cuánto devolver con Mover para que alcance.
+ * Por qué no se puede ni retirando lo repartido: lo que falta salió de "Por asignar" de una forma que no es reparto.
+ * No dice cuál, porque no lo sabe: Mover, un préstamo, o bajar o borrar otro ingreso, o deshacer otro cobro. Dice
+ * cuánto devolver con Mover para que alcance.
  */
 export function noAlcanzaElRetiro(
   nombre: string,
@@ -43,7 +45,7 @@ export function noAlcanzaElRetiro(
   plan: { faltan: number; alcanzaHasta: number },
 ) {
   const loDemas = formatearCifra(plan.faltan - plan.alcanzaHasta);
-  return `${nombre} tiene ${formatearCifra(saldoCentavos)}; le faltan ${formatearCifra(plan.faltan)}, y lo repartido después solo cubre ${formatearCifra(plan.alcanzaHasta)}: lo demás salió con Mover o con un préstamo. Devuelve ${loDemas} a ${nombre} con Mover y vuelve a intentarlo.`;
+  return `${nombre} tiene ${formatearCifra(saldoCentavos)}; le faltan ${formatearCifra(plan.faltan)}, y lo repartido después solo cubre ${formatearCifra(plan.alcanzaHasta)}: lo demás ya salió de ${nombre} de otra forma (con Mover, con un préstamo, o al bajar o borrar otro ingreso o deshacer otro cobro). Devuelve ${loDemas} a ${nombre} con Mover y vuelve a intentarlo.`;
 }
 
 /** Lo que cambia en un sobre, en centavos con signo. */
@@ -86,7 +88,16 @@ export type SaldoQueQueda = { nombre: string; antes: number; despues: number; mo
  */
 export type VistaPrevia = { firma: string; retirado: Cambio[]; saldos: SaldoQueQueda[] };
 
-/** Lo que identifica una vista previa: qué filas y cuánto de cada una. Si cambia, hay que volver a mostrarla. */
+/** Qué filas y cuánto de cada una. */
 export function firmaDeRetiro(retiros: Retiro[]): string {
   return retiros.map((r) => `${r.id}:${r.centavos}`).join(",");
+}
+
+/**
+ * Lo que identifica una vista previa con retiro: qué filas, cuánto de cada una y los saldos que se vieron antes. Si
+ * algo de eso cambia, hay que volver a mostrarla (guardian-datos, hallazgo 2). Sin retiro no hace falta firma: "".
+ */
+export function firmaDeVista(retiros: Retiro[], saldos: SaldoQueQueda[]): string {
+  if (retiros.length === 0) return "";
+  return `${firmaDeRetiro(retiros)}|${saldos.map((s) => s.antes).join(",")}`;
 }

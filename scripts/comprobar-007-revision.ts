@@ -531,8 +531,9 @@ async function main() {
         comprobar(
           "11",
           'si lo que falta salió con Mover, lo dice antes, con cuánto devolver, y no ofrece "Sí, deshacer"',
-          sinRetiro.includes("lo demás salió con Mover o con un préstamo. Devuelve 5,00 a Por asignar con Mover") &&
-            !sinRetiro.includes("Sí, deshacer"),
+          sinRetiro.includes(
+            "lo demás ya salió de Por asignar de otra forma (con Mover, con un préstamo, o al bajar o borrar otro ingreso o deshacer otro cobro). Devuelve 5,00 a Por asignar con Mover",
+          ) && !sinRetiro.includes("Sí, deshacer"),
         );
       } finally {
         await sesion.salir();
