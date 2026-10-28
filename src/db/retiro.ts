@@ -27,9 +27,11 @@ import { efectoEnCuenta, efectoEnSobre } from "./sumas-de-saldo";
 const deUnaCaptura = /^(captura-.+)-reasignacion-\d+$/;
 
 /**
- * Las filas que mueven dinero de "Por asignar", en orden de id, con su clase. Una salida es reparto (se puede retirar)
- * si es una reasignación que no es Mover ni el reparto propio de un ingreso (la reasignación cuya captura tiene un
- * ingreso), a un sobre activo y con su monto igual a su monto en dólares (guardian-datos, hallazgos 1 y 3).
+ * Las filas que mueven dinero de "Por asignar", en orden de id, con su clase (src/lib/retiro.ts) y el otro sobre. Una
+ * entrada es un lote si es un cobro o un ingreso; lo que entra con Mover desde un sobre es una vuelta. Una salida es
+ * reparto si es una reasignación que no es Mover ni el reparto propio de un ingreso (la reasignación cuya captura
+ * tiene un ingreso), a un sobre activo y con su monto igual a su monto en dólares (guardian-datos, hallazgos 1 y 3);
+ * un préstamo es un préstamo; lo demás, otra.
  */
 export async function movimientosDePorAsignar(
   ejecutor: Ejecutor,
@@ -43,12 +45,19 @@ export async function movimientosDePorAsignar(
       montoCentavos: movimientos.montoCentavos,
       montoUsdCentavos: movimientos.montoUsdCentavos,
       referencia: movimientos.referenciaExterna,
-      sobreId: movimientos.sobreDestinoId,
+      sobreId: sobres.id,
       nombre: sobres.nombre,
       activo: sobres.activo,
     })
     .from(movimientos)
-    .leftJoin(sobres, eq(sobres.id, movimientos.sobreDestinoId))
+    // El otro sobre: adónde sale, o de dónde vuelve lo que entra.
+    .leftJoin(
+      sobres,
+      eq(
+        sobres.id,
+        sql`coalesce(nullif(${movimientos.sobreDestinoId}, ${porAsignarId}), ${movimientos.sobreOrigenId})`,
+      ),
+    )
     .where(or(eq(movimientos.sobreOrigenId, porAsignarId), eq(movimientos.sobreDestinoId, porAsignarId)))
     .orderBy(movimientos.id);
   const ingresos = new Map<string, number>();
@@ -60,9 +69,10 @@ export async function movimientosDePorAsignar(
         {
           id: f.id,
           centavos: f.centavos,
-          clase: "entrada",
-          sobreId: null,
-          nombre: null,
+          // Un cobro o un ingreso es un lote que se deshace; lo demás que entra (Mover hacia Por asignar) es una vuelta.
+          clase: f.tipo === "ingreso" || f.tipo === "cobro_prestamo" ? "entrada" : "vuelta",
+          sobreId: f.tipo === "ingreso" || f.tipo === "cobro_prestamo" ? null : f.sobreId,
+          nombre: f.tipo === "ingreso" || f.tipo === "cobro_prestamo" ? null : f.nombre,
           ingresoId: null,
         },
       ];
@@ -70,7 +80,7 @@ export async function movimientosDePorAsignar(
     const referencia = f.referencia ?? "";
     const captura = deUnaCaptura.exec(referencia)?.[1];
     const ingresoId = captura ? (ingresos.get(`${captura}-ingreso`) ?? null) : null;
-    let clase: Clase = "otra";
+    let clase: Clase = f.tipo === "prestamo" ? "prestamo" : "otra";
     if (f.tipo === "reasignacion") {
       if (referencia.includes(marcaDeMover)) clase = "mover";
       else if (ingresoId !== null) clase = "propio";
@@ -102,7 +112,7 @@ export async function planDeRetiroDesde(
   const saldo = await saldoDeSobre(ejecutor, lote.sobreId);
   const [destino] = await ejecutor.select({ tipo: sobres.tipo }).from(sobres).where(eq(sobres.id, lote.sobreId));
   if (destino?.tipo !== "por_asignar") return { plan: { alcanza: true, retiros: [] }, saldo };
-  const plan = planDeRetiro(await movimientosDePorAsignar(ejecutor, lote.sobreId), lote.id, saldo);
+  const plan = planDeRetiro(await movimientosDePorAsignar(ejecutor, lote.sobreId), lote.id);
   if (bloquear && plan.alcanza && plan.retiros.length > 0) {
     const ids = plan.retiros.map((r) => r.id);
     await ejecutor.select({ id: movimientos.id }).from(movimientos).where(inArray(movimientos.id, ids)).for("update");

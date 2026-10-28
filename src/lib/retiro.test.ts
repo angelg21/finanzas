@@ -1,7 +1,8 @@
 /**
- * Spec 007, criterio 11: deshacer un cobro o borrar un ingreso ya repartidos quita su lote de "Por asignar" con lo que
- * se repartió con ese dinero, primero en entrar, primero en salir, y lo muestra antes de aplicarlo. Deshacer dos, en
- * cualquier orden, deja lo mismo (sexta revisión, hallazgo 1).
+ * Spec 007, criterio 11: deshacer un cobro o borrar un ingreso quita su lote de "Por asignar" con todo lo que se hizo
+ * con ese dinero (lo repartido y lo movido), primero en entrar, primero en salir, y lo muestra antes de aplicarlo. Lo
+ * prestado no se retira: entonces no se deshace. Deshacer dos, en cualquier orden, deja lo mismo (sexta revisión,
+ * hallazgo 1; guardian-datos, 2026-10-23).
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -23,13 +24,29 @@ const entrada = (id: number, centavos: number): MovimientoDePorAsignar => ({
   nombre: null,
   ingresoId: null,
 });
+/** Un Mover desde un sobre hacia Por asignar. */
+const vuelta = (id: number, centavos: number, sobreId = 3, nombre = "Familia"): MovimientoDePorAsignar => ({
+  id,
+  centavos,
+  clase: "vuelta",
+  sobreId,
+  nombre,
+  ingresoId: null,
+});
 const salida = (
   id: number,
   centavos: number,
-  clase: "reparto" | "mover" | "otra",
+  clase: "reparto" | "mover" | "prestamo" | "otra",
   sobreId: number | null = 2,
   nombre: string | null = "Gastos del mes",
-): MovimientoDePorAsignar => ({ id, centavos: -centavos, clase, sobreId, nombre, ingresoId: null });
+): MovimientoDePorAsignar => ({
+  id,
+  centavos: -centavos,
+  clase,
+  sobreId,
+  nombre,
+  ingresoId: null,
+});
 const propio = (id: number, centavos: number, ingresoId: number, sobreId = 3, nombre = "Familia") => ({
   id,
   centavos: -centavos,
@@ -41,8 +58,8 @@ const propio = (id: number, centavos: number, ingresoId: number, sobreId = 3, no
 const saldo = (m: MovimientoDePorAsignar[]) => m.reduce((a, x) => a + x.centavos, 0);
 /** Aplica un plan como lo haría la base: quita el lote, su reparto propio, y borra o achica lo retirado. */
 function aplicar(m: MovimientoDePorAsignar[], loteId: number): MovimientoDePorAsignar[] {
-  const plan = planDeRetiro(m, loteId, saldo(m));
-  if (!plan.alcanza) throw new Error("no alcanza");
+  const plan = planDeRetiro(m, loteId);
+  if (!plan.alcanza) throw new Error(noAlcanzaElRetiro(plan));
   return m.flatMap((x) => {
     if (x.id === loteId || x.ingresoId === loteId) return [];
     const r = plan.retiros.find((y) => y.id === x.id);
@@ -50,6 +67,13 @@ function aplicar(m: MovimientoDePorAsignar[], loteId: number): MovimientoDePorAs
     return r.borra ? [] : [{ ...x, centavos: x.centavos + r.centavos }];
   });
 }
+const retiro = (id: number, centavos: number, borra = true, sobreId = 2, nombre = "Gastos del mes") => ({
+  id,
+  sobreId,
+  nombre,
+  centavos,
+  borra,
+});
 
 describe("cuentaDeLotes: primero en entrar, primero en salir", () => {
   it("cada salida gasta de los lotes más viejos; el reparto propio, de su ingreso", () => {
@@ -63,47 +87,60 @@ describe("cuentaDeLotes: primero en entrar, primero en salir", () => {
       [2, 4, 2_000],
     ]);
   });
+
+  it("un Mover de vuelta desde un sobre paga lo que fue antes con Mover a ese sobre; a otro sobre, no", () => {
+    const m = [
+      entrada(1, 10_000),
+      salida(2, 3_000, "mover", 3, "Familia"),
+      salida(3, 2_000, "mover", 4, "Planes"),
+      vuelta(4, 4_000, 3, "Familia"),
+    ];
+    const c = cuentaDeLotes(m);
+    // La vuelta de Familia paga los 30 que fueron a Familia; le quedan 10 libres. Lo de Planes sale del lote 1.
+    expect(c.gastos.map((g) => [g.lote, g.salida.id, g.centavos])).toEqual([
+      [4, 2, 3_000],
+      [1, 3, 2_000],
+    ]);
+    expect(c.restante(1) + c.restante(4)).toBe(saldo(m));
+  });
 });
 
 describe("planDeRetiro", () => {
-  it("un cobro sin repartir: nada que retirar", () => {
-    const m = [entrada(1, 10_000)];
-    expect(planDeRetiro(m, 1, saldo(m))).toEqual({ alcanza: true, retiros: [] });
+  it("un cobro sin usar: nada que retirar", () => {
+    expect(planDeRetiro([entrada(1, 10_000)], 1)).toEqual({
+      alcanza: true,
+      retiros: [],
+    });
   });
 
   it("un cobro repartido: se retira el reparto que se hizo con su dinero, aunque Por asignar tenga otro", () => {
-    // Cobro de 100 y Repartir de 100; luego un sueldo de 100 sin repartir. El sueldo no paga el cobro.
     const m = [entrada(1, 10_000), salida(2, 10_000, "reparto"), entrada(3, 10_000)];
-    expect(planDeRetiro(m, 1, saldo(m))).toEqual({
+    expect(planDeRetiro(m, 1)).toEqual({
       alcanza: true,
-      retiros: [{ id: 2, sobreId: 2, nombre: "Gastos del mes", centavos: 10_000, borra: true }],
+      retiros: [retiro(2, 10_000)],
     });
   });
 
   it("un reparto que gastó de dos lotes se achica solo en lo de este", () => {
     const m = [entrada(1, 3_000), entrada(2, 20_000), salida(3, 20_000, "reparto")];
-    expect(planDeRetiro(m, 2, saldo(m))).toEqual({
+    expect(planDeRetiro(m, 2)).toEqual({
       alcanza: true,
-      retiros: [{ id: 3, sobreId: 2, nombre: "Gastos del mes", centavos: 17_000, borra: false }],
+      retiros: [retiro(3, 17_000, false)],
     });
   });
 
-  it("★ dos cobros repartidos, deshechos en el orden de registro o al revés, dejan lo mismo (sexta revisión)", () => {
-    const m = [
-      entrada(1, 100_000),
-      salida(2, 59_000, "reparto", 9, "Deudas"),
-      salida(3, 41_000, "reparto"),
-      entrada(4, 100_000),
-      salida(5, 4_000, "reparto"),
-      salida(6, 96_000, "reparto", 7, "Emergencia"),
-    ];
-    const enOrden = aplicar(aplicar(m, 1), 4);
-    const alReves = aplicar(aplicar(m, 4), 1);
-    expect(enOrden).toEqual([]);
-    expect(alReves).toEqual([]);
-    // El primero solo se lleva lo suyo: el reparto del segundo sigue entero.
-    const trasElPrimero = aplicar(m, 1);
-    expect(trasElPrimero.map((x) => x.id)).toEqual([4, 5, 6]);
+  it("lo movido con su dinero también se retira: vuelve del sobre adonde fue", () => {
+    const m = [entrada(1, 10_000), salida(2, 2_000, "mover", 3, "Familia"), salida(3, 8_000, "reparto")];
+    expect(planDeRetiro(m, 1)).toEqual({
+      alcanza: true,
+      retiros: [retiro(2, 2_000, true, 3, "Familia"), retiro(3, 8_000)],
+    });
+  });
+
+  it("si lo movido ya volvió con Mover, no hay nada que retirar de ahí: ir y volver no deja nada", () => {
+    const m = [entrada(1, 2_000), salida(2, 500, "mover", 3, "Familia"), vuelta(3, 500, 3, "Familia")];
+    expect(planDeRetiro(m, 1)).toEqual({ alcanza: true, retiros: [] });
+    expect(saldo(aplicar(m, 1))).toBe(0);
   });
 
   it("el reparto propio de otro ingreso no se retira: es de su dinero", () => {
@@ -113,78 +150,104 @@ describe("planDeRetiro", () => {
       entrada(3, 45_000),
       propio(4, 45_000, 3),
     ];
-    const plan = planDeRetiro(m, 1, saldo(m));
-    expect(plan).toEqual({
+    expect(planDeRetiro(m, 1)).toEqual({
       alcanza: true,
-      retiros: [{ id: 2, sobreId: 3, nombre: "Familia", centavos: 10_000, borra: true }],
+      retiros: [retiro(2, 10_000, true, 3, "Familia")],
     });
     expect(aplicar(aplicar(m, 1), 3)).toEqual([]);
   });
 
-  it("lo que salió con Mover lo cubre lo libre de Por asignar; si no hay, no se puede y dice adónde fue", () => {
-    const m = [entrada(1, 10_000), salida(2, 10_000, "mover", 3, "Familia")];
-    const plan = planDeRetiro(m, 1, saldo(m));
+  it("lo prestado no se retira: no se deshace, y dice por qué", () => {
+    const m = [entrada(1, 10_000), salida(2, 3_000, "prestamo", null, null), salida(3, 7_000, "reparto")];
+    const plan = planDeRetiro(m, 1);
     expect(plan).toEqual({
       alcanza: false,
-      faltan: 10_000,
-      salidas: [{ clase: "mover", nombre: "Familia", centavos: 10_000 }],
+      salidas: [{ clase: "prestamo", centavos: 3_000 }],
     });
     if (plan.alcanza) throw new Error("no debía alcanzar");
-    expect(noAlcanzaElRetiro("Por asignar", plan)).toBe(
-      "De este dinero salieron 100,00 con Mover a Familia, y Por asignar no tiene con qué cubrirlo: faltan 100,00. Devuelve 100,00 a Por asignar con Mover desde Familia y vuelve a intentarlo.",
-    );
-    // Devolverlo con Mover deja dinero libre, y entonces sí: Mover no contó en ninguno de los dos sentidos.
-    const devuelto = [...m, entrada(3, 10_000)];
-    expect(planDeRetiro(devuelto, 1, saldo(devuelto))).toEqual({ alcanza: true, retiros: [] });
-  });
-
-  it("lo que salió con un préstamo se dice como otra forma", () => {
-    const m = [entrada(1, 10_000), salida(2, 3_000, "otra", null, null), salida(3, 7_000, "reparto")];
-    const plan = planDeRetiro(m, 1, saldo(m));
-    if (plan.alcanza) throw new Error("no debía alcanzar");
-    expect(noAlcanzaElRetiro("Por asignar", plan)).toBe(
-      "De este dinero salieron 30,00 de otra forma (un préstamo, o al bajar otro ingreso), y Por asignar no tiene con qué cubrirlo: faltan 30,00. Devuelve 30,00 a Por asignar con Mover y vuelve a intentarlo.",
+    expect(noAlcanzaElRetiro(plan)).toBe(
+      "De este dinero, 30,00 se prestaron. Eso no se puede retirar, así que no se deshace.",
     );
   });
 
-  it("lo que salió sin lote lo tapa la entrada siguiente, que ya no queda libre", () => {
-    // Por asignar en −50; un cobro de 20 tapa 20 del hueco y un reparto de 20 sale sin lote.
-    const m = [salida(1, 5_000, "otra", null, null), entrada(2, 2_000), salida(3, 2_000, "reparto")];
-    const c = cuentaDeLotes(m);
-    expect(c.restante(2)).toBe(0);
-    expect(c.gastos.map((g) => [g.lote, g.salida.id, g.centavos])).toEqual([[2, 1, 2_000]]);
-    // Deshacer ese cobro abriría otra vez el hueco: no hay nada libre que lo cubra.
-    expect(planDeRetiro(m, 2, saldo(m))).toEqual({
-      alcanza: false,
-      faltan: 2_000,
-      salidas: [{ clase: "otra", nombre: null, centavos: 2_000 }],
-    });
-  });
-
-  it("un Mover que sale, se deshace su lote y vuelve: la vuelta tapa el hueco y no queda dinero fantasma", () => {
-    // Cobro de 20, Mover 5 a Familia y Mover 5 de vuelta: se deshace el cobro con lo libre que dejó la vuelta.
-    const m = [entrada(1, 2_000), salida(2, 500, "mover", 3, "Familia"), entrada(3, 500)];
-    const sinElCobro = aplicar(m, 1);
-    expect(saldo(sinElCobro)).toBe(0);
-    // Luego otro cobro y su Repartir: es todo de él; la vuelta ya tapó lo que salió con Mover.
-    const despues = [...sinElCobro, entrada(4, 1_000), salida(5, 1_000, "reparto", 3, "Familia")];
-    expect(cuentaDeLotes(despues).restante(3)).toBe(0);
-    expect(planDeRetiro(despues, 4, saldo(despues))).toEqual({
-      alcanza: true,
-      retiros: [{ id: 5, sobreId: 3, nombre: "Familia", centavos: 1_000, borra: true }],
-    });
+  it("lo que usa el reparto de un ingreso que se bajó tampoco", () => {
+    // Un ingreso de 10 con 40 repartidos (bajado después): los 30 de más salen del cobro anterior.
+    const m = [entrada(1, 3_000), entrada(2, 1_000), propio(3, 4_000, 2)];
+    const plan = planDeRetiro(m, 1);
+    if (plan.alcanza) throw new Error("no debía alcanzar");
+    expect(noAlcanzaElRetiro(plan)).toBe(
+      "De este dinero, 30,00 los usa el reparto de un ingreso que bajaste. Eso no se puede retirar, así que no se deshace.",
+    );
   });
 
   it("lo retirado nunca pasa de lo que el lote gastó", () => {
     for (const reparto of [1, 4_099, 10_000, 15_000]) {
       const m = [entrada(1, 10_000), entrada(2, 5_000), salida(3, reparto, "reparto")];
-      const plan = planDeRetiro(m, 1, saldo(m));
+      const plan = planDeRetiro(m, 1);
       if (!plan.alcanza) throw new Error("debía alcanzar");
       expect(plan.retiros.reduce((a, r) => a + r.centavos, 0)).toBe(Math.min(reparto, 10_000));
     }
   });
 });
 
+describe("★ dos deshacer, en el orden de registro o al revés, dejan lo mismo", () => {
+  const ambos = (m: MovimientoDePorAsignar[], x: number, y: number) => {
+    expect(aplicar(aplicar(m, x), y)).toEqual(aplicar(aplicar(m, y), x));
+    return aplicar(aplicar(m, x), y);
+  };
+
+  it("dos cobros repartidos (sexta revisión): los repartos de los dos se retiran enteros", () => {
+    const m = [
+      entrada(1, 100_000),
+      salida(2, 59_000, "reparto", 9, "Deudas"),
+      salida(3, 41_000, "reparto"),
+      entrada(4, 100_000),
+      salida(5, 4_000, "reparto"),
+      salida(6, 96_000, "reparto", 7, "Emergencia"),
+    ];
+    expect(ambos(m, 1, 4)).toEqual([]);
+    // El primero solo se lleva lo suyo: el reparto del segundo sigue entero.
+    expect(aplicar(m, 1).map((x) => x.id)).toEqual([4, 5, 6]);
+  });
+
+  it("con un Mover desde Por asignar en medio (guardian-datos, N1)", () => {
+    const m = [
+      entrada(1, 4_000),
+      entrada(2, 8_000),
+      salida(3, 2_000, "mover", 3, "Familia"),
+      salida(4, 10_000, "reparto"),
+      entrada(5, 4_000),
+    ];
+    // El Mover y el Repartir se hicieron con A y B: se retiran enteros; queda el ingreso.
+    expect(ambos(m, 1, 2).map((x) => x.id)).toEqual([5]);
+  });
+
+  it("con un préstamo de un lote que no se deshace en medio (N2)", () => {
+    const m = [
+      entrada(1, 4_000),
+      salida(2, 3_000, "prestamo", null, null),
+      entrada(3, 8_000),
+      salida(4, 9_000, "reparto"),
+      entrada(5, 4_000),
+    ];
+    // El préstamo es del lote 1: ese no se deshace, en ningún orden. El 3 y el 5 sí, y en cualquier orden.
+    expect(planDeRetiro(m, 1).alcanza).toBe(false);
+    expect(planDeRetiro(aplicar(m, 3), 1).alcanza).toBe(false);
+    ambos(m, 3, 5);
+  });
+
+  it("con lo movido devuelto antes de deshacer, en los dos órdenes (guardian-datos, el consejo)", () => {
+    // Cobro A 100, Mover 100 a Familia, cobro B 100, Repartir 100 a Gastos, y los 100 vuelven de Familia.
+    const m = [
+      entrada(1, 10_000),
+      salida(2, 10_000, "mover", 3, "Familia"),
+      entrada(3, 10_000),
+      salida(4, 10_000, "reparto"),
+      vuelta(5, 10_000, 3, "Familia"),
+    ];
+    expect(ambos(m, 1, 3).map((x) => x.id)).toEqual([2, 5]);
+  });
+});
 describe("cambiosPorSobre: cómo queda cada sobre", () => {
   const porAsignar = { sobreId: 1, nombre: "Por asignar" };
   const retiros = [

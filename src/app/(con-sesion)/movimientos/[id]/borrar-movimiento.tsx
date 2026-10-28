@@ -19,7 +19,7 @@ type Datos = {
   avisos: string[];
   /** Por qué no se puede borrar ("Por asignar tiene 30,00; le faltan 770,00"): entonces no se ofrece. */
   impedido?: string;
-  /** Cómo queda todo, y lo que se retira de lo repartido con ese dinero (spec 007, criterio 11); su firma va con la confirmación. */
+  /** Cómo queda todo, y lo que se retira de lo repartido o movido con ese dinero (spec 007, criterio 11); su firma va con la confirmación. */
   previa?: VistaPrevia;
 };
 
@@ -84,7 +84,7 @@ export function ConfirmarBorrado({
 }
 
 /**
- * Lo que se retira de lo repartido con ese dinero, si hace falta, y cada saldo que cambia, antes y después: lo que se ve es lo
+ * Lo que se retira de lo repartido o movido con ese dinero, si hace falta, y cada saldo que cambia, antes y después: lo que se ve es lo
  * que se aplica, porque la acción solo lo hace con esta misma firma (spec 007, criterio 11).
  */
 function ComoQueda({ previa }: { previa: VistaPrevia }) {
@@ -93,9 +93,9 @@ function ComoQueda({ previa }: { previa: VistaPrevia }) {
     <div className="flex flex-col gap-2">
       {retirado > 0 ? (
         <p className="text-[13px] font-semibold text-texto-2">
-          Ya se repartió: se retiran {formatearCifra(retirado)} de lo que se repartió con este dinero (
-          {previa.retirado.map((r) => `${r.nombre} ${formatearCifra(r.centavos)}`).join(" · ")}), y el reparto los
-          volverá a pedir.
+          Ya se usó: se retiran {formatearCifra(retirado)} de lo que se repartió o se movió con este dinero (
+          {previa.retirado.map((r) => `${r.nombre} ${formatearCifra(r.centavos)}`).join(" · ")}). Lo repartido, el
+          reparto lo volverá a pedir.
         </p>
       ) : null}
       <p className="text-[12px] font-extrabold uppercase tracking-wide text-texto-2">Así queda</p>

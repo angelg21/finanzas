@@ -35,8 +35,8 @@ async function alDeshacerElCobro(
   const [sobre] = await ejecutor.select({ nombre: sobres.nombre }).from(sobres).where(eq(sobres.id, c.sobreDestinoId));
   const porAsignar = { sobreId: c.sobreDestinoId, nombre: sobre?.nombre ?? "Por asignar" };
   const { plan, saldo } = await planDeRetiroDesde(ejecutor, { id: c.id, sobreId: c.sobreDestinoId }, bloquear);
-  if (!plan.alcanza) return { error: noAlcanzaElRetiro(porAsignar.nombre, plan) };
-  // Con "Por asignar" ya en negativo (o un cobro que no cayó en él), no se lo deja más abajo.
+  if (!plan.alcanza) return { error: noAlcanzaElRetiro(plan) };
+  // Lo que el cobro no usó tiene que estar en "Por asignar": si ya estaba en negativo, no se lo deja más abajo.
   const queda = saldo - c.montoUsdCentavos + plan.retiros.reduce((a, r) => a + r.centavos, 0);
   if (queda < 0) {
     return { error: `${porAsignar.nombre} tiene ${formatearCifra(saldo)}; le faltan ${formatearCifra(-queda)}` };
@@ -92,7 +92,7 @@ export type PagoOCobro = NonNullable<Awaited<ReturnType<typeof pagoOCobroParaDes
  * Deshacer un pago o un cobro (spec 007, criterios 1 a 3): borra el movimiento con el candado de la deuda, que
  * serializa con pagar y cobrar. Un pago devuelve el dinero a su cuenta y a Deudas, siempre. Un cobro lo saca de la
  * cuenta y de "Por asignar": con su candado (el del reparto, tomado después del de la deuda, en el mismo orden que en
- * todas partes). Con él se retira lo que se repartió con su dinero (criterio 11), solo si es la misma vista previa
+ * todas partes). Con él se retira lo que se repartió o se movió con su dinero (criterio 11), solo si es la misma vista previa
  * que se vio y confirmó (`firma`: filas, montos y saldos); si cambió, responde `cambio` para volver a mostrarla.
  * Quien llama sin haber visto una (`firma` vacía) solo deshace si no hay nada que retirar, como antes del criterio.
  */

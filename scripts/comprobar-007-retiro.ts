@@ -4,10 +4,10 @@
  * aplica con la firma de esa vista previa. Lo que importa es que quede todo como si no hubiera pasado: los saldos de
  * cuentas y sobres, lo que el reparto cuenta como recibido en cada mes y la cuota de Deudas. Escenarios:
  *   · uno: sin firma no se toca nada; la vista previa es lo que queda; una firma vieja no se aplica;
- *   · lo que salió con Mover: no se deshace y dice desde dónde devolverlo; devuelto, sí, y queda neutro;
+ *   · lo movido con su dinero se retira; ir y volver con Mover no deja nada; lo prestado impide deshacer y se dice;
  *   · el reparto propio de otro ingreso no se retira, y ese ingreso se sigue borrando entero (guardian-datos);
- *   · dos cobros, y dos ingresos, deshechos en el orden de registro y al revés: los dos órdenes, neutros (sexta
- *     revisión, hallazgo 1);
+ *   · dos cobros (con un Mover en medio), y dos ingresos, deshechos en el orden de registro y al revés: los dos
+ *     órdenes, neutros (sexta revisión, hallazgo 1; guardian-datos, N1);
  *   · un saldo que cambia entre la vista previa y la confirmación, con retiro o sin él (guardian, hallazgo 2; sexta
  *     revisión, hallazgo 3), y la carrera con un Mover desde el sobre retirado;
  *   · Por asignar con dinero de antes del cobro: se retira solo lo que se repartió con el del cobro.
@@ -110,7 +110,7 @@ async function main() {
   const idDeReferencia = async (referencia: string) =>
     (await db.select({ id: movimientos.id }).from(movimientos).where(eq(movimientos.referenciaExterna, referencia)))[0]
       ?.id ?? null;
-  async function prestamo(monto: string) {
+  async function prestamo(monto: string, origenId = gastosDelMes!.id) {
     const captura = idDePrueba();
     const p = prepararPrestamo(
       {
@@ -120,7 +120,7 @@ async function main() {
         fechaPrevista: "",
         nota: "",
         cuenta: cuentaBinance,
-        sobreOrigenId: gastosDelMes!.id,
+        sobreOrigenId: origenId,
       },
       inicial.sobres,
       hoy,
@@ -246,28 +246,55 @@ async function main() {
     comprobar("con la de ahora se deshace, y todo queda como ella mostró", hecho(r2) && comoSeVio);
     comprobar("y queda como antes del cobro: saldos, lo recibido y la cuota", (await comoQueda()) === base);
 
-    // Lo que salió con Mover: no se deshace y dice desde dónde devolverlo; devuelto, sí, y neutro
+    // Lo movido con su dinero también se retira: vuelve del sobre adonde fue, y queda como antes
     base = await comoQueda();
     const b = await cobrar(p, "20");
     await mover(porAsignar.id, familia.id, 500);
-    const antesDeNegar = (await estado()).huella;
-    const rNo = await deshacer(b);
-    const mensaje =
-      "De este dinero salieron 5,00 con Mover a Familia, y Por asignar no tiene con qué cubrirlo: faltan 5,00. Devuelve 5,00 a Por asignar con Mover desde Familia y vuelve a intentarlo.";
+    const vistaB = (await pagoOCobroParaDeshacer(b))?.previa;
     comprobar(
-      "si parte salió con Mover, no se deshace, lo dice antes y dice desde dónde devolverlo",
+      "si parte se movió con Mover, la vista previa lo retira de Familia, y deshacer deja todo como antes",
+      JSON.stringify(vistaB?.retirado) ===
+        JSON.stringify([{ sobreId: familia.id, nombre: "Familia", centavos: 500 }]) &&
+        hecho(await deshacerPagoOCobro(b, vistaB?.firma ?? "")) &&
+        (await comoQueda()) === base,
+      JSON.stringify(vistaB?.retirado),
+    );
+    // Ir y volver con Mover antes de deshacer: no queda nada que retirar de Familia
+    const b2 = await cobrar(p, "20");
+    await mover(porAsignar.id, familia.id, 500);
+    await mover(familia.id, porAsignar.id, 500);
+    const vistaB2 = (await pagoOCobroParaDeshacer(b2))?.previa;
+    comprobar(
+      "si lo movido ya volvió, no se retira nada, y deshacer deja todo como antes",
+      vistaB2?.retirado.length === 0 &&
+        hecho(await deshacerPagoOCobro(b2, vistaB2.firma)) &&
+        (await comoQueda()) === base,
+    );
+    // Lo prestado no se retira: no se deshace, ni un cobro ni un ingreso, y lo dice
+    const b3 = await cobrar(p, "20");
+    await prestamo("5", porAsignar.id);
+    const antesDeNegar = (await estado()).huella;
+    const rNo = await deshacer(b3);
+    const mensaje = "De este dinero, 5,00 se prestaron. Eso no se puede retirar, así que no se deshace.";
+    comprobar(
+      "si parte se prestó, no se deshace, y lo dice antes",
       "ok" in rNo &&
         !rNo.ok &&
         rNo.error === mensaje &&
-        (await pagoOCobroParaDeshacer(b))?.impedido === mensaje &&
+        (await pagoOCobroParaDeshacer(b3))?.impedido === mensaje &&
         (await estado()).huella === antesDeNegar,
       "error" in rNo ? rNo.error : "",
     );
-    await mover(familia.id, porAsignar.id, 500);
+    await porAsignarEn(0);
+    const i3 = await ingreso(2_000);
+    await prestamo("5", porAsignar.id);
+    const rNoIngreso = await borrar(i3);
     comprobar(
-      "devuelto con Mover desde ahí, se deshace y queda como antes del cobro",
-      hecho(await deshacer(b)) && (await comoQueda()) === base,
+      "lo mismo al borrar un ingreso (criterio 7 de la 006): no se borra y lo dice",
+      "ok" in rNoIngreso && !rNoIngreso.ok && rNoIngreso.error === mensaje,
+      "error" in rNoIngreso ? rNoIngreso.error : "",
     );
+    await porAsignarEn(0);
 
     // El reparto propio de otro ingreso no se retira, y ese ingreso se sigue borrando entero
     base = await comoQueda();
@@ -293,7 +320,8 @@ async function main() {
       base = await comoQueda();
       const d1 = await cobrar(p, "30");
       await repartir(2000, gastosDelMes.id);
-      await repartir(1000, planes.id);
+      // Con un Mover desde Por asignar en medio (guardian-datos, N1).
+      await mover(porAsignar.id, planes.id, 1000);
       const d2 = await cobrar(p, "30");
       await repartir(500, ocasiones.id);
       await repartir(2500, familia.id);
@@ -301,7 +329,7 @@ async function main() {
       const r1 = await deshacer(primero);
       const rSegundo = await deshacer(segundo);
       comprobar(
-        `dos cobros repartidos, deshechos en orden ${orden}: los dos se ofrecen y todo queda como antes`,
+        `dos cobros repartidos, con un Mover en medio, deshechos en orden ${orden}: los dos se ofrecen y todo queda como antes`,
         hecho(r1) && hecho(rSegundo) && (await comoQueda()) === base,
         "error" in rSegundo ? rSegundo.error : "",
       );

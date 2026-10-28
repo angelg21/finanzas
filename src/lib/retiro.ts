@@ -1,148 +1,162 @@
 import { formatearCifra } from "./dinero";
 
 /**
- * Retirar lo repartido (spec 007, criterio 11, decidido por el desarrollador: "que deshacer lo haga todo, con vista
- * previa"). "Por asignar" es una cuenta de lotes: cada entrada (un ingreso, un cobro, un Mover hacia él) es un lote, y
- * cada salida gasta de los lotes más viejos que aún tienen dinero, primero en entrar, primero en salir; el reparto
- * propio de un ingreso gasta de su propio lote. Deshacer un cobro o borrar un ingreso quita su lote, y con él lo que
- * se repartió con ese dinero (Repartir y Apartar): esas filas se borran o se achican. Así deshacer dos, en cualquier
- * orden, deja todo como si no hubieran pasado (sexta revisión, hallazgo 1). Lo que de ese lote salió de otra forma
- * (Mover, un préstamo) no se puede retirar: lo cubre lo libre de "Por asignar", y si no alcanza, no se deshace y se
- * dice. Lo retirado cuenta como reparto deshecho, así el reparto siguiente lo vuelve a pedir. La pantalla lo muestra
- * antes y solo se aplica al confirmar esa misma vista previa (la firma).
+ * Retirar lo hecho con un dinero (spec 007, criterio 11, decidido por el desarrollador: "que deshacer lo haga todo, con
+ * vista previa"). "Por asignar" es una cuenta de lotes: cada cobro y cada ingreso es un lote, y lo que sale de él gasta
+ * de los lotes más viejos, primero en entrar, primero en salir; el reparto propio de un ingreso, de su lote. Un Mover
+ * de vuelta desde un sobre cancela antes los Mover que fueron a ese sobre: ir y volver no deja nada.
+ *
+ * Deshacer un cobro o borrar un ingreso quita su lote y todo lo que se hizo con él: lo repartido (Repartir y Apartar) y
+ * lo movido a otro sobre; esas filas se borran o se achican. Lo que se prestó, o lo que usa el reparto de otro ingreso
+ * que se bajó, no se puede retirar: entonces no se deshace, y se dice por qué. Como deshacer se lleva siempre todo lo
+ * que usó su dinero, quitar un lote no cambia lo que gastaron los otros, y dos deshacer dejan lo mismo en cualquier
+ * orden (sexta revisión y guardian-datos, 2026-10-23). Lo repartido que se retira cuenta como reparto deshecho, así el
+ * reparto siguiente lo vuelve a pedir. La pantalla lo muestra antes y solo se aplica al confirmar esa misma vista
+ * previa (la firma).
  */
 
 /**
- * Qué es cada fila que mueve dinero de "Por asignar": una entrada; un reparto (Repartir o Apartar), que se puede
- * retirar; el reparto propio de un ingreso; un Mover hacia otro sobre; u otra salida (un préstamo, o una fila rara).
+ * Qué es cada fila que mueve dinero de "Por asignar": la entrada de un cobro o un ingreso (un lote que se puede
+ * deshacer); una vuelta (un Mover desde un sobre); un reparto (Repartir o Apartar); el reparto propio de un ingreso; un
+ * Mover hacia un sobre; un préstamo; u otra salida (una fila rara).
  */
-export type Clase = "entrada" | "reparto" | "propio" | "mover" | "otra";
+export type Clase = "entrada" | "vuelta" | "reparto" | "propio" | "mover" | "prestamo" | "otra";
 
 export type MovimientoDePorAsignar = {
   id: number;
   /** Con signo: lo que entra a "Por asignar" (+) o sale de él (−), en centavos de dólar. */
   centavos: number;
   clase: Clase;
-  /** A qué sobre sale, en un reparto o un Mover. */
+  /** El otro sobre: adónde va un reparto o un Mover, o de dónde viene una vuelta. */
   sobreId: number | null;
   nombre: string | null;
   /** En el reparto propio de un ingreso, el id de ese ingreso, de cuyo lote sale. */
   ingresoId: number | null;
 };
 
-export type Retiro = { id: number; sobreId: number; nombre: string; centavos: number; borra: boolean };
+export type Retiro = {
+  id: number;
+  sobreId: number;
+  nombre: string;
+  centavos: number;
+  borra: boolean;
+};
 
 /** Lo que de un lote salió de una forma que no se puede retirar. */
-export type Salida = { clase: "mover" | "otra"; nombre: string | null; centavos: number };
+export type Salida = {
+  clase: "prestamo" | "propio" | "otra";
+  centavos: number;
+};
 
-export type PlanDeRetiro = { alcanza: true; retiros: Retiro[] } | { alcanza: false; faltan: number; salidas: Salida[] };
+export type PlanDeRetiro = { alcanza: true; retiros: Retiro[] } | { alcanza: false; salidas: Salida[] };
 
+type Lote = { id: number; restante: number };
 type Gasto = { lote: number; salida: MovimientoDePorAsignar; centavos: number };
+type Pendiente = { salida: MovimientoDePorAsignar; centavos: number };
 
 /**
- * La cuenta de lotes: cuánto le queda a cada lote y qué salidas gastaron de él. Lo que sale sin lote que lo pague deja
- * "Por asignar" en negativo, y la entrada siguiente lo tapa antes de quedar libre: así lo que les queda a los lotes es
- * siempre el saldo, también después de deshacer algo que se había movido (sexta revisión).
+ * La cuenta de lotes. Primero, cada vuelta paga lo que fue con Mover a su sobre antes de ella, lo más viejo primero, y
+ * cada ingreso aparta su reparto propio de su lote. Después, lo demás que sale, en el orden en que se registró, gasta
+ * de los lotes y de lo que les quede a las vueltas, primero en entrar, primero en salir; una salida sin lote que la
+ * pague la paga el lote siguiente. Devuelve lo que le queda a cada lote y qué salidas gastaron de él.
  */
 export function cuentaDeLotes(movimientos: MovimientoDePorAsignar[]) {
-  const lotes: { id: number; restante: number }[] = [];
-  const porId = new Map<number, { id: number; restante: number }>();
+  const orden = [...movimientos].sort((a, b) => a.id - b.id);
+  const porId = new Map<number, Lote>();
+  const lotes: Lote[] = [];
   const gastos: Gasto[] = [];
-  let primero = 0;
-  /** Lo que salió sin lote, en orden: la entrada siguiente lo paga primero. */
-  const sinLote: { salida: MovimientoDePorAsignar; resta: number }[] = [];
-  const tomar = (lote: { id: number; restante: number }, salida: MovimientoDePorAsignar, quiere: number) => {
-    const centavos = Math.min(quiere, lote.restante);
-    if (centavos <= 0) return 0;
-    lote.restante -= centavos;
-    gastos.push({ lote: lote.id, salida, centavos });
-    return centavos;
-  };
-  for (const m of [...movimientos].sort((a, b) => a.id - b.id)) {
+  const salidas: Pendiente[] = [];
+  /** Lo que fue con Mover a cada sobre y todavía no volvió. */
+  const sinVolver = new Map<number, Pendiente[]>();
+  for (const m of orden) {
     if (m.centavos > 0) {
       const lote = { id: m.id, restante: m.centavos };
-      while (lote.restante > 0 && sinLote.length > 0) {
-        sinLote[0].resta -= tomar(lote, sinLote[0].salida, sinLote[0].resta);
-        if (sinLote[0].resta === 0) sinLote.shift();
-      }
-      lotes.push(lote);
       porId.set(m.id, lote);
+      lotes.push(lote);
+      for (const ida of m.clase === "vuelta" && m.sobreId !== null ? (sinVolver.get(m.sobreId) ?? []) : []) {
+        const centavos = Math.min(ida.centavos, lote.restante);
+        if (centavos === 0) break;
+        ida.centavos -= centavos;
+        lote.restante -= centavos;
+        gastos.push({ lote: lote.id, salida: ida.salida, centavos });
+      }
       continue;
     }
-    let resta = -m.centavos;
+    const pendiente = { salida: m, centavos: -m.centavos };
     const propio = m.clase === "propio" && m.ingresoId !== null ? porId.get(m.ingresoId) : undefined;
-    if (propio) resta -= tomar(propio, m, resta);
-    while (resta > 0 && primero < lotes.length) {
-      if (lotes[primero].restante === 0) primero++;
-      else resta -= tomar(lotes[primero], m, resta);
+    if (propio) {
+      const centavos = Math.min(pendiente.centavos, propio.restante);
+      propio.restante -= centavos;
+      pendiente.centavos -= centavos;
+      if (centavos > 0) gastos.push({ lote: propio.id, salida: m, centavos });
     }
-    if (resta > 0) sinLote.push({ salida: m, resta });
+    salidas.push(pendiente);
+    if (m.clase === "mover" && m.sobreId !== null)
+      sinVolver.set(m.sobreId, [...(sinVolver.get(m.sobreId) ?? []), pendiente]);
   }
-  return { restante: (id: number) => porId.get(id)?.restante ?? 0, existe: (id: number) => porId.has(id), gastos };
+  // Lo que las vueltas pagaron ya no sale de ningún lote: queda lo que no volvió.
+  let i = 0;
+  for (const s of salidas) {
+    let resta = s.centavos;
+    while (resta > 0 && i < lotes.length) {
+      const centavos = Math.min(resta, lotes[i].restante);
+      if (centavos > 0) {
+        lotes[i].restante -= centavos;
+        gastos.push({ lote: lotes[i].id, salida: s.salida, centavos });
+        resta -= centavos;
+      }
+      if (lotes[i].restante === 0) i++;
+    }
+  }
+  return {
+    restante: (id: number) => porId.get(id)?.restante ?? 0,
+    existe: (id: number) => porId.has(id),
+    gastos,
+  };
 }
 
 /**
- * El plan de quitar el lote `loteId` con lo que se repartió con él. `saldoCentavos` es el saldo de "Por asignar": lo
- * que no es de este lote es lo libre que puede cubrir lo que salió de otra forma.
+ * El plan de quitar el lote `loteId` con todo lo que se hizo con él: retira lo repartido y lo movido; si algo se prestó
+ * o lo usa el reparto de otro ingreso, no se puede.
  */
-export function planDeRetiro(
-  movimientos: MovimientoDePorAsignar[],
-  loteId: number,
-  saldoCentavos: number,
-): PlanDeRetiro {
-  const cuenta = cuentaDeLotes(movimientos);
-  const delLote = cuenta.gastos.filter((g) => g.lote === loteId);
-  const retiros = delLote
-    .filter((g) => g.salida.clase === "reparto" && g.salida.sobreId !== null)
-    .map((g) => ({
-      id: g.salida.id,
-      sobreId: g.salida.sobreId as number,
-      nombre: g.salida.nombre ?? "?",
-      centavos: g.centavos,
-      borra: g.centavos === -g.salida.centavos,
-    }));
-  // El reparto propio del ingreso que se borra se va con él; el de otro ingreso que gastó de este lote, no se toca.
-  const fuera = delLote.filter(
-    (g) =>
-      g.salida.clase === "mover" ||
-      g.salida.clase === "otra" ||
-      (g.salida.clase === "propio" && g.salida.ingresoId !== loteId),
-  );
-  const totalFuera = fuera.reduce((a, g) => a + g.centavos, 0);
-  const libre = Math.max(0, saldoCentavos - cuenta.restante(loteId));
-  if (totalFuera > libre) {
-    const salidas = new Map<string, Salida>();
-    for (const g of fuera) {
-      const clase = g.salida.clase === "mover" ? "mover" : "otra";
-      const clave = `${clase}:${clase === "mover" ? g.salida.sobreId : ""}`;
-      const previa = salidas.get(clave);
-      salidas.set(clave, {
-        clase,
-        nombre: clase === "mover" ? g.salida.nombre : null,
-        centavos: (previa?.centavos ?? 0) + g.centavos,
+export function planDeRetiro(movimientos: MovimientoDePorAsignar[], loteId: number): PlanDeRetiro {
+  const delLote = cuentaDeLotes(movimientos).gastos.filter((g) => g.lote === loteId);
+  const retiros: Retiro[] = [];
+  const salidas = new Map<Salida["clase"], Salida>();
+  for (const g of delLote) {
+    const { clase, id, sobreId, nombre, centavos: total, ingresoId } = g.salida;
+    // El reparto propio del lote se va con él.
+    if (clase === "propio" && ingresoId === loteId) continue;
+    if ((clase === "reparto" || clase === "mover") && sobreId !== null) {
+      retiros.push({
+        id,
+        sobreId,
+        nombre: nombre ?? "?",
+        centavos: g.centavos,
+        borra: g.centavos === -total,
       });
+      continue;
     }
-    return { alcanza: false, faltan: totalFuera - libre, salidas: [...salidas.values()] };
+    const tipo = clase === "prestamo" || clase === "propio" ? clase : "otra";
+    salidas.set(tipo, {
+      clase: tipo,
+      centavos: (salidas.get(tipo)?.centavos ?? 0) + g.centavos,
+    });
   }
-  return { alcanza: true, retiros };
+  return salidas.size > 0 ? { alcanza: false, salidas: [...salidas.values()] } : { alcanza: true, retiros };
 }
 
-/**
- * Por qué no se puede: de este dinero salió algo con Mover o de otra forma, y lo libre de "Por asignar" no lo cubre.
- * Dice adónde fue lo de Mover, para devolverlo de ahí: Mover no cuenta como reparto en ninguno de los dos sentidos.
- */
-export function noAlcanzaElRetiro(nombre: string, plan: { faltan: number; salidas: Salida[] }) {
+/** Por qué no se puede: parte de este dinero salió de una forma que no se retira. */
+export function noAlcanzaElRetiro(plan: { salidas: Salida[] }) {
   const partes = plan.salidas.map((s) =>
-    s.clase === "mover"
-      ? `${formatearCifra(s.centavos)} con Mover a ${s.nombre}`
-      : `${formatearCifra(s.centavos)} de otra forma (un préstamo, o al bajar otro ingreso)`,
+    s.clase === "prestamo"
+      ? `${formatearCifra(s.centavos)} se prestaron`
+      : s.clase === "propio"
+        ? `${formatearCifra(s.centavos)} los usa el reparto de un ingreso que bajaste`
+        : `${formatearCifra(s.centavos)} salieron de otra forma`,
   );
-  const faltan = formatearCifra(plan.faltan);
-  const soloMover = plan.salidas.every((s) => s.clase === "mover");
-  const desde = soloMover ? ` desde ${plan.salidas.map((s) => s.nombre).join(" o ")}` : "";
-  return `De este dinero salieron ${partes.join(" y ")}, y ${nombre} no tiene con qué cubrirlo: faltan ${faltan}. Devuelve ${faltan} a ${nombre} con Mover${desde} y vuelve a intentarlo.`;
+  return `De este dinero, ${partes.join(" y ")}. Eso no se puede retirar, así que no se deshace.`;
 }
-
 /** Lo que cambia en un sobre, en centavos con signo. */
 export type Cambio = { sobreId: number; nombre: string; centavos: number };
 

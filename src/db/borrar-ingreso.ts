@@ -10,7 +10,7 @@ import { movimientos, sobres } from "./schema";
 
 /*
   Borrar un ingreso con su reparto (spec 006, criterio 7). Si lo que quedó sin repartir ya se repartió después, se
-  retira lo que se repartió con su dinero (spec 007, criterio 11): se muestra antes y se aplica solo al confirmar esa
+  retira lo que se repartió o se movió con su dinero (spec 007, criterio 11): se muestra antes y se aplica solo al confirmar esa
   misma vista previa. Vivía con la edición; tiene su propio archivo desde ese criterio.
 */
 
@@ -37,7 +37,7 @@ type IngresoLeido = {
 
 /**
  * Lo que pasaría al borrar un ingreso, leído con el ejecutor dado: su reparto, el plan y la vista previa de cómo queda
- * todo, con lo que se retira de lo que se repartió con su dinero (spec 007, criterio 11). La pantalla lo pide sin
+ * todo, con lo que se retira de lo que se repartió o se movió con su dinero (spec 007, criterio 11). La pantalla lo pide sin
  * candado; la acción, con `bloquear`, dentro de su transacción.
  */
 async function alBorrarElIngreso(ejecutor: Ejecutor, i: IngresoLeido, captura: string | null, bloquear: boolean) {
@@ -56,7 +56,7 @@ async function alBorrarElIngreso(ejecutor: Ejecutor, i: IngresoLeido, captura: s
   };
   const { plan: retiro } = await planDeRetiroDesde(ejecutor, { id: i.id, sobreId: i.sobreDestinoId }, bloquear);
   if (!retiro.alcanza) {
-    const error = noAlcanzaElRetiro(entrada.destino.nombre, retiro);
+    const error = noAlcanzaElRetiro(retiro);
     return { ids, reparto, plan: { ok: false, error } as PlanDeBorrado, previa: null, retiros: [] };
   }
   // El plan comprueba además que el sobre no quede en negativo: si ya lo estaba, o si el ingreso no cayó en "Por asignar".

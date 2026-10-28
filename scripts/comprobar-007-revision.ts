@@ -9,7 +9,8 @@
  * Con --url, además, contra un servidor en marcha con esta misma base y el usuario de prueba, como un navegador sin
  * JavaScript: Mover no trae origen elegido; desde Inversión, sin confirmar no guarda, la confirmación vale para ese
  * monto y no otro, y el reintento no duplica; deshacer un cobro ya repartido muestra antes qué se retira y cómo queda
- * todo, se aplica al confirmar esa vista previa y no otra, y si lo que falta salió con Mover lo dice (criterio 11).
+ * todo, se aplica al confirmar esa vista previa y no otra; lo movido se retira, y si parte se prestó lo dice (criterio
+ * 11).
  *   pnpm exec tsx scripts/comprobar-007-revision.ts [--url http://localhost:3000]
  * Corre sobre la base local con los datos de demostración y la deja como estaba. Lo suyo son capturas cuyo id empieza
  * por 0c070017, que se borran al terminar y, si una corrida se cortó, al empezar la siguiente. Se niega ante
@@ -145,7 +146,7 @@ async function main() {
     if (!r.ok) throw new Error(`prepararPago rechazó ${monto}: ${Object.keys(r.errores).join(", ")}`);
     return { ...r.fila, referenciaExterna: referenciaDeCaptura(captura, "pago") };
   }
-  async function prestamo(monto: string) {
+  async function prestamo(monto: string, origenId = gastosDelMes!.id) {
     const captura = idDePrueba();
     const p = prepararPrestamo(
       {
@@ -155,7 +156,7 @@ async function main() {
         fechaPrevista: "",
         nota: "",
         cuenta: cuentaBinance,
-        sobreOrigenId: gastosDelMes!.id,
+        sobreOrigenId: origenId,
       },
       inicial.sobres,
       hoy,
@@ -493,7 +494,7 @@ async function main() {
         comprobar(
           "11",
           "deshacer un cobro ya repartido dice antes qué se retira y cómo queda, y ofrece confirmarlo con su firma",
-          visto.includes("se retiran 5,00 de lo que se repartió con este dinero (Planes 5,00)") &&
+          visto.includes("se retiran 5,00 de lo que se repartió o se movió con este dinero (Planes 5,00)") &&
             visto.includes("Así queda") &&
             visto.includes("Sí, deshacer") &&
             firmaDe(form1) !== "" &&
@@ -510,7 +511,7 @@ async function main() {
           vieja.estado === 200 &&
             texto(vieja.html).includes("Algo cambió desde la vista previa") &&
             texto(vieja.html).includes(
-              "se retiran 6,00 de lo que se repartió con este dinero (Planes 5,00 · Gastos del mes 1,00)",
+              "se retiran 6,00 de lo que se repartió o se movió con este dinero (Planes 5,00 · Gastos del mes 1,00)",
             ) &&
             firmaDe(form2) !== firmaDe(form1) &&
             (await pagoOCobroParaDeshacer(cobroRepartido)) !== null,
@@ -526,16 +527,24 @@ async function main() {
             enSobre(await estado(), porAsignar.id) === 0,
           `${confirmada.estado} ${confirmada.ubicacion}`,
         );
-        // Si lo que falta salió con Mover, no hay qué retirar: lo dice antes y no ofrece "Sí, deshacer"
+        // Lo movido con su dinero se retira y se ve; lo prestado no se retira: lo dice antes y no ofrece "Sí, deshacer"
         const cobroMovido = await cobrar(p5, "20");
         await mover(porAsignar.id, planes.id, 500);
+        const conMover = texto((await sesion.pagina(`/movimientos/${cobroMovido}?borrar=1`)).html);
+        comprobar(
+          "11",
+          "si parte se movió con Mover, la vista previa lo retira de Planes y ofrece deshacer",
+          conMover.includes("se retiran 5,00 de lo que se repartió o se movió con este dinero (Planes 5,00)") &&
+            conMover.includes("Sí, deshacer"),
+        );
+        // El préstamo sale de lo más viejo que queda en Por asignar: los 15 de ese mismo cobro.
+        await prestamo("5", porAsignar.id);
         const sinRetiro = texto((await sesion.pagina(`/movimientos/${cobroMovido}?borrar=1`)).html);
         comprobar(
           "11",
-          'si lo que falta salió con Mover, lo dice antes, con cuánto devolver, y no ofrece "Sí, deshacer"',
-          sinRetiro.includes(
-            "De este dinero salieron 5,00 con Mover a Planes, y Por asignar no tiene con qué cubrirlo: faltan 5,00. Devuelve 5,00 a Por asignar con Mover desde Planes",
-          ) && !sinRetiro.includes("Sí, deshacer"),
+          'si parte se prestó, lo dice antes y no ofrece "Sí, deshacer"',
+          sinRetiro.includes("De este dinero, 5,00 se prestaron. Eso no se puede retirar, así que no se deshace.") &&
+            !sinRetiro.includes("Sí, deshacer"),
         );
       } finally {
         await sesion.salir();

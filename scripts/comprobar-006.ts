@@ -9,8 +9,8 @@
  *   ★ 5  · bajarlo más de lo que tiene Por asignar no guarda nada y lo dice; una baja y un reparto a la vez, con el
  *          mismo candado, nunca dejan Por asignar en negativo;
  *   ★ 6  · borrar un gasto se lleva su venta, y la cuenta y el sobre recuperan lo que tenían;
- *   ★ 7  · borrar un ingreso se lleva su reparto; si lo que falta salió con Mover, no se borra y lo dice (retirar lo
- *          repartido con su dinero, criterio 11 de la 007, lo prueba scripts/comprobar-007-retiro.ts); la
+ *   ★ 7  · borrar un ingreso se lleva su reparto (si lo que quedó sin repartir ya se usó, el criterio 11 de la 007,
+ *          que prueba scripts/comprobar-007-retiro.ts); la
  *          confirmación avisa del sobre que quedará en negativo;
  *   ★ 8  · nada que no sea gasto o ingreso se abre para editar (la página da 404 cuando movimientoParaEditar da null)
  *          ni se edita o borra por su id; un gasto sin captura se edita solo él;
@@ -28,7 +28,7 @@
 import { config } from "dotenv";
 import { randomUUID } from "node:crypto";
 import { count, eq, isNull, like, not, or } from "drizzle-orm";
-import { referenciaDeCaptura, referenciaDeMover, referenciaDeReasignacion } from "../src/lib/captura";
+import { referenciaDeCaptura, referenciaDeReasignacion } from "../src/lib/captura";
 import { exigirBaseLocal } from "../src/lib/destino-base";
 import { centavosATexto } from "../src/lib/dinero";
 import { planDeEdicionDeGasto } from "../src/lib/editar-gasto";
@@ -220,15 +220,6 @@ async function main() {
       (f) => f.tipo === "reasignacion",
     );
     return repartirPorAsignar(captura, porAsignar!.id, filas);
-  }
-  /** Saca de Por asignar con Mover, que no es reparto (spec 007, criterio 10). */
-  async function moverDesdePorAsignar(centavos: number, destino: number) {
-    const captura = idDePrueba();
-    const monto = centavosATexto(centavos);
-    const filas = filasDeIngreso(captura, monto, [{ sobreId: destino, monto }]).filter(
-      (f) => f.tipo === "reasignacion",
-    );
-    await registrarMovimientos(filas.map((f) => ({ ...f, referenciaExterna: referenciaDeMover(captura, destino) })));
   }
   /** Deja Por asignar con exactamente `centavos`: reparte lo que sobra a Planes o registra un ingreso por lo que falta. */
   async function porAsignarEn(centavos: number) {
@@ -564,26 +555,8 @@ async function main() {
       "borrar un ingreso ya borrado responde que no existe, sin error",
       noExiste(await borrarIngreso(k.ingresoId)),
     );
-    // Si lo que falta salió con Mover, no se borra y lo dice. Retirar lo que se repartió con su dinero (criterio 11 de
-    // la 007) lo prueba scripts/comprobar-007-retiro.ts.
-    const m3 = await ingreso("100");
-    await moverDesdePorAsignar(enSobre(await estado(), porAsignar.id) - 3000, planes.id);
-    const antesDeM3 = (await estado()).huella;
-    const rM3 = await borrarIngreso(m3.ingresoId);
-    comprobar(
-      "7",
-      "si lo que falta salió con Mover, no se borra y lo dice",
-      "ok" in rM3 &&
-        !rM3.ok &&
-        rM3.error ===
-          "De este dinero salieron 70,00 con Mover a Planes, y Por asignar no tiene con qué cubrirlo: faltan 70,00. Devuelve 70,00 a Por asignar con Mover desde Planes y vuelve a intentarlo.",
-      "error" in rM3 ? rM3.error : "",
-    );
-    comprobar(
-      "7",
-      "y el ingreso sigue ahí, sin cambios",
-      (await fila(m3.ingresoId)) !== null && (await estado()).huella === antesDeM3,
-    );
+    // Si lo que quedó sin repartir ya se usó, se retira lo hecho con ese dinero, o no se borra si se prestó (criterio 11
+    // de la 007): lo prueba scripts/comprobar-007-retiro.ts.
     // Un sobre que ya gastó lo recibido: la confirmación lo avisa antes, y borrar lo deja en negativo.
     const n = await ingreso("100", [{ sobreId: planes.id, monto: "40" }]);
     const saldoPlanes = enSobre(await estado(), planes.id);
