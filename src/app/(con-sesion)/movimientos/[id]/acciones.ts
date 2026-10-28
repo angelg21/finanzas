@@ -7,6 +7,7 @@ import { categoriasDeGastoPorUso, saldosPorCuenta, sobresParaGasto } from "@/db/
 import { borrarIngreso } from "@/db/borrar-ingreso";
 import { borrarGasto, editarGasto, editarIngreso, movimientoParaEditar } from "@/db/editar-movimientos";
 import { deshacerPagoOCobro } from "@/db/deshacer-pago";
+import { deshacerTransferencia } from "@/db/transferencias";
 import { categoriasDeIngresoPorUso } from "@/db/reparto";
 import { planDeEdicionDeGasto } from "@/lib/editar-gasto";
 import { planDeEdicionDeIngreso } from "@/lib/editar-ingreso";
@@ -227,19 +228,24 @@ export async function borrarMovimientoAccion(_previo: EstadoBorrar, datos: FormD
   const id = idDe(datos);
   if (id === null) redirect("/movimientos");
   const tipo = texto(datos, "tipo");
-  const deshacer = tipo === "pago" || tipo === "cobro";
+  const deshacer = tipo === "pago" || tipo === "cobro" || tipo === "transferencia";
   const firma = texto(datos, "firma");
   let resultado:
     | Awaited<ReturnType<typeof borrarGasto>>
     | Awaited<ReturnType<typeof borrarIngreso>>
-    | Awaited<ReturnType<typeof deshacerPagoOCobro>>;
+    | Awaited<ReturnType<typeof deshacerPagoOCobro>>
+    | Awaited<ReturnType<typeof deshacerTransferencia>>;
   try {
-    // Spec 007: un pago o un cobro se deshace; un gasto o un ingreso se borra con lo enlazado (spec 006).
-    resultado = deshacer
-      ? await deshacerPagoOCobro(id, firma)
-      : tipo === "ingreso"
-        ? await borrarIngreso(id, firma)
-        : await borrarGasto(id);
+    // Spec 007: un pago o un cobro se deshace; spec 011: una transferencia entre cuentas, con su comisión; un gasto o
+    // un ingreso se borra con lo enlazado (spec 006).
+    resultado =
+      tipo === "transferencia"
+        ? await deshacerTransferencia(id)
+        : deshacer
+          ? await deshacerPagoOCobro(id, firma)
+          : tipo === "ingreso"
+            ? await borrarIngreso(id, firma)
+            : await borrarGasto(id);
   } catch (error) {
     registrarFalla("No se pudo borrar el movimiento", error);
     return { error: mensajeDeFalla("otra", "no se borró") };

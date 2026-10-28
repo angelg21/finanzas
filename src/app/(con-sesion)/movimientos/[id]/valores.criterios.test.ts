@@ -27,6 +27,22 @@ describe("★ 8 · solo gastos e ingresos abren la edición", () => {
   });
 });
 
+describe("spec 011 · una transferencia entre cuentas se abre para deshacerla; la venta de USDT de un gasto, no", () => {
+  it("la transferencia entre cuentas enlaza a /movimientos/[id] con a dónde volver", () => {
+    expect(enlaceDeEdicion({ id: 21, tipo: "transferencia", entreCuentas: true }, "/movimientos?tipo=mover")).toBe(
+      "/movimientos/21?volver=%2Fmovimientos%3Ftipo%3Dmover",
+    );
+  });
+
+  it("la venta de USDT de un gasto en bolívares sigue sin abrir nada", () => {
+    expect(enlaceDeEdicion({ id: 22, tipo: "transferencia", entreCuentas: false }, "/movimientos")).toBeUndefined();
+  });
+
+  it("la marca solo vale en una transferencia: una reasignación con ella tampoco abre", () => {
+    expect(enlaceDeEdicion({ id: 23, tipo: "reasignacion", entreCuentas: true }, "/movimientos")).toBeUndefined();
+  });
+});
+
 describe("spec 007, ★ 1 · un pago o un cobro se abre para deshacerlo", () => {
   it("su fila enlaza a /movimientos/[id], desde Movimientos o desde la deuda", () => {
     expect(enlaceDeEdicion({ id: 11, tipo: "pago_deuda" }, "/deudas/4")).toBe("/movimientos/11?volver=%2Fdeudas%2F4");

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ClipboardList, HandCoins } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ClipboardList, HandCoins, Landmark } from "lucide-react";
 import Link from "next/link";
-import { Pildora, Tarjeta, TituloPagina } from "@/components/ui";
+import { Pildora, TituloPagina } from "@/components/ui";
 import { contarPorCompletar } from "@/db/por-completar";
 import { exigirSesion } from "@/app/sesion";
 
@@ -11,7 +11,8 @@ const opciones = [
   { tipo: "gasto", texto: "Gasto", detalle: "Lo más frecuente. En dólares o en bolívares.", Icono: ArrowUpRight },
   { tipo: "ingreso", texto: "Ingreso", detalle: "Cae en Por asignar y propone el reparto.", Icono: ArrowDownLeft },
   { tipo: "deuda", texto: "Deuda", detalle: "Paga lo que debes o cobra lo que te deben.", Icono: HandCoins },
-  { tipo: "mover", texto: "Mover", detalle: "Entre sobres. Entre cuentas, más adelante.", Icono: ArrowLeftRight },
+  { tipo: "mover", texto: "Mover", detalle: "Entre sobres: el dinero cambia de trabajo.", Icono: ArrowLeftRight },
+  { tipo: "transferir", texto: "Transferir", detalle: "Entre cuentas, con la comisión si la hubo.", Icono: Landmark },
   {
     tipo: "por-completar",
     texto: "Por completar",
@@ -38,7 +39,7 @@ export default async function Nuevo({ searchParams }: PageProps<"/nuevo">) {
           </Pildora>
         </Link>
       ) : null}
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-5 lg:gap-5">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3 lg:gap-5">
         {opciones.map(({ tipo: t, texto, detalle, Icono }) => {
           const activa = elegido === t;
           return (
@@ -61,11 +62,6 @@ export default async function Nuevo({ searchParams }: PageProps<"/nuevo">) {
           );
         })}
       </div>
-      <Tarjeta>
-        <p className="text-[13px] text-texto-2">
-          Mover entre sobres ya tiene su pantalla. Mover entre cuentas llega con la feature de cuentas y transferencias.
-        </p>
-      </Tarjeta>
     </main>
   );
 }

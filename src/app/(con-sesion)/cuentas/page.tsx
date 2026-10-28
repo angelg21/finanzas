@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CheckCircle2, ChevronRight, CircleAlert, Landmark } from "lucide-react";
 import Link from "next/link";
+import { AvisoPasajero } from "@/components/aviso-pasajero";
 import { CirculoCuenta } from "@/components/circulo-cuenta";
 import {
   Cifra,
@@ -29,7 +30,7 @@ const nombreTipo: Record<string, string> = {
   transito: "USD en EE. UU.",
 };
 
-export default async function Cuentas() {
+export default async function Cuentas({ searchParams }: PageProps<"/cuentas">) {
   await exigirSesion();
   const [cuentas, sobres, deudas] = await Promise.all([
     saldosPorCuenta(),
@@ -48,6 +49,17 @@ export default async function Cuentas() {
   return (
     <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">
       <TituloPagina titulo="Cuentas" />
+      {(await searchParams).transferido === "1" ? (
+        // Spec 011: al volver de transferir entre cuentas.
+        <div className="-mt-2 flex px-1 lg:col-span-12 lg:mt-0 lg:px-0">
+          <AvisoPasajero parametros={["transferido"]}>
+            <Pildora tono="positiva">
+              <CheckCircle2 size={13} aria-hidden />
+              Transferido
+            </Pildora>
+          </AvisoPasajero>
+        </div>
+      ) : null}
 
       <section className="hero rounded-tarjeta p-5 lg:col-span-7 lg:p-6">
         <p className="text-[13px] font-semibold text-white/75">Patrimonio en cuentas</p>
@@ -112,7 +124,7 @@ export default async function Cuentas() {
       </div>
 
       <Tarjeta className="lg:col-span-12">
-        <EncabezadoTarjeta titulo="Mis cuentas" />
+        <EncabezadoTarjeta titulo="Mis cuentas" enlace={{ href: "/nuevo/transferir", texto: "Transferir" }} />
         <div className="flex flex-col lg:grid lg:grid-cols-2 lg:gap-x-8">
           {cuentas.map((c) => (
             <FilaLista

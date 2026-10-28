@@ -61,6 +61,7 @@ function tituloDe(ruta: string) {
   if (ruta.startsWith("/deudas/apartar")) return "Apartar para deudas";
   if (/^\/deudas\/\d+\/editar/.test(ruta)) return "Editar deuda";
   if (ruta.startsWith("/nuevo/mover")) return "Mover entre sobres";
+  if (ruta.startsWith("/nuevo/transferir")) return "Transferir entre cuentas";
   if (ruta.startsWith("/nuevo/por-completar")) return "Anotar por completar";
   if (ruta.startsWith("/por-completar/varios")) return "Completar varios";
   if (/^\/por-completar\/\d+/.test(ruta)) return "Editar por completar";

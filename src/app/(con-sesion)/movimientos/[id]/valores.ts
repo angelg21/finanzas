@@ -53,10 +53,15 @@ export function avisoDeVuelta(params: Record<string, string | string[] | undefin
 }
 
 /**
- * La dirección de un gasto o un ingreso para editarlo, o de un pago o un cobro para deshacerlo (spec 007), con a
- * dónde volver. Transferencias, reasignaciones y préstamos no abren nada (spec 006, criterio 8).
+ * La dirección de un gasto o un ingreso para editarlo, o de un pago, un cobro o una transferencia entre cuentas para
+ * deshacerlo (specs 007 y 011), con a dónde volver. La venta de USDT de un gasto, las reasignaciones y los préstamos
+ * no abren nada (spec 006, criterio 8).
  */
-export function enlaceDeEdicion(m: { id: number; tipo: string }, volver: string): string | undefined {
-  if (!["gasto", "ingreso", "pago_deuda", "cobro_prestamo"].includes(m.tipo)) return undefined;
+export function enlaceDeEdicion(
+  m: { id: number; tipo: string; entreCuentas?: boolean },
+  volver: string,
+): string | undefined {
+  const seAbre = ["gasto", "ingreso", "pago_deuda", "cobro_prestamo"].includes(m.tipo);
+  if (!seAbre && !(m.tipo === "transferencia" && m.entreCuentas === true)) return undefined;
   return `/movimientos/${m.id}?volver=${encodeURIComponent(volver)}`;
 }

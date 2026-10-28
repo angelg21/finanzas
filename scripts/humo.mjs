@@ -93,6 +93,8 @@ const conSesion = [
   ["/movimientos?etiqueta=1e3&etiqueta=2", 200],
   // Spec 009: las pantallas nuevas, y un ?pendiente= que no existe es la captura de siempre.
   ["/nuevo/por-completar", 200],
+  // Spec 011: transferir entre cuentas.
+  ["/nuevo/transferir", 200],
   // La flecha vuelve a la lista con ?desde=lista; cualquier otro valor, al formulario del gasto (2026-10-23).
   ["/nuevo/por-completar?desde=lista", 200],
   ["/nuevo/por-completar?desde=%3Cx%3E&desde=2", 200],

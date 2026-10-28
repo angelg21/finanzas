@@ -22,11 +22,22 @@ export function idDeReferencia(referencia: string | null): string | null {
 
 /**
  * "captura-<id>-gasto": una por fila, igual en cada reintento. Nunca empieza por "demo-". "deuda" es la fila de la
- * tabla deudas; las demás, movimientos (spec 005, criterio 7).
+ * tabla deudas; las demás, movimientos (spec 005, criterio 7). "transferencia" es la venta de USDT de un gasto en
+ * bolívares; "envio" y "comision", una transferencia entre cuentas y su comisión (spec 011).
  */
 export function referenciaDeCaptura(
   id: string,
-  tipo: "gasto" | "transferencia" | "ingreso" | "deuda" | "pago" | "prestamo" | "cobro" | "pendiente",
+  tipo:
+    | "gasto"
+    | "transferencia"
+    | "ingreso"
+    | "deuda"
+    | "pago"
+    | "prestamo"
+    | "cobro"
+    | "pendiente"
+    | "envio"
+    | "comision",
 ): string {
   return `captura-${id.toLowerCase()}-${tipo}`;
 }

@@ -149,7 +149,7 @@ No hay tasas históricas, ni tasa BCV, ni pérdida cambiaria. Un gasto en bolív
 - Invariante: la suma de los sobres es igual a la suma de los saldos en dólares de todas las cuentas, también la de la prima: el dinero que la app registra ahí es tuyo aunque la cuenta no lo sea (ADR 0006). Cada dólar tiene un trabajo.
 - Los bolívares pertenecen siempre al sobre de gastos del mes.
 - Al registrar un ingreso, la app propone el reparto según las reglas: monto fijo a gastos, monto fijo a familia, el resto por prioridad y porcentaje, con tope en el sobre de emergencia. Se confirma con un clic y se puede ajustar.
-- Mover dinero entre sobres es una reasignación, no mueve dinero real. Mover dinero entre cuentas es una transferencia, no cambia los sobres.
+- Mover dinero entre sobres es una reasignación, no mueve dinero real. Mover dinero entre cuentas es una transferencia, no cambia los sobres; si cobraron comisión, esa diferencia es un gasto (feature 011).
 - El sobre de inversión avisa si intentas gastar desde él.
 
 **Modelo de datos**
@@ -212,9 +212,9 @@ Referencia antes de diseñar: Actual Budget, open source, usa exactamente el mod
 
 **Fase 1, dos semanas: usar desde el día uno**
 
-- Cuentas, categorías, movimientos con nota. Los gastos con nota y las categorías con icono y color están hechos en la feature 001, y los ingresos en la 004; faltan administrar cuentas (observación 3) y los movimientos entre cuentas.
+- Cuentas, categorías, movimientos con nota. Los gastos con nota y las categorías con icono y color están hechos en la feature 001, y los ingresos en la 004; falta administrar cuentas (observación 3). Los movimientos entre cuentas están **hechos** en la feature 011 (28 de octubre de 2026): lo que salió y lo que llegó, y la diferencia como un gasto de comisión, en "Comisiones".
 - Corregir un gasto o un ingreso ya registrado (monto, categoría, cuenta, sobre, fecha y nota) y borrarlo, sin romper nunca el cuadre entre cuentas y sobres. Aprobado por el desarrollador el 17 de octubre de 2026 y **hecho** en la feature 006: se toca la fila en Movimientos o en el inicio; un gasto con bolívares recalcula su venta de USDT; un ingreso solo baja si "Por asignar" alcanza, y al borrarlo se lleva su reparto.
-- Ajustes de uso diario (feature 007, 17 de octubre de 2026): **hecho** deshacer un pago o un cobro de una deuda, etiquetas para filtrar Movimientos (reemplazadas el mismo día por las de la feature 008) y mover dinero entre sobres desde Registrar → Mover, con una advertencia y una confirmación al sacar de Inversión. Mover entre cuentas sigue pendiente.
+- Ajustes de uso diario (feature 007, 17 de octubre de 2026): **hecho** deshacer un pago o un cobro de una deuda, etiquetas para filtrar Movimientos (reemplazadas el mismo día por las de la feature 008) y mover dinero entre sobres desde Registrar → Mover, con una advertencia y una confirmación al sacar de Inversión. Mover entre cuentas llegó en la feature 011.
 - Etiquetas (feature 008, 17 de octubre de 2026): **hecho**. Una por gasto o ingreso (SAX, Rielco, KumIA), elegida en el formulario o creada ahí mismo con "+ Añadir etiqueta"; "SAX" y "sax" son la misma. Movimientos filtra por etiqueta y muestra su acumulado.
 - Gastos por completar (feature 009, 22 de octubre de 2026): **hecho**. Lo gastado con bolívares prestados se anota en el momento (categoría, descripción, fecha y, si se sabe, el monto) sin mover dinero, y se completa después: uno por uno con su propia venta, o varios a la vez con una sola venta de USDT; si de esa venta sobran bolívares, la app pregunta si van a la cuenta de Bolívares o se registran como un gasto más.
 - Flujo de gasto en bolívares. **Hecho** en la feature 001, fusionada el 12 de octubre de 2026.

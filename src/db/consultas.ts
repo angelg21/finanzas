@@ -143,6 +143,9 @@ export function baseMovimientos() {
       persona: deudas.persona,
       etiquetaId: movimientos.etiquetaId,
       etiqueta: etiquetas.nombre,
+      // Una transferencia entre cuentas (spec 011), que se deshace; no la venta de USDT de un gasto en bolívares.
+      entreCuentas: sql<boolean>`(${movimientos.tipo}::text = 'transferencia' and ${movimientos.origen}::text = 'manual'
+        and coalesce(${movimientos.referenciaExterna}, '') like 'captura-%-envio')`,
     })
     .from(movimientos)
     .leftJoin(categorias, eq(movimientos.categoriaId, categorias.id))

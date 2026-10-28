@@ -175,6 +175,12 @@ Primer uso: el desglose del sobre Ocasiones en `/sobres/[id]`. La captura de gas
 - Borrar confirma en un `<dialog>` como el del calendario, con lo que se borra y los sobres que quedarían en negativo en `negativo`; sin JavaScript, la misma confirmación en la página con `?borrar=1`. Si no se puede borrar, solo el motivo. Al borrar un ingreso, debajo, la vista previa de la feature 007 (criterio 11).
 - Al volver, en `/movimientos` o en el inicio, una `Pildora` `positiva` con "Gasto actualizado", "Ingreso actualizado" o "Borrado".
 
+**Transferir entre cuentas** (feature 011):
+
+- `/nuevo/transferir`: el selector de Registrar con "Transferir" en menta y una `Tarjeta` de 6 columnas centradas, como Mover: "De" y "A" en `SelectorPildoras` con el saldo de cada cuenta en su moneda, ninguna elegida; "Cuánto salió" y "Cuánto llegó" en `CampoMonto`, cada uno con la moneda de su cuenta y "Vacío si llegó lo mismo" debajo del segundo; con JavaScript, la línea en `texto-2` "Comisión: 1,00 USD. Se registra como un gasto, en Comisiones."; "La comisión sale de" en `SelectorPildoras` con Gastos del mes elegido; `SelectorFecha`, nota y "Transferir".
+- En `/cuentas`, "Transferir" como enlace de `EncabezadoTarjeta` en "Mis cuentas" y, al volver, la `Pildora` `positiva` "Transferido".
+- La transferencia se abre como un pago o un cobro: título "Cuenta prima → Binance", el monto a 28 px y "Deshacer transferencia" con la confirmación de borrar de la 006.
+
 **Ajustes de uso diario** (feature 007):
 
 - `/movimientos/[id]` de un pago o un cobro: el título ("Pago a Papás"), el monto a 28 px en una `Tarjeta`, la cuenta, la fecha y la nota, y "Deshacer pago" o "Deshacer cobro" con la confirmación de borrar de la 006 ("Sí, deshacer").

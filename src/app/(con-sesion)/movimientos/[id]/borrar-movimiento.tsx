@@ -11,7 +11,7 @@ import type { EstadoBorrar } from "./valores";
 
 type Datos = {
   id: number;
-  tipo: "gasto" | "ingreso" | "pago" | "cobro";
+  tipo: "gasto" | "ingreso" | "pago" | "cobro" | "transferencia";
   volver: string;
   /** "Se borran el gasto y la venta de 20,00 USDT." */
   queSeBorra: string;
@@ -32,6 +32,7 @@ const etiquetaDe = {
   ingreso: "Borrar ingreso",
   pago: "Deshacer pago",
   cobro: "Deshacer cobro",
+  transferencia: "Deshacer transferencia",
 } as const;
 
 /**
@@ -66,7 +67,7 @@ export function ConfirmarBorrado({
       <div className="flex gap-2">
         {impedido ? null : (
           <Boton type="submit" variante="peligro" disabled={pendiente} className="flex-1">
-            {pendiente ? "Un momento…" : tipo === "pago" || tipo === "cobro" ? "Sí, deshacer" : "Sí, borrar"}
+            {pendiente ? "Un momento…" : tipo === "gasto" || tipo === "ingreso" ? "Sí, borrar" : "Sí, deshacer"}
           </Boton>
         )}
         {alCancelar ? (

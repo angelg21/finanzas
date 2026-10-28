@@ -15,6 +15,7 @@ import { type PagoOCobro, pagoOCobroParaDeshacer } from "@/db/deshacer-pago";
 import { vistaPreviaDeBorrado } from "@/db/borrar-ingreso";
 import { type MovimientoParaEditar, movimientoParaEditar } from "@/db/editar-movimientos";
 import { todasLasEtiquetas } from "@/db/etiquetas";
+import { type TransferenciaParaDeshacer, transferenciaParaDeshacer } from "@/db/transferencias";
 import { categoriasDeIngresoPorUso } from "@/db/reparto";
 import { centavosATexto, formatearCentavos, formatearCifra, formatearTasaGuardada } from "@/lib/dinero";
 import { hoyEnCaracas } from "@/lib/fechas";
@@ -44,10 +45,12 @@ export default async function EditarMovimiento({ params, searchParams }: PagePro
   const volver = destinoDeVuelta(typeof pedido === "string" ? pedido : "");
   const m = await movimientoParaEditar(movimientoId);
   if (!m) {
-    // Spec 007: un pago o un cobro de una deuda no se edita, se deshace.
+    // Spec 007: un pago o un cobro de una deuda no se edita, se deshace; spec 011: una transferencia entre cuentas, igual.
     const p = await pagoOCobroParaDeshacer(movimientoId);
-    if (!p) notFound();
-    return <DeshacerPagoOCobro p={p} volver={volver} confirmar={borrar === "1"} />;
+    if (p) return <DeshacerPagoOCobro p={p} volver={volver} confirmar={borrar === "1"} />;
+    const t = await transferenciaParaDeshacer(movimientoId);
+    if (!t) notFound();
+    return <DeshacerTransferencia t={t} volver={volver} confirmar={borrar === "1"} />;
   }
   const hoy = hoyEnCaracas(new Date());
   const esGasto = m.movimiento.tipo === "gasto";
@@ -110,6 +113,62 @@ function DeshacerPagoOCobro({ p, volver, confirmar }: { p: PagoOCobro; volver: s
           <p className="text-[28px] font-extrabold tracking-tight">{monto}</p>
           <p className="mt-1 text-[13px] text-texto-2">
             {[p.cuenta, p.fecha.split("-").reverse().join("-"), p.nota].filter(Boolean).join(" · ")}
+          </p>
+        </Tarjeta>
+        <div className="flex">
+          <BotonBorrar {...deshacer} />
+        </div>
+      </div>
+    </main>
+  );
+}
+
+/** Una transferencia entre cuentas (spec 011): de dónde a dónde, cuánto llegó, y "Deshacer" con su confirmación. */
+function DeshacerTransferencia({
+  t,
+  volver,
+  confirmar,
+}: {
+  t: TransferenciaParaDeshacer;
+  volver: string;
+  confirmar: boolean;
+}) {
+  const monto = formatearCentavos(t.montoCentavos, t.moneda);
+  const deshacer = {
+    id: t.id,
+    tipo: "transferencia" as const,
+    volver,
+    queSeBorra: t.comision
+      ? `Se deshace la transferencia de ${monto} de ${t.origen} a ${t.destino} y su comisión de ${formatearCentavos(t.comision.montoCentavos, t.moneda)}: las dos cuentas y ${t.comision.sobre} vuelven a como estaban.`
+      : `Se deshace la transferencia de ${monto} de ${t.origen} a ${t.destino}: las dos cuentas vuelven a como estaban.`,
+    avisos: [],
+  };
+  return (
+    <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">
+      <header className="flex flex-col gap-2 px-1 lg:col-span-12 lg:px-0">
+        <Link href={volver} className="flex items-center gap-1 text-[13px] font-semibold text-enlace hover:text-texto">
+          <ArrowLeft size={16} aria-hidden />
+          {etiquetaDeVuelta(volver)}
+        </Link>
+        <h1 className="text-[24px] font-extrabold tracking-tight">{`${t.origen} → ${t.destino}`}</h1>
+      </header>
+      <div className="flex flex-col gap-4 lg:col-span-6 lg:col-start-4">
+        {confirmar ? (
+          <Tarjeta>
+            <ConfirmarBorrado {...deshacer} />
+          </Tarjeta>
+        ) : null}
+        <Tarjeta>
+          <p className="text-[28px] font-extrabold tracking-tight">{monto}</p>
+          <p className="mt-1 text-[13px] text-texto-2">
+            {[
+              "Transferencia",
+              t.comision ? `comisión ${formatearCentavos(t.comision.montoCentavos, t.moneda)}` : null,
+              t.fecha.split("-").reverse().join("-"),
+              t.nota,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
         </Tarjeta>
         <div className="flex">

@@ -6,10 +6,11 @@ const tipos = [
   { tipo: "ingreso", texto: "Ingreso", href: "/nuevo/ingreso" },
   { tipo: "deuda", texto: "Deuda", href: "/nuevo/deuda" },
   { tipo: "mover", texto: "Mover", href: "/nuevo/mover" },
+  { tipo: "transferir", texto: "Transferir", href: "/nuevo/transferir" },
 ] as const;
 
-/** El selector "Gasto · Ingreso · Deuda · Mover" de las pantallas de Registrar, con la actual en menta. */
-export function SelectorTipo({ actual }: { actual: "gasto" | "ingreso" | "deuda" | "mover" }) {
+/** El selector "Gasto · Ingreso · Deuda · Mover · Transferir" de las pantallas de Registrar, con la actual en menta. */
+export function SelectorTipo({ actual }: { actual: (typeof tipos)[number]["tipo"] }) {
   return (
     <nav aria-label="Tipo de movimiento" className="tarjeta flex w-fit items-center gap-1 rounded-full p-1">
       {tipos.map(({ tipo, texto, href }) =>
