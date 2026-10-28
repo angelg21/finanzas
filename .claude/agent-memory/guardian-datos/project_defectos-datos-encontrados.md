@@ -127,10 +127,15 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
   - `categoriasConUso` no cuenta pendientes: la página promete borrar y el escritor archiva.
   - Anotar no compara contenido en un reintento. La base acepta fechas raras, una referencia vacía y un monto > 2^53.
 
-**Criterio 11 de la 007, 4460c75 (2026-10-23). APTO; abiertos** (ver [[revision-007-ajustes]])
+**Criterio 11 de la 007, d069e51 (2026-10-23). NO APTO; abierto** (ver [[revision-007-ajustes]])
 
-- **Media.** El retiro (del más reciente) se lleva el reparto propio de otro ingreso. Ese ingreso ya no se puede borrar, y el mensaje culpa a Mover o a un préstamo inexistentes. Seguir el remedio (Mover) deja un fijo contado con el sobre en 0: la propuesta pierde Familia 100. Es la misma clase que el hallazgo 1 de la quinta vuelta.
-- **Baja.** La firma no cubre los saldos de la vista previa, y el retiro no toma (3, sobre) de los sobres de los que saca. Un Mover, apartar, pago o gasto en medio deja un sobre en negativo aunque la vista mostraba ≥ 0.
+- **Media-alta.** Dos deshacer no son neutros si entre medio hubo un Mover, un préstamo desde PA o un ingreso bajado por debajo de su reparto, con una entrada después. El orden de registro deja reparto contado como recibido. El mensaje pide devolver desde un sobre que ya devolvió.
+- **Cerrados en d069e51 (medidos):** el reparto propio de otro ingreso ya no se retira; la firma cubre los saldos; el retiro toma (3, sobre), y Mover, apartar y pago esperan.
+
+**Criterio 11 de la 007, 4460c75 (2026-10-23). APTO; superado por d069e51**
+
+- ~~**Media.** El retiro (del más reciente) se lleva el reparto propio de otro ingreso.~~ Cerrado para cobros, ingresos y Repartir; sigue la clase con Mover (arriba).
+- ~~**Baja.** La firma no cubre los saldos; sin (3, sobre).~~ Cerrado.
 - **Info.** Sin filtro de sobre activo (descuadra al archivar); un ingreso fuera de PA retira apartados; monto ≠ USD da 23514; PA negativo previo retira de más; meses pasados y demo-* entran.
 
 **007, auditada en main ad01eeb (2026-10-22). Ninguno bloquea** (ver [[revision-007-ajustes]])

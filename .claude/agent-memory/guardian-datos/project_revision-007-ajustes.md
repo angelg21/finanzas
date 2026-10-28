@@ -1,9 +1,17 @@
 ---
 name: revision-007-ajustes
-description: Spec 007 (deshacer, Mover, recibido): ad01eeb SEGURO (2026-10-22); criterio 11 (retiro con vista previa y firma, 4460c75) APTO el 2026-10-23 con H1 media (el retiro se come el reparto de otro ingreso y el mensaje culpa a Mover); el neto con piso ya no existe, ahora "Mover no cuenta"
+description: Spec 007 (deshacer, Mover, recibido): ad01eeb SEGURO; criterio 11 4460c75 APTO con H1; d069e51 (cuenta de lotes FIFO) NO APTO el 2026-10-23 — no es neutro con Mover, préstamo o bajar un ingreso desde PA, y el consejo del mensaje es imposible
 metadata:
   type: project
 ---
+
+**d069e51, cuenta de lotes FIFO (2026-10-23): NO APTO para datos.** Medido en `finanzas_gret2_a` y `_demo` (ya borradas) con `fff6d62f…/scratchpad/gretiro2/sonda.mts <neutro|consejo|clasif|fiel|carreras|forzado|tormenta|volumen>` y el simulador puro `modelo.mts <casos> <semilla> <ops>` (usa `planDeRetiro` real; `RETIRO=<ruta>` carga una variante).
+
+- Bien: fidelidad (restante − huecos = saldo PA) en 2.500 pasos reales y 100 mil simulados; vista previa = lo que queda en 578 aplicados; sin interbloqueos (tormenta 20); Mover, apartar y pago desde el sobre retirado esperan detrás de deshacer (~465 ms, 4 de 4); solo cobros, ingresos y Repartir: 0 de 95 mil distintos.
+- **H1 media-alta:** con un Mover, un préstamo desde PA o un ingreso bajado por debajo de su reparto, más una entrada después, deshacer en orden de registro deja reparto contado (N1: Gastos +20 recibido, PA 0 contra 20). Causa: al quitar el lote, la salida que no se retira se reatribuye por FIFO al lote siguiente y desplaza el Repartir a lotes nuevos. Siguiendo el mensaje: pide devolver desde Familia dos veces (la segunda, Familia en 0, sinSaldo) y queda Gastos recibido +100. Pagar los huecos al final reduce los casos, pero no los elimina.
+- Info: los Mover de antes del 22-10 son "reparto" para siempre; 600 mil filas en el libro: 2 s con (3, PA) tomado (40 mil: 146 ms).
+
+**How to apply:** en la próxima vuelta, correr primero `modelo.mts` con `moverOut`, `prestamo` y `bajar`. Exigir 0 distintos y 0 asimetrías, o un límite escrito en la spec y un mensaje que no pida devolver lo ya devuelto.
 
 **Criterio 11, 4460c75 (2026-10-23): APTO para datos.** Retirar lo repartido al deshacer un cobro o borrar un ingreso (`src/lib/retiro.ts`, `src/db/retiro.ts`, `deshacer-pago.ts`, `borrar-ingreso.ts`). Sin migración. Medido en `finanzas_gret_a` (ya borrada) con `fff6d62f…/scratchpad/gretiro/sonda-retiro.mts <basico|otroingreso|otroingresonov|carreras|forzado|tormenta|filas|firma|volumen>` y `propiedades.mts`:
 

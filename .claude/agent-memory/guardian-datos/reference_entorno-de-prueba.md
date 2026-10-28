@@ -194,4 +194,10 @@ metadata:
   - **`/cuentas` sin navegador:** `cuentas-pagina.mts` hace `process.loadEnvFile` dentro del archivo, entra con `abrirSesion` de `scripts/comprobar-003-paginas.ts` y busca "Cuadra con los sobres".
   - `comprobar-006`, `-007` y `-007-revision --url` corren contra la base real y la dejan con las mismas md5 por tabla; solo avanzan las secuencias (+142 movimientos, +16 deudas).
 
+- **Métodos de d069e51 (2026-10-23)**, en `fff6d62f…/scratchpad/gretiro2/`:
+  - `sonda.mts`: los ayudantes de `gretiro/` más las fases nuevas. Solo corre en `finanzas_gret2_*`. Se arma con `cat base.part medio.part viejas.part cierre-viejas.part fases.part runner.part`.
+  - `modelo.mts`: simulador puro del libro de PA con la lib real; encuentra órdenes que no conmutan en 1 s. Probarlo antes que la base: es 100 veces más rápido.
+  - **`db:demo:limpiar` + `db:demo` sin tocar los ids de la real:** sobre una copia con `DATABASE_URL=...5433/<copia>` en la línea. La huella de la demo da igual que la real (0dcb6db0…).
+  - `comprobar-007-retiro.ts` también corre sobre una copia así (18 ✓ en 2 s).
+
 Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].

@@ -10,7 +10,7 @@
 - [Revisión de 004](project_revision-004-reparto.md): T4 SEGURO; T5 APTO (7dd832a); 97437d7 APTO; su corrección 789fbc6 APTO (la propuesta sigue lanzando); mirar git log -- src/db
 - [Revisión de 005](project_revision-005-deudas.md): 0005 APTA; T6/T7/T13 con cambios, arreglos medidos; /f-review SEGURO (2026-10-16); fecha prevista rara tumba reparto
 - [Revisión de 006](project_revision-006-editar.md): T3 SEGURO (2026-10-17); candado (3,PA) probado con mutante; el escritor confía en el plan; cuenta archivada; ids > int4
-- [Revisión de 007](project_revision-007-ajustes.md): ad01eeb SEGURO; criterio 11 (4460c75) APTO 2026-10-23, H1 retiro come reparto ajeno, H2 firma sin saldos; Mover no cuenta
+- [Revisión de 007](project_revision-007-ajustes.md): ad01eeb SEGURO; 4460c75 APTO; d069e51 (lotes FIFO) NO APTO 2026-10-23: no neutro con Mover/préstamo; simulador gretiro2
 - [Revisión de 008](project_revision-008-etiquetas.md): 0006 SEGURO (2026-10-17, sha 56bd5d69); respaldo antes de migrar falla con código nuevo; etiquetas sin marca demo
 - [Revisión de 009](project_revision-009-por-completar.md): 0007 NO APLICAR; 2.ª vuelta 0007+0008 SEGURO (0d8904e); residual: el último gasto hereda la venta compartida
 - [Captura idempotente](project_captura-idempotente.md): T12 de 002 NO APTO y luego APTO; 23505 + huella + 15 min; residuales: id reutilizado idéntico, sin editar movimientos, pruebas de base en f-verify
