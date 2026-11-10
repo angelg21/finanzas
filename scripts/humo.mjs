@@ -68,6 +68,9 @@ const publicas = [
 const conSesion = [
   ["/", 200],
   ["/movimientos", 200],
+  // Todo: sin cortar por fecha, con las dos flechas apagadas.
+  ["/movimientos?periodo=todo", 200],
+  ["/movimientos?tipo=mover&periodo=todo", 200],
   ["/sobres", 200],
   ["/cuentas", 200],
   ["/nuevo", 200],

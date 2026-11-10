@@ -19,13 +19,13 @@ Fecha: 7 de octubre de 2026. Dos referencias elegidas por el usuario: `docs/refe
 
 Tercera referencia, `docs/referencias/movimientos-referencia.jpg` (14 de octubre de 2026, la app que el desarrollador usa en el iPhone), solo para la estructura de Movimientos (spec 003):
 
-| En la referencia                                         | En la app                                                                                        |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Pestañas GASTOS e INGRESOS                               | **Pestanas** Gastos · Ingresos · Mover                                                           |
-| Día / Semana / Mes / Año / Período y "‹ Octubre de 2026" | **Pestanas** Día · Semana · Mes · Año, sin el rango libre, y las flechas del periodo             |
-| Anillo de colores con el total en el centro              | **GraficaCategorias**: cada porción del color de su categoría, con leyenda que filtra la lista   |
-| Filas por categoría con icono, porcentaje y monto        | La leyenda del anillo; debajo, cada movimiento como **FilaMovimiento** con su `CirculoCategoria` |
-| Botón "+" amarillo flotante                              | **BotonFlotanteRegistrar** con el degradado de `boton-pino`                                      |
+| En la referencia                                         | En la app                                                                                                      |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Pestañas GASTOS e INGRESOS                               | **Pestanas** Gastos · Ingresos · Mover                                                                         |
+| Día / Semana / Mes / Año / Período y "‹ Octubre de 2026" | **Pestanas** Día · Semana · Mes · Año · Todo, sin el rango libre, y las flechas del periodo (apagadas en Todo) |
+| Anillo de colores con el total en el centro              | **GraficaCategorias**: cada porción del color de su categoría, con leyenda que filtra la lista                 |
+| Filas por categoría con icono, porcentaje y monto        | La leyenda del anillo; debajo, cada movimiento como **FilaMovimiento** con su `CirculoCategoria`               |
+| Botón "+" amarillo flotante                              | **BotonFlotanteRegistrar** con el degradado de `boton-pino`                                                    |
 
 ## Dos disposiciones
 

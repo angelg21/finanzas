@@ -183,3 +183,26 @@ describe("años de menos de cuatro cifras (revisión de la 003, hallazgo 5)", ()
     expect(moverPeriodo("mes", "0100-01-31", -1, hoy)).toBe("0099-12-31");
   });
 });
+
+describe("Todo: sin cortar por fecha", () => {
+  it("el rango abarca cualquier fecha que guarde la base, sea cual sea el día de referencia", () => {
+    expect(rangoDePeriodo("todo", "2026-10-14")).toEqual({ desde: "0001-01-01", hasta: "9999-12-31" });
+    expect(rangoDePeriodo("todo", "2025-01-01")).toEqual(rangoDePeriodo("todo", "2026-10-14"));
+  });
+
+  it("no hay periodo anterior ni siguiente", () => {
+    expect(moverPeriodo("todo", "2026-10-01", -1, hoy)).toBe("2026-10-01");
+    expect(moverPeriodo("todo", "2026-10-01", 1, hoy)).toBe("2026-10-01");
+    expect(esPeriodoActual("todo", "2025-01-01", hoy)).toBe(true);
+  });
+
+  it('se llama "Todo el historial"', () => {
+    expect(etiquetaPeriodo("todo", "2026-10-14", hoy)).toBe("Todo el historial");
+  });
+
+  it("viaja en la dirección y se lee de vuelta", () => {
+    const filtros = { pestana: "gastos", periodo: "todo", fecha: hoy, categoria: null } as const;
+    expect(consultaDeFiltros(filtros, hoy)).toBe("?periodo=todo");
+    expect(leerFiltros({ periodo: "todo" }, hoy)).toEqual(filtros);
+  });
+});

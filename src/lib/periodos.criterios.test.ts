@@ -101,14 +101,16 @@ describe("★ 5 · bordes del periodo", () => {
       semana: (desde) => diaDeLaSemana(desde) === "lunes",
       mes: (desde) => desde.endsWith("-01"),
       anio: (desde) => desde.endsWith("-01-01"),
+      todo: (desde) => desde === "0001-01-01",
     };
     const finales: Record<TipoPeriodo, (hasta: string) => boolean> = {
       dia: () => true,
       semana: (hasta) => diaDeLaSemana(hasta) === "domingo",
       mes: (hasta) => diaSiguiente(hasta).endsWith("-01"),
       anio: (hasta) => hasta.endsWith("-12-31"),
+      todo: (hasta) => hasta === "9999-12-31",
     };
-    for (const tipo of ["dia", "semana", "mes", "anio"] as const) {
+    for (const tipo of ["dia", "semana", "mes", "anio", "todo"] as const) {
       let anterior: { desde: string; hasta: string } | null = null;
       for (const fecha of dias("2023-01-01", "2027-12-31")) {
         const rango = rangoDePeriodo(tipo, fecha);

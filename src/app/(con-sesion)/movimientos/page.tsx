@@ -41,8 +41,10 @@ export const metadata: Metadata = { title: "Movimientos" };
 export const dynamic = "force-dynamic";
 
 const LIMITE = 200;
+/** Todo es para ver la lista entera, también el historial importado (spec 012): con el corte de los demás no se vería. */
+const LIMITE_TODO = 1000;
 const textoPestana = { gastos: "Gastos", ingresos: "Ingresos", mover: "Mover" } as const;
-const textoPeriodo = { dia: "Día", semana: "Semana", mes: "Mes", anio: "Año" } as const;
+const textoPeriodo = { dia: "Día", semana: "Semana", mes: "Mes", anio: "Año", todo: "Todo" } as const;
 const nada = {
   gastos: "No hay gastos",
   ingresos: "No hay ingresos",
@@ -92,7 +94,13 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
   };
   const filtros: Filtros = { ...pedidos, categoria: categoria?.categoriaId ?? null };
   const [lista, dias, delPeriodo] = await Promise.all([
-    movimientosDelPeriodo(filtros.pestana, rango, filtros.categoria, LIMITE, etiqueta?.id ?? null),
+    movimientosDelPeriodo(
+      filtros.pestana,
+      rango,
+      filtros.categoria,
+      filtros.periodo === "todo" ? LIMITE_TODO : LIMITE,
+      etiqueta?.id ?? null,
+    ),
     resumenPorDia(filtros.pestana, rango, filtros.categoria, etiqueta?.id ?? null),
     filtros.pestana === "mover" ? [] : etiquetasDelPeriodo(filtros.pestana, rango, filtros.categoria),
   ]);
@@ -216,13 +224,20 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
             />
           </div>
           <nav aria-label="Cambiar de periodo" className="flex items-center justify-between gap-2 lg:min-w-[260px]">
-            <Link
-              href={enlace({ fecha: moverPeriodo(filtros.periodo, filtros.fecha, -1, hoy) })}
-              aria-label="Periodo anterior"
-              className={`${flecha} text-texto hover:bg-tarjeta-hover`}
-            >
-              <ChevronLeft size={22} aria-hidden />
-            </Link>
+            {/* Todo no tiene periodo anterior ni siguiente: las dos flechas quedan apagadas. */}
+            {filtros.periodo === "todo" ? (
+              <span aria-hidden className={`${flecha} text-texto-3 opacity-40`}>
+                <ChevronLeft size={22} />
+              </span>
+            ) : (
+              <Link
+                href={enlace({ fecha: moverPeriodo(filtros.periodo, filtros.fecha, -1, hoy) })}
+                aria-label="Periodo anterior"
+                className={`${flecha} text-texto hover:bg-tarjeta-hover`}
+              >
+                <ChevronLeft size={22} aria-hidden />
+              </Link>
+            )}
             {/* Elegir un día lleva a ese día; desde ahí, Semana, Mes o Año muestran el suyo (se conserva la fecha). */}
             <BotonCalendario
               destino={enlace({ periodo: "dia", fecha: hoy })}

@@ -1,12 +1,12 @@
 /**
- * Periodos de la pantalla de movimientos (spec 003): día, semana de lunes a domingo, mes y año, sobre la fecha del
+ * Periodos de la pantalla de movimientos (spec 003): día, semana de lunes a domingo, mes, año y todo, sobre la fecha del
  * movimiento ("AAAA-MM-DD", que ya es el día de Caracas). Y los filtros de la dirección: ningún parámetro llega a
  * una consulta sin pasar por `leerFiltros`, y uno inválido cae en Gastos del mes de hoy sin romper la página.
  */
 import { diaAnterior, fechaLarga, fechaValida, moverMes, nombreMes } from "./fechas";
 
-export type TipoPeriodo = "dia" | "semana" | "mes" | "anio";
-export const tiposPeriodo: readonly TipoPeriodo[] = ["dia", "semana", "mes", "anio"];
+export type TipoPeriodo = "dia" | "semana" | "mes" | "anio" | "todo";
+export const tiposPeriodo: readonly TipoPeriodo[] = ["dia", "semana", "mes", "anio", "todo"];
 
 export type PestanaMovimientos = "gastos" | "ingresos" | "mover";
 export const pestanasMovimientos: readonly PestanaMovimientos[] = ["gastos", "ingresos", "mover"];
@@ -61,11 +61,15 @@ export function rangoDePeriodo(tipo: TipoPeriodo, ancla: string): Rango {
       return { desde: `${cuatroCifras(anio)}-${dosCifras(mes)}-01`, hasta: diaEnMes(anio, mes, 31) };
     case "anio":
       return { desde: `${cuatroCifras(anio)}-01-01`, hasta: `${cuatroCifras(anio)}-12-31` };
+    case "todo":
+      // Sin cortar por fecha: de la primera a la última que admite la columna date.
+      return { desde: "0001-01-01", hasta: "9999-12-31" };
   }
 }
 
-/** El día de referencia del periodo anterior (−1) o siguiente (+1), sin pasar de `hoy`. */
+/** El día de referencia del periodo anterior (−1) o siguiente (+1), sin pasar de `hoy`. Todo no tiene ni uno ni otro. */
 export function moverPeriodo(tipo: TipoPeriodo, ancla: string, delta: number, hoy: string): string {
+  if (tipo === "todo") return ancla;
   const { anio, mes, dia } = partes(ancla);
   let movida: string;
   if (tipo === "dia") movida = sumarDias(ancla, delta);
@@ -94,7 +98,7 @@ export function etiquetaDia(fecha: string, hoy: string): string {
 
 const mesCorto = (mes: number) => nombreMes(mes).slice(0, 3).toLowerCase();
 
-/** "Hoy", "12 – 18 oct 2026", "Octubre de 2026" o "2026". */
+/** "Hoy", "12 – 18 oct 2026", "Octubre de 2026", "2026" o "Todo el historial". */
 export function etiquetaPeriodo(tipo: TipoPeriodo, ancla: string, hoy: string): string {
   const { anio, mes } = partes(ancla);
   switch (tipo) {
@@ -104,6 +108,8 @@ export function etiquetaPeriodo(tipo: TipoPeriodo, ancla: string, hoy: string): 
       return `${nombreMes(mes)} de ${anio}`;
     case "anio":
       return String(anio);
+    case "todo":
+      return "Todo el historial";
     case "semana": {
       const { desde, hasta } = rangoDePeriodo("semana", ancla);
       const a = partes(desde);
