@@ -48,8 +48,15 @@ export async function categoriaDeLaPestana(pestana: "gastos" | "ingresos", categ
   return categoria ?? null;
 }
 
-/** Total en USD de cada categoría con movimientos de la pestaña en el periodo, sin el corte de la lista. */
-export async function totalesPorCategoria(pestana: "gastos" | "ingresos", rango: Rango) {
+/**
+ * Total en USD de cada categoría con movimientos de la pestaña en el periodo, sin el corte de la lista. Con etiqueta,
+ * solo lo de esa etiqueta: las píldoras de Ingresos.
+ */
+export async function totalesPorCategoria(
+  pestana: "gastos" | "ingresos",
+  rango: Rango,
+  etiquetaId: number | null = null,
+) {
   return (
     db
       .select({
@@ -61,11 +68,29 @@ export async function totalesPorCategoria(pestana: "gastos" | "ingresos", rango:
       })
       .from(movimientos)
       .innerJoin(categorias, eq(movimientos.categoriaId, categorias.id))
-      .where(delPeriodo(pestana, rango, null))
+      .where(delPeriodo(pestana, rango, null, etiquetaId))
       .groupBy(categorias.id)
       // Orden fijo, también en los empates: el punto del mayor residuo va siempre a la misma categoría.
       .orderBy(desc(sql`sum(${movimientos.montoUsdCentavos})`), categorias.id)
   );
+}
+
+/**
+ * El anillo de Ingresos: el total en USD de cada etiqueta en el periodo, y lo que no lleva etiqueta junto (id null), para
+ * que el centro siga siendo el total de la pestaña. Mismo orden fijo que por categoría.
+ */
+export async function totalesPorEtiqueta(pestana: "gastos" | "ingresos", rango: Rango) {
+  return db
+    .select({
+      id: etiquetas.id,
+      nombre: etiquetas.nombre,
+      centavos: sql<number>`sum(${movimientos.montoUsdCentavos})::bigint`.mapWith(Number),
+    })
+    .from(movimientos)
+    .leftJoin(etiquetas, eq(movimientos.etiquetaId, etiquetas.id))
+    .where(delPeriodo(pestana, rango, null))
+    .groupBy(etiquetas.id)
+    .orderBy(desc(sql`sum(${movimientos.montoUsdCentavos})`), sql`${etiquetas.id} nulls last`);
 }
 
 /** Los movimientos del periodo, del más reciente al más viejo, hasta `limite`. */

@@ -152,15 +152,17 @@ export async function comprobarPaginas(origen: string, d: DatosDePaginas, compro
       ...fueraDeLugar("Ingresos", ingresos.html, d.notas.ingresos),
       ...fueraDeLugar("Mover", mover.html, d.notas.mover),
     ];
-    // El anillo se reconoce por su etiqueta: el emblema de la app también es role="img".
-    const anillo = /role="img" aria-label="[^"]* por categoría/;
+    // El anillo se reconoce por su etiqueta: el emblema de la app también es role="img". En Ingresos va por etiqueta
+    // (pedido del desarrollador, 2026-11-09), con "Sin etiqueta" dentro: el centro sigue siendo el total de la pestaña.
+    const anillo = /role="img" aria-label="[^"]* por (categoría|etiqueta)/;
+    const anilloDe = (html: string) => anillo.exec(html)?.[1];
     comprobar(
       "3",
       "en la página, cada pestaña muestra solo las filas de su tipo, y Mover va sin anillo",
       malas.length === 0 &&
         centro(ingresos.html) === cifra(d.totalIngresosMarzo) &&
-        anillo.test(gastos.html) &&
-        anillo.test(ingresos.html) &&
+        anilloDe(gastos.html) === "categoría" &&
+        anilloDe(ingresos.html) === "etiqueta" &&
         !anillo.test(mover.html),
       malas.length ? malas.join("; ") : `centro de ingresos ${centro(ingresos.html)}`,
     );

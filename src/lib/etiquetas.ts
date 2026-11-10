@@ -3,7 +3,7 @@
  * cada una. Se eligen de una lista y se crean en el mismo formulario. "SAX", "sax" y " Sax " son la misma: la clave es
  * la de las categorías, sin mayúsculas, acentos ni espacios de más, y la base la hace única.
  */
-import { claveDeNombre } from "./categorias";
+import { type ColorCategoria, claveDeNombre } from "./categorias";
 
 const LARGO_MAXIMO = 30;
 const idMaximo = 2_147_483_647;
@@ -48,4 +48,28 @@ export function leerIdEtiqueta(valor: unknown): number | null {
   if (typeof valor !== "string" || !/^\d{1,10}$/.test(valor)) return null;
   const id = Number(valor);
   return id > 0 && id <= idMaximo ? id : null;
+}
+
+/** La paleta sin el gris, en un orden que separa los tonos vecinos: dos etiquetas seguidas nunca se parecen. */
+const coloresDeEtiqueta: ColorCategoria[] = [
+  "azul",
+  "coral",
+  "verde",
+  "lavanda",
+  "ambar",
+  "turquesa",
+  "rosa",
+  "oliva",
+  "indigo",
+  "naranja",
+  "pino",
+];
+
+/**
+ * El color de la porción de una etiqueta en el anillo de Ingresos: las etiquetas no eligen color, así que sale de su
+ * id y es siempre el mismo. "Sin etiqueta" (null) es gris.
+ */
+export function colorDeEtiqueta(id: number | null): ColorCategoria {
+  if (id === null) return "pizarra";
+  return coloresDeEtiqueta[(id - 1) % coloresDeEtiqueta.length];
 }

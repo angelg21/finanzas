@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BotonCalendario } from "@/components/calendario";
 import { Boton, Entrada } from "@/components/formulario";
 import { GraficaCategorias } from "@/components/grafica-categorias";
+import { PildorasDeFiltro } from "@/components/pildoras-de-filtro";
 import { FilaMovimiento } from "@/components/movimiento";
 import { Pestanas } from "@/components/pestanas";
 import { CheckCircle2 } from "lucide-react";
@@ -15,14 +16,14 @@ import {
   etiquetasDelPeriodo,
   movimientosDelPeriodo,
   resumenPorDia,
+  totalesPorEtiqueta,
   totalesPorCategoria,
 } from "@/db/movimientos-del-periodo";
 import { etiquetaPorId } from "@/db/etiquetas";
 import { exigirSesion } from "@/app/sesion";
 import { avisoDeVuelta, enlaceDeEdicion } from "./[id]/valores";
 import { distribuirPorCategoria } from "@/lib/distribucion";
-import { leerIdEtiqueta } from "@/lib/etiquetas";
-import { formatearCifraCorta } from "@/lib/dinero";
+import { colorDeEtiqueta, leerIdEtiqueta } from "@/lib/etiquetas";
 import { hoyEnCaracas } from "@/lib/fechas";
 import {
   type Filtros,
@@ -61,10 +62,10 @@ function cuando({ periodo, fecha }: Filtros, hoy: string) {
 }
 
 /**
- * Movimientos (spec 003): Gastos, Ingresos y Mover; el periodo con sus flechas; en Gastos e Ingresos, el anillo por
- * categoría con su leyenda que filtra; y la lista por día. Todo son enlaces con parámetros que valida `leerFiltros`:
- * funciona sin JavaScript. Dos tandas en paralelo: los totales por categoría y, con filtros, la categoría por su tipo
- * y la etiqueta (spec 008); después la lista, el resumen por día y las etiquetas del periodo.
+ * Movimientos (spec 003): Gastos, Ingresos y Mover; el periodo con sus flechas; en Gastos e Ingresos, el anillo con su
+ * leyenda que filtra y las píldoras (spec 008); y la lista por día. Todo son enlaces con parámetros que valida
+ * `leerFiltros`: funciona sin JavaScript. Dos tandas en paralelo: los totales del anillo y, con filtros, la categoría
+ * por su tipo y la etiqueta; después la lista, el resumen por día y los totales de las píldoras.
  */
 export default async function Movimientos({ searchParams }: PageProps<"/movimientos">) {
   await exigirSesion();
@@ -77,23 +78,23 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
   const idEtiqueta = leerIdEtiqueta(parametros.etiqueta);
   const rango = rangoDePeriodo(pedidos.periodo, pedidos.fecha);
   const conAnillo = pedidos.pestana !== "mover";
+  // En Ingresos, a pedido del desarrollador (2026-11-09), el anillo va por etiqueta (de qué cliente entró) y las
+  // píldoras, por categoría. En Gastos, como en las specs 003 y 008: anillo por categoría y píldoras por etiqueta.
+  const anilloPorEtiqueta = pedidos.pestana === "ingresos";
 
-  const [totales, pedida, etiqueta] =
+  const [porCategoria, porEtiqueta, categoria, etiqueta] =
     pedidos.pestana === "mover"
-      ? [[], null, null]
+      ? [[], [], null, null]
       : await Promise.all([
-          totalesPorCategoria(pedidos.pestana, rango),
+          anilloPorEtiqueta ? [] : totalesPorCategoria(pedidos.pestana, rango),
+          anilloPorEtiqueta ? totalesPorEtiqueta(pedidos.pestana, rango) : [],
+          // Filtra cualquier categoría del tipo de la pestaña, aunque no tenga movimientos en el periodo: entonces lo
+          // dice y el filtro sigue en las flechas y el calendario (criterio 6). Una de otro tipo, o que no existe, no.
           pedidos.categoria === null ? null : categoriaDeLaPestana(pedidos.pestana, pedidos.categoria),
           idEtiqueta === null ? null : etiquetaPorId(idEtiqueta),
         ]);
-  // Filtra cualquier categoría del tipo de la pestaña, aunque no tenga movimientos en el periodo: entonces lo dice y el
-  // filtro sigue en las flechas, las píldoras y el calendario (criterio 6). Una de otro tipo, o que no existe, no filtra.
-  const categoria = pedida && {
-    ...pedida,
-    centavos: totales.find((t) => t.categoriaId === pedida.categoriaId)?.centavos ?? 0,
-  };
   const filtros: Filtros = { ...pedidos, categoria: categoria?.categoriaId ?? null };
-  const [lista, dias, delPeriodo] = await Promise.all([
+  const [lista, dias, pildoras] = await Promise.all([
     movimientosDelPeriodo(
       filtros.pestana,
       rango,
@@ -102,14 +103,14 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
       etiqueta?.id ?? null,
     ),
     resumenPorDia(filtros.pestana, rango, filtros.categoria, etiqueta?.id ?? null),
-    filtros.pestana === "mover" ? [] : etiquetasDelPeriodo(filtros.pestana, rango, filtros.categoria),
+    filtros.pestana === "mover"
+      ? []
+      : anilloPorEtiqueta
+        ? totalesPorCategoria(filtros.pestana, rango, etiqueta?.id ?? null).then((cs) =>
+            cs.map((c) => ({ id: c.categoriaId, nombre: c.nombre, centavos: c.centavos })),
+          )
+        : etiquetasDelPeriodo(filtros.pestana, rango, filtros.categoria),
   ]);
-  // La activa siempre tiene su píldora, aunque no haya movimientos con ella en el periodo o la categoría: tocarla otra
-  // vez la quita (revisión de la 008, hallazgo 3).
-  const etiquetas =
-    etiqueta && !delPeriodo.some((e) => e.id === etiqueta.id)
-      ? [...delPeriodo, { id: etiqueta.id, nombre: etiqueta.nombre, centavos: 0 }]
-      : delPeriodo;
 
   const enlace = (cambios: Partial<Filtros> & { etiqueta?: number | null }) => {
     const { etiqueta: conEtiqueta = etiqueta?.id ?? null, ...resto } = cambios;
@@ -117,7 +118,39 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
     if (!conEtiqueta) return base;
     return `${base}${base.includes("?") ? "&" : "?"}etiqueta=${conEtiqueta}`;
   };
-  const { total, porciones } = distribuirPorCategoria(totales);
+  // La activa siempre tiene su píldora, aunque no tenga movimientos en el periodo: tocarla otra vez la quita (revisión
+  // de la 008, hallazgo 3). En Ingresos la píldora activa es la categoría.
+  const activa = anilloPorEtiqueta ? categoria && { id: categoria.categoriaId, nombre: categoria.nombre } : etiqueta;
+  const conActiva =
+    activa && !pildoras.some((p) => p.id === activa.id) ? [...pildoras, { ...activa, centavos: 0 }] : pildoras;
+  const opcionesPildoras = conActiva.map((p) => {
+    const otra = p.id === activa?.id ? null : p.id;
+    return {
+      clave: String(p.id),
+      nombre: p.nombre,
+      centavos: p.centavos,
+      activa: p.id === activa?.id,
+      href: enlace(anilloPorEtiqueta ? { categoria: otra } : { etiqueta: otra }),
+    };
+  });
+  const { total, porciones } = distribuirPorCategoria(
+    anilloPorEtiqueta
+      ? porEtiqueta.map((e) => ({
+          clave: String(e.id ?? "sin-etiqueta"),
+          nombre: e.nombre ?? "Sin etiqueta",
+          color: colorDeEtiqueta(e.id),
+          centavos: e.centavos,
+          // "Sin etiqueta" no es un filtro: tocarla muestra todas.
+          href: enlace({ etiqueta: e.id }),
+        }))
+      : porCategoria.map((c) => ({
+          clave: String(c.categoriaId),
+          nombre: c.nombre,
+          color: c.color,
+          centavos: c.centavos,
+          href: enlace({ categoria: c.categoriaId }),
+        })),
+  );
   const cuantos = dias.reduce((a, d) => a + d.cantidad, 0);
   const porDia = new Map(dias.map((d) => [d.fecha, d.centavos]));
 
@@ -130,10 +163,7 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
         <div className="flex items-baseline justify-between gap-3 px-1">
           <h2 className="flex items-baseline gap-1.5 text-[15px] font-bold">
             {[categoria?.nombre, etiqueta?.nombre].filter(Boolean).join(" · ") || "Todas"} ·{" "}
-            <Cifra
-              centavos={etiqueta ? dias.reduce((a, d) => a + d.centavos, 0) : categoria ? categoria.centavos : total}
-              tamano="md"
-            />
+            <Cifra centavos={etiqueta || categoria ? dias.reduce((a, d) => a + d.centavos, 0) : total} tamano="md" />
           </h2>
           {cuantos > lista.length ? (
             <span className="text-[12px] text-texto-3">
@@ -284,43 +314,21 @@ export default async function Movimientos({ searchParams }: PageProps<"/movimien
         </div>
       </div>
 
-      {etiquetas.length > 0 ? (
-        // Spec 008: las etiquetas del periodo con su total. Tocar una filtra la lista y su total; otra vez, lo quita.
-        <nav aria-label="Etiquetas" className="flex flex-wrap gap-2">
-          {etiquetas.map((e) => (
-            <Link
-              key={e.id}
-              href={enlace({ etiqueta: e.id === etiqueta?.id ? null : e.id })}
-              aria-current={e.id === etiqueta?.id ? "true" : undefined}
-              className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2"
-            >
-              <Pildora tono={e.id === etiqueta?.id ? "palida" : "oscura"}>
-                {e.nombre} <span className="tabular opacity-70">{formatearCifraCorta(e.centavos)}</span>
-              </Pildora>
-            </Link>
-          ))}
-        </nav>
-      ) : null}
+      <PildorasDeFiltro etiqueta={anilloPorEtiqueta ? "Categorías" : "Etiquetas"} opciones={opcionesPildoras} />
 
       {conAnillo ? (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5">
           <div className="lg:sticky lg:top-6 lg:col-span-5 lg:self-start">
             <Tarjeta>
               <GraficaCategorias
-                titulo={`${textoPestana[filtros.pestana]} por categoría, ${etiquetaPeriodo(filtros.periodo, filtros.fecha, hoy)}`}
+                titulo={`${textoPestana[filtros.pestana]} por ${anilloPorEtiqueta ? "etiqueta" : "categoría"}, ${etiquetaPeriodo(filtros.periodo, filtros.fecha, hoy)}`}
                 etiquetaCentro={filtros.pestana === "gastos" ? "USD EN GASTOS" : "USD EN INGRESOS"}
                 total={total}
-                elegida={categoria ? String(categoria.categoriaId) : null}
-                hrefTodas={enlace({ categoria: null })}
-                porciones={porciones.map((p) => ({
-                  clave: String(p.categoriaId),
-                  nombre: p.nombre,
-                  color: p.color,
-                  centavos: p.centavos,
-                  porcentaje: p.porcentaje,
-                  menosDeUno: p.menosDeUno,
-                  href: enlace({ categoria: p.categoriaId }),
-                }))}
+                elegida={
+                  anilloPorEtiqueta ? etiqueta && String(etiqueta.id) : categoria && String(categoria.categoriaId)
+                }
+                hrefTodas={enlace(anilloPorEtiqueta ? { etiqueta: null } : { categoria: null })}
+                porciones={porciones}
               />
             </Tarjeta>
           </div>

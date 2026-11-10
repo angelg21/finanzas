@@ -82,9 +82,10 @@ export function FilaMovimiento({ m, href }: { m: MovimientoReciente; href?: stri
       ) : (
         <CirculoCategoria icono={m.categoriaIcono ?? ""} color={m.categoriaColor ?? ""} />
       )}
+      {/* La descripción se lee entera: baja de línea en vez de cortarse con "…" (pedido del desarrollador, 2026-11-09). */}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[15px] font-bold">{titulo}</span>
-        <span className="mt-0.5 block truncate text-[13px] text-texto-3">{detalle.filter(Boolean).join(" · ")}</span>
+        <span className="block break-words text-[15px] font-bold">{titulo}</span>
+        <span className="mt-0.5 block break-words text-[13px] text-texto-3">{detalle.filter(Boolean).join(" · ")}</span>
       </span>
       <span className="flex shrink-0 flex-col items-end gap-0.5 text-right">
         {signo < 0 ? (

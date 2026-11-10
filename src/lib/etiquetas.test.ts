@@ -1,6 +1,14 @@
 /** Spec 008, criterios 1, 3 y 5: el nombre de una etiqueta, su clave sin duplicados por tipeo, y el id del filtro. */
 import { describe, expect, it } from "vitest";
-import { conEtiqueta, coincidenConEtiqueta, etiquetaIgual, leerIdEtiqueta, nombreDeEtiqueta } from "./etiquetas";
+import { coloresCategoria } from "./categorias";
+import {
+  colorDeEtiqueta,
+  conEtiqueta,
+  coincidenConEtiqueta,
+  etiquetaIgual,
+  leerIdEtiqueta,
+  nombreDeEtiqueta,
+} from "./etiquetas";
 
 describe("★ 1 · nombreDeEtiqueta: el nombre limpio y su clave", () => {
   it("sin espacios de más, con su grafía; la clave sin mayúsculas, acentos ni espacios de más", () => {
@@ -70,5 +78,20 @@ describe("★ 5 · leerIdEtiqueta: el id del filtro", () => {
     for (const v of [undefined, "", "0", "-1", "1.5", "abc", "2147483648", "12abc", ["1", "2"]]) {
       expect(leerIdEtiqueta(v)).toBeNull();
     }
+  });
+});
+
+describe("colorDeEtiqueta: el color de su porción en el anillo de Ingresos", () => {
+  it("cada etiqueta tiene siempre el mismo color de la paleta, y las 11 primeras, distintos", () => {
+    const colores = Array.from({ length: 11 }, (_, i) => colorDeEtiqueta(i + 1));
+    expect(new Set(colores).size).toBe(11);
+    expect(colores.every((c) => (coloresCategoria as readonly string[]).includes(c))).toBe(true);
+    expect(colorDeEtiqueta(12)).toBe(colorDeEtiqueta(1));
+    expect(colorDeEtiqueta(4)).toBe(colorDeEtiqueta(4));
+  });
+
+  it('"Sin etiqueta" es gris, y ninguna etiqueta lo es', () => {
+    expect(colorDeEtiqueta(null)).toBe("pizarra");
+    expect(Array.from({ length: 30 }, (_, i) => colorDeEtiqueta(i + 1))).not.toContain("pizarra");
   });
 });
