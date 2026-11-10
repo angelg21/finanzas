@@ -55,12 +55,13 @@ export function avisoDeVuelta(params: Record<string, string | string[] | undefin
 /**
  * La dirección de un gasto o un ingreso para editarlo, o de un pago, un cobro o una transferencia entre cuentas para
  * deshacerlo (specs 007 y 011), con a dónde volver. La venta de USDT de un gasto, las reasignaciones y los préstamos
- * no abren nada (spec 006, criterio 8).
+ * no abren nada (spec 006, criterio 8), ni lo importado de la app vieja, que es historial (spec 012).
  */
 export function enlaceDeEdicion(
-  m: { id: number; tipo: string; entreCuentas?: boolean },
+  m: { id: number; tipo: string; entreCuentas?: boolean; historial?: boolean },
   volver: string,
 ): string | undefined {
+  if (m.historial) return undefined;
   const seAbre = ["gasto", "ingreso", "pago_deuda", "cobro_prestamo"].includes(m.tipo);
   if (!seAbre && !(m.tipo === "transferencia" && m.entreCuentas === true)) return undefined;
   return `/movimientos/${m.id}?volver=${encodeURIComponent(volver)}`;

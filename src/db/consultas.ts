@@ -1,10 +1,10 @@
-import { and, desc, eq, gte, ne, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ne, not, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "./index";
 import { clavesDeMeses, hoyEnCaracas, inicioDeMes } from "@/lib/fechas";
 import { sobreAceptaGasto } from "@/lib/gastos";
 import { categorias, cuentas, deudas, etiquetas, movimientos, partidasSobre, reglasReparto, sobres } from "./schema";
-import { efectoEnCuenta, efectoEnCuentaUsd, efectoEnSobre } from "./sumas-de-saldo";
+import { efectoEnCuenta, efectoEnCuentaUsd, efectoEnSobre, esHistorial } from "./sumas-de-saldo";
 
 /** Saldo de cada sobre activo, en centavos de dólar. */
 export async function saldosPorSobre() {
@@ -146,6 +146,8 @@ export function baseMovimientos() {
       // Una transferencia entre cuentas (spec 011), que se deshace; no la venta de USDT de un gasto en bolívares.
       entreCuentas: sql<boolean>`(${movimientos.tipo}::text = 'transferencia' and ${movimientos.origen}::text = 'manual'
         and coalesce(${movimientos.referenciaExterna}, '') like 'captura-%-envio')`,
+      // Historial de la app vieja (spec 012): se ve, pero no se abre.
+      historial: sql<boolean>`${esHistorial}`,
     })
     .from(movimientos)
     .leftJoin(categorias, eq(movimientos.categoriaId, categorias.id))
@@ -162,10 +164,10 @@ export async function movimientosRecientes(limite = 80) {
   return baseMovimientos().orderBy(desc(movimientos.fecha), desc(movimientos.id)).limit(limite);
 }
 
-/** Movimientos que tocan un sobre, como origen o destino. */
+/** Movimientos que tocan un sobre, como origen o destino. Sin el historial de la app vieja (spec 012): no fue su dinero. */
 export async function movimientosDeSobre(sobreId: number, limite = 50) {
   return baseMovimientos()
-    .where(or(eq(movimientos.sobreOrigenId, sobreId), eq(movimientos.sobreDestinoId, sobreId)))
+    .where(and(or(eq(movimientos.sobreOrigenId, sobreId), eq(movimientos.sobreDestinoId, sobreId)), not(esHistorial)))
     .orderBy(desc(movimientos.fecha), desc(movimientos.id))
     .limit(limite);
 }

@@ -51,7 +51,7 @@ export async function urlProduccion(accion: string): Promise<string> {
  * Lo que escribe el desarrollador; vacío si la entrada se cierra sin respuesta. Con `oculto`, lo que se escribe no
  * se repite en pantalla: ni en la terminal ni en su historial queda la cadena.
  */
-function preguntar(texto: string, oculto = false): Promise<string> {
+export function preguntar(texto: string, oculto = false): Promise<string> {
   return new Promise((resolver) => {
     let callado = false;
     const salida = new Writable({

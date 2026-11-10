@@ -43,6 +43,17 @@ describe("spec 011 · una transferencia entre cuentas se abre para deshacerla; l
   });
 });
 
+describe("spec 012 · lo importado de la app vieja es historial: no abre nada", () => {
+  it("un gasto, un ingreso o una transferencia importados no enlazan a la edición", () => {
+    expect(enlaceDeEdicion({ id: 31, tipo: "gasto", historial: true }, "/movimientos")).toBeUndefined();
+    expect(enlaceDeEdicion({ id: 32, tipo: "ingreso", historial: true }, "/movimientos")).toBeUndefined();
+    expect(
+      enlaceDeEdicion({ id: 33, tipo: "transferencia", entreCuentas: true, historial: true }, "/movimientos"),
+    ).toBeUndefined();
+    expect(enlaceDeEdicion({ id: 34, tipo: "gasto", historial: false }, "/")).toBe("/movimientos/34?volver=%2F");
+  });
+});
+
 describe("spec 007, ★ 1 · un pago o un cobro se abre para deshacerlo", () => {
   it("su fila enlaza a /movimientos/[id], desde Movimientos o desde la deuda", () => {
     expect(enlaceDeEdicion({ id: 11, tipo: "pago_deuda" }, "/deudas/4")).toBe("/movimientos/11?volver=%2Fdeudas%2F4");

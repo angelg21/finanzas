@@ -219,7 +219,7 @@ Referencia antes de diseñar: Actual Budget, open source, usa exactamente el mod
 - Gastos por completar (feature 009, 22 de octubre de 2026): **hecho**. Lo gastado con bolívares prestados se anota en el momento (categoría, descripción, fecha y, si se sabe, el monto) sin mover dinero, y se completa después: uno por uno con su propia venta, o varios a la vez con una sola venta de USDT; si de esa venta sobran bolívares, la app pregunta si van a la cuenta de Bolívares o se registran como un gasto más.
 - Flujo de gasto en bolívares. **Hecho** en la feature 001, fusionada el 12 de octubre de 2026.
 - Sobres con reglas de reparto y confirmación de un clic. **Hecho** en la feature 004: `/nuevo/ingreso` registra el ingreso en una cuenta en dólares, lo deja en "Por asignar" y propone el reparto (los fijos una vez al mes, los porcentajes sobre lo que queda, con el tope de Emergencia), que se ajusta y se guarda con un clic; `/sobres/repartir` reparte lo que quede en "Por asignar"; `/sobres/reglas` edita las reglas y el tope. Las reglas sembradas reparten 40/30/30 tras los fijos y no dan la tabla de la sección 2 (187,50 y 187,50 frente a 175 y 200): se ajustan desde `/sobres/reglas`. Quedan para después las reglas según el monto del ingreso y los ingresos en bolívares.
-- Importador de Gestor de Gastos. Antes de importar, lo que las revisiones de la 004 y la 005 dejaron para él, porque desde la app no se llega y con datos importados sí:
+- Importador de Gestor de Gastos. **Construido** en la feature 012 (9 de noviembre de 2026): `pnpm db:importar:produccion <archivo.xlsx>` trae gastos, ingresos y transferencias como historial (ADR 0013): salen en Movimientos, en las gráficas y en los acumulados por etiqueta, y no mueven ningún saldo. Muestra todo antes y solo escribe al confirmar. Solo escribe movimientos con fechas validadas; no trae deudas, topes ni partidas, así que lo de abajo sigue pendiente para un importador que los traiga. Lo que las revisiones de la 004 y la 005 dejaron para él, porque desde la app no se llega y con datos importados sí:
   - los escritores de `src/db` validan las fechas con `esFecha`: una `fecha_prevista` como `0050-01-01` hace lanzar a `cuotaDeDeudas` y tumba el ingreso, el reparto y `/deudas`;
   - `cuotaDelMes` registra por qué se quedó sin cuota (hoy su `.catch` se traga también un corte de conexión) y cubre también el cálculo, no solo la lectura;
   - un tope de Emergencia o una partida fuera de los enteros seguros no tumba la propuesta del reparto: se trata como "sin tope" o lo frena el importador.
@@ -307,7 +307,7 @@ Si la app no exporta: migrar solo los totales mensuales por categoría. Diecioch
 
 - [ ] Escribir el límite de gasto mensual en un número y las reglas de reparto.
 - [ ] Crear hoy el fondo de emergencia aunque sea en la app vieja: mover lo ahorrado a Simple Earn o a una subcuenta de Binance y llamarlo así.
-- [ ] Exportar el CSV de Gestor de Gastos y pasarlo para escribir el importador.
+- [x] Exportar Gestor de Gastos y escribir el importador. Hecho el 9 de noviembre de 2026 (feature 012): el .xlsx con las tres hojas; falta correrlo en producción.
 - [ ] Empezar "La psicología del dinero", 20 minutos al día.
 - [ ] Instalar Actual Budget y probar el modelo de sobres dos semanas.
 - [x] Definir el modelo de datos y montar el esqueleto de la app. Hecho el 2 de octubre de 2026: Next.js 16, Drizzle, Postgres local en Docker, esquema de fase 1 y semillas.

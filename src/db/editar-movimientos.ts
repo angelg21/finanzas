@@ -1,4 +1,4 @@
-import { and, eq, inArray, like, sql } from "drizzle-orm";
+import { and, eq, inArray, like, not, sql } from "drizzle-orm";
 import { idDeReferencia, prefijoDeCaptura, referenciaDeCaptura } from "../lib/captura";
 import type { GastoGuardado, PlanDeGasto } from "../lib/editar-gasto";
 import { type IngresoGuardado, type PlanDeIngreso, type RepartoGuardado } from "../lib/editar-ingreso";
@@ -8,6 +8,7 @@ import { resolverEtiqueta } from "./etiquetas";
 import { db } from "./index";
 import { type Ejecutor, claveReparto, guardadasDeCaptura, saldoDeSobre } from "./movimientos";
 import { movimientos, sobres } from "./schema";
+import { esHistorial } from "./sumas-de-saldo";
 
 /*
   Editar o borrar un gasto o un ingreso (spec 006). Cada operación es una transacción: se vuelve a leer la fila y lo
@@ -48,13 +49,16 @@ const valoresDeVenta = (f: FilaMovimiento) => ({
   cuentaDestinoId: f.cuentaDestinoId,
 });
 
+/** El historial de la app vieja (spec 012) no se abre, no se edita ni se borra. */
+const noEsHistorial = not(esHistorial);
+
 /** Un gasto o un ingreso con lo enlazado por su captura; null si no existe o es de otro tipo (criterio 8). */
 export async function movimientoParaEditar(id: number) {
   if (!idValido(id)) return null;
   const [movimiento] = await db
     .select()
     .from(movimientos)
-    .where(and(eq(movimientos.id, id), inArray(movimientos.tipo, [...soloEditables])));
+    .where(and(eq(movimientos.id, id), inArray(movimientos.tipo, [...soloEditables]), noEsHistorial));
   if (!movimiento) return null;
   const captura = movimiento.origen === "manual" ? idDeReferencia(movimiento.referenciaExterna) : null;
   const enlazadas = captura ? (await guardadasDeCaptura(captura)).filter((f) => f.id !== movimiento.id) : [];
@@ -78,7 +82,7 @@ export async function filaBloqueada(tx: Ejecutor, id: number, tipo: (typeof solo
   const [fila] = await tx
     .select()
     .from(movimientos)
-    .where(and(eq(movimientos.id, id), eq(movimientos.tipo, tipo)))
+    .where(and(eq(movimientos.id, id), eq(movimientos.tipo, tipo), noEsHistorial))
     .for("update");
   return fila ?? null;
 }
