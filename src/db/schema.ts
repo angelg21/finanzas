@@ -84,6 +84,12 @@ export const cuentas = pgTable(
     activa: boolean().notNull().default(true),
     orden: integer().notNull().default(0),
     nota: text(),
+    /**
+     * Nombres del catálogo de src/lib/categorias.ts, como en categorías (spec 013). Nulos = el aspecto automático por
+     * tipo y moneda (src/lib/cuentas.ts): las cuentas de antes se ven igual hasta que se editan.
+     */
+    icono: text(),
+    color: text(),
     creadoEn: creadoEn(),
   },
   (t) => [uniqueIndex("cuentas_nombre_unico").on(t.nombre)],

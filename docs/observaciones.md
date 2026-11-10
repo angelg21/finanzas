@@ -35,6 +35,8 @@ Lista viva de las observaciones del usuario sobre la interfaz, lo que se cambió
 - Eliminar solo si la cuenta no tiene movimientos; si los tiene, se archiva (deja de verse pero conserva el historial).
 - **Del guardián, en la feature 006 (2026-10-17):** archivar una cuenta o un sobre tiene que impedir editar o borrar los movimientos que los tocan, o no archivar con historial: editar el gasto de una cuenta archivada con saldo 0 descuadró en 500 en una copia de la base.
 
+**Hecho** el 10 de noviembre de 2026, en la feature 013, con dos cambios: el saldo inicial queda fuera (una cuenta nueva empieza en 0 y el dinero llega con Transferir o un ingreso), y se puede elegir icono y color. Lo del guardián se resolvió por una tercera vía: solo se archiva con saldo 0, en su moneda y en USD, y una archivada cuyo saldo deja de ser 0 vuelve a salir en Cuentas, así que el cuadre nunca esconde dinero.
+
 ## 4. Nueva paleta de colores y fuente
 
 **Observación** (7 de octubre de 2026): el usuario trajo una segunda referencia, `docs/referencias/ui-referencia-2-colores.webp`, cuyos colores le gustan mucho más, y pidió la fuente Roboto Flex.

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CheckCircle2, ChevronRight, CircleAlert, Landmark } from "lucide-react";
+import { CheckCircle2, ChevronRight, CircleAlert, Landmark, Plus } from "lucide-react";
 import Link from "next/link";
 import { AvisoPasajero } from "@/components/aviso-pasajero";
 import { CirculoCuenta } from "@/components/circulo-cuenta";
@@ -14,30 +14,28 @@ import {
   TituloPagina,
 } from "@/components/ui";
 import { saldosPorCuenta, saldosPorSobre } from "@/db/consultas";
+import { cuentasConUso } from "@/db/cuentas";
 import { deudasConPendiente } from "@/db/deudas";
+import { nombreDeTipo } from "@/lib/cuentas";
 import { patrimonioNeto, pendientePorSentido } from "@/lib/deudas";
 import { formatearCentavos } from "@/lib/dinero";
 import { exigirSesion } from "@/app/sesion";
+import { BotonRestaurarCuenta } from "./botones-cuenta";
 
 export const metadata: Metadata = { title: "Cuentas" };
 export const dynamic = "force-dynamic";
 
-const nombreTipo: Record<string, string> = {
-  exchange: "Exchange",
-  billetera: "Billetera",
-  efectivo: "Efectivo",
-  banco: "Banco",
-  transito: "USD en EE. UU.",
-};
-
 export default async function Cuentas({ searchParams }: PageProps<"/cuentas">) {
   await exigirSesion();
-  const [cuentas, sobres, deudas] = await Promise.all([
+  const [cuentas, sobres, deudas, todas] = await Promise.all([
     saldosPorCuenta(),
     saldosPorSobre(),
     // Una deuda con datos rotos no tumba Cuentas: el patrimonio lo dice y /deudas muestra el error (guardian-datos, T6).
     deudasConPendiente().catch(() => null),
+    cuentasConUso(),
   ]);
+  // Spec 013: las archivadas, para restaurarlas. Una con saldo también sale arriba, en la lista (criterio 10).
+  const archivadas = todas.filter((c) => !c.activa);
   // Todas las cuentas, también la de la prima: el dinero que la app registra ahí es mío aunque la cuenta
   // no lo sea, y desde ella también se gasta (spec 001, criterio 16).
   const totalCuentas = cuentas.reduce((acc, c) => acc + c.saldoUsdCentavos, 0);
@@ -129,9 +127,10 @@ export default async function Cuentas({ searchParams }: PageProps<"/cuentas">) {
           {cuentas.map((c) => (
             <FilaLista
               key={c.id}
-              avatar={<CirculoCuenta tipo={c.tipo} moneda={c.moneda} />}
+              href={`/cuentas/${c.id}`}
+              avatar={<CirculoCuenta tipo={c.tipo} moneda={c.moneda} icono={c.icono} color={c.color} />}
               titulo={c.nombre}
-              subtitulo={`${nombreTipo[c.tipo] ?? c.tipo} · ${c.moneda}${!c.esPropia ? " · a nombre de mi prima" : ""}`}
+              subtitulo={`${nombreDeTipo[c.tipo]} · ${c.moneda}${!c.esPropia ? " · a nombre de mi prima" : ""}${!c.activa ? " · archivada" : ""}`}
               derecha={
                 <>
                   <Cifra centavos={c.saldoCentavos} moneda={c.moneda} />
@@ -140,8 +139,48 @@ export default async function Cuentas({ searchParams }: PageProps<"/cuentas">) {
               }
             />
           ))}
+          <Link
+            href="/cuentas/nueva"
+            className="-mx-2 flex items-center gap-3 rounded-[14px] px-2 py-2.5 hover:bg-tarjeta-hover focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            <span
+              aria-hidden
+              className="grid size-11 shrink-0 place-items-center rounded-full border border-dashed border-tarjeta-borde bg-tarjeta-hover text-texto-2"
+            >
+              <Plus size={21} strokeWidth={1.75} />
+            </span>
+            <span className="text-[13px] font-extrabold uppercase tracking-wide">Nueva cuenta</span>
+          </Link>
         </div>
       </Tarjeta>
+
+      {archivadas.length > 0 ? (
+        <Tarjeta className="lg:col-span-12">
+          <EncabezadoTarjeta titulo={`Archivadas (${archivadas.length})`} />
+          <p className="mb-2 text-[13px] text-texto-3">
+            No se ofrecen al registrar, pero sus movimientos las conservan.
+          </p>
+          <div className="flex flex-col lg:grid lg:grid-cols-2 lg:gap-x-8">
+            {archivadas.map((c) => (
+              <FilaLista
+                key={c.id}
+                avatar={
+                  <CirculoCuenta
+                    tipo={c.tipo}
+                    moneda={c.moneda}
+                    icono={c.icono}
+                    color={c.color}
+                    className="opacity-45"
+                  />
+                }
+                titulo={c.nombre}
+                subtitulo={`${nombreDeTipo[c.tipo]} · ${c.moneda}`}
+                derecha={<BotonRestaurarCuenta id={c.id} nombre={c.nombre} />}
+              />
+            ))}
+          </div>
+        </Tarjeta>
+      ) : null}
     </main>
   );
 }

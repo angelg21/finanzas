@@ -34,6 +34,8 @@ const conDatos = [
   "/sobres",
   "/sobres/3?x=1",
   "/cuentas",
+  "/cuentas/nueva",
+  "/cuentas/1",
   "/nuevo",
   "/nuevo/gasto",
   "/nuevo/ingreso",
@@ -73,6 +75,9 @@ const conSesion = [
   ["/movimientos?tipo=mover&periodo=todo", 200],
   ["/sobres", 200],
   ["/cuentas", 200],
+  // Spec 013: crear y editar cuenta; una que no existe, 404.
+  ["/cuentas/nueva", 200],
+  ["/cuentas/999999", 404],
   ["/nuevo", 200],
   ["/nuevo/gasto", 200],
   ["/nuevo/ingreso", 200],

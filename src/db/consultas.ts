@@ -25,8 +25,13 @@ export async function saldosPorSobre() {
     .orderBy(sobres.orden, sobres.id);
 }
 
-/** Saldo de cada cuenta activa: en su propia moneda y en centavos de dólar. */
+/**
+ * Saldo de cada cuenta activa: en su propia moneda y en centavos de dólar. También la archivada cuyo saldo dejó de ser
+ * 0 (por editar o deshacer un movimiento viejo, spec 013, criterio 10): el cuadre nunca esconde dinero.
+ */
 export async function saldosPorCuenta() {
+  const saldo = sql<number>`coalesce(sum(${efectoEnCuenta(cuentas.id)}), 0)::bigint`;
+  const saldoUsd = sql<number>`coalesce(sum(${efectoEnCuentaUsd(cuentas.id)}), 0)::bigint`;
   return db
     .select({
       id: cuentas.id,
@@ -34,13 +39,16 @@ export async function saldosPorCuenta() {
       moneda: cuentas.moneda,
       tipo: cuentas.tipo,
       esPropia: cuentas.esPropia,
-      saldoCentavos: sql<number>`coalesce(sum(${efectoEnCuenta(cuentas.id)}), 0)::bigint`.mapWith(Number),
-      saldoUsdCentavos: sql<number>`coalesce(sum(${efectoEnCuentaUsd(cuentas.id)}), 0)::bigint`.mapWith(Number),
+      icono: cuentas.icono,
+      color: cuentas.color,
+      activa: cuentas.activa,
+      saldoCentavos: saldo.mapWith(Number),
+      saldoUsdCentavos: saldoUsd.mapWith(Number),
     })
     .from(cuentas)
     .leftJoin(movimientos, or(eq(movimientos.cuentaOrigenId, cuentas.id), eq(movimientos.cuentaDestinoId, cuentas.id)))
-    .where(eq(cuentas.activa, true))
     .groupBy(cuentas.id)
+    .having(or(eq(cuentas.activa, true), sql`${saldo} <> 0`, sql`${saldoUsd} <> 0`))
     .orderBy(cuentas.orden, cuentas.id);
 }
 

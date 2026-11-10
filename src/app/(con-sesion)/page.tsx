@@ -185,7 +185,7 @@ export default async function Inicio({ searchParams }: PageProps<"/">) {
             <FilaLista
               key={c.id}
               href="/cuentas"
-              avatar={<CirculoCuenta tipo={c.tipo} moneda={c.moneda} />}
+              avatar={<CirculoCuenta tipo={c.tipo} moneda={c.moneda} icono={c.icono} color={c.color} />}
               titulo={c.nombre}
               subtitulo={`${nombreTipoCuenta[c.tipo] ?? c.tipo} · ${c.moneda}`}
               derecha={

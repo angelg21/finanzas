@@ -1,11 +1,13 @@
 import { Banknote, Bitcoin, Building2, DollarSign, Landmark, type LucideIcon, Wallet } from "lucide-react";
 import { createElement } from "react";
 import { type AspectoCuenta, aspectoDeCuenta } from "@/lib/cuentas";
+import { fondoDe, iconoDe } from "./iconos-categoria";
 
 /*
-  Una cuenta como las categorías: círculo de color con un icono de línea encima, nunca emojis. El aspecto sale de su
-  tipo y su moneda (src/lib/cuentas.ts). Los tonos son los de la paleta de categorías, salvo el amarillo de cripto,
-  que lleva el icono en pino oscuro porque en blanco no se leería (paleta-cuentas.test.ts).
+  Una cuenta como las categorías: círculo de color con un icono de línea encima, nunca emojis. Si se le eligieron icono
+  y color (spec 013), esos, del catálogo de las categorías. Si no, el aspecto sale de su tipo y su moneda
+  (src/lib/cuentas.ts). Los tonos son los de la paleta de categorías, salvo el amarillo de cripto, que lleva el icono en
+  pino oscuro porque en blanco no se leería (paleta-cuentas.test.ts).
 */
 
 const aspectos: Record<AspectoCuenta, { Icono: LucideIcon; clases: string }> = {
@@ -25,20 +27,27 @@ const medidas = {
 export function CirculoCuenta({
   tipo,
   moneda,
+  icono = null,
+  color = null,
   tamano = "lg",
   className = "",
 }: {
   tipo: string;
   moneda: string;
+  /** Los elegidos al editar la cuenta; nulos, el aspecto automático. */
+  icono?: string | null;
+  color?: string | null;
   /** `lg` en las listas, del alto del avatar que reemplaza. */
   tamano?: keyof typeof medidas;
   className?: string;
 }) {
-  const { Icono, clases } = aspectos[aspectoDeCuenta({ tipo, moneda })];
-  const { caja, icono } = medidas[tamano];
+  const automatico = aspectos[aspectoDeCuenta({ tipo, moneda })];
+  const { Icono, clases } =
+    icono && color ? { Icono: iconoDe(icono), clases: `${fondoDe(color)} text-white` } : automatico;
+  const { caja, icono: lado } = medidas[tamano];
   return (
     <span aria-hidden className={`grid shrink-0 place-items-center rounded-full ${clases} ${caja} ${className}`}>
-      {createElement(Icono, { size: icono, strokeWidth: 1.9 })}
+      {createElement(Icono, { size: lado, strokeWidth: 1.9 })}
     </span>
   );
 }

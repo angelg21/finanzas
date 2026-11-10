@@ -122,6 +122,7 @@ export const iconosCategoria: IconoCategoria[] = [
   icono("billete", "Dinero", "efectivo, billetes"),
   icono("monedas", "Dinero", "monedas, ingresos, otros ingresos"),
   icono("alcancia", "Dinero", "ahorro, alcancía"),
+  icono("bitcoin", "Dinero", "bitcoin, cripto, binance, exchange, usdt"),
   icono("banco", "Dinero", "banco, comisión bancaria"),
   icono("tarjeta", "Dinero", "tarjeta, crédito, deuda"),
   icono("recibo", "Dinero", "factura, recibo, cuentas"),
