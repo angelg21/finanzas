@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Tarjeta } from "@/components/ui";
 import { cuentaPorId } from "@/db/cuentas";
+import { pendientesConCuentaPrevista } from "@/db/deudas";
 import { aspectoParaElegir, destinoAlEliminarCuenta } from "@/lib/cuentas";
 import { formatearCentavos } from "@/lib/dinero";
 import { BotonEliminarCuenta } from "../botones-cuenta";
@@ -19,13 +20,21 @@ export default async function EditarCuenta({ params }: PageProps<"/cuentas/[id]"
   const { id } = await params;
   const cuenta = await cuentaPorId(Number(id));
   if (!cuenta) notFound();
+  const deudas = await pendientesConCuentaPrevista(cuenta.id);
 
-  const destino = destinoAlEliminarCuenta(cuenta);
+  const destino = destinoAlEliminarCuenta({ ...cuenta, deudasPendientes: deudas.length });
   const archivar = destino === "archivar";
-  const saldo =
-    cuenta.moneda === "USD"
-      ? formatearCentavos(cuenta.saldoCentavos)
-      : `${formatearCentavos(cuenta.saldoCentavos, cuenta.moneda)} (${formatearCentavos(cuenta.saldoUsdCentavos)})`;
+  const explicacion = {
+    // En bolívares, los Bs en 0 pueden dejar un resto en USD por las tasas: no hay nada que transferir (del guardián).
+    "con-saldo":
+      cuenta.saldoCentavos === 0
+        ? `Sus ${cuenta.moneda} están en 0, pero por la diferencia de tasas suma ${formatearCentavos(cuenta.saldoUsdCentavos)} en el cuadre: quitarla lo descuadraría.`
+        : `Tiene ${formatearCentavos(cuenta.saldoCentavos, cuenta.moneda)}. Para quitarla, primero pasa ese dinero a otra cuenta con Transferir y deja el saldo en 0.`,
+    prevista: `Es la cuenta prevista de la deuda con ${deudas.map((d) => d.persona).join(", ")}: cámbiala en esa deuda primero, o su aviso de liquidez se perdería.`,
+    archivar:
+      "Está en 0 pero tiene historial: se archivará, no se borra. Deja de verse en Cuentas y al registrar, y sus movimientos la conservan; puedes restaurarla.",
+    borrar: "Está en 0 y no tiene movimientos: se borrará del todo.",
+  }[destino];
 
   return (
     <main className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">
@@ -55,14 +64,8 @@ export default async function EditarCuenta({ params }: PageProps<"/cuentas/[id]"
               {archivar ? "Archivar cuenta" : "Eliminar cuenta"}
             </summary>
             <div className="mt-3 flex flex-col gap-3 border-t border-tarjeta-borde pt-3">
-              <p className="text-[13px] text-texto-2">
-                {destino === "con-saldo"
-                  ? `Tiene ${saldo}. Para quitarla, primero pasa ese dinero a otra cuenta con Transferir y deja el saldo en 0.`
-                  : archivar
-                    ? "Está en 0 pero tiene historial: se archivará, no se borra. Deja de verse en Cuentas y al registrar, y sus movimientos la conservan; puedes restaurarla."
-                    : "Está en 0 y no tiene movimientos: se borrará del todo."}
-              </p>
-              {destino === "con-saldo" ? null : <BotonEliminarCuenta id={cuenta.id} archivar={archivar} />}
+              <p className="text-[13px] text-texto-2">{explicacion}</p>
+              {destino === "borrar" || archivar ? <BotonEliminarCuenta id={cuenta.id} archivar={archivar} /> : null}
             </div>
           </details>
         </Tarjeta>

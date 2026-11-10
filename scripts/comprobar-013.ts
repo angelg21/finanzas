@@ -5,13 +5,15 @@
  *   ★ 7 · con saldo no se elimina;
  *   ★ 8 · en 0 y sin usos se borra;
  *   ★ 9 · en 0 y con historial se archiva y deja de salir en Cuentas;
- *   ★ 10 · si el saldo de una archivada deja de ser 0, vuelve a salir en Cuentas y el cuadre sigue diciendo la verdad.
+ *   ★ 10 · si el saldo de una archivada deja de ser 0, vuelve a salir en Cuentas y el cuadre sigue diciendo la verdad,
+ *          pero no se ofrece al registrar (del guardián: la de bolívares se elige sola);
+ *   ★ 12 · la cuenta prevista de una deuda pendiente no se archiva.
  * Los ★ 3 y 5 de la validación están en src/lib/cuentas.test.ts. Con --url, además, contra un servidor en marcha con
  * esta misma base y el usuario de prueba, como un navegador sin JavaScript: crear con icono y color, el nombre
  * repetido, y eliminar desde la pantalla.
  *   pnpm exec tsx scripts/comprobar-013.ts [--url http://localhost:3000]
  * Corre sobre la base local y la deja como estaba: sus cuentas se llaman "Prueba 013…" y sus movimientos llevan la
- * referencia captura-0c013013-…; se borran al terminar y, si una corrida se cortó, al empezar la siguiente.
+ * referencia captura-0c013013-…, y su deuda la persona "Prueba 013"; se borran al terminar y, si una corrida se cortó, al empezar la siguiente.
  */
 import { config } from "dotenv";
 import { eq, like } from "drizzle-orm";
@@ -33,19 +35,20 @@ async function main() {
   exigirBaseLocal(process.env.DATABASE_URL, "comprobar-013");
   const posicionUrl = process.argv.indexOf("--url");
   const origenUrl = posicionUrl >= 0 ? process.argv[posicionUrl + 1] : null;
-  const { db, categorias, cuentas, movimientos, sobres } = await import("../src/db/index");
-  const { saldosPorCuenta, saldosPorSobre } = await import("../src/db/consultas");
+  const { db, categorias, cuentas, deudas, movimientos, sobres } = await import("../src/db/index");
+  const { cuentasDelCuadre, saldosPorCuenta, saldosPorSobre } = await import("../src/db/consultas");
   const { actualizarCuenta, crearCuenta, cuentaPorId, eliminarCuenta } = await import("../src/db/cuentas");
 
   const limpiar = async () => {
     await db.delete(movimientos).where(like(movimientos.referenciaExterna, `${MARCA}%`));
+    await db.delete(deudas).where(eq(deudas.persona, "Prueba 013"));
     await db.delete(cuentas).where(like(cuentas.nombre, "Prueba 013%"));
   };
   await limpiar();
 
   /** Lo que muestra Cuentas: la lista, y si cuadra con los sobres. */
   const cuadre = async () => {
-    const [lista, deSobres] = await Promise.all([saldosPorCuenta(), saldosPorSobre()]);
+    const [lista, deSobres] = await Promise.all([cuentasDelCuadre(), saldosPorSobre()]);
     const enCuentas = lista.reduce((a, c) => a + c.saldoUsdCentavos, 0);
     const enSobres = deSobres.reduce((a, s) => a + s.saldoCentavos, 0);
     return { lista, enCuentas, enSobres, cuadra: enCuentas === enSobres };
@@ -106,6 +109,17 @@ async function main() {
         referenciaExterna: `${MARCA}gasto`,
       })
       .returning({ id: movimientos.id });
+    // ★ 12: con una deuda pendiente que la prevé, no se archiva; sin ella, sí.
+    const [deuda] = await db
+      .insert(deudas)
+      .values({ sentido: "debo", persona: "Prueba 013", montoInicialCentavos: 500, cuentaPrevistaId: nueva })
+      .returning({ id: deudas.id });
+    comprobar(
+      "12",
+      "en 0 pero prevista por una deuda pendiente no se archiva",
+      (await eliminarCuenta(nueva)) === "prevista" && (await cuentaPorId(nueva))?.activa === true,
+    );
+    await db.delete(deudas).where(eq(deudas.id, deuda.id));
     const archivada = await eliminarCuenta(nueva);
     const sinElla = await cuadre();
     comprobar(
@@ -133,6 +147,11 @@ async function main() {
         reaparece.cuadra === antes.cuadra &&
         reaparece.enCuentas - reaparece.enSobres === antes.enCuentas - antes.enSobres,
       `cuentas ${reaparece.enCuentas}, sobres ${reaparece.enSobres}`,
+    );
+    comprobar(
+      "10",
+      "con saldo y archivada, no se ofrece al registrar: hay que restaurarla",
+      !(await saldosPorCuenta()).some((c) => c.id === nueva),
     );
 
     const vacia = await crearCuenta({ nombre: "Prueba 013 b", ...valores });

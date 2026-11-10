@@ -13,7 +13,7 @@ import {
   TarjetaPalida,
   TituloPagina,
 } from "@/components/ui";
-import { saldosPorCuenta, saldosPorSobre } from "@/db/consultas";
+import { cuentasDelCuadre, saldosPorSobre } from "@/db/consultas";
 import { cuentasConUso } from "@/db/cuentas";
 import { deudasConPendiente } from "@/db/deudas";
 import { nombreDeTipo } from "@/lib/cuentas";
@@ -28,7 +28,8 @@ export const dynamic = "force-dynamic";
 export default async function Cuentas({ searchParams }: PageProps<"/cuentas">) {
   await exigirSesion();
   const [cuentas, sobres, deudas, todas] = await Promise.all([
-    saldosPorCuenta(),
+    // Con las archivadas que tienen saldo: el cuadre nunca esconde dinero (spec 013, criterio 10).
+    cuentasDelCuadre(),
     saldosPorSobre(),
     // Una deuda con datos rotos no tumba Cuentas: el patrimonio lo dice y /deudas muestra el error (guardian-datos, T6).
     deudasConPendiente().catch(() => null),

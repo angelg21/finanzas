@@ -200,4 +200,12 @@ metadata:
   - **`db:demo:limpiar` + `db:demo` sin tocar los ids de la real:** sobre una copia con `DATABASE_URL=...5433/<copia>` en la línea. La huella de la demo da igual que la real (0dcb6db0…).
   - `comprobar-007-retiro.ts` también corre sobre una copia así (18 ✓ en 2 s).
 
+- **Las herramientas viejas ya no están** (2026-11-10): las carpetas `c--Users-...-finanzas/<uuid>/scratchpad/` quedaron vacías o limpias. El scratchpad de la sesión ahora cuelga de `Temp/claude/596375892df7b268/<uuid>/scratchpad/`.
+- **Herramientas de 013**, en `596375892df7b268/fff6d62f…/scratchpad/g013/` (solo corren en `finanzas_g013*`):
+  - `sonda.mts <crear|obs3|borrar|moneda|vesResidual|vesRuta|carreraInsert|carreraBorrado|carreraUpdate>`;
+  - `accion-gasto.cts <saldo|vendiendo>`: el `registrarGasto` real, con sesión, `next/cache` y `registrarFalla` falsos;
+  - `uso.mts`, `medir.mts` (main contra árbol), `diff-snapshot.cts <NNNN_snapshot.json>` e `invariante.sql`, que cuenta todas las cuentas, solo las activas y las activas más las de saldo distinto de 0.
+- Una FK no bloquea la fila padre en un UPDATE que no cambia la columna de la FK, ni en un DELETE del hijo. Un `FOR UPDATE` sobre la cuenta solo serializa contra inserts y contra cambios de cuenta.
+- `db:demo:limpiar` + `db:demo` + `db:seed` sobre una copia (`DATABASE_URL=...5433/<copia>` en la línea) deja la real intacta: md5 por tabla iguales. Las secuencias de la real igual pueden subir por otros (+2 el 2026-11-10).
+
 Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].

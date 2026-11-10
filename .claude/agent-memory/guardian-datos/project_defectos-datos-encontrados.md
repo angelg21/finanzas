@@ -103,7 +103,7 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
 **Abiertos, nuevos en T3 de 006 (2026-10-17). Ninguno bloquea** (ver [[revision-006-editar]])
 
 - **Baja, defensa.** `editarGasto` y `editarIngreso` hacen spread del plan en `.set` y usan `plan.venta.id`. Un plan fabricado borra filas ajenas, cambia el tipo o pisa la referencia. Hoy el plan sale de lib y no pasa.
-- **Baja, futuro.** Editar o borrar un movimiento de una cuenta o un sobre archivado descuadra (medido: 500).
+- **Baja, futuro.** Editar o borrar un movimiento de una cuenta o un sobre archivado descuadra (medido: 500). **Cuentas: cerrado en a09c1a4 (013)** con el HAVING (medido el 2026-11-10). **Sobres: sigue abierto**, porque `saldosPorSobre` filtra `activo`.
 - **Baja.** Un id entre 2^31 y 2^53 en `/movimientos/[id]` da un 500 (22003) en vez del 404.
 - **Info.** Una referencia `captura-` en mayúsculas lleva a una venta doble al editar.
 - **Info.** Si se borra el gasto, el reintento de la captura original lo vuelve a meter.
@@ -126,6 +126,12 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
   - Mismo id con otros pendientes a la vez: el catch de 23505 da "ya" (vendiendo) o entran los dos grupos (dólares).
   - `categoriasConUso` no cuenta pendientes: la página promete borrar y el escritor archiva.
   - Anotar no compara contenido en un reintento. La base acepta fechas raras, una referencia vacía y un monto > 2^53.
+
+**013, a09c1a4 (2026-11-10). Abiertos** (ver [[revision-013-cuentas]])
+
+- **Media.** Las archivadas con saldo entran en todos los formularios de registro. Una VES archivada pasa a ser "la de bolívares" sin que el usuario la elija (medido con la acción real).
+- **Baja.** El aviso de liquidez desaparece si se archiva la cuenta prevista. Las deudas ofrecen la archivada y después la rechazan con un error genérico.
+- **Info.** Una VES con residuo en USD no se puede eliminar. `db:seed` vuelve a crear una cuenta de la semilla renombrada o borrada.
 
 **Criterio 11 de la 007, d069e51 (2026-10-23). NO APTO; abierto** (ver [[revision-007-ajustes]])
 

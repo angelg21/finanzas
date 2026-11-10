@@ -116,15 +116,19 @@ export function validarCuenta(
 }
 
 /**
- * Criterios 7 a 9. Con saldo no se elimina: el dinero desaparecería del cuadre. Cuenta también el equivalente en USD,
- * que en bolívares puede no ser 0 con los Bs en 0 (las tasas de entrada y de salida difieren). En 0, sin movimientos ni
- * deudas que la usen se borra; con historial se archiva para que sus movimientos la conserven.
+ * Criterios 7 a 9 y 12. Con saldo no se elimina: el dinero desaparecería del cuadre. Cuenta también el equivalente en
+ * USD, que en bolívares puede no ser 0 con los Bs en 0 (las tasas de entrada y de salida difieren). Si es la cuenta
+ * prevista de una deuda pendiente tampoco: su aviso de liquidez se perdería; primero se cambia en la deuda. En 0, sin
+ * movimientos ni deudas que la usen se borra; con historial se archiva para que sus movimientos la conserven.
  */
 export function destinoAlEliminarCuenta(cuenta: {
   usos: number;
   saldoCentavos: number;
   saldoUsdCentavos: number;
-}): "con-saldo" | "borrar" | "archivar" {
+  /** Deudas con algo pendiente que la tienen como cuenta prevista. */
+  deudasPendientes?: number;
+}): "con-saldo" | "prevista" | "borrar" | "archivar" {
   if (cuenta.saldoCentavos !== 0 || cuenta.saldoUsdCentavos !== 0) return "con-saldo";
+  if ((cuenta.deudasPendientes ?? 0) > 0) return "prevista";
   return cuenta.usos > 0 ? "archivar" : "borrar";
 }

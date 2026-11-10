@@ -1,5 +1,6 @@
 import { and, count, eq, max, or, sql } from "drizzle-orm";
 import { db } from "./index";
+import { pendientesConCuentaPrevista } from "./deudas";
 import { cuentas, deudas, movimientos } from "./schema";
 import { efectoEnCuenta, efectoEnCuentaUsd } from "./sumas-de-saldo";
 import { type ValoresCuenta, destinoAlEliminarCuenta } from "@/lib/cuentas";
@@ -76,6 +77,7 @@ async function bloquearYMedir(tx: Transaccion, id: number) {
     usos: suma.cuantos + previstas,
     saldoCentavos: suma.saldoCentavos,
     saldoUsdCentavos: suma.saldoUsdCentavos,
+    deudasPendientes: (await pendientesConCuentaPrevista(id, tx)).length,
   };
 }
 
@@ -96,13 +98,18 @@ export async function actualizarCuenta(
   });
 }
 
-/** Criterios 7 a 9: con saldo no se toca; en 0, sin usos se borra y con historial se archiva. */
-export async function eliminarCuenta(id: number): Promise<"borrada" | "archivada" | "con-saldo" | "no-existe"> {
+/**
+ * Criterios 7 a 9 y 12: con saldo, o prevista por una deuda pendiente, no se toca; en 0, sin usos se borra y con
+ * historial se archiva.
+ */
+export async function eliminarCuenta(
+  id: number,
+): Promise<"borrada" | "archivada" | "con-saldo" | "prevista" | "no-existe"> {
   return db.transaction(async (tx) => {
     const actual = await bloquearYMedir(tx, id);
     if (!actual) return "no-existe";
     const destino = destinoAlEliminarCuenta(actual);
-    if (destino === "con-saldo") return "con-saldo";
+    if (destino === "con-saldo" || destino === "prevista") return destino;
     if (destino === "borrar") {
       await tx.delete(cuentas).where(eq(cuentas.id, id));
       return "borrada";

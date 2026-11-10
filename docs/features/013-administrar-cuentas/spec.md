@@ -34,9 +34,12 @@ mostrando la archivada si su saldo deja de ser 0.
 9. ★ Dada una cuenta con saldo 0 y con historial, cuando la elimino, entonces se archiva: deja de verse en Cuentas y
    al registrar, y sus movimientos la conservan.
 10. ★ Dada una cuenta archivada cuyo saldo deja de ser 0 (por editar o deshacer un movimiento viejo), entonces vuelve a
-    verse en Cuentas con la píldora "Archivada" y el cuadre sigue diciendo la verdad.
+    verse en Cuentas marcada "archivada" y el cuadre sigue diciendo la verdad; pero no se ofrece al registrar (ni se
+    elige sola como la cuenta de bolívares): para usarla, se restaura.
 11. Dada una cuenta archivada, cuando toco "Restaurar" en la sección de archivadas de Cuentas, entonces vuelve a la lista
     y a los formularios de registro.
+12. ★ Dada una cuenta en 0 que es la cuenta prevista de una deuda con algo pendiente, cuando abro eliminar, entonces no
+    hay botón y dice que se cambie primero en la deuda: archivarla borraría su aviso de liquidez (del guardián).
 
 ## Pantallas
 
@@ -68,7 +71,13 @@ puede; sin usos se borra; con usos se archiva).
 ## Riesgos y decisiones
 
 - El guardián (feature 006) pidió impedir editar movimientos de una archivada o no archivar con historial. Se elige
-  una tercera vía más simple: solo se archiva con saldo 0, y `saldosPorCuenta` muestra también las archivadas cuyo saldo
-  no es 0. El cuadre nunca esconde dinero y no hay que bloquear ediciones.
+  una tercera vía más simple: solo se archiva con saldo 0, y `cuentasDelCuadre` (la lista de `/cuentas`) muestra también
+  las archivadas cuyo saldo no es 0. El cuadre nunca esconde dinero y no hay que bloquear ediciones. `saldosPorCuenta`,
+  la lista de los formularios, sigue siendo solo de activas: el guardián de la 013 midió que, si no, un gasto en Bs caía
+  en una cuenta de bolívares archivada.
+- Una cuenta en bolívares rara vez queda en 0 en USD (las tasas de entrada y salida difieren), así que casi nunca se
+  podrá quitar; la pantalla lo explica en vez de pedir una transferencia imposible.
+- `pnpm db:seed` crea por nombre las cuentas de la semilla: si se renombra o se borra una de ellas y se vuelve a sembrar,
+  aparece de nuevo. La semilla solo se corre al montar una base, así que no se cambia aquí.
 - Eliminar bloquea la fila de la cuenta (FOR UPDATE) y cuenta usos y saldo dentro de la transacción: un movimiento que
   se esté guardando con esa cuenta termina antes de contar, como en categorías.

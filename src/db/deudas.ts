@@ -58,6 +58,12 @@ export async function deudasConPendiente() {
 
 export type DeudaConPendiente = Awaited<ReturnType<typeof deudasConPendiente>>[number];
 
+/** Las deudas con algo pendiente cuya cuenta prevista es `cuentaId`: con alguna, la cuenta no se archiva (spec 013). */
+export async function pendientesConCuentaPrevista(cuentaId: number, ejecutor: Ejecutor = db) {
+  const filas = await consultarDeudas(eq(deudas.cuentaPrevistaId, cuentaId), ejecutor);
+  return filas.filter((d) => d.pendienteCentavos > 0);
+}
+
 /** Una deuda con su pendiente; dentro de una transacción, con lo que ya está escrito. null si no existe. */
 export async function deudaPorId(id: number, ejecutor: Ejecutor = db) {
   const [deuda] = await consultarDeudas(eq(deudas.id, id), ejecutor);

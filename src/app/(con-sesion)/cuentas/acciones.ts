@@ -98,7 +98,7 @@ export async function guardarCuenta(previo: EstadoCuenta, formData: FormData): P
   redirect("/cuentas");
 }
 
-/** Criterios 7 a 9: con saldo no se toca; en 0, sin usos se borra y con historial se archiva. */
+/** Criterios 7 a 9 y 12: con saldo o prevista por una deuda no se toca; en 0, sin usos se borra y si no, se archiva. */
 export async function eliminarCuentaAccion(_previo: EstadoBotonCuenta, formData: FormData): Promise<EstadoBotonCuenta> {
   const sesion = await leerSesion();
   if (!sesion) return { error: mensajeDeFalla("sesion", "no se guardó") };
@@ -111,7 +111,9 @@ export async function eliminarCuentaAccion(_previo: EstadoBotonCuenta, formData:
     registrarFalla("No se pudo eliminar la cuenta", error);
     return { error: mensajeDeFalla("otra", "no se guardó") };
   }
-  if (resultado === "con-saldo") return { error: "Tiene saldo: pásalo primero a otra cuenta con Transferir." };
+  if (resultado === "con-saldo") return { error: "Tiene saldo: no se puede quitar sin descuadrar." };
+  if (resultado === "prevista")
+    return { error: "Es la cuenta prevista de una deuda pendiente: cámbiala allí primero." };
   revalidar();
   redirect("/cuentas");
 }

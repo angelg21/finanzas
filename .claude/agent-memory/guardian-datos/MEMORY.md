@@ -13,4 +13,5 @@
 - [Revisión de 007](project_revision-007-ajustes.md): ad01eeb SEGURO; 4460c75 APTO; d069e51 (lotes FIFO) NO APTO 2026-10-23: no neutro con Mover/préstamo; simulador gretiro2
 - [Revisión de 008](project_revision-008-etiquetas.md): 0006 SEGURO (2026-10-17, sha 56bd5d69); respaldo antes de migrar falla con código nuevo; etiquetas sin marca demo
 - [Revisión de 009](project_revision-009-por-completar.md): 0007 NO APLICAR; 2.ª vuelta 0007+0008 SEGURO (0d8904e); residual: el último gasto hereda la venta compartida
+- [Revisión de 013](project_revision-013-cuentas.md): 0009 apta; HAVING cierra obs. 3; Media: archivada con saldo entra a formularios (VES sola)
 - [Captura idempotente](project_captura-idempotente.md): T12 de 002 NO APTO y luego APTO; 23505 + huella + 15 min; residuales: id reutilizado idéntico, sin editar movimientos, pruebas de base en f-verify

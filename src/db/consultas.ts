@@ -25,13 +25,11 @@ export async function saldosPorSobre() {
     .orderBy(sobres.orden, sobres.id);
 }
 
-/**
- * Saldo de cada cuenta activa: en su propia moneda y en centavos de dólar. También la archivada cuyo saldo dejó de ser
- * 0 (por editar o deshacer un movimiento viejo, spec 013, criterio 10): el cuadre nunca esconde dinero.
- */
-export async function saldosPorCuenta() {
-  const saldo = sql<number>`coalesce(sum(${efectoEnCuenta(cuentas.id)}), 0)::bigint`;
-  const saldoUsd = sql<number>`coalesce(sum(${efectoEnCuentaUsd(cuentas.id)}), 0)::bigint`;
+const saldoEnSuMoneda = () => sql<number>`coalesce(sum(${efectoEnCuenta(cuentas.id)}), 0)::bigint`;
+const saldoEnUsd = () => sql<number>`coalesce(sum(${efectoEnCuentaUsd(cuentas.id)}), 0)::bigint`;
+
+/** Cada cuenta con su saldo en su moneda y en centavos de dólar, para las dos listas de abajo. */
+function consultarSaldosDeCuentas() {
   return db
     .select({
       id: cuentas.id,
@@ -42,13 +40,33 @@ export async function saldosPorCuenta() {
       icono: cuentas.icono,
       color: cuentas.color,
       activa: cuentas.activa,
-      saldoCentavos: saldo.mapWith(Number),
-      saldoUsdCentavos: saldoUsd.mapWith(Number),
+      saldoCentavos: saldoEnSuMoneda().mapWith(Number),
+      saldoUsdCentavos: saldoEnUsd().mapWith(Number),
     })
     .from(cuentas)
     .leftJoin(movimientos, or(eq(movimientos.cuentaOrigenId, cuentas.id), eq(movimientos.cuentaDestinoId, cuentas.id)))
+    .$dynamic();
+}
+
+/**
+ * Saldo de cada cuenta activa: en su propia moneda y en centavos de dólar. Es la lista para registrar y elegir: una
+ * archivada no se ofrece, tampoco si su saldo dejó de ser 0 (spec 013, del guardián: la de bolívares se elige sola).
+ */
+export async function saldosPorCuenta() {
+  return consultarSaldosDeCuentas()
+    .where(eq(cuentas.activa, true))
     .groupBy(cuentas.id)
-    .having(or(eq(cuentas.activa, true), sql`${saldo} <> 0`, sql`${saldoUsd} <> 0`))
+    .orderBy(cuentas.orden, cuentas.id);
+}
+
+/**
+ * Las de saldosPorCuenta y también la archivada cuyo saldo dejó de ser 0, por editar o deshacer un movimiento viejo
+ * (spec 013, criterio 10): el cuadre de /cuentas nunca esconde dinero. Para volver a usarla, se restaura.
+ */
+export async function cuentasDelCuadre() {
+  return consultarSaldosDeCuentas()
+    .groupBy(cuentas.id)
+    .having(or(eq(cuentas.activa, true), sql`${saldoEnSuMoneda()} <> 0`, sql`${saldoEnUsd()} <> 0`))
     .orderBy(cuentas.orden, cuentas.id);
 }
 

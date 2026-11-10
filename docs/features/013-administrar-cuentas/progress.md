@@ -23,4 +23,5 @@
 - 2026-11-10. T2: `drizzle/0009_ambiguous_carlie_cooper.sql`, dos `ADD COLUMN` nulos, aplicada en local.
 - 2026-11-10. T3 a T5: `pnpm exec tsx scripts/comprobar-013.ts --url http://localhost:3000` en verde (★ 2, 5, 7, 8, 9 y 10 en la base; 1, 2, 3 y 8 en pantalla sin JavaScript). Capturas de `/cuentas`, `/cuentas/nueva` y `/cuentas/1` en ambos temas, y de la tarjeta de archivadas con una cuenta de prueba que luego se borró.
 - 2026-11-10. `pnpm verify` en verde (53,8 s), con `/cuentas/nueva` y `/cuentas/999999` en el humo.
+- 2026-11-10. Guardián de datos: migración segura; un defecto medio (una archivada con saldo entraba en los formularios y la de bolívares recibía gastos sola) y uno bajo (archivar la cuenta prevista de una deuda borraba su aviso de liquidez). Corregidos: `saldosPorCuenta` vuelve a ser solo de activas, `cuentasDelCuadre` alimenta `/cuentas`, y criterio 12 nuevo. `comprobar-013 --url` en verde con 12 comprobaciones; `pnpm verify` en verde.
 - Producción: hace falta `pnpm db:migrate:produccion` (lo corre el desarrollador) antes de que el despliegue use las columnas nuevas.

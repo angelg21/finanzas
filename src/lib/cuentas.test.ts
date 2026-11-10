@@ -84,6 +84,23 @@ describe("destinoAlEliminarCuenta (spec 013, criterios 7 a 9)", () => {
   });
 });
 
+describe("destinoAlEliminarCuenta con deudas (spec 013, criterio 12, del guardián)", () => {
+  it("★ 12: en 0 pero prevista por una deuda pendiente no se archiva: su aviso de liquidez se perdería", () => {
+    expect(destinoAlEliminarCuenta({ usos: 3, saldoCentavos: 0, saldoUsdCentavos: 0, deudasPendientes: 1 })).toBe(
+      "prevista",
+    );
+    expect(destinoAlEliminarCuenta({ usos: 3, saldoCentavos: 0, saldoUsdCentavos: 0, deudasPendientes: 0 })).toBe(
+      "archivar",
+    );
+  });
+
+  it("★ 12: el saldo manda sobre la deuda: primero se dice que tiene dinero", () => {
+    expect(destinoAlEliminarCuenta({ usos: 3, saldoCentavos: 5, saldoUsdCentavos: 5, deudasPendientes: 2 })).toBe(
+      "con-saldo",
+    );
+  });
+});
+
 describe("aspectoParaElegir (spec 013, criterio 6)", () => {
   it("con icono y color elegidos, esos; sin ellos, el equivalente de su aspecto automático en el catálogo", () => {
     expect(aspectoParaElegir({ tipo: "exchange", moneda: "USDT", icono: "tarjeta", color: "rosa" })).toEqual({
