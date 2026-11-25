@@ -21,7 +21,7 @@ sobre Deudas) pasa a "sale del sobre que elijas, Deudas por defecto", y el 18 (u
 2. ★ Dado un pago desde un sobre que no es Deudas, cuando lo guardo, entonces baja ese sobre y la cuenta, Deudas no
    cambia, el pendiente baja y el cuadre de sobres y cuentas se mantiene.
 3. ★ Dado un pago enviado a mano desde Por asignar o desde un sobre inactivo, entonces no se guarda.
-4. Dado el formulario de pago, entonces "¿También es un gasto?" es opcional, empieza en "No" y ofrece las categorías de
+4. Dado el formulario de pago, entonces "Registrar también como gasto" es opcional, empieza en "No" y ofrece las categorías de
    gasto activas, con su icono.
 5. ★ Dado un pago con categoría, cuando lo guardo, entonces es un solo movimiento: el dinero sale una vez, y el pago sale
    en Movimientos → Gastos con su categoría (lista, anillo y total), en "gastado este mes" y en la gráfica mensual, y no
@@ -35,8 +35,10 @@ sobre Deudas) pasa a "sale del sobre que elijas, Deudas por defecto", y el 18 (u
 
 - Formulario de pago (detalle de la deuda y `/nuevo/deuda`): tras la cuenta, `SelectorPildoras` "Sale del sobre" con
   el saldo de cada sobre como detalle; la línea del sobre debajo del monto usa el sobre elegido. Antes de la fecha, un
-  `<details>` "¿También es un gasto? (opcional)" con un `SelectorPildoras` de categorías con icono, "No" primero y
-  elegido. Funciona sin JavaScript.
+  `<details>` cuya fila se ve tocable (borde, icono, "Registrar también como gasto", "Opcional · toca para elegir la
+  categoría", lo elegido a la derecha y una flecha que gira al abrir), con un `SelectorPildoras` de categorías con
+  icono, "No" primero y elegido. Funciona sin JavaScript. El desplegable usa un grupo con nombre (`group/gasto`): un
+  `group` a secas haría que todas las píldoras se vieran elegidas (corregido el 2026-11-25 tras usarlo en el teléfono).
 - En las listas, un pago con categoría lleva el círculo de su categoría en vez del neutro, y la categoría en el detalle.
 
 ## Datos

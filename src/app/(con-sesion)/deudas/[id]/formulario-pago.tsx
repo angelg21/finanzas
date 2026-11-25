@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ChevronDown, ReceiptText } from "lucide-react";
 import { useActionState, useState } from "react";
 import { SelectorFecha } from "@/components/calendario";
 import { Boton, Campo, CampoMonto, EnlaceBoton, Entrada, ErrorCampo, SelectorPildoras } from "@/components/formulario";
@@ -106,6 +106,8 @@ function Campos({
   const [monto, setMonto] = useState(valores.monto);
   const [cuentaId, setCuentaId] = useState(valores.cuentaId);
   const [sobreId, setSobreId] = useState(valores.sobreId);
+  const [categoriaId, setCategoriaId] = useState(valores.categoriaId);
+  const categoriaElegida = categorias.find((c) => String(c.id) === categoriaId);
   const [fecha, setFecha] = useState(valores.fecha);
   const [editado, setEditado] = useState(false);
   const moneda = cuentas.find((c) => String(c.id) === cuentaId)?.moneda ?? "USD";
@@ -158,12 +160,27 @@ function Campos({
       ) : null}
 
       {cual === "pago" ? (
-        // Opcional y cerrado: casi siempre un pago no es gasto. Sin JavaScript se abre igual y "No" va elegido.
-        <details open={valores.categoriaId !== "" || errores.categoria !== undefined} className="group">
-          <summary className="cursor-pointer list-none text-[13px] font-semibold text-enlace hover:text-texto">
-            ¿También es un gasto? <span className="font-normal text-texto-3">(opcional)</span>
+        // Opcional y cerrado: casi siempre un pago no es gasto. Sin JavaScript se abre igual y "No" va elegido. El grupo
+        // lleva nombre: un `group` a secas aquí haría que cada píldora se viera elegida, porque las píldoras se pintan
+        // con `group-has-checked` y este desplegable siempre contiene un radio marcado.
+        <details
+          open={valores.categoriaId !== "" || errores.categoria !== undefined}
+          className="group/gasto rounded-[14px] border border-tarjeta-borde"
+        >
+          <summary className="flex cursor-pointer list-none items-center gap-3 rounded-[14px] px-4 py-3 hover:bg-tarjeta-hover focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden">
+            <ReceiptText size={18} aria-hidden className="shrink-0 text-texto-2" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[14px] font-semibold">Registrar también como gasto</span>
+              <span className="block text-[12px] text-texto-3">Opcional · toca para elegir la categoría</span>
+            </span>
+            <span className="shrink-0 text-[13px] font-semibold text-texto-2">{categoriaElegida?.nombre ?? "No"}</span>
+            <ChevronDown
+              size={18}
+              aria-hidden
+              className="shrink-0 text-texto-3 transition-transform group-open/gasto:rotate-180"
+            />
           </summary>
-          <div className="mt-3 flex flex-col gap-2">
+          <div className="flex flex-col gap-3 border-t border-tarjeta-borde px-4 pt-3 pb-4">
             <p className="text-[13px] text-texto-3">
               Con categoría, el pago sale también en tus gastos. Sigue siendo un solo movimiento: el dinero sale una
               vez.
@@ -180,6 +197,7 @@ function Campos({
                 })),
               ]}
               valorInicial={valores.categoriaId}
+              onCambio={setCategoriaId}
               envolver
               error={errores.categoria}
             />

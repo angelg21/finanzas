@@ -8,7 +8,7 @@
  *   ★ 7 · deshacer el pago con categoría devuelve todo y deja de contar en los gastos;
  *   ★ 8 · el reintento de la misma captura no duplica.
  * Con --url, además, contra un servidor en marcha con esta misma base y el usuario de prueba, como un navegador sin
- * JavaScript: el formulario con "Sale del sobre" y "¿También es un gasto?", pagar desde otro sobre con categoría, y el
+ * JavaScript: el formulario con "Sale del sobre" y "Registrar también como gasto", pagar desde otro sobre con categoría, y el
  * error desde Por asignar.
  *   pnpm exec tsx scripts/comprobar-014.ts [--url http://localhost:3000]
  * Corre sobre la base local y la deja como estaba: su deuda es de "Prueba 014" y sus pagos llevan la referencia
@@ -230,10 +230,10 @@ async function main() {
         const categoriasDelForm = radios("categoriaId");
         comprobar(
           "1",
-          "el formulario trae «Sale del sobre» con Deudas elegido y «¿También es un gasto?» con «No» elegido",
+          "el formulario trae «Sale del sobre» con Deudas elegido y «Registrar también como gasto» con «No» elegido",
           pagina.estado === 200 &&
             texto(form).includes("Sale del sobre") &&
-            texto(form).includes("¿También es un gasto?") &&
+            texto(form).includes("Registrar también como gasto") &&
             sobresDelForm.some((r) => r.valor === String(sobreDeudas.id) && r.marcado) &&
             sobresDelForm.some((r) => r.valor === String(gastosDelMes.id)) &&
             !sobresDelForm.some((r) => r.valor === String(porAsignar.id)) &&
