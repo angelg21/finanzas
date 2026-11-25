@@ -17,6 +17,7 @@ import {
   patrimonioNeto,
   pendientePorSentido,
   prepararPago,
+  sobreAceptaPago,
   validarDeuda,
 } from "./deudas";
 
@@ -398,5 +399,34 @@ describe("avisoDelSobre: el aviso antes de prestar desde un sobre (observación 
 
   it("el de Deudas es el mismo aviso con su nombre", () => {
     expect(avisoDelSobreDeudas(13_500, 25_000)).toEqual(avisoDelSobre("Deudas", 13_500, 25_000));
+  });
+});
+
+// Spec 014: pagar desde cualquier sobre, y como gasto si se quiere.
+describe("pagar desde otro sobre y como gasto (spec 014, criterios 1 a 3 y 5)", () => {
+  const papas014 = { id: 3, sentido: "debo" as const, pendienteCentavos: 52_000 };
+  const base014: EntradaPago = { monto: "200", fecha: hoy, nota: "", cuenta: binance };
+
+  it("★ 3: se paga desde cualquier sobre menos Por asignar", () => {
+    for (const tipo of ["deudas", "gastos", "familia", "emergencia", "meta", "inversion", "fondo"]) {
+      expect(sobreAceptaPago(tipo)).toBe(true);
+    }
+    expect(sobreAceptaPago("por_asignar")).toBe(false);
+  });
+
+  it("★ 2: la fila sale del sobre elegido", () => {
+    const r = prepararPago(base014, papas014, 12, hoy);
+    expect(r.ok && r.fila.sobreOrigenId).toBe(12);
+  });
+
+  it("★ 5: con categoría, la fila es un solo pago_deuda que la lleva; sin ella, nula como antes", () => {
+    const con = prepararPago({ ...base014, categoriaId: 7 }, papas014, sobreDeudas, hoy);
+    expect(con.ok && { tipo: con.fila.tipo, categoriaId: con.fila.categoriaId, deudaId: con.fila.deudaId }).toEqual({
+      tipo: "pago_deuda",
+      categoriaId: 7,
+      deudaId: 3,
+    });
+    const sin = prepararPago(base014, papas014, sobreDeudas, hoy);
+    expect(sin.ok && sin.fila.categoriaId).toBeNull();
   });
 });

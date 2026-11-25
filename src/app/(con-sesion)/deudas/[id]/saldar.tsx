@@ -7,8 +7,10 @@ import { AvisoGuardado, FormularioPago, type Guardado } from "./formulario-pago"
 
 type Datos = {
   deuda: Pick<DeudaConPendiente, "id" | "sentido" | "estado" | "pendienteCentavos" | "cuentaPrevistaId">;
-  /** El sobre Deudas con su saldo, aunque esté inactivo, o null si no existe. */
-  sobreDeudas: { activo: boolean; saldoCentavos: number } | null;
+  /** Los sobres desde los que se puede pagar, con su saldo: activos menos Por asignar (spec 014). */
+  sobres: { id: number; nombre: string; tipo: string; saldoCentavos: number }[];
+  /** Las categorías de gasto activas, por si el pago también cuenta como gasto (spec 014). */
+  categorias: { id: number; nombre: string; icono: string; color: string }[];
   porAsignar: { activo: boolean } | null;
   /** Las cuentas activas: aquí se dejan las de dólares. */
   cuentas: { id: number; nombre: string; moneda: Moneda }[];
@@ -19,10 +21,10 @@ type Datos = {
 
 /**
  * El formulario para pagar lo que debo o cobrar lo que me deben (spec 005, criterios 3 y 5), o por qué no se puede:
- * ya saldada, sin el sobre que hace falta activo o sin cuentas en dólares. Lo comparten el detalle de la deuda y
+ * ya saldada, sin un sobre del que pagar o Por asignar activo, o sin cuentas en dólares. Lo comparten el detalle de la deuda y
  * /nuevo/deuda (criterio 23), con la misma acción: cada apertura es una captura nueva.
  */
-export function Saldar({ deuda, sobreDeudas, porAsignar, cuentas, hoy, guardado }: Datos) {
+export function Saldar({ deuda, sobres, categorias, porAsignar, cuentas, hoy, guardado }: Datos) {
   const debo = deuda.sentido === "debo";
   const enDolares = cuentas.filter((c) => c.moneda !== "VES");
   if (deuda.estado === "pagada") {
@@ -40,8 +42,8 @@ export function Saldar({ deuda, sobreDeudas, porAsignar, cuentas, hoy, guardado 
     );
   }
   const impedimento =
-    debo && !sobreDeudas?.activo
-      ? "No hay un sobre Deudas activo: no se puede pagar."
+    debo && sobres.length === 0
+      ? "No hay ningún sobre activo del que pagar."
       : !debo && !porAsignar?.activo
         ? "No hay un sobre Por asignar activo: no se puede cobrar."
         : enDolares.length === 0
@@ -50,6 +52,8 @@ export function Saldar({ deuda, sobreDeudas, porAsignar, cuentas, hoy, guardado 
   if (impedimento) return <p className="text-[13px] text-negativo">{impedimento}</p>;
 
   const cuentaInicial = cuentaParaPagar(deuda.cuentaPrevistaId, enDolares);
+  // Deudas por defecto, que es para lo que se aparta (spec 014, criterio 1).
+  const sobreInicial = sobres.find((s) => s.tipo === "deudas") ?? sobres[0];
   return (
     // Con la deuda como clave, elegir otra en /nuevo/deuda empieza un formulario nuevo, con su pendiente escrito.
     <FormularioPago
@@ -60,12 +64,15 @@ export function Saldar({ deuda, sobreDeudas, porAsignar, cuentas, hoy, guardado 
         idCaptura: crypto.randomUUID(),
         monto: centavosATexto(deuda.pendienteCentavos),
         cuentaId: cuentaInicial === null ? "" : String(cuentaInicial),
+        sobreId: debo && sobreInicial ? String(sobreInicial.id) : "",
+        categoriaId: "",
         fecha: "hoy",
         nota: "",
       }}
       cuentas={enDolares.map(({ id, nombre, moneda }) => ({ id, nombre, moneda }))}
       hoy={hoy}
-      saldoDeudasCentavos={debo && sobreDeudas ? sobreDeudas.saldoCentavos : null}
+      sobres={debo ? sobres.map(({ id, nombre, saldoCentavos }) => ({ id, nombre, saldoCentavos })) : []}
+      categorias={debo ? categorias : []}
       guardado={guardado}
     />
   );

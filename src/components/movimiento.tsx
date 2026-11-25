@@ -46,14 +46,15 @@ export function tituloDeDeuda(tipo: MovimientoReciente["tipo"], persona: string 
  * Un movimiento como fila de lista (spec 003), en /movimientos y en los últimos movimientos del inicio: el círculo de
  * su categoría primero, la nota o la categoría, debajo el detalle, y el monto en USD a la derecha. Un gasto en
  * bolívares muestra también los Bs y la tasa. Las transferencias y reasignaciones llevan un círculo neutro y
- * "origen → destino". Pagos, préstamos y cobros de deudas, un círculo neutro con su icono y "Pago a Papás"; el signo
- * sale de signoDe, como el de un gasto o un ingreso.
+ * "origen → destino". Pagos, préstamos y cobros de deudas, un círculo neutro con su icono y "Pago a Papás"; un pago
+ * que también es gasto, el círculo de su categoría (spec 014). El signo sale de signoDe, como el de un gasto o un ingreso.
  */
 export function FilaMovimiento({ m, href }: { m: MovimientoReciente; href?: string }) {
   const Icono = iconoTipo[m.tipo];
   const esMover = m.tipo === "transferencia" || m.tipo === "reasignacion";
   const deDeuda = tituloDeDeuda(m.tipo, m.persona);
-  const neutro = esMover || deDeuda !== null;
+  // Un pago que también es gasto (spec 014) lleva el círculo de su categoría, como un gasto.
+  const neutro = esMover || (deDeuda !== null && !m.categoriaIcono);
   const signo = signoDe(m.tipo);
   const titulo =
     m.tipo === "transferencia"
@@ -64,7 +65,7 @@ export function FilaMovimiento({ m, href }: { m: MovimientoReciente; href?: stri
   const cuenta = signo < 0 ? m.cuentaOrigen : m.cuentaDestino;
   const detalle =
     deDeuda !== null
-      ? [etiquetaTipo[m.tipo], cuenta, m.nota]
+      ? [etiquetaTipo[m.tipo], m.categoria, cuenta, m.nota]
       : esMover
         ? [etiquetaTipo[m.tipo], m.nota]
         : // La etiqueta, si tiene (spec 008): "Sueldo remoto · Binance · SAX".

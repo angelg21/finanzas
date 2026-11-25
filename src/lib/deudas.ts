@@ -175,15 +175,28 @@ export type FilaMovimientoDeuda = {
   cuentaDestinoId: number | null;
   sobreOrigenId: number | null;
   sobreDestinoId: number | null;
-  categoriaId: null;
+  /** Solo un pago, y solo si también cuenta como gasto (spec 014); el cobro nunca. */
+  categoriaId: number | null;
   deudaId: number;
   nota: string | null;
   origen: "manual";
 };
 
-export type EntradaPago = { monto: string; fecha: string; nota: string; cuenta: CuentaDeuda | null };
+export type EntradaPago = {
+  monto: string;
+  fecha: string;
+  nota: string;
+  cuenta: CuentaDeuda | null;
+  /** Una categoría de gasto ya comprobada si el pago también cuenta como gasto (spec 014); nada, si no. */
+  categoriaId?: number | null;
+};
 export type DeudaParaSaldar = { id: number; sentido: SentidoDeuda; pendienteCentavos: number };
-export type ErroresPago = Partial<Record<"monto" | "cuenta" | "fecha" | "deuda", string>>;
+export type ErroresPago = Partial<Record<"monto" | "cuenta" | "fecha" | "deuda" | "sobre" | "categoria", string>>;
+
+/** Spec 014: una deuda se paga desde cualquier sobre menos Por asignar, que primero se reparte. */
+export function sobreAceptaPago(tipoSobre: string): boolean {
+  return tipoSobre !== "por_asignar";
+}
 export type PagoPreparado = { ok: true; fila: FilaMovimientoDeuda } | { ok: false; errores: ErroresPago };
 
 /** De 0,01 al pendiente, o el mensaje del campo (criterio 6). Lo comparten el pago y el cobro. */
@@ -200,15 +213,11 @@ export function leerMontoHastaPendiente(texto: string, pendiente: number): numbe
 }
 
 /**
- * Un pago de una deuda que debo (criterio 3): sale de una cuenta en dólares, 1 a 1, y del sobre Deudas. No lleva
- * categoría: no es gasto. Si Deudas no alcanza se guarda igual; el aviso lo da avisoDelSobreDeudas.
+ * Un pago de una deuda que debo (criterio 3): sale de una cuenta en dólares, 1 a 1, y del sobre elegido, Deudas por
+ * defecto (spec 014). Sin categoría no es gasto; con ella también cuenta como gasto, pero sigue siendo un solo
+ * movimiento: el dinero sale una vez. Si el sobre no alcanza se guarda igual; el aviso lo da avisoDelSobre.
  */
-export function prepararPago(
-  e: EntradaPago,
-  deuda: DeudaParaSaldar,
-  sobreDeudasId: number,
-  hoy: string,
-): PagoPreparado {
+export function prepararPago(e: EntradaPago, deuda: DeudaParaSaldar, sobreId: number, hoy: string): PagoPreparado {
   if (deuda.sentido !== "debo") return { ok: false, errores: { deuda: "Esto no es algo que debas" } };
   if (estadoDe(deuda.pendienteCentavos) === "pagada")
     return { ok: false, errores: { deuda: "Esta deuda ya está pagada" } };
@@ -234,9 +243,9 @@ export function prepararPago(
       tasa: null,
       cuentaOrigenId: e.cuenta.id,
       cuentaDestinoId: null,
-      sobreOrigenId: sobreDeudasId,
+      sobreOrigenId: sobreId,
       sobreDestinoId: null,
-      categoriaId: null,
+      categoriaId: e.categoriaId ?? null,
       deudaId: deuda.id,
       nota: e.nota.trim() || null,
       origen: "manual",

@@ -5,8 +5,8 @@ import { notFound } from "next/navigation";
 import { FilaMovimiento } from "@/components/movimiento";
 import { Cifra, EncabezadoTarjeta, Pildora, Progreso, Tarjeta } from "@/components/ui";
 import { AvisoPasajero } from "@/components/aviso-pasajero";
-import { saldosPorCuenta } from "@/db/consultas";
-import { deudaConMovimientos, deudasConPendiente, sobreDeudas } from "@/db/deudas";
+import { categoriasDeGastoPorUso, saldosPorCuenta, sobresParaPagar } from "@/db/consultas";
+import { deudaConMovimientos, deudasConPendiente } from "@/db/deudas";
 import { sobrePorAsignar } from "@/db/reparto";
 import { formatearCifra } from "@/lib/dinero";
 import { hoyEnCaracas } from "@/lib/fechas";
@@ -38,9 +38,10 @@ export default async function DetalleDeuda({ params, searchParams }: PageProps<"
   const guardado = guardados.find((g) => g === deLaDireccion);
   const deudaId = Number(id);
   if (!Number.isSafeInteger(deudaId) || deudaId <= 0) notFound();
-  const [datos, sobre, porAsignar, cuentas, todas] = await Promise.all([
+  const [datos, sobres, categorias, porAsignar, cuentas, todas] = await Promise.all([
     deudaConMovimientos(deudaId),
-    sobreDeudas(),
+    sobresParaPagar(),
+    categoriasDeGastoPorUso(),
     sobrePorAsignar(),
     saldosPorCuenta(),
     deudasConPendiente(),
@@ -123,7 +124,8 @@ export default async function DetalleDeuda({ params, searchParams }: PageProps<"
         <EncabezadoTarjeta titulo={debo ? "Registrar pago" : "Registrar cobro"} />
         <Saldar
           deuda={deuda}
-          sobreDeudas={sobre}
+          sobres={sobres}
+          categorias={categorias}
           porAsignar={porAsignar}
           cuentas={cuentas}
           hoy={hoy}

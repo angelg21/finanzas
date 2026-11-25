@@ -1,6 +1,6 @@
-import { and, count, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, inArray, lte, not, sql } from "drizzle-orm";
 import type { PestanaMovimientos, Rango } from "@/lib/periodos";
-import { baseMovimientos } from "./consultas";
+import { baseMovimientos, cuentaComoGasto } from "./consultas";
 import { db } from "./index";
 import { categorias, etiquetas, movimientos } from "./schema";
 
@@ -9,14 +9,21 @@ import { categorias, etiquetas, movimientos } from "./schema";
   una cuarta por la clave de la categoría. Los rangos y
   la categoría llegan ya validados por `leerFiltros`. Gastos e Ingresos cuentan solo su tipo; las transferencias y
   las reasignaciones van solo a Mover, porque contarlas sería contar dos veces el mismo dinero (criterio 3). Pagos,
-  préstamos y cobros de deudas también van a Mover: no son gasto ni ingreso (spec 005, criterio 18).
+  préstamos y cobros de deudas también van a Mover: no son gasto ni ingreso (spec 005, criterio 18). Salvo el pago al
+  que se le puso categoría (spec 014): ese cuenta como gasto y va solo a Gastos, para no verse dos veces.
 */
 
 const tiposDe = {
-  gastos: ["gasto"],
   ingresos: ["ingreso"],
   mover: ["transferencia", "reasignacion", "pago_deuda", "prestamo", "cobro_prestamo"],
-} as const satisfies Record<PestanaMovimientos, readonly (typeof movimientos.$inferSelect.tipo)[]>;
+} as const satisfies Record<Exclude<PestanaMovimientos, "gastos">, readonly (typeof movimientos.$inferSelect.tipo)[]>;
+
+/** Qué movimientos son de cada pestaña. */
+const deLaPestana = {
+  gastos: cuentaComoGasto,
+  ingresos: inArray(movimientos.tipo, [...tiposDe.ingresos]),
+  mover: and(inArray(movimientos.tipo, [...tiposDe.mover]), not(cuentaComoGasto)),
+} satisfies Record<PestanaMovimientos, unknown>;
 
 /** Los movimientos de la pestaña en el periodo; con categoría y con etiqueta (spec 008), solo los suyos. */
 function delPeriodo(
@@ -26,7 +33,7 @@ function delPeriodo(
   etiquetaId: number | null = null,
 ) {
   return and(
-    inArray(movimientos.tipo, [...tiposDe[pestana]]),
+    deLaPestana[pestana],
     gte(movimientos.fecha, rango.desde),
     lte(movimientos.fecha, rango.hasta),
     categoriaId === null ? undefined : eq(movimientos.categoriaId, categoriaId),

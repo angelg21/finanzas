@@ -254,7 +254,7 @@ export const movimientos = pgTable(
           and ${t.cuentaOrigenId} is null and ${t.cuentaDestinoId} is null and ${t.deudaId} is null
         when 'pago_deuda' then
           ${t.cuentaOrigenId} is not null and ${t.sobreOrigenId} is not null and ${t.deudaId} is not null
-          and ${t.cuentaDestinoId} is null and ${t.sobreDestinoId} is null and ${t.categoriaId} is null
+          and ${t.cuentaDestinoId} is null and ${t.sobreDestinoId} is null
         when 'prestamo' then
           ${t.cuentaOrigenId} is not null and ${t.sobreOrigenId} is not null and ${t.deudaId} is not null
           and ${t.cuentaDestinoId} is null and ${t.sobreDestinoId} is null and ${t.categoriaId} is null

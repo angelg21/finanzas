@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { saldosPorCuenta } from "@/db/consultas";
-import { deudaPorId, sobreDeudas } from "@/db/deudas";
+import { categoriasDeGastoPorUso, saldosPorCuenta, sobresParaPagar } from "@/db/consultas";
+import { deudaPorId } from "@/db/deudas";
 import { cobrarPrestamo, pagarDeuda } from "@/db/guardar-deudas";
 import { guardadasDeCaptura } from "@/db/movimientos";
 import { sobrePorAsignar } from "@/db/reparto";
@@ -24,6 +24,8 @@ const esquema = z.object({
   idCaptura: z.string().refine(esIdCaptura, mensajeDeFalla("version")),
   monto: z.string().trim().max(30, "Ese número es demasiado largo"),
   cuentaId: z.string().regex(/^\d{0,9}$/, "Elige una cuenta en dólares"),
+  sobreId: z.string().regex(/^\d{0,9}$/, "Elige de qué sobre sale"),
+  categoriaId: z.string().regex(/^\d{0,9}$/, "Elige una categoría de gasto"),
   fecha: z.string().trim().max(10, "Elige hoy o un día anterior"),
   nota: z.string().trim().max(200, "La nota admite hasta 200 caracteres"),
 });
@@ -33,7 +35,7 @@ const textos = {
   pago: {
     queNoSeGuardo: "el pago no se guardó",
     yaGuardado: "Este pago ya se guardó antes: revísalo en el historial y, si es otro, vuelve a guardar.",
-    sinSobre: "No hay un sobre Deudas activo: no se puede pagar",
+    sinSobre: "Elige de qué sobre sale el pago",
     saldada: "Esta deuda ya está pagada",
   },
   cobro: {
@@ -103,7 +105,20 @@ function preparar(cual: Cual, entrada: EntradaPago, deuda: DeudaParaSaldar, sobr
   return cual === "pago" ? prepararPago(entrada, deuda, sobreId, hoy) : prepararCobro(entrada, deuda, sobreId, hoy);
 }
 
-/** La deuda, el sobre y la cuenta se leen de la base: nada del formulario se cree a ciegas. */
+/** El sobre del pago, entre los que lo aceptan (spec 014); el del cobro, Por asignar. Null si no vale. */
+async function sobreElegido(cual: Cual, sobreId: string) {
+  if (cual === "cobro") return sobrePorAsignar();
+  const sobre = (await sobresParaPagar()).find((s) => String(s.id) === sobreId);
+  return sobre ? { id: sobre.id, activo: true } : null;
+}
+
+/** La categoría si el pago también es gasto: null si no lo es, undefined si la elegida no es de gasto activa. */
+async function categoriaElegida(cual: Cual, categoriaId: string): Promise<number | null | undefined> {
+  if (cual === "cobro" || categoriaId === "") return null;
+  return (await categoriasDeGastoPorUso()).find((c) => String(c.id) === categoriaId)?.id;
+}
+
+/** La deuda, el sobre, la categoría y la cuenta se leen de la base: nada del formulario se cree a ciegas. */
 async function procesar(datos: FormData, cual: Cual): Promise<Resultado> {
   const t = textos[cual];
   const leido = esquema.safeParse(tecleadoDe(datos));
@@ -114,19 +129,26 @@ async function procesar(datos: FormData, cual: Cual): Promise<Resultado> {
   const valores: ValoresPago = leido.data;
   const deudaId = Number(valores.deudaId);
   const hoy = hoyEnCaracas(new Date());
-  const [deuda, sobre, cuentas] = await Promise.all([
+  const [deuda, sobre, cuentas, categoriaId] = await Promise.all([
     deudaPorId(deudaId),
-    cual === "pago" ? sobreDeudas() : sobrePorAsignar(),
+    sobreElegido(cual, valores.sobreId),
     saldosPorCuenta(),
+    categoriaElegida(cual, valores.categoriaId),
   ]);
   if (!deuda) return { estado: "error", errores: { general: "Esa deuda ya no existe" }, valores };
-  if (!sobre?.activo) return { estado: "error", errores: { general: t.sinSobre }, valores };
+  if (!sobre?.activo) {
+    return { estado: "error", errores: cual === "pago" ? { sobre: t.sinSobre } : { general: t.sinSobre }, valores };
+  }
+  if (categoriaId === undefined) {
+    return { estado: "error", errores: { categoria: "Elige una categoría de gasto, o «No»" }, valores };
+  }
   const cuenta = cuentas.find((c) => String(c.id) === valores.cuentaId);
   const entrada: EntradaPago = {
     monto: valores.monto,
     fecha: fechaDesdeAtajo(valores.fecha, hoy),
     nota: valores.nota,
     cuenta: cuenta ? { id: cuenta.id, moneda: cuenta.moneda } : null,
+    categoriaId,
   };
   const referenciaExterna = referenciaDeCaptura(valores.idCaptura, cual);
   const destino = `/deudas/${deudaId}?guardado=${cual}`;

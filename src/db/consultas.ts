@@ -2,9 +2,17 @@ import { and, desc, eq, gte, ne, not, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "./index";
 import { clavesDeMeses, hoyEnCaracas, inicioDeMes } from "@/lib/fechas";
+import { sobreAceptaPago } from "@/lib/deudas";
 import { sobreAceptaGasto } from "@/lib/gastos";
 import { categorias, cuentas, deudas, etiquetas, movimientos, partidasSobre, reglasReparto, sobres } from "./schema";
 import { efectoEnCuenta, efectoEnCuentaUsd, efectoEnSobre, esHistorial } from "./sumas-de-saldo";
+
+/**
+ * Lo que cuenta como gasto en totales, gráficas y en la pestaña Gastos: los gastos, y los pagos de deuda a los que se les
+ * puso categoría (spec 014). Un pago sin categoría no es gasto y va a Mover (spec 005, criterio 18).
+ */
+export const cuentaComoGasto = sql`(${movimientos.tipo} = 'gasto'
+  or (${movimientos.tipo} = 'pago_deuda' and ${movimientos.categoriaId} is not null))`;
 
 /** Saldo de cada sobre activo, en centavos de dólar. */
 export async function saldosPorSobre() {
@@ -88,7 +96,7 @@ export async function resumenMensual(meses = 6): Promise<ResumenMes[]> {
           Number,
         ),
       gastosCentavos:
-        sql<number>`coalesce(sum(case when ${movimientos.tipo} = 'gasto' then ${movimientos.montoUsdCentavos} else 0 end), 0)::bigint`.mapWith(
+        sql<number>`coalesce(sum(case when ${cuentaComoGasto} then ${movimientos.montoUsdCentavos} else 0 end), 0)::bigint`.mapWith(
           Number,
         ),
     })
@@ -112,7 +120,7 @@ export async function gastadoEsteMes(): Promise<number> {
       total: sql<number>`coalesce(sum(${movimientos.montoUsdCentavos}), 0)::bigint`.mapWith(Number),
     })
     .from(movimientos)
-    .where(and(eq(movimientos.tipo, "gasto"), gte(movimientos.fecha, inicioDelMes())));
+    .where(and(cuentaComoGasto, gte(movimientos.fecha, inicioDelMes())));
   return fila?.total ?? 0;
 }
 
@@ -210,15 +218,16 @@ export async function categoriasDeGastoPorUso() {
     .from(categorias)
     .leftJoin(
       movimientos,
-      and(
-        eq(movimientos.categoriaId, categorias.id),
-        eq(movimientos.tipo, "gasto"),
-        gte(movimientos.fecha, sql`current_date - 90`),
-      ),
+      and(eq(movimientos.categoriaId, categorias.id), cuentaComoGasto, gte(movimientos.fecha, sql`current_date - 90`)),
     )
     .where(and(eq(categorias.tipo, "gasto"), eq(categorias.activa, true)))
     .groupBy(categorias.id)
     .orderBy(desc(usos), categorias.orden, categorias.id);
+}
+
+/** Sobres desde los que se paga una deuda, con su saldo: los activos menos "Por asignar" (spec 014). */
+export async function sobresParaPagar() {
+  return (await saldosPorSobre()).filter((s) => sobreAceptaPago(s.tipo));
 }
 
 /** Sobres a los que se les puede cargar un gasto, con su saldo: los activos menos "Por asignar" y Deudas. */

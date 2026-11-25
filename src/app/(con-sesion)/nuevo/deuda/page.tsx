@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { EncabezadoTarjeta, Pildora, Tarjeta } from "@/components/ui";
-import { saldosPorCuenta } from "@/db/consultas";
-import { deudasConPendiente, sobreDeudas } from "@/db/deudas";
+import { categoriasDeGastoPorUso, saldosPorCuenta, sobresParaPagar } from "@/db/consultas";
+import { deudasConPendiente } from "@/db/deudas";
 import { sobrePorAsignar } from "@/db/reparto";
 import { hoyEnCaracas } from "@/lib/fechas";
 import { avisosDeLiquidez } from "@/lib/liquidez";
@@ -30,9 +30,10 @@ const listas = [
 export default async function PagarOCobrar({ searchParams }: PageProps<"/nuevo/deuda">) {
   await exigirSesion();
   const { deuda: pedida } = await searchParams;
-  const [deudas, sobre, porAsignar, cuentas] = await Promise.all([
+  const [deudas, sobres, categorias, porAsignar, cuentas] = await Promise.all([
     deudasConPendiente(),
-    sobreDeudas(),
+    sobresParaPagar(),
+    categoriasDeGastoPorUso(),
     sobrePorAsignar(),
     saldosPorCuenta(),
   ]);
@@ -88,7 +89,14 @@ export default async function PagarOCobrar({ searchParams }: PageProps<"/nuevo/d
                 titulo={elegida.sentido === "debo" ? `Pago a ${elegida.persona}` : `Cobro de ${elegida.persona}`}
                 enlace={{ href: `/deudas/${elegida.id}`, texto: "Ver deuda" }}
               />
-              <Saldar deuda={elegida} sobreDeudas={sobre} porAsignar={porAsignar} cuentas={cuentas} hoy={hoy} />
+              <Saldar
+                deuda={elegida}
+                sobres={sobres}
+                categorias={categorias}
+                porAsignar={porAsignar}
+                cuentas={cuentas}
+                hoy={hoy}
+              />
             </>
           ) : (
             <>

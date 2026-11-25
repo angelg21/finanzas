@@ -2,7 +2,7 @@ import { and, count, eq, sql } from "drizzle-orm";
 import { puedeApartarDesde } from "../lib/apartado";
 import { puedePrestarDesde } from "../lib/prestamos";
 import { esIdCaptura, referenciaDeCaptura, referenciaDeReasignacion } from "../lib/captura";
-import { type FilaDeuda, montoInicialMinimo } from "../lib/deudas";
+import { type FilaDeuda, montoInicialMinimo, sobreAceptaPago } from "../lib/deudas";
 import { deudaPorId } from "./deudas";
 import { db } from "./index";
 import {
@@ -13,7 +13,16 @@ import {
   registrarMovimientos,
   saldoDeSobre,
 } from "./movimientos";
-import { type Deuda, type Movimiento, type NuevoMovimiento, cuentas, deudas, movimientos, sobres } from "./schema";
+import {
+  type Deuda,
+  type Movimiento,
+  type NuevoMovimiento,
+  categorias,
+  cuentas,
+  deudas,
+  movimientos,
+  sobres,
+} from "./schema";
 
 /*
   Escrituras de deudas (spec 005). Lo que cambia el pendiente de una deuda (pagar, editar, borrar) va en una
@@ -140,6 +149,20 @@ async function exigirLado(
     throw new Error("El movimiento usa un sobre activo que le corresponde");
 }
 
+/**
+ * Un pago que también cuenta como gasto lleva una categoría de gasto activa (spec 014, criterio 6). El check de forma
+ * deja la categoría en el pago, pero no sabe de qué tipo es; en el cobro y el préstamo, el check la exige nula.
+ */
+async function exigirCategoriaDeGasto(tx: Ejecutor, categoriaId: number | null) {
+  if (categoriaId === null) return;
+  const [categoria] = await tx
+    .select({ tipo: categorias.tipo, activa: categorias.activa })
+    .from(categorias)
+    .where(eq(categorias.id, categoriaId));
+  if (categoria?.tipo !== "gasto" || !categoria.activa)
+    throw new Error("Un pago solo lleva una categoría de gasto activa");
+}
+
 type ResultadoMovimiento = { nueva: true } | { nueva: false; guardadas: Movimiento[] };
 type ResultadoSaldo = ResultadoMovimiento | { noExiste: true } | { excede: true; pendienteCentavos: number };
 
@@ -149,7 +172,8 @@ const saldos = {
     tipo: "pago_deuda",
     sentido: "debo",
     lado: "origen",
-    sobreValido: (tipo: string) => tipo === "deudas",
+    // Desde cualquier sobre menos Por asignar (spec 014).
+    sobreValido: sobreAceptaPago,
   },
   cobro: {
     tipo: "cobro_prestamo",
@@ -179,8 +203,8 @@ async function saldar(idCaptura: string, fila: NuevoMovimiento, cual: keyof type
   try {
     return await db.transaction(async (tx) => {
       await bloquearDeuda(tx, deudaId);
-      // Un pago saca de Deudas: con su candado (el del reparto, después del de la deuda, como al deshacer), Mover
-      // desde Deudas espera y ve el saldo ya pagado (guardian-datos, 007).
+      // Un pago saca de su sobre: con su candado (el del reparto, después del de la deuda, como al deshacer), Mover
+      // desde ese sobre espera y ve el saldo ya pagado (guardian-datos, 007).
       if (cual === "pago" && fila.sobreOrigenId != null) {
         await tx.execute(sql`select pg_advisory_xact_lock(${claveReparto}, ${fila.sobreOrigenId})`);
       }
@@ -193,6 +217,7 @@ async function saldar(idCaptura: string, fila: NuevoMovimiento, cual: keyof type
         return { excede: true as const, pendienteCentavos: deuda.pendienteCentavos };
       }
       await exigirLado(tx, fila, regla.lado, regla.sobreValido);
+      await exigirCategoriaDeGasto(tx, fila.categoriaId ?? null);
       await registrarMovimientos([fila], tx);
       return { nueva: true as const };
     });
@@ -202,7 +227,7 @@ async function saldar(idCaptura: string, fila: NuevoMovimiento, cual: keyof type
   }
 }
 
-/** Un pago de una deuda que debo: sale de una cuenta en dólares y del sobre Deudas activo. */
+/** Un pago de una deuda que debo: sale de una cuenta en dólares y de un sobre activo que no sea Por asignar. */
 export async function pagarDeuda(idCaptura: string, fila: NuevoMovimiento) {
   return saldar(idCaptura, fila, "pago");
 }
