@@ -5,14 +5,7 @@ import { clavesDeMeses, hoyEnCaracas, inicioDeMes } from "@/lib/fechas";
 import { sobreAceptaPago } from "@/lib/deudas";
 import { sobreAceptaGasto } from "@/lib/gastos";
 import { categorias, cuentas, deudas, etiquetas, movimientos, partidasSobre, reglasReparto, sobres } from "./schema";
-import { efectoEnCuenta, efectoEnCuentaUsd, efectoEnSobre, esHistorial } from "./sumas-de-saldo";
-
-/**
- * Lo que cuenta como gasto en totales, gráficas y en la pestaña Gastos: los gastos, y los pagos de deuda a los que se les
- * puso categoría (spec 014). Un pago sin categoría no es gasto y va a Mover (spec 005, criterio 18).
- */
-export const cuentaComoGasto = sql`(${movimientos.tipo} = 'gasto'
-  or (${movimientos.tipo} = 'pago_deuda' and ${movimientos.categoriaId} is not null))`;
+import { cuentaComoGasto, efectoEnCuenta, efectoEnCuentaUsd, efectoEnSobre, esHistorial } from "./sumas-de-saldo";
 
 /** Saldo de cada sobre activo, en centavos de dólar. */
 export async function saldosPorSobre() {

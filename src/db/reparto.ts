@@ -131,7 +131,8 @@ export async function cuotaDelMes() {
   const [sobre, deudas] = await Promise.all([sobreDeudas(), deudasConPendiente().catch(() => null)]);
   if (!sobre?.activo || !deudas) return null;
   const hoy = hoyEnCaracas(new Date());
-  // Lo apartado al empezar el mes: así la cuota no cambia dentro del mes, aunque lleguen pagos o cobros.
+  // Lo apartado al empezar el mes: así la cuota no cambia dentro del mes por lo que entra o sale de Deudas. Un pago
+  // desde otro sobre (spec 014) sí la baja, porque baja el pendiente: nunca la sube, y se corrige sola.
   const apartado = sobre.saldoCentavos - sobre.recibidoEnElMesCentavos;
   return {
     sobreId: sobre.id,

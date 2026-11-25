@@ -16,6 +16,14 @@ const tipoQue = (lado: keyof Efecto) => inArray(movimientos.tipo, tiposCon(lado)
 export const esHistorial = sql`(${movimientos.origen}::text = 'importado'
   and coalesce(${movimientos.referenciaExterna}, '') like ${`${prefijoDeHistorial}%`})`;
 
+/**
+ * Lo que cuenta como gasto en totales, gráficas, la pestaña Gastos y el importador: los gastos, y los pagos de deuda a
+ * los que se les puso categoría (spec 014). Un pago sin categoría no es gasto y va a Mover (spec 005, criterio 18). No
+ * cambia ningún saldo: un pago ya sale de su cuenta y su sobre.
+ */
+export const cuentaComoGasto = sql`(${movimientos.tipo} = 'gasto'
+  or (${movimientos.tipo} = 'pago_deuda' and ${movimientos.categoriaId} is not null))`;
+
 /** En USD, para el saldo del sobre `sobreId` (una columna o un id). */
 export function efectoEnSobre(sobreId: SQLWrapper | number): SQL {
   return sql`case

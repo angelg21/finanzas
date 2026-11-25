@@ -7,7 +7,7 @@
  *   pnpm db:importar <archivo.xlsx> --aplicar    → la base local, sin preguntar
  *   pnpm db:importar:produccion <archivo.xlsx>   → producción: la cadena y las confirmaciones en la terminal
  */
-import { and, eq, inArray, not, or, sql } from "drizzle-orm";
+import { and, eq, not, or, sql } from "drizzle-orm";
 import { claveDeNombre } from "../lib/categorias";
 import { formatearCentavos, type Moneda } from "../lib/dinero";
 import { nombreDeEtiqueta } from "../lib/etiquetas";
@@ -18,7 +18,7 @@ import { mapeoGestorDeGastos } from "../lib/mapeo-gestor-de-gastos";
 import { conectar, preguntar, terminarConError, urlLocal, urlProduccion } from "./conexion-script";
 import { leerXlsx } from "./leer-xlsx";
 import { type NuevoMovimiento, categorias, cuentas, etiquetas, movimientos, sobres } from "./schema";
-import { efectoEnCuenta, efectoEnSobre, esHistorial } from "./sumas-de-saldo";
+import { cuentaComoGasto, efectoEnCuenta, efectoEnSobre, esHistorial } from "./sumas-de-saldo";
 
 type Base = ReturnType<typeof conectar>["db"];
 type Ejecutor = Base | Parameters<Parameters<Base["transaction"]>[0]>[0];
@@ -27,17 +27,18 @@ async function contextoDe(db: Base): Promise<ContextoDeImportacion> {
   const anotados = await db
     .select({
       fecha: movimientos.fecha,
-      tipo: movimientos.tipo,
+      esGasto: sql<boolean>`${cuentaComoGasto}`,
       centavosUsd: movimientos.montoUsdCentavos,
       nota: movimientos.nota,
     })
     .from(movimientos)
-    .where(and(inArray(movimientos.tipo, ["gasto", "ingreso"]), not(esHistorial)));
+    // Un pago de deuda con categoría también es un gasto ya anotado (spec 014, guardian-datos).
+    .where(and(or(cuentaComoGasto, eq(movimientos.tipo, "ingreso")), not(esHistorial)));
   return {
     cuentas: await db.select({ nombre: cuentas.nombre, moneda: cuentas.moneda }).from(cuentas),
     categorias: await db.select({ nombre: categorias.nombre, tipo: categorias.tipo }).from(categorias),
     etiquetas: await db.select({ nombre: etiquetas.nombre }).from(etiquetas),
-    yaAnotados: anotados.map((a) => ({ ...a, tipo: a.tipo === "gasto" ? "gasto" : "ingreso" })),
+    yaAnotados: anotados.map(({ esGasto, ...a }) => ({ ...a, tipo: esGasto ? "gasto" : "ingreso" })),
   };
 }
 

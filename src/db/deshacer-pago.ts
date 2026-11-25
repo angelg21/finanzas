@@ -67,10 +67,13 @@ export async function pagoOCobroParaDeshacer(id: number) {
       deudaId: movimientos.deudaId,
       sobreDestinoId: movimientos.sobreDestinoId,
       persona: deudas.persona,
+      // El sobre del que salió el pago, que no siempre es Deudas (spec 014): a él vuelve el dinero.
+      sobreOrigen: sobres.nombre,
       cuentaId: sql<number | null>`coalesce(${movimientos.cuentaOrigenId}, ${movimientos.cuentaDestinoId})`,
     })
     .from(movimientos)
     .innerJoin(deudas, eq(deudas.id, movimientos.deudaId))
+    .leftJoin(sobres, eq(sobres.id, movimientos.sobreOrigenId))
     .where(and(eq(movimientos.id, id), inArray(movimientos.tipo, ["pago_deuda", "cobro_prestamo"])));
   if (!m) return null;
   const [cuenta] = m.cuentaId
@@ -90,7 +93,7 @@ export type PagoOCobro = NonNullable<Awaited<ReturnType<typeof pagoOCobroParaDes
 
 /**
  * Deshacer un pago o un cobro (spec 007, criterios 1 a 3): borra el movimiento con el candado de la deuda, que
- * serializa con pagar y cobrar. Un pago devuelve el dinero a su cuenta y a Deudas, siempre. Un cobro lo saca de la
+ * serializa con pagar y cobrar. Un pago devuelve el dinero a su cuenta y al sobre del que salió. Un cobro lo saca de la
  * cuenta y de "Por asignar": con su candado (el del reparto, tomado después del de la deuda, en el mismo orden que en
  * todas partes). Con él se retira lo que se repartió o se movió con su dinero (criterio 11), solo si es la misma vista previa
  * que se vio y confirmó (`firma`: filas, montos y saldos); si cambió, responde `cambio` para volver a mostrarla.

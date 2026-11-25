@@ -158,7 +158,9 @@ async function exigirCategoriaDeGasto(tx: Ejecutor, categoriaId: number | null) 
   const [categoria] = await tx
     .select({ tipo: categorias.tipo, activa: categorias.activa })
     .from(categorias)
-    .where(eq(categorias.id, categoriaId));
+    .where(eq(categorias.id, categoriaId))
+    // Con la fila compartida hasta el insert: cambiarla de tipo espera y luego ve el pago (guardian-datos, 014).
+    .for("share");
   if (categoria?.tipo !== "gasto" || !categoria.activa)
     throw new Error("Un pago solo lleva una categoría de gasto activa");
 }

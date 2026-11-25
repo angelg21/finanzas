@@ -1,8 +1,9 @@
 import { and, count, desc, eq, gte, inArray, lte, not, sql } from "drizzle-orm";
 import type { PestanaMovimientos, Rango } from "@/lib/periodos";
-import { baseMovimientos, cuentaComoGasto } from "./consultas";
+import { baseMovimientos } from "./consultas";
 import { db } from "./index";
 import { categorias, etiquetas, movimientos } from "./schema";
+import { cuentaComoGasto } from "./sumas-de-saldo";
 
 /*
   Lecturas de /movimientos (spec 003): tres consultas por página, todas sobre `movimientos_fecha_idx`, y con filtro

@@ -208,4 +208,12 @@ metadata:
 - Una FK no bloquea la fila padre en un UPDATE que no cambia la columna de la FK, ni en un DELETE del hijo. Un `FOR UPDATE` sobre la cuenta solo serializa contra inserts y contra cambios de cuenta.
 - `db:demo:limpiar` + `db:demo` + `db:seed` sobre una copia (`DATABASE_URL=...5433/<copia>` en la línea) deja la real intacta: md5 por tabla iguales. Las secuencias de la real igual pueden subir por otros (+2 el 2026-11-10).
 
+- **Herramientas de 014** (2026-11-25), en `596375892df7b268/fff6d62f…/scratchpad/g014/`:
+  - `sonda-014.mts <escritor|carrera-categoria|carrera-mover|todo>`: solo corre en `finanzas_g014_*` y limpia por `nota like 'sonda-014%'`. Con `SONDA_MUT=<ruta>` usa un `guardar-deudas` mutado.
+  - Para armar el mutante, cambiar los imports por URL `file:///` absolutas. drizzle-orm va por `realpath` hasta `.pnpm/.../drizzle-orm/index.js`: `require.resolve` da `index.cjs`, que no sirve en ESM.
+  - `diff-snapshot.cts <NNNN_snapshot.json>`.
+  - `huella.sql` e `invariante.sql`: el invariante cuenta las cuentas del cuadre y excluye el historial.
+  - Para tener una copia con forma de producción sin conocer el check viejo: tomar `pg_get_constraintdef` y quitarle o añadirle la condición con sed.
+- La base real tenía conexiones abiertas (el `next dev`), así que `createdb -T finanzas` no sirve. La primera copia se hace con `pg_dump | psql`, y las demás con `-T` desde esa copia.
+
 Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].

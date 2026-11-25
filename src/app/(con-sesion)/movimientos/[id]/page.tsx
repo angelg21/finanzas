@@ -86,7 +86,7 @@ function DeshacerPagoOCobro({ p, volver, confirmar }: { p: PagoOCobro; volver: s
     tipo: esPago ? ("pago" as const) : ("cobro" as const),
     volver,
     queSeBorra: esPago
-      ? `Se deshace el pago de ${monto} a ${p.persona}: vuelve a la cuenta y al sobre Deudas, y la deuda vuelve a deberse.`
+      ? `Se deshace el pago de ${monto} a ${p.persona}: vuelve a la cuenta y al sobre ${p.sobreOrigen ?? "del que salió"}, y la deuda vuelve a deberse.`
       : `Se deshace el cobro de ${monto} de ${p.persona}: sale de la cuenta y de Por asignar, y vuelve a deberte.`,
     avisos: [],
     // Spec 007, criterio 11: si ya se repartió, se ve antes cómo queda todo y lo que se retira; si ni así alcanza, se

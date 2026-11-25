@@ -14,4 +14,5 @@
 - [Revisión de 008](project_revision-008-etiquetas.md): 0006 SEGURO (2026-10-17, sha 56bd5d69); respaldo antes de migrar falla con código nuevo; etiquetas sin marca demo
 - [Revisión de 009](project_revision-009-por-completar.md): 0007 NO APLICAR; 2.ª vuelta 0007+0008 SEGURO (0d8904e); residual: el último gasto hereda la venta compartida
 - [Revisión de 013](project_revision-013-cuentas.md): 0009 apta; HAVING cierra obs. 3; Media: archivada con saldo entra a formularios (VES sola)
+- [Revisión de 014](project_revision-014-pagar-deuda.md): 7ee2b1f SEGURO (2026-11-25); cuentaComoGasto; abiertas: carrera de categoría (for share), texto de deshacer, importador
 - [Captura idempotente](project_captura-idempotente.md): T12 de 002 NO APTO y luego APTO; 23505 + huella + 15 min; residuales: id reutilizado idéntico, sin editar movimientos, pruebas de base en f-verify

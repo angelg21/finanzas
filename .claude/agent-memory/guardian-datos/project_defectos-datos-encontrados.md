@@ -1,6 +1,6 @@
 ---
 name: defectos-datos-encontrados
-description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en 003, 004, 97437d7, 005, T3 de 006, la 0006 de 008, 009, 007 y su criterio 11 (2026-10-23: retiro que se come el reparto de otro ingreso, firma sin saldos)
+description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en 003, 004, 97437d7, 005, T3 de 006, la 0006 de 008, 009, 007 y su criterio 11, 013 y 014 (2026-11-25: carrera de categoría en el pago, texto de deshacer, importador)
 metadata:
   type: project
 ---
@@ -132,6 +132,13 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
 - **Media.** Las archivadas con saldo entran en todos los formularios de registro. Una VES archivada pasa a ser "la de bolívares" sin que el usuario la elija (medido con la acción real).
 - **Baja.** El aviso de liquidez desaparece si se archiva la cuenta prevista. Las deudas ofrecen la archivada y después la rechazan con un error genérico.
 - **Info.** Una VES con residuo en USD no se puede eliminar. `db:seed` vuelve a crear una cuenta de la semilla renombrada o borrada.
+
+**014, 7ee2b1f (2026-11-25). SEGURO; abiertos** (ver [[revision-014-pagar-deuda]])
+
+- **Baja.** `exigirCategoriaDeGasto` lee la categoría sin `for share`. Si cambia a ingreso en la ventana, queda un pago con categoría de ingreso (4 de 4 con orden forzado; el mutante con `for share` lo cierra). Es la misma clase que la de T15 de 001 en los gastos, que sigue abierta.
+- **Baja.** El texto de deshacer un pago dice "al sobre Deudas" aunque haya salido de otro sobre (`movimientos/[id]/page.tsx:89`).
+- **Baja.** `contextoDe` del importador solo mira gasto e ingreso, así que un pago con categoría no cuenta como ya anotado.
+- **Info.** Un pago desde otro sobre baja la cuota de Deudas dentro del mes.
 
 **Criterio 11 de la 007, d069e51 (2026-10-23). NO APTO; abierto** (ver [[revision-007-ajustes]])
 

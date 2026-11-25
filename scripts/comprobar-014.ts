@@ -273,6 +273,13 @@ async function main() {
           "el pago sale en Movimientos → Gastos como «Pago a Prueba 014»",
           gastos.includes("Pago a Prueba 014"),
         );
+        // Del guardián: deshacer dice el sobre del que salió, no siempre Deudas.
+        const deshacer = texto((await sesion.pagina(`/movimientos/${guardada?.id}?borrar=1`)).html);
+        comprobar(
+          "7",
+          `deshacer ese pago dice que vuelve «al sobre ${gastosDelMes.nombre}»`,
+          deshacer.includes(`vuelve a la cuenta y al sobre ${gastosDelMes.nombre}`),
+        );
         datos.set("idCaptura", idDePrueba());
         datos.set("sobreId", String(porAsignar.id));
         const mal = await sesion.enviar(`/deudas/${deuda.id}`, datos);

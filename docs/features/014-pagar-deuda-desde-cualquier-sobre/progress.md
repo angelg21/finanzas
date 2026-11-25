@@ -22,4 +22,5 @@
 - 2026-11-25. T1: 3 pruebas nuevas en `deudas.test.ts`; 2 vistas fallar (la del sobre ya pasaba: `prepararPago` recibía el sobre) y luego las 825 de `src/lib` en verde.
 - 2026-11-25. T2: `drizzle/0010_boring_selene.sql`, el check de forma sin `categoria_id is null` en `pago_deuda`; aplicada en local.
 - 2026-11-25. T3 a T5: `pnpm exec tsx scripts/comprobar-014.ts --url http://localhost:3000` en verde (★ 2, 3, 5, 6, 7 y 8 en la base; 1, 3 y 5 en pantalla sin JavaScript). Capturas de `/deudas/206` en ambos temas.
+- 2026-11-25. Guardián de datos: SEGURO DE APLICAR, con tres defectos bajos, corregidos: la categoría se lee con `for share` (un cambio de tipo en carrera esperaba y la dejaba como ingreso en un pago), deshacer dice el sobre del que salió el pago en vez de "Deudas", y el importador reconoce como ya anotado un pago con categoría (`cuentaComoGasto` pasó a `sumas-de-saldo.ts`). `comprobar-014 --url` (13), 007 y 012 en verde; `pnpm verify` en verde.
 - Producción: hace falta `pnpm db:migrate:produccion` (lo corre el desarrollador) antes de publicar: sin él, un pago con categoría choca con el check viejo.
