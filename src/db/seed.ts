@@ -126,6 +126,12 @@ async function main() {
     if (!s) throw new Error(`No existe un sobre de tipo ${tipo}`);
     return s.id;
   };
+  // Negocios recibe regla si la semilla lo acaba de crear, o si Inversión todavía no tiene fila de regla: una primera
+  // semilla cortada entre los sobres y las reglas (guardian-datos, 015). En una base dividida por el script, Inversión
+  // ya tiene la suya y Negocios la que le puso el script, o ninguna porque el desarrollador la quitó.
+  const inversionSinRegla =
+    (await db.$count(schema.reglasReparto, eq(schema.reglasReparto.sobreId, idDe("inversion")))) === 0;
+  const conNegocios = sobres.some((s) => s.tipo === "negocios") && (negociosNuevo || inversionSinRegla);
   await db
     .insert(schema.reglasReparto)
     .values([
@@ -135,10 +141,9 @@ async function main() {
       { orden: 3, sobreId: idDe("fondo"), tipo: "fijo", valor: 2_500 },
       { orden: 4, sobreId: idDe("emergencia"), tipo: "porcentaje", valor: 4_000 },
       { orden: 5, sobreId: idDe("meta"), tipo: "porcentaje", valor: 3_000 },
-      // El 30 % de Inversión partido 2/3 y 1/3 (spec 015). Negocios solo recibe regla si la semilla lo acaba de crear:
-      // en una base dividida por el script, la suya ya la puso el script, o el desarrollador la quitó.
+      // El 30 % de Inversión partido 2/3 y 1/3 (spec 015).
       { orden: 6, sobreId: idDe("inversion"), tipo: "porcentaje", valor: 2_000 },
-      ...(negociosNuevo ? [{ orden: 6, sobreId: idDe("negocios"), tipo: "porcentaje" as const, valor: 1_000 }] : []),
+      ...(conNegocios ? [{ orden: 6, sobreId: idDe("negocios"), tipo: "porcentaje" as const, valor: 1_000 }] : []),
     ])
     .onConflictDoNothing();
 

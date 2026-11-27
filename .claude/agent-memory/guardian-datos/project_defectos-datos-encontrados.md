@@ -1,6 +1,6 @@
 ---
 name: defectos-datos-encontrados
-description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en 003, 004, 97437d7, 005, T3 de 006, la 0006 de 008, 009, 007 y su criterio 11, 013 y 014 (2026-11-25: carrera de categoría en el pago, texto de deshacer, importador)
+description: Defectos y huecos de datos que encontré en auditorías (con fecha), abiertos y cerrados; revisado completo en la segunda vuelta de T14 de 002 y ampliado en 003, 004, 97437d7, 005, T3 de 006, la 0006 de 008, 009, 007 y su criterio 11, 013, 014 y 015 (2026-11-26: semilla cortada, carreras del script de división)
 metadata:
   type: project
 ---
@@ -139,6 +139,15 @@ Antes de dar algo por cerrado, comprobar si estos puntos siguen abiertos. Últim
 - **Baja.** El texto de deshacer un pago dice "al sobre Deudas" aunque haya salido de otro sobre (`movimientos/[id]/page.tsx:89`).
 - **Baja.** `contextoDe` del importador solo mira gasto e ingreso, así que un pago con categoría no cuenta como ya anotado.
 - **Info.** Un pago desde otro sobre baja la cuota de Deudas dentro del mes.
+
+**015, 694f56e (2026-11-26). SEGURO; abiertos** (ver [[revision-015-dividir-inversion]])
+
+- **Baja.** Si la semilla se corta en una base vacía entre los sobres y las reglas, la segunda corrida deja Negocios sin regla, con los porcentajes en 90 %.
+- **Info.**
+  - Un movimiento que se confirma a mitad de la división la aborta, y no queda nada escrito.
+  - Si la división confirma entre la lectura de la acción de reglas y `guardarReglas`, la partición se deshace en silencio. Es la misma clase que la nota de T9 de 004.
+  - Con una regla fija, el mes de la división paga de más a Negocios.
+  - Con dos sobres de inversión, el script elige uno al azar.
 
 **Criterio 11 de la 007, d069e51 (2026-10-23). NO APTO; abierto** (ver [[revision-007-ajustes]])
 

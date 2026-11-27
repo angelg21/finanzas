@@ -15,4 +15,5 @@
 - [Revisión de 009](project_revision-009-por-completar.md): 0007 NO APLICAR; 2.ª vuelta 0007+0008 SEGURO (0d8904e); residual: el último gasto hereda la venta compartida
 - [Revisión de 013](project_revision-013-cuentas.md): 0009 apta; HAVING cierra obs. 3; Media: archivada con saldo entra a formularios (VES sola)
 - [Revisión de 014](project_revision-014-pagar-deuda.md): 7ee2b1f SEGURO (2026-11-25); cuentaComoGasto; abiertas: carrera de categoría (for share), texto de deshacer, importador
+- [Revisión de 015](project_revision-015-dividir-inversion.md): 694f56e SEGURO (2026-11-26); 0011 en transacción ok; baja: semilla cortada deja 90 %; no usar 'negocios' junto a 0011
 - [Captura idempotente](project_captura-idempotente.md): T12 de 002 NO APTO y luego APTO; 23505 + huella + 15 min; residuales: id reutilizado idéntico, sin editar movimientos, pruebas de base en f-verify

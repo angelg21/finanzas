@@ -21,7 +21,11 @@ type Base = ReturnType<typeof conectar>["db"];
 
 async function estado(tx: EjecutorDeScript) {
   const [deSobres, deReglas] = await Promise.all([
-    tx.select({ id: sobres.id, nombre: sobres.nombre, tipo: sobres.tipo, orden: sobres.orden }).from(sobres),
+    // Por id: de haber dos sobres de inversión, el plan toma siempre el primero que se creó (guardian-datos, 015).
+    tx
+      .select({ id: sobres.id, nombre: sobres.nombre, tipo: sobres.tipo, orden: sobres.orden })
+      .from(sobres)
+      .orderBy(sobres.id),
     tx
       .select({
         sobreId: reglasReparto.sobreId,

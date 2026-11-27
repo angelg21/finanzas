@@ -216,4 +216,15 @@ metadata:
   - Para tener una copia con forma de producción sin conocer el check viejo: tomar `pg_get_constraintdef` y quitarle o añadirle la condición con sed.
 - La base real tenía conexiones abiertas (el `next dev`), así que `createdb -T finanzas` no sirve. La primera copia se hace con `pg_dump | psql`, y las demás con `-T` desde esa copia.
 
+- **Herramientas de 015** (2026-11-26), en `596375892df7b268/fff6d62f…/scratchpad/g015/`:
+  - `revertir-015.sql`: deshace la división, recrea el enum sin el valor nuevo y borra la fila de la 0011. Solo corre en `finanzas_g015_*`.
+  - `migrar-ensayo.mts`: el cuerpo de `migrar-produccion.ts` contra una copia.
+  - `saldos.sql`: oráculo por sobre, cuenta y regla.
+  - `sonda-reparto.mts`: la propuesta real para varios montos.
+  - `sonda-reglas.mts a|b`: el formulario viejo, y `guardarReglas` con la lista vieja.
+  - `carrera-c1.sh <copia>`: un gasto confirmado entre las dos fotos.
+  - `carreras.sh`: el candado `(4,0)` y dos divisiones a la vez.
+  - `semillas.sh`: S1-S5. S5 corta la semilla con un trigger `for each statement`.
+- **Ordenar una carrera sin trigger en la otra conexión:** sondear `pg_stat_activity` (`state='active' and query ilike 'insert into "sobres"%'`) hasta ver al script dormido en su trigger, y recién entonces escribir desde psql. Con un `sleep` fijo no sirve, porque tsx tarda ~1 s en arrancar.
+
 Ver también [[defectos-datos-encontrados]], [[rls-supabase]] y [[auditoria-t14-002]].
