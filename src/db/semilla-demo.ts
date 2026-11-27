@@ -62,7 +62,8 @@ async function main() {
   const emergencia = sobre("Emergencia");
   const metas = sobre("Planes");
   const ocasiones = sobre("Ocasiones");
-  const inversion = sobre("Inversión");
+  // Por tipo: desde la spec 015 se llama "Inversión a largo plazo", o como el desarrollador lo haya renombrado.
+  const inversion = sobres.find((s) => s.tipo === "inversion")?.id ?? falta("el sobre de inversión");
   const sobreDeudas = sobres.find((s) => s.tipo === "deudas")?.id ?? falta("el sobre Deudas");
 
   const filas: Nuevo[] = [];

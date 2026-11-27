@@ -86,7 +86,8 @@ async function main() {
   const hoy = hoyEnCaracas(new Date());
   const validos = reparto.sobres.map((s) => s.id);
   const planes = reparto.sobres.find((s) => s.nombre === "Planes");
-  const inversion = reparto.sobres.find((s) => s.nombre === "Inversión");
+  // Por tipo: desde la spec 015 el sobre se llama "Inversión a largo plazo".
+  const inversion = reparto.sobres.find((s) => s.tipo === "inversion");
   if (!planes || !inversion) throw new Error("Faltan los sobres Planes e Inversión: corre pnpm db:seed");
 
   /** Las filas de un ingreso con el reparto dado (o la propuesta), con las referencias de su captura. */

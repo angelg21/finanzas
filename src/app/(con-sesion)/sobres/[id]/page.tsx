@@ -35,9 +35,10 @@ const nombreTipo: Record<Sobre["tipo"], string> = {
   familia: "Apoyo familiar",
   emergencia: "Fondo de emergencia",
   meta: "Meta",
-  inversion: "Inversión",
+  inversion: "Inversión a largo plazo",
   fondo: "Fondo de reserva",
   deudas: "Para pagar deudas",
+  negocios: "Negocios",
 };
 
 export async function generateMetadata({ params }: PageProps<"/sobres/[id]">): Promise<Metadata> {

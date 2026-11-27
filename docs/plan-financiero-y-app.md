@@ -61,14 +61,15 @@ Con 700 $/mes el fondo de emergencia se llena en 4 meses. Cuando esté lleno, es
 
 Un sobre es una porción del dinero con un propósito. Una sola cuenta de Binance puede contener cinco sobres. El saldo "disponible para gastar" es solo el del sobre de gastos del mes.
 
-| Sobre          | Para qué                                                                         | Regla                                                                                             |
-| -------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Gastos del mes | Todo el consumo, incluido ocio                                                   | Se llena con el monto fijo cada cobro; lo que sobra a fin de mes se reasigna                      |
-| Familia        | Apoyo a la familia                                                               | Monto fijo por cobro                                                                              |
-| Emergencia     | Reserva de 6 meses                                                               | Se llena hasta el tope y luego deja de recibir                                                    |
-| Planes         | Viajes, teléfono, ropa, compras grandes. Una por meta cuando tenga monto y fecha | Cuota calculada por monto y fecha                                                                 |
-| Ocasiones      | Regalos, cumpleaños, aniversarios, Navidad: previsible pero irregular            | Fondo de reserva: aporte fijo mensual igual al desglose anual entre doce; lo que sobra se acumula |
-| Inversión      | Aportes al bróker                                                                | Intocable                                                                                         |
+| Sobre                   | Para qué                                                                         | Regla                                                                                             |
+| ----------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Gastos del mes          | Todo el consumo, incluido ocio                                                   | Se llena con el monto fijo cada cobro; lo que sobra a fin de mes se reasigna                      |
+| Familia                 | Apoyo a la familia                                                               | Monto fijo por cobro                                                                              |
+| Emergencia              | Reserva de 6 meses                                                               | Se llena hasta el tope y luego deja de recibir                                                    |
+| Planes                  | Viajes, teléfono, ropa, compras grandes. Una por meta cuando tenga monto y fecha | Cuota calculada por monto y fecha                                                                 |
+| Ocasiones               | Regalos, cumpleaños, aniversarios, Navidad: previsible pero irregular            | Fondo de reserva: aporte fijo mensual igual al desglose anual entre doce; lo que sobra se acumula |
+| Inversión a largo plazo | Aportes al bróker: S&P 500, oro y renta variable a largo plazo                   | Intocable                                                                                         |
+| Negocios                | Oportunidades de negocio de ahora (feature 015, 26 de noviembre de 2026)         | Libre: se usa cuando aparece una. Recibe un tercio de lo que antes iba a Inversión                |
 
 ---
 
@@ -107,7 +108,7 @@ Un ETF global de acumulación domiciliado en Irlanda, por ejemplo VWRA en la bol
 
 **Plan práctico**
 
-1. Durante los 4 meses que tarda el fondo de emergencia, el sobre de inversión acumula en USDT. Ese tiempo es para aprender.
+1. Durante los 4 meses que tarda el fondo de emergencia, el sobre de inversión acumula en USDT. Ese tiempo es para aprender. Desde el 26 de noviembre de 2026 (feature 015) lo de inversión se divide: dos tercios a "Inversión a largo plazo", intocable, y un tercio a "Negocios", libre, para oportunidades de ahora; así el dinero de un negocio no sale del ahorro de largo plazo.
 2. Al tener el fondo lleno, abrir bróker. Primero Interactive Brokers, luego Hapi.
 3. Si ningún bróker regulado acepta, alternativa temporal: hasta 10 % de lo invertido en BTC, el resto sigue esperando en stablecoin.
 4. Nunca invertir a través de la cuenta de la prima.

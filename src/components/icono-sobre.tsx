@@ -1,4 +1,5 @@
 import {
+  BriefcaseBusiness,
   Gift,
   HandCoins,
   HeartHandshake,
@@ -30,6 +31,7 @@ const iconoPorTipo: Record<Sobre["tipo"], LucideIcon> = {
   fondo: Gift,
   inversion: Sprout,
   deudas: HandCoins,
+  negocios: BriefcaseBusiness,
 };
 
 /** El relleno de cada tono del anillo y el color del icono sobre él; las tramas llevan un halo blanco. */

@@ -80,6 +80,8 @@ const pasos: Record<string, PasoDeSobre> = {
   familia: 5,
   fondo: 6,
   deudas: 7,
+  // Spec 015: el de las metas; Inversión lleva el 2 y van seguidos en el anillo.
+  negocios: 3,
 };
 
 /** El color sigue al tipo de sobre, no a su tamaño; un tipo sin tono propio lleva el de las metas. */

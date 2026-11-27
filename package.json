@@ -20,6 +20,8 @@
     "db:demo:limpiar": "tsx src/db/semilla-demo.ts --limpiar",
     "db:importar": "tsx src/db/importar.ts",
     "db:importar:produccion": "tsx src/db/importar.ts --produccion",
+    "db:dividir-inversion": "tsx src/db/dividir-inversion.ts",
+    "db:dividir-inversion:produccion": "tsx src/db/dividir-inversion.ts --produccion",
     "db:respaldo:produccion": "tsx src/db/respaldo.ts --produccion",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

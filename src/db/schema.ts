@@ -56,6 +56,8 @@ export const tipoSobreEnum = pgEnum("tipo_sobre", [
   "fondo",
   /** Lo apartado para pagar deudas. Recibe una cuota calculada en cada reparto, sin fila en reglas_reparto (spec 005). */
   "deudas",
+  /** Oportunidades de negocio de ahora (spec 015). Libre, a diferencia de "inversion", que es a largo plazo e intocable. */
+  "negocios",
 ]);
 export const tipoCategoriaEnum = pgEnum("tipo_categoria", ["ingreso", "gasto"]);
 export const tipoMovimientoEnum = pgEnum("tipo_movimiento", tiposDeMovimiento);

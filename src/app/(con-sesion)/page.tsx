@@ -34,9 +34,10 @@ const nombreTipoSobre: Record<Sobre["tipo"], string> = {
   familia: "Apoyo familiar",
   emergencia: "Fondo de emergencia",
   meta: "Meta",
-  inversion: "Inversión",
+  inversion: "Inversión a largo plazo",
   fondo: "Fondo de reserva",
   deudas: "Para pagar deudas",
+  negocios: "Negocios",
 };
 
 const nombreTipoCuenta: Record<string, string> = {

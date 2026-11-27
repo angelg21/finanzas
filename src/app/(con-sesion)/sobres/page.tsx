@@ -21,9 +21,11 @@ const descripcion: Record<Sobre["tipo"], string> = {
   familia: "Apoyo a la familia.",
   emergencia: "Seis meses de gastos. Solo para emergencias reales.",
   meta: "Ahorro con monto y fecha.",
-  inversion: "Aportes al bróker. Nunca se retira.",
+  inversion: "S&P 500, oro y renta variable a largo plazo. Nunca se retira.",
   fondo: "Gastos previsibles pero irregulares. Aporte fijo mensual; lo que sobra se acumula.",
   deudas: "Lo apartado para pagar lo que debes. Recibe su cuota en cada reparto.",
+  // Spec 015: libre, a diferencia de Inversión a largo plazo.
+  negocios: "Oportunidades de negocio de ahora: se usa cuando aparece una.",
 };
 
 function fechaCorta(iso: string) {

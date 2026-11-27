@@ -16,12 +16,12 @@ import { type ContextoDeImportacion, type PlanDeImportacion, planDeImportacion }
 import { leerExportacion } from "../lib/leer-exportacion";
 import { mapeoGestorDeGastos } from "../lib/mapeo-gestor-de-gastos";
 import { conectar, preguntar, terminarConError, urlLocal, urlProduccion } from "./conexion-script";
+import { fotoDeSaldos, saldosCambiados } from "./foto-de-saldos";
 import { leerXlsx } from "./leer-xlsx";
 import { type NuevoMovimiento, categorias, cuentas, etiquetas, movimientos, sobres } from "./schema";
-import { cuentaComoGasto, efectoEnCuenta, efectoEnSobre, esHistorial } from "./sumas-de-saldo";
+import { cuentaComoGasto, esHistorial } from "./sumas-de-saldo";
 
 type Base = ReturnType<typeof conectar>["db"];
-type Ejecutor = Base | Parameters<Parameters<Base["transaction"]>[0]>[0];
 
 async function contextoDe(db: Base): Promise<ContextoDeImportacion> {
   const anotados = await db
@@ -42,34 +42,9 @@ async function contextoDe(db: Base): Promise<ContextoDeImportacion> {
   };
 }
 
-/** Cada saldo de cuenta (en su moneda) y de sobre, con las mismas sumas que la app. */
-async function saldos(tx: Ejecutor): Promise<Map<string, number>> {
-  const deSobres = await tx
-    .select({
-      id: sobres.id,
-      saldo: sql<number>`coalesce(sum(${efectoEnSobre(sobres.id)}), 0)::bigint`.mapWith(Number),
-    })
-    .from(sobres)
-    .leftJoin(movimientos, or(eq(movimientos.sobreOrigenId, sobres.id), eq(movimientos.sobreDestinoId, sobres.id)))
-    .groupBy(sobres.id);
-  const deCuentas = await tx
-    .select({
-      id: cuentas.id,
-      saldo: sql<number>`coalesce(sum(${efectoEnCuenta(cuentas.id)}), 0)::bigint`.mapWith(Number),
-    })
-    .from(cuentas)
-    .leftJoin(movimientos, or(eq(movimientos.cuentaOrigenId, cuentas.id), eq(movimientos.cuentaDestinoId, cuentas.id)))
-    .groupBy(cuentas.id);
-  return new Map([
-    ...deSobres.map((s) => [`sobre ${s.id}`, s.saldo] as const),
-    ...deCuentas.map((c) => [`cuenta ${c.id}`, c.saldo] as const),
-  ]);
-}
-
-/** Crea lo que falta, inserta lo que no estaba y comprueba que ningún saldo cambió; si cambió, no queda nada. */
 async function aplicar(db: Base, plan: PlanDeImportacion) {
   return db.transaction(async (tx) => {
-    const antes = await saldos(tx);
+    const antes = await fotoDeSaldos(tx);
     for (const c of plan.crear.cuentas) {
       const [{ orden }] = await tx.select({ orden: sql<number>`coalesce(max(${cuentas.orden}), 0) + 1` }).from(cuentas);
       await tx
@@ -136,12 +111,10 @@ async function aplicar(db: Base, plan: PlanDeImportacion) {
       ? await tx.insert(movimientos).values(filas).onConflictDoNothing().returning({ id: movimientos.id })
       : [];
 
-    const despues = await saldos(tx);
-    const cambiados = [...despues].filter(([clave, saldo]) => (antes.get(clave) ?? 0) !== saldo);
+    const despues = await fotoDeSaldos(tx);
+    const cambiados = saldosCambiados(antes, despues);
     if (cambiados.length > 0) {
-      throw new Error(
-        `Cambiarían ${cambiados.length} saldos (${cambiados.map(([c]) => c).join(", ")}): no se importó nada.`,
-      );
+      throw new Error(`Cambiarían ${cambiados.length} saldos (${cambiados.join(", ")}): no se importó nada.`);
     }
     return { insertadas: insertadas.length, saldosComparados: despues.size };
   });
