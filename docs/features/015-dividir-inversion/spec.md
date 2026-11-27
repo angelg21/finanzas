@@ -38,7 +38,7 @@ largo plazo y Negocios arranca en 0 (si quiere pasar algo, lo hace con Mover); l
 ## Pantallas
 
 - Sobres: Negocios con el icono `BriefcaseBusiness`, la descripción "Oportunidades de negocio de ahora: se usa cuando
-  aparece una." y el tono 3 del anillo (el de las metas: Inversión lleva el 2 y van seguidos). Inversión a largo plazo
+  aparece una." y su propio tono del anillo, el 8, ámbar (`dona-6`): con el blanco de las metas no se distinguía de Planes (pedido del desarrollador el 2026-11-26, tras verlo). Inversión a largo plazo
   conserva "Intocable".
 - Sin pantallas nuevas: Reglas de reparto, Mover, la captura y el pago de deuda ya ofrecen todo sobre libre.
 

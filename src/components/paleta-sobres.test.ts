@@ -42,6 +42,17 @@ describe("paleta de sobres: las tramas del anillo", () => {
     }
   });
 
+  it("el ámbar de Negocios (spec 015) es distinto de los demás tonos del anillo y lleva el icono blanco a 3:1 o más", () => {
+    const raizCss = bloque(":root");
+    const ambar = token(raizCss, "dona-6");
+    expect(ambar).toBeDefined();
+    const otros = [1, 2, 3, 4, 5].map((n) => token(raizCss, `dona-${n}`));
+    expect(otros).not.toContain(ambar);
+    expect(contraste(ambar ?? "#ffffff", "#ffffff")).toBeGreaterThanOrEqual(3);
+    expect(dona).toMatch(/fill-dona-6/);
+    expect(icono).toMatch(/fill-dona-6/);
+  });
+
   it("la rejilla de Deudas está en el anillo, en su leyenda y en el icono del sobre", () => {
     expect(dona).toMatch(/idRejilla/);
     expect(dona).toMatch(/rejillaCss/);

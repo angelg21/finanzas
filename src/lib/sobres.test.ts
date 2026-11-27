@@ -133,4 +133,12 @@ describe("pasoDeSobre: el color del anillo de Sobres sigue al tipo de sobre", ()
     const delAnillo = ["emergencia", "inversion", "meta", "gastos", "familia", "fondo", "deudas"].map(pasoDeSobre);
     expect(new Set(delAnillo).size).toBe(delAnillo.length);
   });
+
+  it("Negocios lleva su propio paso, el ámbar, distinto del de las metas y de cada otro tipo (spec 015)", () => {
+    expect(pasoDeSobre("negocios")).toBe(8);
+    const delAnillo = ["emergencia", "inversion", "meta", "gastos", "familia", "fondo", "deudas", "negocios"].map(
+      pasoDeSobre,
+    );
+    expect(new Set(delAnillo).size).toBe(delAnillo.length);
+  });
 });

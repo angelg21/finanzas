@@ -67,10 +67,11 @@ export function nivelParaIcono(medida: MedidaDeSobre): NivelDeSobre {
 }
 
 /**
- * El tono del anillo de Sobres por tipo: 1 pino profundo, 2 verde, 3 blanco, 4 salvia gris, 5 rayado, 6 puntos y
- * 7 rejilla (Deudas, spec 005). Las tres tramas son del mismo pino sobre blanco y se distinguen por la forma.
+ * El tono del anillo de Sobres por tipo: 1 pino profundo, 2 verde, 3 blanco, 4 salvia gris, 5 rayado, 6 puntos,
+ * 7 rejilla (Deudas, spec 005) y 8 ámbar (Negocios, spec 015). Las tres tramas son del mismo pino sobre blanco y se
+ * distinguen por la forma.
  */
-export type PasoDeSobre = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type PasoDeSobre = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 const pasos: Record<string, PasoDeSobre> = {
   emergencia: 1,
@@ -80,8 +81,8 @@ const pasos: Record<string, PasoDeSobre> = {
   familia: 5,
   fondo: 6,
   deudas: 7,
-  // Spec 015: el de las metas; Inversión lleva el 2 y van seguidos en el anillo.
-  negocios: 3,
+  // Spec 015: su propio ámbar, a pedido del desarrollador: con el blanco de las metas no se distinguía de Planes.
+  negocios: 8,
 };
 
 /** El color sigue al tipo de sobre, no a su tamaño; un tipo sin tono propio lleva el de las metas. */

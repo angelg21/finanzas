@@ -43,6 +43,7 @@ const tonos: Record<PasoDeSobre, { relleno: string; icono: string; patron?: "ray
   5: { relleno: "", icono: "text-dona-5", patron: "rayas" },
   6: { relleno: "", icono: "text-dona-5", patron: "puntos" },
   7: { relleno: "", icono: "text-dona-5", patron: "rejilla" },
+  8: { relleno: "fill-dona-6", icono: "text-white" },
 };
 
 const lados = { sm: "size-8", md: "size-11", lg: "size-14" } as const;

@@ -11,13 +11,19 @@ import { formatearCentavos, formatearEnteros } from "@/lib/dinero";
   El color sigue a la entidad (tipo de sobre), no a su tamaño.
 */
 
-export type SegmentoDona = { clave: string; nombre: string; valorCentavos: number; paso: 1 | 2 | 3 | 4 | 5 | 6 | 7 };
+export type SegmentoDona = {
+  clave: string;
+  nombre: string;
+  valorCentavos: number;
+  paso: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+};
 
 const clasePaso: Record<Exclude<SegmentoDona["paso"], 5 | 6 | 7>, { relleno: string; fondo: string }> = {
   1: { relleno: "fill-dona-1", fondo: "bg-dona-1" },
   2: { relleno: "fill-dona-2", fondo: "bg-dona-2" },
   3: { relleno: "fill-dona-3", fondo: "bg-dona-3" },
   4: { relleno: "fill-dona-4", fondo: "bg-dona-4" },
+  8: { relleno: "fill-dona-6", fondo: "bg-dona-6" },
 };
 
 /** El paso 5 es blanco con rayas diagonales, el 6 blanco con puntos y el 7 blanco con rejilla, todos del color dona-5. */
